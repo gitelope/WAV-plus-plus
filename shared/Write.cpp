@@ -1,5 +1,5 @@
 
-#include "SaveWAV.hpp"
+#include "Write.hpp"
 #include "WaveFile.hpp" // for format codes
 #include <fstream>
 #include <cassert>
@@ -118,7 +118,7 @@ void WriteData (std::ofstream & out, std::vector<double> const & samples, uint16
     else assert (false);
 }
 
-void SaveWAV (std::vector<double> const & samples, ExportFormat format, int sample_rate, int channels, std::string const & filepath)
+void Write (std::vector<double> const & samples, ExportFormat format, int sample_rate, int channels, std::string const & filepath)
 {
     static_assert (std::endian::native == std::endian::little, "Only little endian systems are supported.");
 

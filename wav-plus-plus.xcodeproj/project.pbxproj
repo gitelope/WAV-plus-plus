@@ -10,11 +10,11 @@
 		C499DB892E13436D00A88D60 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C499DB872E13436D00A88D60 /* main.cpp */; };
 		C499DB8C2E13437000A88D60 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C499DB8A2E13437000A88D60 /* main.cpp */; };
 		C499DB962E13445F00A88D60 /* reading_bytes.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C499DB902E13445F00A88D60 /* reading_bytes.cpp */; };
-		C499DB972E13445F00A88D60 /* SaveWAV.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C499DB922E13445F00A88D60 /* SaveWAV.cpp */; };
+		C499DB972E13445F00A88D60 /* Write.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C499DB922E13445F00A88D60 /* Write.cpp */; };
 		C499DB982E13445F00A88D60 /* WaveFile.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C499DB942E13445F00A88D60 /* WaveFile.cpp */; };
 		C499DB992E13445F00A88D60 /* Read.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C499DB8E2E13445F00A88D60 /* Read.cpp */; };
 		C499DB9A2E13445F00A88D60 /* reading_bytes.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C499DB902E13445F00A88D60 /* reading_bytes.cpp */; };
-		C499DB9B2E13445F00A88D60 /* SaveWAV.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C499DB922E13445F00A88D60 /* SaveWAV.cpp */; };
+		C499DB9B2E13445F00A88D60 /* Write.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C499DB922E13445F00A88D60 /* Write.cpp */; };
 		C499DB9C2E13445F00A88D60 /* WaveFile.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C499DB942E13445F00A88D60 /* WaveFile.cpp */; };
 		C499DB9D2E13445F00A88D60 /* Read.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C499DB8E2E13445F00A88D60 /* Read.cpp */; };
 /* End PBXBuildFile section */
@@ -49,8 +49,8 @@
 		C499DB8E2E13445F00A88D60 /* Read.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Read.cpp; sourceTree = "<group>"; };
 		C499DB8F2E13445F00A88D60 /* reading_bytes.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = reading_bytes.hpp; sourceTree = "<group>"; };
 		C499DB902E13445F00A88D60 /* reading_bytes.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = reading_bytes.cpp; sourceTree = "<group>"; };
-		C499DB912E13445F00A88D60 /* SaveWAV.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = SaveWAV.hpp; sourceTree = "<group>"; };
-		C499DB922E13445F00A88D60 /* SaveWAV.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = SaveWAV.cpp; sourceTree = "<group>"; };
+		C499DB912E13445F00A88D60 /* Write.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Write.hpp; sourceTree = "<group>"; };
+		C499DB922E13445F00A88D60 /* Write.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Write.cpp; sourceTree = "<group>"; };
 		C499DB932E13445F00A88D60 /* WaveFile.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = WaveFile.hpp; sourceTree = "<group>"; };
 		C499DB942E13445F00A88D60 /* WaveFile.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = WaveFile.cpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -115,8 +115,8 @@
 				C499DB8E2E13445F00A88D60 /* Read.cpp */,
 				C499DB8F2E13445F00A88D60 /* reading_bytes.hpp */,
 				C499DB902E13445F00A88D60 /* reading_bytes.cpp */,
-				C499DB912E13445F00A88D60 /* SaveWAV.hpp */,
-				C499DB922E13445F00A88D60 /* SaveWAV.cpp */,
+				C499DB912E13445F00A88D60 /* Write.hpp */,
+				C499DB922E13445F00A88D60 /* Write.cpp */,
 				C499DB932E13445F00A88D60 /* WaveFile.hpp */,
 				C499DB942E13445F00A88D60 /* WaveFile.cpp */,
 			);
@@ -207,7 +207,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				C499DB9A2E13445F00A88D60 /* reading_bytes.cpp in Sources */,
-				C499DB9B2E13445F00A88D60 /* SaveWAV.cpp in Sources */,
+				C499DB9B2E13445F00A88D60 /* Write.cpp in Sources */,
 				C499DB9C2E13445F00A88D60 /* WaveFile.cpp in Sources */,
 				C499DB9D2E13445F00A88D60 /* Read.cpp in Sources */,
 				C499DB8C2E13437000A88D60 /* main.cpp in Sources */,
@@ -219,7 +219,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				C499DB962E13445F00A88D60 /* reading_bytes.cpp in Sources */,
-				C499DB972E13445F00A88D60 /* SaveWAV.cpp in Sources */,
+				C499DB972E13445F00A88D60 /* Write.cpp in Sources */,
 				C499DB982E13445F00A88D60 /* WaveFile.cpp in Sources */,
 				C499DB992E13445F00A88D60 /* Read.cpp in Sources */,
 				C499DB892E13436D00A88D60 /* main.cpp in Sources */,
