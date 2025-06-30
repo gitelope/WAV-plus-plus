@@ -1,6 +1,6 @@
 
-#ifndef wavplusplus_Load_hpp
-#define wavplusplus_Load_hpp
+#ifndef wavplusplus_Read_hpp
+#define wavplusplus_Read_hpp
 
 #include <string>
 #include <vector>
