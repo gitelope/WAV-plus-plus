@@ -106,12 +106,14 @@ void WriteData (std::ofstream & out, std::vector<double> const & samples, uint16
                 static_assert (sizeof (float) == 4 && CHAR_BIT == 8, "float is not 32-bit.");
                 for (auto const & sample : samples)
                     WriteToFile (out, static_cast<float> (sample));
+                break;
             }
             case 64:
             {
                 static_assert (sizeof (double) == 8 && CHAR_BIT == 8, "double is not 64-bit.");
                 for (auto const & sample : samples)
                     WriteToFile (out, sample);
+                break;
             }
         }
     }
