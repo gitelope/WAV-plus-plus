@@ -64,7 +64,7 @@ uint8_t uint8 (std::vector<std::byte> const & bytes, int & pos)
 uint8_t uint8 (std::ifstream & in, int & pos)
 {
     uint8_t result {0};
-    in.read (reinterpret_cast<char*> (result), 1);
+    in.read (reinterpret_cast<char*> (&result), 1);
     ++pos;
     return result;
 }

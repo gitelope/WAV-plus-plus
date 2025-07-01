@@ -299,7 +299,7 @@ void ReadLinearPCM (std::ifstream & in, int & position, std::vector<double> & de
         case 8:
             for (auto & sample : destination)
             {
-                sample = (uint8 (in, position) - 128) / two_to_the_n_minus_one;
+                sample = (uint8 (in, position) - 128.) / two_to_the_n_minus_one;
             }
             break;
 
