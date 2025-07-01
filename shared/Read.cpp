@@ -1,7 +1,6 @@
 
 #include "Read.hpp"
 #include "reading_bytes.hpp"
-#include "WaveFile.hpp" // consider moving enums and namespaced constants back into a formats.hpp
 
 #include <filesystem>
 #include <fstream>

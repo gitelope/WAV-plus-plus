@@ -2,13 +2,12 @@
 #ifndef wavplusplus_reading_bytes_hpp
 #define wavplusplus_reading_bytes_hpp
 
+#include "formats.hpp"
 #include <vector>
 #include <string>
 
 namespace wav
 {
-
-struct GUID;
 
 void ReadBytes (std::string const & filePath, std::vector<std::byte> &);
 void PrintBytesAsHex (std::vector<std::byte> const & bytes);

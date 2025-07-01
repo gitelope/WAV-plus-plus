@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		C479D8552E149E7C00093894 /* formats.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C479D8542E149E7C00093894 /* formats.cpp */; };
+		C479D8562E149E7C00093894 /* formats.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C479D8542E149E7C00093894 /* formats.cpp */; };
 		C499DB892E13436D00A88D60 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C499DB872E13436D00A88D60 /* main.cpp */; };
 		C499DB8C2E13437000A88D60 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C499DB8A2E13437000A88D60 /* main.cpp */; };
 		C499DB962E13445F00A88D60 /* reading_bytes.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C499DB902E13445F00A88D60 /* reading_bytes.cpp */; };
@@ -41,6 +43,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		C479D8532E149E7C00093894 /* formats.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = formats.hpp; sourceTree = "<group>"; };
+		C479D8542E149E7C00093894 /* formats.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = formats.cpp; sourceTree = "<group>"; };
 		C499DB752E13435300A88D60 /* write and read */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "write and read"; sourceTree = BUILT_PRODUCTS_DIR; };
 		C499DB802E13436900A88D60 /* write and inspect */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "write and inspect"; sourceTree = BUILT_PRODUCTS_DIR; };
 		C499DB872E13436D00A88D60 /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
@@ -119,6 +123,8 @@
 				C499DB922E13445F00A88D60 /* Write.cpp */,
 				C499DB932E13445F00A88D60 /* WaveFile.hpp */,
 				C499DB942E13445F00A88D60 /* WaveFile.cpp */,
+				C479D8532E149E7C00093894 /* formats.hpp */,
+				C479D8542E149E7C00093894 /* formats.cpp */,
 			);
 			path = shared;
 			sourceTree = "<group>";
@@ -210,6 +216,7 @@
 				C499DB9B2E13445F00A88D60 /* Write.cpp in Sources */,
 				C499DB9C2E13445F00A88D60 /* WaveFile.cpp in Sources */,
 				C499DB9D2E13445F00A88D60 /* Read.cpp in Sources */,
+				C479D8552E149E7C00093894 /* formats.cpp in Sources */,
 				C499DB8C2E13437000A88D60 /* main.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -222,6 +229,7 @@
 				C499DB972E13445F00A88D60 /* Write.cpp in Sources */,
 				C499DB982E13445F00A88D60 /* WaveFile.cpp in Sources */,
 				C499DB992E13445F00A88D60 /* Read.cpp in Sources */,
+				C479D8562E149E7C00093894 /* formats.cpp in Sources */,
 				C499DB892E13436D00A88D60 /* main.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
