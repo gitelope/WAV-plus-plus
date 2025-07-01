@@ -19,14 +19,12 @@ struct Info
     int containerSizeInBits {0}; // sample containerSize >= sample bitDepth
     bool isLinearPCM {false};
     bool isFloatPCM {false};
-    std::vector<double> peaks;
 };
 
 struct ReadInfo // holds info useful to helpers of Read() but not to its clients
 {
     int riffChunkSize {0};
     int blockAlign {0};
-    // int framesAccordingToFactChunk {0};
 };
 
 void Read (std::string const & filepath, std::vector<double> & destination, Info &, bool verbose = false);
