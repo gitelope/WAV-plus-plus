@@ -1,5 +1,5 @@
 
-#include "WaveFile.hpp"
+#include "File.hpp"
 #include <cassert>
 #include <sstream>
 
@@ -55,7 +55,7 @@ File::File (std::string const & filepath, bool verbose)
                                   + std::to_string (riff.size + 8) + ").");
 }
 
-void File::PrintFileInfo()
+void File::PrintInfo()
 {
     std::string channelString;
     switch (format.channels)

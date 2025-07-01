@@ -1,6 +1,6 @@
 
-#ifndef wavplusplus_WaveFile_hpp
-#define wavplusplus_WaveFile_hpp
+#ifndef wavplusplus_File_hpp
+#define wavplusplus_File_hpp
 
 #include "reading_bytes.hpp"
 
@@ -79,7 +79,7 @@ class File
 {
 public:
     File (std::string const & filepath, bool verbose = false);
-    void PrintFileInfo();
+    void PrintInfo();
     void PrintSamples();
     void PrintChunks();
 

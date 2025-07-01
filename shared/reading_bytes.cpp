@@ -1,6 +1,5 @@
 
 #include "reading_bytes.hpp"
-#include "WaveFile.hpp"
 #include <fstream>
 #include <cassert>
 #include <iostream>

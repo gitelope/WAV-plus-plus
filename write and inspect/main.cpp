@@ -1,6 +1,6 @@
 
 #include "../shared/Write.hpp"
-#include "../shared/WaveFile.hpp"
+#include "../shared/File.hpp"
 
 #include <vector>
 #include <string>
@@ -11,12 +11,12 @@
 void LoadWaveFile (std::string const & filepath)
 {
     // load wave file
-    wav::File waveFile {filepath, true /*verbose*/};
-    waveFile.PrintChunks();
+    wav::File file {filepath, true /*verbose*/};
+    file.PrintChunks();
     std::cout << std::endl;
-    waveFile.PrintFileInfo();
+    file.PrintInfo();
     std::cout << std::endl;
-    waveFile.PrintSamples();
+    file.PrintSamples();
 }
 
 int main (int argc, const char * argv[])

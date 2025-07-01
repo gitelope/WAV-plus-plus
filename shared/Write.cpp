@@ -1,6 +1,5 @@
 
 #include "Write.hpp"
-#include "WaveFile.hpp" // for format codes
 #include <fstream>
 #include <cassert>
 

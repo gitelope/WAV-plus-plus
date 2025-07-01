@@ -3,9 +3,12 @@
 #include "../shared/Write.hpp"
 
 #include <vector>
+#include <iostream>
+#include <format>
 
 // 1. Write with wav::Write.
 // 2. Read with wav::Read.
+// 3. (optional) Print samples.
 
 int main (int argc, const char * argv[])
 {
@@ -15,7 +18,15 @@ int main (int argc, const char * argv[])
 
     wav::Info info;
     std::vector<double> in;
-    wav::Read (filename, in, info);
+    wav::Read (filename, in, info, true /*verbose*/);
+
+    const bool printSamples {true};
+    if (printSamples)
+    {
+        for (auto sample : in) std::cout << std::format("{}", sample) << ",";
+        std::cout << '\n' << std::endl;
+    }
+
 
     return 0;
 }
