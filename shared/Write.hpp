@@ -5,6 +5,18 @@
 #include "WaveFile.hpp"
 #include <vector>
 
+/*
+ encoding options:
+ linear PCM: 8-bit, 16-bit, 24-bit, and 32-bit
+ float PCM: 32-bit and 64-bit
+
+ channel options:
+ mono, stereo, and multichannel
+
+ format:
+ PCMWAVEFORMAT (very common, but technically non-standard for some of the above options)
+ */
+
 namespace wav
 {
 
