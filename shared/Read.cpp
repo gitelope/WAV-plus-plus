@@ -11,7 +11,7 @@
 namespace wav
 {
 
-void Read (std::string const & filepath, std::vector<double> & destination, Info & info)
+void Read (std::string const & filepath, std::vector<double> & destination, Info & info, bool verbose)
 {
     static_assert (std::endian::native == std::endian::little, "Only little endian systems are supported at the moment.");
 
@@ -19,51 +19,57 @@ void Read (std::string const & filepath, std::vector<double> & destination, Info
     {
         throw std::runtime_error ("File does not exist: " + filepath);
     }
+    if (verbose) std::cout << "\n" << filepath << std::endl;
+
     std::ifstream in {filepath, std::ios::binary | std::ios::in};
 
-    int position {0};
     ReadInfo readInfo;
 
-    ReadRiffChunk (in, position, readInfo);
+    ReadRiffChunk (in, readInfo, verbose);
 
     const long fileLength = std::filesystem::file_size (filepath);
     if (readInfo.riffChunkSize + 8 != fileLength) throw std::runtime_error ("RIFF chunk size + 8 does not equal file size.");
-    std::cout << "file length: " << fileLength << std::endl;
+    if (verbose) std::cout << "file length: " << fileLength << std::endl;
 
-    ReadSubchunks (in, position, destination, info, readInfo);
+    ReadSubchunks (in, destination, info, readInfo, verbose);
 
     in.close();
 }
 
-void ReadRiffChunk (std::ifstream & in, int & position, ReadInfo & readInfo)
+void ReadRiffChunk (std::ifstream & in, ReadInfo & readInfo, bool verbose)
 {
-    const auto id {fourCharacterCode (in, position)};     // RIFF
-    readInfo.riffChunkSize = uint32_le (in, position);    // file length (in bytes) - 8
-    const auto format {fourCharacterCode (in, position)}; // WAVE
+    const auto id {fourCharacterCode (in)};     // RIFF
+    readInfo.riffChunkSize = uint32_le (in);    // file length (in bytes) - 8
+    const auto format {fourCharacterCode (in)}; // WAVE
     if (id != "RIFF") throw std::runtime_error ("RIFF chunk ID should be \"RIFF\".");
     if (format != "WAVE") throw std::runtime_error ("RIFF chunk format should be \"WAVE\".");
-    std::cout << id << '\n' << readInfo.riffChunkSize << '\n' << format << std::endl;
 }
 
-void ReadSubchunks (std::ifstream & in, int & position, std::vector<double> & destination, Info & info, ReadInfo & readInfo)
+void ReadSubchunks (std::ifstream & in, std::vector<double> & destination, Info & info, ReadInfo & readInfo, bool verbose)
 {
+    if (verbose) std::cout << "\nchunks encountered: " << std::endl;
+
     while (in.peek() != EOF)
     {
-        const auto chunkID {fourCharacterCode (in, position)};
-        std::cout << '\n' << chunkID;
+        const auto chunkID {fourCharacterCode (in)};
+        if (verbose) std::cout << chunkID;
 
-        if      (chunkID == "fmt ") ReadFormatChunk (in, position, info, readInfo);
-        else if (chunkID == "fact") ReadFactChunk   (in, position, info);
-        else if (chunkID == "data") ReadDataChunk   (in, position, destination, info, readInfo);
+        if      (chunkID == "fmt ") ReadFormatChunk (in, info, readInfo);
+        else if (chunkID == "fact") ReadFactChunk   (in, info);
+        else if (chunkID == "data") ReadDataChunk   (in, destination, info, readInfo);
         else
         {
             // skip to next chunk
-            const auto size = uint32_le (in, position);
+            const auto size = uint32_le (in);
 
-            std::cout << ": index " << position - 4 << ", size " << size << " - skipped" << std::endl;
+            if (verbose)
+            {
+                auto position {in.tellg()};
+                position -= static_cast <decltype(position)> (4);
+                std::cout << " (skipped - index " << position << ", size " << size << ")";
+            }
 
             in.ignore (size);
-            position += size;
 
             // RIFF sub-chunks (not to be confused with "RIFF" chunks)
             // are not allowed to have an odd number of bytes.
@@ -72,20 +78,20 @@ void ReadSubchunks (std::ifstream & in, int & position, std::vector<double> & de
             // unreported byte of padding at the end to make for an even
             // number. However, all padding should be reflected in the main
             // "RIFF" chunk size.
-            const auto padding {size % 2}; // When chunk size is odd, there will be one byte of padding.
-            in.ignore (padding);
-            position += padding;
+            in.ignore (size % 2); // When chunk size is odd, there will be one byte of padding.
         }
+        if (verbose) std::cout << std::endl;
     }
+    if (verbose) std::cout << std::endl;
 }
 
-void ReadFormatChunk (std::ifstream & in, int & position, Info & info, ReadInfo & readInfo)
+void ReadFormatChunk (std::ifstream & in, Info & info, ReadInfo & readInfo)
 {
     // These fields are found in formats WAVEFORMAT, PCMWAVEFORMAT, WAVEFORMATEX, and WAVEFORMATEXTENSIBLE:
     //
     // no need to read ID since it has already been read and has the expected value
     //
-    const auto chunkSize {uint32_le (in, position)};
+    const auto chunkSize {uint32_le (in)};
     // format chunk size
     // WAVEFORMAT:                                                       14
     // PCMWAVEFORMAT:                                             14+2 = 16
@@ -96,19 +102,19 @@ void ReadFormatChunk (std::ifstream & in, int & position, Info & info, ReadInfo 
         throw std::runtime_error ("fmt chunk size (" + std::to_string (chunkSize) + ") is unsupported.");
     }
     //
-    const auto formatCode {uint16_le (in, position)};
+    const auto formatCode {uint16_le (in)};
     if (formatCode != FormatCode::LINEAR_PCM && formatCode != FormatCode::FLOAT_PCM && formatCode != FormatCode::EXTENSIBLE)
     {
         throw std::runtime_error (std::format ("Format not supported: 0x{:04X}", formatCode));
     }
     //
-    info.channels = uint16_le (in, position);
+    info.channels = uint16_le (in);
     //
-    info.sampleRate = uint32_le (in, position);
+    info.sampleRate = uint32_le (in);
     //
-    [[maybe_unused]] const auto byteRate {uint32_le (in, position)};
+    [[maybe_unused]] const auto byteRate {uint32_le (in)};
     //
-    readInfo.blockAlign = uint16_le (in, position);
+    readInfo.blockAlign = uint16_le (in);
 
     // This field is found in PCMWAVEFORMAT, WAVEFORMATEX, and WAVEFORMATEXTENSIBLE,
     // but must be inferred in WAVEFORMAT.
@@ -136,7 +142,7 @@ void ReadFormatChunk (std::ifstream & in, int & position, Info & info, ReadInfo 
     uint16_t bitsPerSample {0};
     if (chunkSize == 16 || chunkSize == 18 || chunkSize == 40)
     {
-        bitsPerSample = uint16_le (in, position);
+        bitsPerSample = uint16_le (in);
 
         if (formatCode == FormatCode::EXTENSIBLE)
         {
@@ -178,7 +184,7 @@ void ReadFormatChunk (std::ifstream & in, int & position, Info & info, ReadInfo 
     // WAVEFORMATEXTENSIBLE should have a format chunk size of 40 (18 + 22) and a cbSize of 22.
     if (chunkSize == 18 || chunkSize == 40)
     {
-        const auto extraFormatInformationSize {uint16_le (in, position)}; // a.k.a. cbSize
+        const auto extraFormatInformationSize {uint16_le (in)}; // a.k.a. cbSize
         if (extraFormatInformationSize != chunkSize - 18)
             throw std::runtime_error ("Invalid cbSize: " + std::to_string (extraFormatInformationSize));
     }
@@ -189,9 +195,9 @@ void ReadFormatChunk (std::ifstream & in, int & position, Info & info, ReadInfo 
     GUID subFormat;
     if (chunkSize == 40)
     {
-        validBitsPerSample = uint16_le (in, position);
-        channelMask = std::bitset<32> (uint32_le (in, position));
-        subFormat = guid (in, position);
+        validBitsPerSample = uint16_le (in);
+        channelMask = std::bitset<32> (uint32_le (in));
+        subFormat = guid (in);
 
         if (subFormat != ExtensibleFormat::LINEAR_PCM && subFormat != ExtensibleFormat::FLOAT_PCM)
             throw std::runtime_error ("Extensible subformat not supported: " + subFormat.str());
@@ -233,16 +239,16 @@ void ReadFormatChunk (std::ifstream & in, int & position, Info & info, ReadInfo 
     // In the future, if this code is used to read format chunks of odd byte length, we must skip the last padding byte.
 }
 
-void ReadFactChunk (std::ifstream & in, int & position, Info & info)
+void ReadFactChunk (std::ifstream & in, Info & info)
 {
-    const auto chunkSize {uint32_le (in, position)};
+    const auto chunkSize {uint32_le (in)};
     // "fact" chunk size should be 4 for float PCM (and linear PCM though the chunk is not required)
     if (chunkSize != 4) throw std::runtime_error ("fact chunk size (" + std::to_string (chunkSize) + ") should be 4.");
 
     // For linear and floar PCM, the "fact" chunk will only provide redundant information–
     // the total number of frames of audio. This should be equal to data chunk size divided by
     // block align.
-    const auto frames {uint32_le (in, position)}; // samples per channel
+    const auto frames {uint32_le (in)}; // samples per channel
     // Checking for consistency:
     if (info.frames > 0 && frames != info.frames)
     {
@@ -254,10 +260,10 @@ void ReadFactChunk (std::ifstream & in, int & position, Info & info)
     else info.frames = frames;
 }
 
-void ReadDataChunk (std::ifstream & in, int & position, std::vector<double> & destination, Info & info, ReadInfo & readInfo)
+void ReadDataChunk (std::ifstream & in, std::vector<double> & destination, Info & info, ReadInfo & readInfo)
 {
     // No need to read id since it has already been read and has the expected value.
-    const auto chunkSize {uint32_le (in, position)};
+    const auto chunkSize {uint32_le (in)};
     if (chunkSize % readInfo.blockAlign != 0)
     {
         throw std::runtime_error ("Size of data chunk is not divisible by block_align.");
@@ -268,8 +274,8 @@ void ReadDataChunk (std::ifstream & in, int & position, std::vector<double> & de
     assert (info.channels > 0);
     destination.resize (info.frames * info.channels);
 
-    if      (info.isLinearPCM) ReadLinearPCM (in, position, destination, info);
-    else if (info.isFloatPCM)  ReadFloatPCM  (in, position, destination, info);
+    if      (info.isLinearPCM) ReadLinearPCM (in, destination, info);
+    else if (info.isFloatPCM)  ReadFloatPCM  (in, destination, info);
 
 
     // Padding:
@@ -279,13 +285,10 @@ void ReadDataChunk (std::ifstream & in, int & position, std::vector<double> & de
     // so an extra byte will be appended to the end of the data.
     // After reading the 21 bytes, we must skip the next "unreported" 22nd padding byte.
     // (8-bit and 24-bit mono files with odd sample lengths will need the padding.)
-
-    const auto padding {chunkSize % 2}; // When chunk size is odd, increment position by 1.
-    in.ignore (padding);
-    position += padding;
+    in.ignore (chunkSize % 2); // When chunk size is odd, increment position by 1.
 }
 
-void ReadLinearPCM (std::ifstream & in, int & position, std::vector<double> & destination, Info const & info)
+void ReadLinearPCM (std::ifstream & in, std::vector<double> & destination, Info const & info)
 {
     // Divide signed integer by the absolute value of the largest negative int for the bit depth.
     // This is equal to one greater than the largest positive value for the bit depth.
@@ -299,30 +302,30 @@ void ReadLinearPCM (std::ifstream & in, int & position, std::vector<double> & de
         case 8:
             for (auto & sample : destination)
             {
-                sample = (uint8 (in, position) - 128.) / two_to_the_n_minus_one;
+                sample = (uint8 (in) - 128.) / two_to_the_n_minus_one;
             }
             break;
 
         case 16:
             for (auto & sample : destination)
             {
-                sample = int16_le (in, position) / two_to_the_n_minus_one;
+                sample = int16_le (in) / two_to_the_n_minus_one;
             }
             break;
 
         case 24:
             for (auto & sample : destination)
-                sample = int24_le (in, position) / two_to_the_n_minus_one;
+                sample = int24_le (in) / two_to_the_n_minus_one;
             break;
 
         case 32:
             for (auto & sample : destination)
-                sample = int32_le (in, position) / two_to_the_n_minus_one;
+                sample = int32_le (in) / two_to_the_n_minus_one;
             break;
     }
 }
 
-void ReadFloatPCM (std::ifstream & in, int & position, std::vector<double> & destination, Info const & info)
+void ReadFloatPCM (std::ifstream & in, std::vector<double> & destination, Info const & info)
 {
     assert (info.containerSizeInBits == info.bitDepth);
 
@@ -330,12 +333,12 @@ void ReadFloatPCM (std::ifstream & in, int & position, std::vector<double> & des
     {
         case 32:
             for (auto & sample : destination)
-                sample = float32_le (in, position);
+                sample = float32_le (in);
             break;
 
         case 64:
             for (auto & sample : destination)
-                sample = float64_le (in, position);
+                sample = float64_le (in);
             break;
     }
 }

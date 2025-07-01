@@ -46,14 +46,11 @@ std::string fourCharacterCode (std::vector<std::byte> const & bytes, int & pos)
     return code;
 }
 
-std::string fourCharacterCode (std::ifstream & in, int & pos)
+std::string fourCharacterCode (std::ifstream & in)
 {
     std::array<char, 4> buffer {};
-    in.read (buffer.data(), 4);
-
-    pos += 4;
-
-    return std::string (buffer.data(), 4);
+    in.read (buffer.data(), buffer.size());
+    return std::string (buffer.data(), buffer.size());
 }
 
 uint8_t uint8 (std::vector<std::byte> const & bytes, int & pos)
@@ -61,11 +58,10 @@ uint8_t uint8 (std::vector<std::byte> const & bytes, int & pos)
     return static_cast<uint8_t> (bytes [pos++]);
 }
 
-uint8_t uint8 (std::ifstream & in, int & pos)
+uint8_t uint8 (std::ifstream & in)
 {
     uint8_t result {0};
     in.read (reinterpret_cast<char*> (&result), 1);
-    ++pos;
     return result;
 }
 
@@ -79,13 +75,13 @@ GUID guid (std::vector<std::byte> const & bytes, int & pos)
     return {data1, data2, data3, data4};
 }
 
-GUID guid (std::ifstream & in, int & pos)
+GUID guid (std::ifstream & in)
 {
-    const auto data1 {uint32_le (in, pos)};
-    const auto data2 {uint16_le (in, pos)};
-    const auto data3 {uint16_le (in, pos)};
+    const auto data1 {uint32_le (in)};
+    const auto data2 {uint16_le (in)};
+    const auto data3 {uint16_le (in)};
     std::array <uint8_t, 8> data4;
-    for (int i=0; i<data4.size(); ++i) data4[i] = uint8 (in, pos);
+    for (int i=0; i<data4.size(); ++i) data4[i] = uint8 (in);
     return {data1, data2, data3, data4};
 }
 
@@ -114,20 +110,16 @@ uint32_t uint32_le (std::vector<std::byte> const & bytes, int & pos)
     return result;
 }
 
-uint32_t uint32_le (std::ifstream & in, int & pos)
+uint32_t uint32_le (std::ifstream & in)
 {
     std::array <uint8_t, 4> buffer {};
     in.read (reinterpret_cast<char*> (buffer.data()), buffer.size());
 
-    const auto result =
+    return
     static_cast<uint32_t> (buffer[0])       |
     static_cast<uint32_t> (buffer[1]) << 8  |
     static_cast<uint32_t> (buffer[2]) << 16 |
     static_cast<uint32_t> (buffer[3]) << 24 ;
-
-    pos += 4;
-
-    return result;
 }
 
 uint16_t uint16_le (std::vector<std::byte> const & bytes, int & pos)
@@ -151,18 +143,14 @@ uint16_t uint16_le (std::vector<std::byte> const & bytes, int & pos)
     return result;
 }
 
-uint16_t uint16_le (std::ifstream & in, int & pos)
+uint16_t uint16_le (std::ifstream & in)
 {
     std::array <uint8_t, 2> buffer {};
     in.read (reinterpret_cast<char*> (buffer.data()), buffer.size());
 
-    const auto result =
+    return
     static_cast<uint32_t> (buffer [0])     |
     static_cast<uint32_t> (buffer [1]) << 8;
-
-    pos += 2;
-
-    return result;
 }
 
 int16_t int16_le (std::vector<std::byte> const & bytes, int & pos)
@@ -176,18 +164,14 @@ int16_t int16_le (std::vector<std::byte> const & bytes, int & pos)
     return result;
 }
 
-int16_t int16_le (std::ifstream & in, int & pos)
+int16_t int16_le (std::ifstream & in)
 {
     std::array <uint8_t, 2> buffer {};
     in.read (reinterpret_cast<char*> (buffer.data()), buffer.size());
 
-    const auto result =
+    return
     static_cast<int16_t> (buffer [0])       |
     static_cast<int16_t> (buffer [1])   << 8;
-
-    pos += 2;
-
-    return result;
 }
 
 int32_t int24_le (std::vector<std::byte> const & bytes, int & pos)
@@ -215,7 +199,7 @@ int32_t int24_le (std::vector<std::byte> const & bytes, int & pos)
     return result;
 }
 
-int32_t int24_le (std::ifstream & in, int & pos)
+int32_t int24_le (std::ifstream & in)
 {
     // 24-bit signed int --> 32-bit signed int
     // (both 2's-complement)
@@ -230,17 +214,13 @@ int32_t int24_le (std::ifstream & in, int & pos)
     std::array <uint8_t, 3> buffer {};
     in.read (reinterpret_cast<char*> (buffer.data()), buffer.size());
 
-    const auto result =
+    return
     (
        static_cast<int32_t>   (buffer[2] & 0x7F) << 16 |
        static_cast<int32_t>   (buffer[1])        << 8  |
        static_cast<int32_t>   (buffer[0])
     )
     - (static_cast<int32_t>   (buffer[2] & 0x80) << 16);
-
-    pos += 3;
-
-    return result;
 }
 
 int32_t int32_le (std::vector<std::byte> const & bytes, int & pos)
@@ -256,20 +236,16 @@ int32_t int32_le (std::vector<std::byte> const & bytes, int & pos)
     return result;
 }
 
-int32_t int32_le (std::ifstream & in, int & pos)
+int32_t int32_le (std::ifstream & in)
 {
     std::array <uint8_t, 4> buffer {};
     in.read (reinterpret_cast<char*> (buffer.data()), buffer.size());
 
-    const auto result =
+    return
     static_cast<int32_t> (buffer [3]) << 24 |
     static_cast<int32_t> (buffer [2]) << 16 |
     static_cast<int32_t> (buffer [1]) << 8  |
     static_cast<int32_t> (buffer [0])       ;
-
-    pos += 4;
-
-    return result;
 }
 
 float float32_le (std::vector<std::byte> const & bytes, int & pos)
@@ -289,7 +265,7 @@ float float32_le (std::vector<std::byte> const & bytes, int & pos)
     return std::bit_cast<float> (integer);
 }
 
-float float32_le (std::ifstream & in, int & pos)
+float float32_le (std::ifstream & in)
 {
     /*
      const auto result =
@@ -306,9 +282,6 @@ float float32_le (std::ifstream & in, int & pos)
 
     int32_t integer = 0;
     for (int n=0; n<4; ++n) integer |= (static_cast<int32_t> (buffer [n]) << 8 * n);
-
-    pos += 4;
-
     return std::bit_cast<float> (integer);
 }
 
@@ -332,7 +305,7 @@ double float64_le (std::vector<std::byte> const & bytes, int & pos)
     return std::bit_cast<double> (integer);
 }
 
-double float64_le (std::ifstream & in, int & pos)
+double float64_le (std::ifstream & in)
 {
     /*
      const auto integer =
@@ -352,9 +325,6 @@ double float64_le (std::ifstream & in, int & pos)
 
     int64_t integer = 0;
     for (int n=0; n<8; ++n) integer |= (static_cast<int64_t> (buffer [n]) << 8 * n);
-
-    pos += 8;
-
     return std::bit_cast<double> (integer);
 }
 

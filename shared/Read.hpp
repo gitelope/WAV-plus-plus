@@ -29,16 +29,16 @@ struct ReadInfo // holds info useful to helpers of Read() but not to its clients
     // int framesAccordingToFactChunk {0};
 };
 
-void Read (std::string const & filepath, std::vector<double> & destination, Info &);
+void Read (std::string const & filepath, std::vector<double> & destination, Info &, bool verbose = false);
 
-void ReadRiffChunk   (std::ifstream &, int & position, ReadInfo &); // just reads the beginning, actually
-void ReadSubchunks   (std::ifstream &, int & position, std::vector<double> & destination, Info &, ReadInfo &);
-void ReadFormatChunk (std::ifstream &, int & position, Info &, ReadInfo &);
-void ReadFactChunk   (std::ifstream &, int & position, Info &);
-void ReadDataChunk   (std::ifstream &, int & position, std::vector<double> & destination, Info & info, ReadInfo & readInfo);
+void ReadRiffChunk   (std::ifstream &, ReadInfo &, bool verbose); // just reads the beginning, actually
+void ReadSubchunks   (std::ifstream &, std::vector<double> & destination, Info &, ReadInfo &, bool verbose);
+void ReadFormatChunk (std::ifstream &, Info &, ReadInfo &);
+void ReadFactChunk   (std::ifstream &, Info &);
+void ReadDataChunk   (std::ifstream &, std::vector<double> & destination, Info & info, ReadInfo & readInfo);
 
-void ReadLinearPCM (std::ifstream &, int & position, std::vector<double> & destination, Info const &);
-void ReadFloatPCM  (std::ifstream &, int & position, std::vector<double> & destination, Info const &);
+void ReadLinearPCM (std::ifstream &, std::vector<double> & destination, Info const &);
+void ReadFloatPCM  (std::ifstream &, std::vector<double> & destination, Info const &);
 
 } // namespace wav
 
