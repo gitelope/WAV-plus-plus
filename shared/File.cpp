@@ -8,14 +8,11 @@ namespace wav
 
 File::File (std::string const & filepath, bool verbose)
 {
-    static_assert (std::endian::native == std::endian::little, "Only little endian systems are supported.");
-
-    std::vector<std::byte> bytes;
-    ReadBytes (filepath, bytes);
+    const auto bytes {ReadBytes (filepath)};
 
     if (verbose) std::cout << "Chunks present:";
 
-    int position = 0;
+    size_t position {0};
 
     const auto chunkID = fourCharacterCode (bytes, position);
     if (chunkID != "RIFF") throw std::runtime_error ("Invalid WAV format: No RIFF chunk.");
@@ -185,7 +182,7 @@ void File::PrintChunks()
     std::cout << data << std::endl;
 }
 
-void File::ReadRiffChunk (std::vector<std::byte> const & bytes, int & position)
+void File::ReadRiffChunk (std::vector<std::byte> const & bytes, size_t & position)
 {
     // Technically, the whole file is a RIFF chunk. This is just the first part of it.
     assert (position == 4);
@@ -196,7 +193,7 @@ void File::ReadRiffChunk (std::vector<std::byte> const & bytes, int & position)
     assert (position == 12);
 }
 
-void File::ReadFormatChunk (std::vector<std::byte> const & bytes, int & position)
+void File::ReadFormatChunk (std::vector<std::byte> const & bytes, size_t & position)
 {
     // These fields are found in formats WAVEFORMAT, PCMWAVEFORMAT, WAVEFORMATEX, and WAVEFORMATEXTENSIBLE:
     //
@@ -295,7 +292,7 @@ void File::ReadFormatChunk (std::vector<std::byte> const & bytes, int & position
     position += (format.size % 2); // When chunk size is odd, increment position by 1.
 }
 
-void File::ReadFactChunk (std::vector<std::byte> const & bytes, int & position)
+void File::ReadFactChunk (std::vector<std::byte> const & bytes, size_t & position)
 {
     fact.present = true;
     fact.size = uint32_le (bytes, position);
@@ -303,7 +300,7 @@ void File::ReadFactChunk (std::vector<std::byte> const & bytes, int & position)
     fact.file_size = uint32_le (bytes, position);
 }
 
-void File::ReadPeakChunk (std::vector<std::byte> const & bytes, int & position)
+void File::ReadPeakChunk (std::vector<std::byte> const & bytes, size_t & position)
 {
     peak.present = true;
     peak.size = uint32_le (bytes, position);
@@ -317,7 +314,7 @@ void File::ReadPeakChunk (std::vector<std::byte> const & bytes, int & position)
     }
 }
 
-void File::ReadDataChunk (std::vector<std::byte> const & bytes, int & position)
+void File::ReadDataChunk (std::vector<std::byte> const & bytes, size_t & position)
 {
     // No need to read id since it has already been read and has the expected value.
     data.size = uint32_le (bytes, position);
@@ -371,7 +368,7 @@ void File::ReadDataChunk (std::vector<std::byte> const & bytes, int & position)
     position += (data.size % 2); // When chunk size is odd, increment position by 1.
 }
 
-void File::ReadExtensibleFormatData (std::vector<std::byte> const & bytes, int & position)
+void File::ReadExtensibleFormatData (std::vector<std::byte> const & bytes, size_t & position)
 {
     if (format.sub_format == ExtensibleFormat::LINEAR_PCM)
         ReadLinearPCM (bytes, position, format.bits_per_sample);
@@ -380,7 +377,7 @@ void File::ReadExtensibleFormatData (std::vector<std::byte> const & bytes, int &
         ReadIEEE754Float (bytes, position);
 }
 
-void File::ReadLinearPCM (std::vector<std::byte> const & bytes, int & position, int container_size_in_bits)
+void File::ReadLinearPCM (std::vector<std::byte> const & bytes, size_t & position, int container_size_in_bits)
 {
     data.samples_int.resize (data.size * format.channels / format.block_align);
 
@@ -408,7 +405,7 @@ void File::ReadLinearPCM (std::vector<std::byte> const & bytes, int & position, 
     }
 }
 
-void File::ReadIEEE754Float (std::vector<std::byte> const & bytes, int & position)
+void File::ReadIEEE754Float (std::vector<std::byte> const & bytes, size_t & position)
 {
     const int N = data.size * format.channels / format.block_align;
 

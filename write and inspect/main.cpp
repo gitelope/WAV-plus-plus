@@ -23,7 +23,7 @@ int main (int argc, const char * argv[])
 {
     const std::vector<double> samples {-1, 0, 1};
     const auto filename = "out.WAV";
-    wav::Write (samples, wav::ExportFormat::FLOAT_PCM_64, 48000, 1, filename);
+    wav::Write (samples, wav::ExportFormat::FLOAT_PCM_32, 48000, 1, filename);
     LoadWaveFile (filename);
     return 0;
 }

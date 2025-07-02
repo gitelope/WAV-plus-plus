@@ -90,15 +90,15 @@ public:
     PeakChunk peak;
 
 private:
-    void ReadRiffChunk   (std::vector<std::byte> const &, int & position);
-    void ReadFormatChunk (std::vector<std::byte> const &, int & position);
-    void ReadFactChunk   (std::vector<std::byte> const &, int & position);
-    void ReadPeakChunk   (std::vector<std::byte> const &, int & position);
-    void ReadDataChunk   (std::vector<std::byte> const &, int & position);
+    void ReadRiffChunk   (std::vector<std::byte> const &, size_t & position);
+    void ReadFormatChunk (std::vector<std::byte> const &, size_t & position);
+    void ReadFactChunk   (std::vector<std::byte> const &, size_t & position);
+    void ReadPeakChunk   (std::vector<std::byte> const &, size_t & position);
+    void ReadDataChunk   (std::vector<std::byte> const &, size_t & position);
 
-    void ReadLinearPCM            (std::vector<std::byte> const &, int & position, int container_size_in_bits);
-    void ReadIEEE754Float         (std::vector<std::byte> const &, int & position);
-    void ReadExtensibleFormatData (std::vector<std::byte> const &, int & position);
+    void ReadLinearPCM            (std::vector<std::byte> const &, size_t & position, int container_size_in_bits);
+    void ReadIEEE754Float         (std::vector<std::byte> const &, size_t & position);
+    void ReadExtensibleFormatData (std::vector<std::byte> const &, size_t & position);
 };
 
 std::ostream & operator<< (std::ostream & os, RiffChunk   const & riff);

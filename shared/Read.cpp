@@ -12,8 +12,6 @@ namespace wav
 
 void Read (std::string const & filepath, std::vector<double> & destination, Info & info, bool verbose)
 {
-    static_assert (std::endian::native == std::endian::little, "Only little endian systems are supported at the moment.");
-
     if (! std::filesystem::is_regular_file (filepath))
     {
         throw std::runtime_error ("File does not exist: " + filepath);

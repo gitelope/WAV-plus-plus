@@ -121,8 +121,6 @@ void WriteData (std::ofstream & out, std::vector<double> const & samples, uint16
 
 void Write (std::vector<double> const & samples, ExportFormat format, int sample_rate, int channels, std::string const & filepath)
 {
-    static_assert (std::endian::native == std::endian::little, "Only little endian systems are supported.");
-
     if (samples.size() % channels != 0) throw std::invalid_argument ("Number of samples should be divisible by the number of channels.");
 
     uint16_t bits_per_sample {0};

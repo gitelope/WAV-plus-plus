@@ -7,70 +7,100 @@
 namespace wav
 {
 
-void ReadBytes (std::string const & filePath, std::vector<std::byte> & bytes)
+std::vector<std::byte> ReadBytes (std::string const & filePath)
 {
-    std::ifstream in {filePath, std::ios::binary | std::ios::in};
-    const auto file_length = std::filesystem::file_size (filePath);
-    bytes.resize (file_length);
-    in.read (reinterpret_cast<char *>(bytes.data()), file_length);
-    in.close();
+    std::ifstream in {filePath, std::ios::binary};
+    if (!in) throw std::ios_base::failure ("Failed to open file.");
+
+    const auto length = std::filesystem::file_size (filePath);
+    std::vector<std::byte> bytes (length);
+
+    if (!in.read (reinterpret_cast<char*> (bytes.data()), length))
+    {
+        throw std::ios_base::failure ("Failed to read file.");
+    }
+
+    return bytes;
 }
 
-void PrintBytesAsHex (std::vector<std::byte> const & bytes)
+void PrintBytesAsHex (std::vector<std::byte> const& bytes)
 {
-    // used to reset cout when done:
-    std::ios_base::fmtflags default_cout_flags (std::cout.flags());
+    // used to reset cout when done
+    const auto original_flags {std::cout.flags()};
 
-    std::cout << std::hex << std::setfill('0');
+    std::cout << std::hex << std::setfill ('0');
+
     for (auto const & byte : bytes)
     {
-        std::cout << std::setw(2) << std::to_integer<int>(byte) << " ";
+        std::cout << std::setw(2) << std::to_integer<uint16_t> (byte) << ' ';
     }
     std::cout << std::endl;
 
-    // reset cout
-    std::cout.flags (default_cout_flags);
+    // reset cout formatting
+    std::cout.flags (original_flags);
 }
 
-std::string fourCharacterCode (std::vector<std::byte> const & bytes, int & pos)
+template <typename T, std::size_t N>
+void read (std::istream & in, std::array<T,N> & buffer)
 {
-    const auto code =  std::string{}
-    + static_cast<char>(bytes[pos])
-    + static_cast<char>(bytes[pos+1])
-    + static_cast<char>(bytes[pos+2])
-    + static_cast<char>(bytes[pos+3]);
+    if (!in.read (reinterpret_cast<char*> (buffer.data()), buffer.size()))
+    {
+        throw std::ios_base::failure (std::format ("Failed to read {} bytes from stream.", N));
+    }
+}
 
+std::string fourCharacterCode (std::vector<std::byte> const & bytes, size_t & pos)
+{
+    if (pos + 4 > bytes.size())
+    {
+        throw std::out_of_range ("Not enough bytes to read four-character code.");
+    }
+    std::string code (reinterpret_cast <const char *> (bytes.data() + pos), 4);
     pos += 4;
-
     return code;
 }
 
 std::string fourCharacterCode (std::ifstream & in)
 {
-    std::array<char, 4> buffer {};
-    in.read (buffer.data(), buffer.size());
-    return std::string (buffer.data(), buffer.size());
+    std::string code (4, '\0');
+    in.read (code.data(), 4);
+    if (!in) throw std::ios_base::failure ("Failed to read 4 characters from stream.");
+    return code;
 }
 
-uint8_t uint8 (std::vector<std::byte> const & bytes, int & pos)
+uint8_t uint8 (std::vector<std::byte> const & bytes, size_t & pos)
 {
+    if (pos + 1 > bytes.size())
+    {
+        throw std::out_of_range ("Attempting to read past end of vector.");
+    }
     return static_cast<uint8_t> (bytes [pos++]);
 }
 
 uint8_t uint8 (std::ifstream & in)
 {
     uint8_t result {0};
-    in.read (reinterpret_cast<char*> (&result), 1);
+    if (!in.read (reinterpret_cast<char*> (&result), 1))
+    {
+        throw std::ios_base::failure ("Failed to read uint8_t from ifstream.");
+    }
     return result;
 }
 
-GUID guid (std::vector<std::byte> const & bytes, int & pos)
+GUID guid (std::vector<std::byte> const & bytes, size_t & pos)
 {
-    const uint32_t data1 = uint32_le (bytes, pos);
-    const uint16_t data2 = uint16_le (bytes, pos);
-    const uint16_t data3 = uint16_le (bytes, pos);
+    if (pos + 16 > bytes.size())
+    {
+        throw std::out_of_range ("Not enough bytes to read GUID.");
+    }
+    const auto data1 {uint32_le (bytes, pos)};
+    const auto data2 {uint16_le (bytes, pos)};
+    const auto data3 {uint16_le (bytes, pos)};
     std::array<uint8_t,8> data4;
-    for (int i=0; i<8; ++i) data4[i] = uint8 (bytes, pos);
+    for (auto & byte : data4)
+    {
+        byte = uint8 (bytes, pos);
+    }
     return {data1, data2, data3, data4};
 }
 
@@ -79,41 +109,35 @@ GUID guid (std::ifstream & in)
     const auto data1 {uint32_le (in)};
     const auto data2 {uint16_le (in)};
     const auto data3 {uint16_le (in)};
-    std::array <uint8_t, 8> data4;
-    for (int i=0; i<data4.size(); ++i) data4[i] = uint8 (in);
+    std::array<uint8_t,8> data4;
+    for (auto & byte : data4)
+    {
+        byte = uint8 (in);
+    }
     return {data1, data2, data3, data4};
 }
 
-uint32_t uint32_le (std::vector<std::byte> const & bytes, int & pos)
+uint32_t uint32_le (std::vector<std::byte> const & bytes, size_t & pos)
 {
+    if (pos + 4 > bytes.size())
+    {
+        throw std::out_of_range ("Less than 4 bytes left.");
+    }
+
     const auto result =
-    static_cast<uint32_t>(bytes[pos])                 // 2^0
-    + static_cast<uint32_t>(bytes[pos+1]) * 256       // 2^8
-    + static_cast<uint32_t>(bytes[pos+2]) * 65536     // 2^16
-    + static_cast<uint32_t>(bytes[pos+3]) * 16777216; // 2^24
-
-    /*
-     // This does the same with bitshifting and bitwise OR:
-
-     const auto result_alt =
-     static_cast<uint32_t>(bytes[pos+3]) << 24
-     | static_cast<uint32_t>(bytes[pos+2]) << 16
-     | static_cast<uint32_t>(bytes[pos+1]) << 8
-     | static_cast<uint32_t>(bytes[pos]);
-
-     assert (result_alt == result);
-     */
+    static_cast<uint32_t> (bytes[pos+3]) << 24 |
+    static_cast<uint32_t> (bytes[pos+2]) << 16 |
+    static_cast<uint32_t> (bytes[pos+1]) << 8  |
+    static_cast<uint32_t> (bytes[pos])         ;
 
     pos += 4;
-
     return result;
 }
 
 uint32_t uint32_le (std::ifstream & in)
 {
-    std::array <uint8_t, 4> buffer {};
-    in.read (reinterpret_cast<char*> (buffer.data()), buffer.size());
-
+    std::array<uint8_t, 4> buffer{};
+    read (in, buffer);
     return
     static_cast<uint32_t> (buffer[0])       |
     static_cast<uint32_t> (buffer[1]) << 8  |
@@ -121,21 +145,15 @@ uint32_t uint32_le (std::ifstream & in)
     static_cast<uint32_t> (buffer[3]) << 24 ;
 }
 
-uint16_t uint16_le (std::vector<std::byte> const & bytes, int & pos)
+uint16_t uint16_le (std::vector<std::byte> const & bytes, size_t & pos)
 {
+    if (pos + 2 > bytes.size())
+    {
+        throw std::out_of_range ("Not enough bytes to read uint16_t.");
+    }
     const auto result =
-    static_cast<uint16_t>(bytes[pos])            // 2^0
-    + static_cast<uint16_t>(bytes[pos+1]) * 256; // 2^8
-
-    /*
-     // This does the same with bitshifting and bitwise OR
-
-     const auto result_alt =
-     static_cast<uint32_t>(bytes[pos+1]) << 8
-     | static_cast<uint32_t>(bytes[pos]);
-
-     assert (result_alt == result);
-     */
+    static_cast<uint16_t>(bytes[pos])       |
+    static_cast<uint16_t>(bytes[pos+1]) << 8;
 
     pos += 2;
 
@@ -145,15 +163,18 @@ uint16_t uint16_le (std::vector<std::byte> const & bytes, int & pos)
 uint16_t uint16_le (std::ifstream & in)
 {
     std::array <uint8_t, 2> buffer {};
-    in.read (reinterpret_cast<char*> (buffer.data()), buffer.size());
-
+    read (in, buffer);
     return
-    static_cast<uint32_t> (buffer [0])     |
-    static_cast<uint32_t> (buffer [1]) << 8;
+    static_cast<uint16_t> (buffer [0])     |
+    static_cast<uint16_t> (buffer [1]) << 8;
 }
 
-int16_t int16_le (std::vector<std::byte> const & bytes, int & pos)
+int16_t int16_le (std::vector<std::byte> const & bytes, size_t & pos)
 {
+    if (pos + 2 > bytes.size())
+    {
+        throw std::out_of_range ("Not enough bytes to read int16_t.");
+    }
     const auto result =
     static_cast<int16_t> (bytes [pos])       |
     static_cast<int16_t> (bytes [pos+1]) << 8;
@@ -166,15 +187,18 @@ int16_t int16_le (std::vector<std::byte> const & bytes, int & pos)
 int16_t int16_le (std::ifstream & in)
 {
     std::array <uint8_t, 2> buffer {};
-    in.read (reinterpret_cast<char*> (buffer.data()), buffer.size());
-
+    read (in, buffer);
     return
     static_cast<int16_t> (buffer [0])       |
     static_cast<int16_t> (buffer [1])   << 8;
 }
 
-int32_t int24_le (std::vector<std::byte> const & bytes, int & pos)
+int32_t int24_le (std::vector<std::byte> const & bytes, size_t & pos)
 {
+    if (pos + 3 > bytes.size())
+    {
+        throw std::out_of_range ("Not enough bytes to read 24-bit int.");
+    }
     // 24-bit signed int --> 32-bit signed int
     // (both 2's-complement)
     //
@@ -187,9 +211,10 @@ int32_t int24_le (std::vector<std::byte> const & bytes, int & pos)
     // 0x80: 0b10000000
     const auto result =
     (
-       static_cast<int32_t> (bytes [pos+2] & std::byte{0x7F}) << 16 |
-       static_cast<int32_t> (bytes [pos+1])                   << 8  |
-       static_cast<int32_t> (bytes [pos])
+       static_cast<int32_t> (bytes [pos])                           |
+       static_cast<int32_t> (bytes [pos+1])                   <<  8 |
+       static_cast<int32_t> (bytes [pos+2] & std::byte{0x7F})   << 16
+
     )
     - (static_cast<int32_t> (bytes [pos+2] & std::byte{0x80}) << 16);
 
@@ -211,8 +236,7 @@ int32_t int24_le (std::ifstream & in)
     // 0x7F: 0b01111111
     // 0x80: 0b10000000
     std::array <uint8_t, 3> buffer {};
-    in.read (reinterpret_cast<char*> (buffer.data()), buffer.size());
-
+    read (in, buffer);
     return
     (
        static_cast<int32_t>   (buffer[2] & 0x7F) << 16 |
@@ -222,13 +246,17 @@ int32_t int24_le (std::ifstream & in)
     - (static_cast<int32_t>   (buffer[2] & 0x80) << 16);
 }
 
-int32_t int32_le (std::vector<std::byte> const & bytes, int & pos)
+int32_t int32_le (std::vector<std::byte> const & bytes, size_t & pos)
 {
+    if (pos + 4 > bytes.size())
+    {
+        throw std::out_of_range ("Not enough bytes to read int32_t.");
+    }
     const auto result =
-    static_cast<int32_t> (bytes [pos+3]) << 24 |
-    static_cast<int32_t> (bytes [pos+2]) << 16 |
+    static_cast<int32_t> (bytes [pos])         |
     static_cast<int32_t> (bytes [pos+1]) << 8  |
-    static_cast<int32_t> (bytes [pos])         ;
+    static_cast<int32_t> (bytes [pos+2]) << 16 |
+    static_cast<int32_t> (bytes [pos+3]) << 24 ;
 
     pos += 4;
 
@@ -238,92 +266,81 @@ int32_t int32_le (std::vector<std::byte> const & bytes, int & pos)
 int32_t int32_le (std::ifstream & in)
 {
     std::array <uint8_t, 4> buffer {};
-    in.read (reinterpret_cast<char*> (buffer.data()), buffer.size());
-
+    read (in, buffer);
     return
-    static_cast<int32_t> (buffer [3]) << 24 |
-    static_cast<int32_t> (buffer [2]) << 16 |
+    static_cast<int32_t> (buffer [0])       |
     static_cast<int32_t> (buffer [1]) << 8  |
-    static_cast<int32_t> (buffer [0])       ;
+    static_cast<int32_t> (buffer [2]) << 16 |
+    static_cast<int32_t> (buffer [3]) << 24 ;
 }
 
-float float32_le (std::vector<std::byte> const & bytes, int & pos)
+float float32_le (std::vector<std::byte> const & bytes, size_t & pos)
 {
-    /*
-     const auto result =
-     static_cast<int32_t>(bytes[pos+3]) << 24
-     | static_cast<int32_t>(bytes[pos+2]) << 16
-     | static_cast<int32_t>(bytes[pos+1]) << 8
-     | static_cast<int32_t>(bytes[pos]);
+    if (pos + 4 > bytes.size())
+    {
+        throw std::out_of_range ("Not enough bytes to read 32-bit float.");
+    }
+    const auto integer =
+    static_cast<uint32_t> (bytes[pos])         |
+    static_cast<uint32_t> (bytes[pos+1]) << 8  |
+    static_cast<uint32_t> (bytes[pos+2]) << 16 |
+    static_cast<uint32_t> (bytes[pos+3]) << 24 ;
 
-     pos += 4;
-     */
+    pos += 4;
 
-    int32_t integer = 0;
-    for (int n=0; n<4; ++n) integer |= (static_cast<int32_t>(bytes[pos++]) << 8 * n);
     return std::bit_cast<float> (integer);
 }
 
 float float32_le (std::ifstream & in)
 {
-    /*
-     const auto result =
-     static_cast<int32_t>(bytes[pos+3]) << 24
-     | static_cast<int32_t>(bytes[pos+2]) << 16
-     | static_cast<int32_t>(bytes[pos+1]) << 8
-     | static_cast<int32_t>(bytes[pos]);
+    std::array <uint8_t, 4> buffer{};
+    read (in, buffer);
 
-     pos += 4;
-     */
+    const auto integer =
+    static_cast<uint32_t> (buffer[0])       |
+    static_cast<uint32_t> (buffer[1]) <<  8 |
+    static_cast<uint32_t> (buffer[2]) << 16 |
+    static_cast<uint32_t> (buffer[3]) << 24 ;
 
-    std::array <uint8_t, 4> buffer {};
-    in.read (reinterpret_cast<char*> (buffer.data()), buffer.size());
-
-    int32_t integer = 0;
-    for (int n=0; n<4; ++n) integer |= (static_cast<int32_t> (buffer [n]) << 8 * n);
     return std::bit_cast<float> (integer);
 }
 
-double float64_le (std::vector<std::byte> const & bytes, int & pos)
+double float64_le (std::vector<std::byte> const & bytes, size_t & pos)
 {
-    /*
-     const auto integer =
-     static_cast<int64_t>(bytes[pos+7]) << 56
-     | static_cast<int64_t>(bytes[pos+6]) << 48
-     | static_cast<int64_t>(bytes[pos+5]) << 40
-     | static_cast<int64_t>(bytes[pos+4]) << 32
-     | static_cast<int64_t>(bytes[pos+3]) << 24
-     | static_cast<int64_t>(bytes[pos+2]) << 16
-     | static_cast<int64_t>(bytes[pos+1]) << 8
-     | static_cast<int64_t>(bytes[pos]);
-     pos += 8;
-     */
+    if (pos + 8 > bytes.size())
+    {
+        throw std::out_of_range ("Not enough bytes to read 64-bit float.");
+    }
+    const auto integer =
+    static_cast<uint64_t> (bytes[pos])         |
+    static_cast<uint64_t> (bytes[pos+1]) <<  8 |
+    static_cast<uint64_t> (bytes[pos+2]) << 16 |
+    static_cast<uint64_t> (bytes[pos+3]) << 24 |
+    static_cast<uint64_t> (bytes[pos+4]) << 32 |
+    static_cast<uint64_t> (bytes[pos+5]) << 40 |
+    static_cast<uint64_t> (bytes[pos+6]) << 48 |
+    static_cast<uint64_t> (bytes[pos+7]) << 56 ;
 
-    int64_t integer = 0;
-    for (int n=0; n<8; ++n) integer |= (static_cast<int64_t> (bytes [pos++]) << 8 * n);
+    pos += 8;
+
     return std::bit_cast<double> (integer);
 }
 
 double float64_le (std::ifstream & in)
 {
-    /*
-     const auto integer =
-     static_cast<int64_t>(bytes[pos+7]) << 56
-     | static_cast<int64_t>(bytes[pos+6]) << 48
-     | static_cast<int64_t>(bytes[pos+5]) << 40
-     | static_cast<int64_t>(bytes[pos+4]) << 32
-     | static_cast<int64_t>(bytes[pos+3]) << 24
-     | static_cast<int64_t>(bytes[pos+2]) << 16
-     | static_cast<int64_t>(bytes[pos+1]) << 8
-     | static_cast<int64_t>(bytes[pos]);
-     pos += 8;
-     */
+    std::array <uint8_t, 8> buffer{};
+    read (in, buffer);
 
-    std::array <uint8_t, 8> buffer {};
-    in.read (reinterpret_cast<char*> (buffer.data()), buffer.size());
+    const auto integer =
+    static_cast<uint64_t> (buffer[0])       |
+    static_cast<uint64_t> (buffer[1]) <<  8 |
+    static_cast<uint64_t> (buffer[2]) << 16 |
+    static_cast<uint64_t> (buffer[3]) << 24 |
+    static_cast<uint64_t> (buffer[4]) << 32 |
+    static_cast<uint64_t> (buffer[5]) << 40 |
+    static_cast<uint64_t> (buffer[6]) << 48 |
+    static_cast<uint64_t> (buffer[7]) << 56 ;
 
-    int64_t integer = 0;
-    for (int n=0; n<8; ++n) integer |= (static_cast<int64_t> (buffer [n]) << 8 * n);
     return std::bit_cast<double> (integer);
 }
 
