@@ -195,28 +195,35 @@ int16_t int16_le (std::ifstream & in)
 
 int32_t int24_le (std::vector<std::byte> const & bytes, size_t & pos)
 {
+    // converts 3 bytes representing a 24-bit signed int (2's-complement)
+    // to a 32-bit signed int (2's-complement) with the same value
     if (pos + 3 > bytes.size())
     {
         throw std::out_of_range ("Not enough bytes to read 24-bit int.");
     }
-    // 24-bit signed int --> 32-bit signed int
-    // (both 2's-complement)
-    //
-    // Clear the most significant bit of the most significant byte.
-    // Cast the bytes to signed 32-bit ints.
-    // Bit shift the ints to the left according to the significance of their corresponding bytes.
-    // If most significant bit (of original MSB) is set, subtract 2^23 from the result.
-    //
-    // 0x7F: 0b01111111
-    // 0x80: 0b10000000
-    const auto result =
-    (
-       static_cast<int32_t> (bytes [pos])                           |
-       static_cast<int32_t> (bytes [pos+1])                   <<  8 |
-       static_cast<int32_t> (bytes [pos+2] & std::byte{0x7F})   << 16
 
-    )
-    - (static_cast<int32_t> (bytes [pos+2] & std::byte{0x80}) << 16);
+    auto result =
+    static_cast<int32_t> (bytes [pos])         |
+    static_cast<int32_t> (bytes [pos+1]) <<  8 |
+    static_cast<int32_t> (bytes [pos+2]) << 16 ;
+
+    // sign extension:
+    // To obtain a (2's-complement) 32-bit signed int with the
+    // same value as a given (2's-complement) 24-bit signed int,
+    // add 8 bits, all set, to the top, when the highest bit–the sign bit–is set
+    // and add 8 bits, all cleared, to the top when the highest bit is not set, e.g.
+    //
+    // a negative ineger:
+    //          10100100 01110010 11110010 = -6,037,566
+    // 11111111 10100100 01110010 11110010 = -6,037,566
+    //
+    // a positive integer:
+    //          00100100 01110010 11110010 =  2,398,722
+    // 00000000 00100100 01110010 11110010 =  2,398,722
+    if (result & 0x800000)
+    {
+        result |= 0xFF000000;
+    }
 
     pos += 3;
 
@@ -225,25 +232,35 @@ int32_t int24_le (std::vector<std::byte> const & bytes, size_t & pos)
 
 int32_t int24_le (std::ifstream & in)
 {
-    // 24-bit signed int --> 32-bit signed int
-    // (both 2's-complement)
-    //
-    // Clear the most significant bit of the most significant byte.
-    // Cast the bytes to signed 32-bit ints.
-    // Bit shift the ints to the left according to the significance of their corresponding bytes.
-    // If most significant bit (of original MSB) is set, subtract 2^23 from the result.
-    //
-    // 0x7F: 0b01111111
-    // 0x80: 0b10000000
+    // converts 3 bytes representing a 24-bit signed int (2's-complement)
+    // to a 32-bit signed int (2's-complement) with the same value
     std::array <uint8_t, 3> buffer {};
     read (in, buffer);
-    return
-    (
-       static_cast<int32_t>   (buffer[2] & 0x7F) << 16 |
-       static_cast<int32_t>   (buffer[1])        << 8  |
-       static_cast<int32_t>   (buffer[0])
-    )
-    - (static_cast<int32_t>   (buffer[2] & 0x80) << 16);
+
+    auto result =
+    static_cast<int32_t> (buffer[0])       |
+    static_cast<int32_t> (buffer[1]) <<  8 |
+    static_cast<int32_t> (buffer[2]) << 16 ;
+
+    // sign extension:
+    // To obtain a (2's-complement) 32-bit signed int with the
+    // same value as a given (2's-complement) 24-bit signed int,
+    // add 8 bits, all set, to the top, when the highest bit–the sign bit–is set
+    // and add 8 bits, all cleared, to the top when the highest bit is not set, e.g.
+    //
+    // a negative ineger:
+    //          10100100 01110010 11110010 = -6,037,566
+    // 11111111 10100100 01110010 11110010 = -6,037,566
+    //
+    // a positive integer:
+    //          00100100 01110010 11110010 =  2,398,722
+    // 00000000 00100100 01110010 11110010 =  2,398,722
+    if (result & 0x800000)
+    {
+        result |= 0xFF000000;
+    }
+
+    return result;
 }
 
 int32_t int32_le (std::vector<std::byte> const & bytes, size_t & pos)
