@@ -20,13 +20,14 @@ void dequantize (std::vector<int32_t> const & integers, int bit_depth, std::vect
 //
 // The "le" suffix signifies a little-endian encoding in the WAV file.
 
+std::string fourCharacterCode (std::ifstream &); // 4 bytes  -> 4-character string
+GUID        guid              (std::ifstream &); // 16 bytes -> GUID struct (WAVEFORMATEXTENSIBLE only)
+
 // unsigned int
 uint8_t     uint8             (std::vector<std::byte> const &, size_t & pos); // 1 byte   -> 8-bit  unsigned int
 uint8_t     uint8             (std::ifstream &);
-uint16_t    uint16_le         (std::vector<std::byte> const &, size_t & pos); // 2 bytes  -> 16-bit unsigned int
-uint16_t    uint16_le         (std::ifstream &);
-uint32_t    uint32_le         (std::vector<std::byte> const &, size_t & pos); // 4 bytes  -> 32-bit unsigned int
-uint32_t    uint32_le         (std::ifstream &);
+uint16_t    uint16_le         (std::ifstream &);                              // 2 bytes  -> 16-bit unsigned int
+uint32_t    uint32_le         (std::ifstream &);                              // 4 bytes  -> 32-bit unsigned int
 
 // signed int
 int16_t     int16_le          (std::vector<std::byte> const &, size_t & pos); // 2 bytes -> 16-bit signed int
@@ -41,12 +42,6 @@ float       float32_le        (std::vector<std::byte> const &, size_t & pos); //
 float       float32_le        (std::ifstream &);
 double      float64_le        (std::vector<std::byte> const &, size_t & pos); // 8 bytes -> 64-bit double
 double      float64_le        (std::ifstream &);
-
-std::string fourCharacterCode (std::vector<std::byte> const &, size_t & pos); // 4 bytes  -> 4-character string
-std::string fourCharacterCode (std::ifstream &);
-
-GUID        guid              (std::vector<std::byte> const &, size_t & pos); // 16 bytes -> GUID struct (WAVEFORMATEXTENSIBLE only)
-GUID        guid              (std::ifstream &);
 
 } // namespace wav
 

@@ -18,7 +18,7 @@ void Read (std::string const & filepath, std::vector<double> & destination, Info
     }
     if (verbose) std::cout << "\n" << filepath << std::endl;
 
-    std::ifstream in {filepath, std::ios::binary | std::ios::in};
+    std::ifstream in {filepath, std::ios::binary};
 
     ReadInfo readInfo;
 

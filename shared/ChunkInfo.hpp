@@ -96,26 +96,26 @@ public:
     std::vector<std::string> chunksSkipped;
 
 private:
-    void ReadRiffChunk         (std::vector<std::byte> const &, size_t & position);
-    void ReadFormatChunk       (std::vector<std::byte> const &, size_t & position);
-    void ReadFactChunk         (std::vector<std::byte> const &, size_t & position);
-    void ReadPeakChunk         (std::vector<std::byte> const &, size_t & position);
-    void ReadDataChunkInfoOnly (std::vector<std::byte> const &, size_t & position);
+    void ReadRiffChunk         (std::ifstream & in);
+    void ReadFormatChunk       (std::ifstream & in);
+    void ReadFactChunk         (std::ifstream & in);
+    void ReadPeakChunk         (std::ifstream & in);
+    void ReadDataChunkInfoOnly (std::ifstream & in);
 
     template <typename IntegerType>
     void RegisterChunk (std::string const & id, IntegerType position)
     {
-        chunksEncountered.emplace_back (std::format ("{} {}", id, position));
+        chunksEncountered.emplace_back (id + " " + std::to_string (position));
     }
     template <typename IntegerType>
     void RegisterSkippedChunk (std::string const & id, IntegerType position)
     {
-        chunksSkipped.emplace_back (std::format ("{} {}", id, position));
+        chunksSkipped.emplace_back (id + " " + std::to_string (position));
     }
 
-    void ReadLinearPCM            (std::vector<std::byte> const &, size_t & position, int container_size_in_bits);
-    void ReadIEEE754Float         (std::vector<std::byte> const &, size_t & position);
-    void ReadExtensibleFormatData (std::vector<std::byte> const &, size_t & position);
+    // void ReadLinearPCM            (std::vector<std::byte> const &, size_t & position, int container_size_in_bits);
+    // void ReadIEEE754Float         (std::vector<std::byte> const &, size_t & position);
+    // void ReadExtensibleFormatData (std::vector<std::byte> const &, size_t & position);
 };
 
 std::ostream & operator<< (std::ostream & os, ChunkInfo   const &);
