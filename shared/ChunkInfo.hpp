@@ -16,7 +16,7 @@ struct RiffChunk
 {
     std::string id {"RIFF"};
     uint32_t size; // = file size in bytes - 8
-    std::string format;
+    std::string format; // WAVE
 };
 
 struct FormatChunk
@@ -47,9 +47,10 @@ struct DataChunk
 {
     std::string id {"data"};
     uint32_t size;
-    std::vector<int32_t> samples_int;
-    std::vector<float> samples_float;
-    std::vector<double> samples_double;
+    int offset; // first byte of first sample
+    //std::vector<int32_t> samples_int;
+    //std::vector<float> samples_float;
+    //std::vector<double> samples_double;
 };
 
 struct FactChunk
@@ -75,13 +76,15 @@ struct PeakChunk
     bool present {false};
 };
 
-class File
+/// All the info from RIFF, fmt, data, fact and PEAK chunks except for the samples.
+class ChunkInfo
 {
 public:
-    File (std::string const & filepath, bool verbose = false);
-    void PrintInfo();
-    void PrintSamples();
-    void PrintChunks();
+    ChunkInfo (std::string const & filepath);
+
+    std::string summary() const;
+
+    // void PrintSamples();
 
     RiffChunk riff;
     FormatChunk format;
@@ -89,23 +92,38 @@ public:
     FactChunk fact;
     PeakChunk peak;
 
+    std::vector<std::string> chunksEncountered;
+    std::vector<std::string> chunksSkipped;
+
 private:
-    void ReadRiffChunk   (std::vector<std::byte> const &, size_t & position);
-    void ReadFormatChunk (std::vector<std::byte> const &, size_t & position);
-    void ReadFactChunk   (std::vector<std::byte> const &, size_t & position);
-    void ReadPeakChunk   (std::vector<std::byte> const &, size_t & position);
-    void ReadDataChunk   (std::vector<std::byte> const &, size_t & position);
+    void ReadRiffChunk         (std::vector<std::byte> const &, size_t & position);
+    void ReadFormatChunk       (std::vector<std::byte> const &, size_t & position);
+    void ReadFactChunk         (std::vector<std::byte> const &, size_t & position);
+    void ReadPeakChunk         (std::vector<std::byte> const &, size_t & position);
+    void ReadDataChunkInfoOnly (std::vector<std::byte> const &, size_t & position);
+
+    template <typename IntegerType>
+    void RegisterChunk (std::string const & id, IntegerType position)
+    {
+        chunksEncountered.emplace_back (std::format ("{} {}", id, position));
+    }
+    template <typename IntegerType>
+    void RegisterSkippedChunk (std::string const & id, IntegerType position)
+    {
+        chunksSkipped.emplace_back (std::format ("{} {}", id, position));
+    }
 
     void ReadLinearPCM            (std::vector<std::byte> const &, size_t & position, int container_size_in_bits);
     void ReadIEEE754Float         (std::vector<std::byte> const &, size_t & position);
     void ReadExtensibleFormatData (std::vector<std::byte> const &, size_t & position);
 };
 
-std::ostream & operator<< (std::ostream & os, RiffChunk   const & riff);
-std::ostream & operator<< (std::ostream & os, FormatChunk const & format);
-std::ostream & operator<< (std::ostream & os, DataChunk   const & data);
-std::ostream & operator<< (std::ostream & os, FactChunk   const & fact);
-std::ostream & operator<< (std::ostream & os, PeakChunk   const & peak);
+std::ostream & operator<< (std::ostream & os, ChunkInfo   const &);
+std::ostream & operator<< (std::ostream & os, RiffChunk   const &);
+std::ostream & operator<< (std::ostream & os, FormatChunk const &);
+std::ostream & operator<< (std::ostream & os, DataChunk   const &);
+std::ostream & operator<< (std::ostream & os, FactChunk   const &);
+std::ostream & operator<< (std::ostream & os, PeakChunk   const &);
 
 } // namespace wav
 

@@ -1,39 +1,39 @@
 
-#include "File.hpp"
+#include "ChunkInfo.hpp"
 #include <cassert>
 #include <sstream>
 
 namespace wav
 {
 
-File::File (std::string const & filepath, bool verbose)
+ChunkInfo::ChunkInfo (std::string const & filepath)
 {
     const auto bytes {ReadBytes (filepath)};
 
-    if (verbose) std::cout << "Chunks present:";
+    size_t readIndex {0};
 
-    size_t position {0};
-
-    const auto chunkID = fourCharacterCode (bytes, position);
+    const auto chunkStart {readIndex};
+    const auto chunkID = fourCharacterCode (bytes, readIndex);
+    RegisterChunk (chunkID, chunkStart);
     if (chunkID != "RIFF") throw std::runtime_error ("Invalid WAV format: No RIFF chunk.");
-    if (verbose) std::cout << '\n' << chunkID;
-    ReadRiffChunk (bytes, position);
+    ReadRiffChunk (bytes, readIndex);
 
-    while (position < riff.size + 8)
+    while (readIndex < riff.size + 8)
     {
-        const auto chunkID = fourCharacterCode (bytes, position);
-        if (verbose) std::cout << '\n' << chunkID;
+        const auto chunkStart {readIndex};
+        const auto chunkID = fourCharacterCode (bytes, readIndex);
+        RegisterChunk (chunkID, chunkStart);
 
-        if      (chunkID == "fmt ") ReadFormatChunk (bytes, position);
-        else if (chunkID == "fact") ReadFactChunk   (bytes, position);
-        else if (chunkID == "PEAK") ReadPeakChunk   (bytes, position);
-        else if (chunkID == "data") ReadDataChunk   (bytes, position);
+        if      (chunkID == "fmt ") ReadFormatChunk (bytes, readIndex);
+        else if (chunkID == "fact") ReadFactChunk   (bytes, readIndex);
+        else if (chunkID == "PEAK") ReadPeakChunk   (bytes, readIndex);
+        else if (chunkID == "data") ReadDataChunkInfoOnly   (bytes, readIndex);
         else
         {
             // skip to next chunk
-            const auto size = uint32_le (bytes, position);
-            if (verbose) std::cout << ": index " << position - 4 << ", size " << size << " - skipped";
-            position += size;
+            RegisterSkippedChunk (chunkID, chunkStart);
+            const auto size = uint32_le (bytes, readIndex);
+            readIndex += size;
             // RIFF sub-chunks (not to be confused with "RIFF" chunks)
             // are not allowed to have an odd number of bytes.
             // If there are an odd number of meaningful bytes, that odd
@@ -41,18 +41,17 @@ File::File (std::string const & filepath, bool verbose)
             // unreported byte of padding at the end to make for an even
             // number. However, all padding should be reflected in the main
             // "RIFF" chunk size.
-            position += (size % 2); // When chunk size is odd, increment position by 1.
+            readIndex += (size % 2); // When chunk size is odd, increment position by 1.
         }
     }
-    if (verbose) std::cout << std::endl;
 
-    if (position > riff.size + 8)
-        throw std::runtime_error ("Ending position (" + std::to_string(position)
+    if (readIndex > riff.size + 8)
+        throw std::runtime_error ("Ending position (" + std::to_string (readIndex)
                                   + ") at end of file read is above expected index ("
                                   + std::to_string (riff.size + 8) + ").");
 }
 
-void File::PrintInfo()
+std::string ChunkInfo::summary() const
 {
     std::string channelString;
     switch (format.channels)
@@ -98,16 +97,21 @@ void File::PrintInfo()
         default:
             format_string = "unsupported format";
     }
-    std::cout << riff.format << " "
+    std::ostringstream oss;
+
+    oss << riff.format << " "
     << format_string << " / "
     << format.sample_rate / 1000 << " kHz / "
     << channelString << " / "
     << frames << " frames" << " / "
     << duration << " seconds" << " / "
     << data.size << " bytes of audio" << std::endl;
+
+    return oss.str();
 }
 
-void File::PrintSamples()
+/*
+void ChunkInfo::PrintSamples()
 {
     switch (format.code)
     {
@@ -171,18 +175,9 @@ void File::PrintSamples()
         }
     }
 }
+*/
 
-void File::PrintChunks()
-{
-    std::cout << '\n' << riff << "\n\n" << format << "\n\n";
-    if (fact.present)
-        std::cout << fact << "\n\n";
-    if (peak.present)
-        std::cout << peak << "\n\n";
-    std::cout << data << std::endl;
-}
-
-void File::ReadRiffChunk (std::vector<std::byte> const & bytes, size_t & position)
+void ChunkInfo::ReadRiffChunk (std::vector<std::byte> const & bytes, size_t & position)
 {
     // Technically, the whole file is a RIFF chunk. This is just the first part of it.
     assert (position == 4);
@@ -193,7 +188,7 @@ void File::ReadRiffChunk (std::vector<std::byte> const & bytes, size_t & positio
     assert (position == 12);
 }
 
-void File::ReadFormatChunk (std::vector<std::byte> const & bytes, size_t & position)
+void ChunkInfo::ReadFormatChunk (std::vector<std::byte> const & bytes, size_t & position)
 {
     // These fields are found in formats WAVEFORMAT, PCMWAVEFORMAT, WAVEFORMATEX, and WAVEFORMATEXTENSIBLE:
     //
@@ -292,7 +287,7 @@ void File::ReadFormatChunk (std::vector<std::byte> const & bytes, size_t & posit
     position += (format.size % 2); // When chunk size is odd, increment position by 1.
 }
 
-void File::ReadFactChunk (std::vector<std::byte> const & bytes, size_t & position)
+void ChunkInfo::ReadFactChunk (std::vector<std::byte> const & bytes, size_t & position)
 {
     fact.present = true;
     fact.size = uint32_le (bytes, position);
@@ -300,7 +295,7 @@ void File::ReadFactChunk (std::vector<std::byte> const & bytes, size_t & positio
     fact.file_size = uint32_le (bytes, position);
 }
 
-void File::ReadPeakChunk (std::vector<std::byte> const & bytes, size_t & position)
+void ChunkInfo::ReadPeakChunk (std::vector<std::byte> const & bytes, size_t & position)
 {
     peak.present = true;
     peak.size = uint32_le (bytes, position);
@@ -314,7 +309,7 @@ void File::ReadPeakChunk (std::vector<std::byte> const & bytes, size_t & positio
     }
 }
 
-void File::ReadDataChunk (std::vector<std::byte> const & bytes, size_t & position)
+void ChunkInfo::ReadDataChunkInfoOnly (std::vector<std::byte> const & bytes, size_t & position)
 {
     // No need to read id since it has already been read and has the expected value.
     data.size = uint32_le (bytes, position);
@@ -322,7 +317,9 @@ void File::ReadDataChunk (std::vector<std::byte> const & bytes, size_t & positio
     {
         throw std::runtime_error ("Size of data chunk is not divisible by block_align.");
     }
-
+    data.offset = static_cast<int> (position);
+    position += data.size + (data.size % 2); // skip data (and padding byte if chunk size is odd number)
+    /*
     switch (format.code)
     {
         case FormatCode::LINEAR_PCM:
@@ -366,9 +363,12 @@ void File::ReadDataChunk (std::vector<std::byte> const & bytes, size_t & positio
     // so an extra byte will be appended to the end of the data.
     // After reading the 21 bytes, we must skip the next "unreported" 22nd padding byte.
     position += (data.size % 2); // When chunk size is odd, increment position by 1.
+     */
+
 }
 
-void File::ReadExtensibleFormatData (std::vector<std::byte> const & bytes, size_t & position)
+/*
+void ChunkInfo::ReadExtensibleFormatData (std::vector<std::byte> const & bytes, size_t & position)
 {
     if (format.sub_format == ExtensibleFormat::LINEAR_PCM)
         ReadLinearPCM (bytes, position, format.bits_per_sample);
@@ -376,8 +376,10 @@ void File::ReadExtensibleFormatData (std::vector<std::byte> const & bytes, size_
     else if (format.sub_format == ExtensibleFormat::FLOAT_PCM)
         ReadIEEE754Float (bytes, position);
 }
+ */
 
-void File::ReadLinearPCM (std::vector<std::byte> const & bytes, size_t & position, int container_size_in_bits)
+/*
+void ChunkInfo::ReadLinearPCM (std::vector<std::byte> const & bytes, size_t & position, int container_size_in_bits)
 {
     data.samples_int.resize (data.size * format.channels / format.block_align);
 
@@ -404,8 +406,9 @@ void File::ReadLinearPCM (std::vector<std::byte> const & bytes, size_t & positio
             break;
     }
 }
-
-void File::ReadIEEE754Float (std::vector<std::byte> const & bytes, size_t & position)
+*/
+/*
+void ChunkInfo::ReadIEEE754Float (std::vector<std::byte> const & bytes, size_t & position)
 {
     const int N = data.size * format.channels / format.block_align;
 
@@ -424,11 +427,33 @@ void File::ReadIEEE754Float (std::vector<std::byte> const & bytes, size_t & posi
             break;
     }
 }
+*/
+
+std::ostream & operator<< (std::ostream & os, ChunkInfo const & info)
+{
+    os << "chunks present\n"
+    << "--------------\n";
+    for (auto const & c : info.chunksEncountered) os << c << '\n';
+    if (info.chunksSkipped.size() > 0)
+    {
+        os << "chunks skipped: " << '\n';
+        for (auto const & c : info.chunksSkipped)
+            os << c << '\n';
+    }
+    os << '\n' << info.riff << "\n\n" << info.format << "\n\n";
+    if (info.fact.present)
+        os << info.fact << "\n\n";
+    if (info.peak.present)
+        os << info.peak << "\n\n";
+    os << info.data << '\n';
+
+    return os;
+}
 
 std::ostream & operator<< (std::ostream & os, RiffChunk const & riff)
 {
     return os
-    << "RIFF CHUNK" << '\n'
+    << "RIFF chunk" << '\n'
     << "----------" << '\n'
     << "id: " << riff.id << '\n'
     << "chunk size: " << riff.size << " ( = file size in bytes minus 8)" << '\n'
@@ -554,14 +579,25 @@ std::ostream & operator<< (std::ostream & os, FormatChunk const & format)
             default: return "unknown";
         }
     };
+    auto fileFormat = [] (uint32_t formatChunkSize)
+    {
+        switch (formatChunkSize)
+        {
+            case 14: return "WAVEFORMAT";
+            case 16: return "PCMWAVEFORMAT";
+            case 18: return "WAVEFORMATEX";
+            case 40: return "WAVEFORMATEXTENSIBLE";
+            default: return "unknown";
+        }
+    };
 
     os
-    << "FORMAT CHUNK" << '\n'
-    << "------------" << '\n'
+    << "fmt  chunk" << '\n'
+    << "----------" << '\n'
     // WAVEFORMAT, PCMWAVEFORMAT, WAVEFORMATEX, WAVEFORMATEXTENSIBLE
     << "format id: "  << format.id << '\n'
-    << "format chunk size: " << format.size << '\n'
-    << "format: " << std::format ("0x{:04X} ({})", format.code, description (format.code)) << '\n'
+    << std::format ("format chunk size: {} ({})", format.size, fileFormat (format.size)) << '\n'
+    << std::format ("format: 0x{:04X} ({})", format.code, description (format.code)) << '\n'
     << "channels: " << format.channels << '\n'
     << "sample rate: " << format.sample_rate << '\n'
     << "byte rate: " << format.byte_rate << '\n'
@@ -593,7 +629,7 @@ std::ostream & operator<< (std::ostream & os, FormatChunk const & format)
 std::ostream & operator<< (std::ostream & os, DataChunk const & data)
 {
     return os
-    << "DATA CHUNK" << '\n'
+    << "data chunk" << '\n'
     << "----------" << '\n'
     << "id: " << data.id << '\n'
     << "chunk size: " << data.size << '\n'
@@ -603,7 +639,7 @@ std::ostream & operator<< (std::ostream & os, DataChunk const & data)
 std::ostream & operator<< (std::ostream & os, FactChunk const & fact)
 {
     return os
-    << "FACT CHUNK" << '\n'
+    << "fact chunk" << '\n'
     << "----------" << '\n'
     << "id: " << fact.id << '\n'
     << "chunk size: " << fact.size << '\n'
@@ -613,7 +649,7 @@ std::ostream & operator<< (std::ostream & os, FactChunk const & fact)
 std::ostream & operator<< (std::ostream & os, PeakChunk const & peak)
 {
     os
-    << "PEAK CHUNK" << '\n'
+    << "PEAK chunk" << '\n'
     << "----------" << '\n'
     << "id: " << peak.id << '\n'
     << "chunk size: " << peak.size << '\n'
