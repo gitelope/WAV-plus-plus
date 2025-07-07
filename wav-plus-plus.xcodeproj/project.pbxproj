@@ -117,12 +117,12 @@
 			children = (
 				C499DB8D2E13445F00A88D60 /* Read.hpp */,
 				C499DB8E2E13445F00A88D60 /* Read.cpp */,
-				C499DB8F2E13445F00A88D60 /* reading_bytes.hpp */,
-				C499DB902E13445F00A88D60 /* reading_bytes.cpp */,
 				C499DB912E13445F00A88D60 /* Write.hpp */,
 				C499DB922E13445F00A88D60 /* Write.cpp */,
 				C499DB932E13445F00A88D60 /* ChunkInfo.hpp */,
 				C499DB942E13445F00A88D60 /* ChunkInfo.cpp */,
+				C499DB8F2E13445F00A88D60 /* reading_bytes.hpp */,
+				C499DB902E13445F00A88D60 /* reading_bytes.cpp */,
 				C479D8532E149E7C00093894 /* formats.hpp */,
 				C479D8542E149E7C00093894 /* formats.cpp */,
 			);
