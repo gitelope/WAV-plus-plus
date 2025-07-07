@@ -2,6 +2,7 @@
 #ifndef wavplusplus_Read_hpp
 #define wavplusplus_Read_hpp
 
+#include "ChunkInfo.hpp"
 #include <string>
 #include <vector>
 
@@ -19,24 +20,14 @@ struct Info
     int containerSizeInBits {0}; // sample containerSize >= sample bitDepth
     bool isLinearPCM {false};
     bool isFloatPCM {false};
-};
 
-struct ReadInfo // holds info useful to helpers of Read() but not to its clients
-{
-    int riffChunkSize {0};
-    int blockAlign {0};
+    void ExtractFrom (ChunkInfo const &);
 };
 
 void Read (std::string const & filepath, std::vector<double> & destination, Info &, bool verbose = false);
-
-void ReadRiffChunk   (std::ifstream &, ReadInfo &, bool verbose); // just reads the beginning, actually
-void ReadSubchunks   (std::ifstream &, std::vector<double> & destination, Info &, ReadInfo &, bool verbose);
-void ReadFormatChunk (std::ifstream &, Info &, ReadInfo &);
-void ReadFactChunk   (std::ifstream &, Info &);
-void ReadDataChunk   (std::ifstream &, std::vector<double> & destination, Info & info, ReadInfo & readInfo);
-
-void ReadLinearPCM (std::ifstream &, std::vector<double> & destination, Info const &);
-void ReadFloatPCM  (std::ifstream &, std::vector<double> & destination, Info const &);
+void ReadDataFastest (std::string const & filepath, std::vector<double> & destination, Info const &, DataChunk const &);
+void ReadLinearPCM (std::vector<std::byte> const & bytes, std::vector<double> & destination, Info const &, DataChunk const &);
+void ReadFloatPCM  (std::vector<std::byte> const & bytes, std::vector<double> & destination, Info const &);
 
 } // namespace wav
 

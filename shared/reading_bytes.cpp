@@ -49,17 +49,6 @@ void read (std::istream & in, std::array<T,N> & buffer)
     }
 }
 
-std::string fourCharacterCode (std::vector<std::byte> const & bytes, size_t & pos)
-{
-    if (pos + 4 > bytes.size())
-    {
-        throw std::out_of_range ("Not enough bytes to read four-character code.");
-    }
-    std::string code (reinterpret_cast <const char *> (bytes.data() + pos), 4);
-    pos += 4;
-    return code;
-}
-
 std::string fourCharacterCode (std::ifstream & in)
 {
     std::string code (4, '\0');
@@ -87,23 +76,6 @@ uint8_t uint8 (std::ifstream & in)
     return result;
 }
 
-GUID guid (std::vector<std::byte> const & bytes, size_t & pos)
-{
-    if (pos + 16 > bytes.size())
-    {
-        throw std::out_of_range ("Not enough bytes to read GUID.");
-    }
-    const auto data1 {uint32_le (bytes, pos)};
-    const auto data2 {uint16_le (bytes, pos)};
-    const auto data3 {uint16_le (bytes, pos)};
-    std::array<uint8_t,8> data4;
-    for (auto & byte : data4)
-    {
-        byte = uint8 (bytes, pos);
-    }
-    return {data1, data2, data3, data4};
-}
-
 GUID guid (std::ifstream & in)
 {
     const auto data1 {uint32_le (in)};
@@ -117,23 +89,6 @@ GUID guid (std::ifstream & in)
     return {data1, data2, data3, data4};
 }
 
-uint32_t uint32_le (std::vector<std::byte> const & bytes, size_t & pos)
-{
-    if (pos + 4 > bytes.size())
-    {
-        throw std::out_of_range ("Less than 4 bytes left.");
-    }
-
-    const auto result =
-    static_cast<uint32_t> (bytes[pos+3]) << 24 |
-    static_cast<uint32_t> (bytes[pos+2]) << 16 |
-    static_cast<uint32_t> (bytes[pos+1]) << 8  |
-    static_cast<uint32_t> (bytes[pos])         ;
-
-    pos += 4;
-    return result;
-}
-
 uint32_t uint32_le (std::ifstream & in)
 {
     std::array<uint8_t, 4> buffer{};
@@ -144,22 +99,6 @@ uint32_t uint32_le (std::ifstream & in)
     static_cast<uint32_t> (buffer[2]) << 16 |
     static_cast<uint32_t> (buffer[3]) << 24 ;
 }
-
-uint16_t uint16_le (std::vector<std::byte> const & bytes, size_t & pos)
-{
-    if (pos + 2 > bytes.size())
-    {
-        throw std::out_of_range ("Not enough bytes to read uint16_t.");
-    }
-    const auto result =
-    static_cast<uint16_t>(bytes[pos])       |
-    static_cast<uint16_t>(bytes[pos+1]) << 8;
-
-    pos += 2;
-
-    return result;
-}
-
 uint16_t uint16_le (std::ifstream & in)
 {
     std::array <uint8_t, 2> buffer {};
