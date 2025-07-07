@@ -11,8 +11,6 @@ namespace wav
 
 struct Info
 {
-public:
-
     int channels {0};
     int sampleRate {0};
     // total samples = channels * frames
@@ -25,14 +23,6 @@ public:
 
     void ExtractFrom (ChunkInfo const &);
 };
-
-
-/*
-struct ReadInfo // holds info useful to helpers of Read() but not to its clients
-{
-    int riffChunkSize {0};
-    int blockAlign {0};
-};*/
 
 void Read (std::string const & filepath, std::vector<double> & destination, Info &, bool verbose = false);
 void ReadData (std::string const & filepath, std::vector<double> & destination, Info const &, DataChunk const &);

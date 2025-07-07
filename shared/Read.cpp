@@ -26,7 +26,6 @@ void Read (std::string const & filepath, std::vector<double> & destination, Info
     const long fileLength = std::filesystem::file_size (filepath);
     if (chunkInfo.riff.size + 8 != fileLength) throw std::runtime_error ("RIFF chunk size + 8 does not equal file size.");
 
-
     playbackInfo.ExtractFrom (chunkInfo);
 
     // read data into destination

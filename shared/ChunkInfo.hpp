@@ -84,8 +84,6 @@ public:
 
     std::string summary() const;
 
-    // void PrintSamples();
-
     RiffChunk riff;
     FormatChunk format;
     DataChunk data;
@@ -112,10 +110,6 @@ private:
     {
         chunksSkipped.emplace_back (id + " " + std::to_string (position));
     }
-
-    // void ReadLinearPCM            (std::vector<std::byte> const &, size_t & position, int container_size_in_bits);
-    // void ReadIEEE754Float         (std::vector<std::byte> const &, size_t & position);
-    // void ReadExtensibleFormatData (std::vector<std::byte> const &, size_t & position);
 };
 
 std::ostream & operator<< (std::ostream & os, ChunkInfo   const &);
