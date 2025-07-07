@@ -10,10 +10,6 @@ namespace wav
 
 ChunkInfo::ChunkInfo (std::string const & filepath)
 {
-    // const auto bytes {ReadBytes (filepath)};
-
-    // size_t readIndex {0};
-    
     if (! std::filesystem::is_regular_file (filepath))
     {
         throw std::runtime_error ("File does not exist: " + filepath);
