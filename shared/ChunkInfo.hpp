@@ -15,7 +15,7 @@ namespace wav
 struct RiffChunk
 {
     std::string id {"RIFF"};
-    uint32_t size; // = file size in bytes - 8
+    uint32_t size {0}; // = file size in bytes - 8
     std::string format; // WAVE
 };
 
@@ -23,31 +23,31 @@ struct FormatChunk
 {
     // WAVEFORMAT, PCMWAVEFORMAT, WAVEFORMATEX, WAVEFORMATEXTENSIBLE:
     std::string id {"fmt "};
-    uint32_t size;
-    uint16_t code; // linear PCM (0x0001), float PCM (0x0003), or extensible (0xFFFE)
-    uint16_t channels;
-    uint32_t sample_rate;
-    uint32_t byte_rate;
-    uint16_t block_align;
+    uint32_t size {0};
+    uint16_t code {0}; // linear PCM (0x0001), float PCM (0x0003), or extensible (0xFFFE)
+    uint16_t channels {0};
+    uint32_t sampleRate {0};
+    uint32_t byteRate {0};
+    uint16_t blockAlign {0};
 
     // PCMWAVEFORMAT, WAVEFORMATEX, WAVEFORMATEXTENSIBLE:
-    uint16_t bits_per_sample;
+    uint16_t bitsPerSample {0};
 
     // WAVEFORMATEX, WAVEFORMATEXTENSIBLE:
-    uint16_t extra_format_information_size;
+    uint16_t extraFormatInformationSize {0};
 
     // WAVEFORMATEXTENSIBLE:
-    uint16_t valid_bits_per_sample;
-    std::bitset<32> channel_mask;
-    GUID sub_format;
+    uint16_t validBitsPerSample {0};
+    std::bitset<32> channelMask;
+    GUID subFormat;
     std::string channelString () const;
 };
 
 struct DataChunk
 {
     std::string id {"data"};
-    uint32_t size;
-    int offset; // first byte of first sample
+    uint32_t size {0};
+    int offset {0}; // first byte of first sample
     //std::vector<int32_t> samples_int;
     //std::vector<float> samples_float;
     //std::vector<double> samples_double;
@@ -56,22 +56,22 @@ struct DataChunk
 struct FactChunk
 {
     std::string id {"fact"};
-    uint32_t size;
-    uint32_t file_size;
+    uint32_t size {0};
+    uint32_t fileSize {0};
     bool present {false};
 };
 
 struct Peak
 {
-    float value; // signed. 1.0 represents 0dB for non-floating-point encodings.
-    uint32_t position_in_frames;
+    float value {0}; // signed. 1.0 represents 0dB for non-floating-point encodings.
+    uint32_t positionInFrames {0};
 };
 struct PeakChunk
 {
     std::string id {"PEAK"};
-    uint32_t size;
-    uint32_t version;
-    uint32_t timestamp;
+    uint32_t size {0};
+    uint32_t version {0};
+    uint32_t timestamp {0};
     std::vector<Peak> peaks;
     bool present {false};
 };
