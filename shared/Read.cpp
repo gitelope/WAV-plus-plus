@@ -29,7 +29,7 @@ void Read (std::string const & filepath, std::vector<double> & destination, Info
     playbackInfo.ExtractFrom (chunkInfo);
 
     // read data into destination
-    ReadData (filepath, destination, playbackInfo, chunkInfo.data);
+    ReadDataFastest (filepath, destination, playbackInfo, chunkInfo.data);
 }
 
 void Info::ExtractFrom (ChunkInfo const & chunkInfo)
@@ -279,7 +279,7 @@ void ReadFactChunk (std::ifstream & in, Info & info)
 }
  */
 
-void ReadData (/*std::ifstream & in,*/ std::string const & filepath, std::vector<double> & destination, Info const & info, DataChunk const & data)
+void ReadDataFastest (std::string const & filepath, std::vector<double> & destination, Info const & info, DataChunk const & data)
 {
     if (! std::filesystem::is_regular_file (filepath))
     {

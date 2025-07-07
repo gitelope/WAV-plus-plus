@@ -11,7 +11,7 @@ int main (int argc, const char * argv[])
     wav::Write (samples, wav::ExportFormat::FLOAT_PCM_32, 48000, 1, filename);
 
     wav::ChunkInfo info {filename};
-    std::cout << info << "\n" << info.summary() << std::endl;
+    std::cout << '\n' << filename << "\n\n" << info << "\n" << info.summary() << std::endl;
 
     return 0;
 }

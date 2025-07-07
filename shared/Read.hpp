@@ -25,7 +25,7 @@ struct Info
 };
 
 void Read (std::string const & filepath, std::vector<double> & destination, Info &, bool verbose = false);
-void ReadData (std::string const & filepath, std::vector<double> & destination, Info const &, DataChunk const &);
+void ReadDataFastest (std::string const & filepath, std::vector<double> & destination, Info const &, DataChunk const &);
 void ReadLinearPCM (std::vector<std::byte> const & bytes, std::vector<double> & destination, Info const &, DataChunk const &);
 void ReadFloatPCM  (std::vector<std::byte> const & bytes, std::vector<double> & destination, Info const &);
 
