@@ -7,39 +7,6 @@
 namespace wav
 {
 
-std::vector<std::byte> ReadBytes (std::string const & filePath)
-{
-    std::ifstream in {filePath, std::ios::binary};
-    if (!in) throw std::ios_base::failure ("Failed to open file.");
-
-    const auto length = std::filesystem::file_size (filePath);
-    std::vector<std::byte> bytes (length);
-
-    if (!in.read (reinterpret_cast<char*> (bytes.data()), length))
-    {
-        throw std::ios_base::failure ("Failed to read file.");
-    }
-
-    return bytes;
-}
-
-void PrintBytesAsHex (std::vector<std::byte> const& bytes)
-{
-    // used to reset cout when done
-    const auto original_flags {std::cout.flags()};
-
-    std::cout << std::hex << std::setfill ('0');
-
-    for (auto const & byte : bytes)
-    {
-        std::cout << std::setw(2) << std::to_integer<uint16_t> (byte) << ' ';
-    }
-    std::cout << std::endl;
-
-    // reset cout formatting
-    std::cout.flags (original_flags);
-}
-
 template <typename T, std::size_t N>
 void read (std::istream & in, std::array<T,N> & buffer)
 {
@@ -300,6 +267,40 @@ double float64_le (std::ifstream & in)
     return std::bit_cast<double> (integer);
 }
 
+std::vector<std::byte> ReadBytes (std::string const & filePath)
+{
+    std::ifstream in {filePath, std::ios::binary};
+    if (!in) throw std::ios_base::failure ("Failed to open file.");
+
+    const auto length = std::filesystem::file_size (filePath);
+    std::vector<std::byte> bytes (length);
+
+    if (!in.read (reinterpret_cast<char*> (bytes.data()), length))
+    {
+        throw std::ios_base::failure ("Failed to read file.");
+    }
+
+    return bytes;
+}
+
+void PrintBytesAsHex (std::vector<std::byte> const& bytes)
+{
+    // used to reset cout when done
+    const auto original_flags {std::cout.flags()};
+
+    std::cout << std::hex << std::setfill ('0');
+
+    for (auto const & byte : bytes)
+    {
+        std::cout << std::setw(2) << std::to_integer<uint16_t> (byte) << ' ';
+    }
+    std::cout << std::endl;
+
+    // reset cout formatting
+    std::cout.flags (original_flags);
+}
+
+/*
 void dequantize (std::vector<int32_t> const & integers, int bit_depth, std::vector<double> & doubles)
 {
     // Divide signed integer by the absolute value of the largest negative int for the bit depth.
@@ -327,5 +328,6 @@ void dequantize (std::vector<int32_t> const & integers, int bit_depth, std::vect
         }
     }
 }
+ */
 
 } // namespace wav

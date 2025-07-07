@@ -5,6 +5,7 @@
 #include <vector>
 #include <iostream>
 #include <format>
+#include <cassert>
 
 // 1. Write with wav::Write.
 // 2. Read with wav::Read.
@@ -14,11 +15,13 @@ int main (int argc, const char * argv[])
 {
     const std::vector<double> out {-1, 0, 1};
     const auto filename = "out.WAV";
-    wav::Write (out, wav::ExportFormat::FLOAT_PCM_64, 48000, 1, filename);
+    wav::Write (out, wav::ExportFormat::LINEAR_PCM_24, 48000, 1, filename);
 
     wav::Info info;
     std::vector<double> in;
     wav::Read (filename, in, info, true /*verbose*/);
+
+    assert (in.size() == out.size());
 
     const bool printSamples {true};
     if (printSamples)
@@ -26,7 +29,6 @@ int main (int argc, const char * argv[])
         for (auto sample : in) std::cout << std::format("{}", sample) << ",";
         std::cout << '\n' << std::endl;
     }
-
 
     return 0;
 }

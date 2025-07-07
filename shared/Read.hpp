@@ -26,16 +26,20 @@ struct Info
 
 void Read (std::string const & filepath, std::vector<double> & destination, Info &, bool verbose = false);
 
+// Compromise between speed and RAM usage with read buffer of adjustable size
+void ReadDataBalanced    (std::string const & filepath, std::vector<double> & destination, Info const &, DataChunk const &, size_t requestedBufferSizeInBytes);
 // Fastest read and greatest RAM usage
 void ReadDataFastest     (std::string const & filepath, std::vector<double> & destination, Info const &, DataChunk const &);
 // Slowest read and lowest RAM usage
 void ReadDataLeastMemory (std::string const & filepath, std::vector<double> & destination, Info const &, DataChunk const &);
 
-void ReadLinearPCM (std::vector<std::byte> const & bytes, std::vector<double> & destination, Info const &);
-void ReadLinearPCM (std::ifstream & in,                   std::vector<double> & destination, Info const &);
+void ReadLinearPCM (std::vector<std::byte> const & bytes,  std::vector<double> & destination, Info const &);
+void ReadLinearPCM (std::ifstream & in,                    std::vector<double> & destination, Info const &);
+void ReadLinearPCM (std::vector<std::byte> const & buffer, std::vector<double> & destination, Info const &, size_t samplesToRead, size_t writePosition);
 
-void ReadFloatPCM  (std::vector<std::byte> const & bytes, std::vector<double> & destination, Info const &);
-void ReadFloatPCM  (std::ifstream &,                      std::vector<double> & destination, Info const &);
+void ReadFloatPCM  (std::vector<std::byte> const & bytes,  std::vector<double> & destination, Info const &);
+void ReadFloatPCM  (std::ifstream &,                       std::vector<double> & destination, Info const &);
+void ReadFloatPCM  (std::vector<std::byte> const & buffer, std::vector<double> & destination, Info const &, size_t samplesToRead, size_t writePosition);
 
 } // namespace wav
 
