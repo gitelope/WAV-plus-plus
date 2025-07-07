@@ -297,10 +297,8 @@ void ReadDataFastest (std::string const & filepath, std::vector<double> & destin
     assert (info.frames > 0 && info.channels > 0);
     destination.resize (info.frames * info.channels);
 
-    // fastest read, most RAM
-    if      (info.isLinearPCM) ReadLinearPCM (bytes, destination, info, data);
+    if      (info.isLinearPCM) ReadLinearPCM (bytes, destination, info);
     else if (info.isFloatPCM)  ReadFloatPCM  (bytes, destination, info);
-
 
     // Padding:
     // If the chunk size is odd, there will be a padding byte of 0x00,
@@ -312,7 +310,32 @@ void ReadDataFastest (std::string const & filepath, std::vector<double> & destin
     in.ignore (data.size % 2); // When chunk size is odd, increment position by 1.
 }
 
-void ReadLinearPCM (std::vector<std::byte> const & bytes, std::vector<double> & destination, Info const & info, DataChunk const & data)
+void ReadDataLeastMemory (std::string const & filepath, std::vector<double> & destination, Info const & info, DataChunk const & data)
+{
+    if (! std::filesystem::is_regular_file (filepath))
+    {
+        throw std::runtime_error ("File does not exist: " + filepath);
+    }
+    std::ifstream in {filepath, std::ios::binary};
+    in.seekg (data.offset);
+
+    assert (info.frames > 0 && info.channels > 0);
+    destination.resize (info.frames * info.channels);
+    if      (info.isLinearPCM) ReadLinearPCM (in, destination, info);
+    else if (info.isFloatPCM)  ReadFloatPCM  (in, destination, info);
+
+    // Padding:
+    // If the chunk size is odd, there will be a padding byte of 0x00,
+    // e.g. 24-bit samples require 3 bytes and therefore a mono file with seven samples
+    // implies a chunk size of 1 x 7 x 3 = 21 bytes,
+    // so an extra byte will be appended to the end of the data.
+    // After reading the 21 bytes, we must skip the next "unreported" 22nd padding byte.
+    // (8-bit and 24-bit mono files with odd sample lengths will need the padding.)
+    in.ignore (data.size % 2); // When chunk size is odd, increment position by 1.
+
+}
+
+void ReadLinearPCM (std::vector<std::byte> const & bytes, std::vector<double> & destination, Info const & info)
 {
     // Divide signed integer by the absolute value of the largest negative int for the bit depth.
     // This is equal to one greater than the largest positive value for the bit depth.
@@ -350,6 +373,43 @@ void ReadLinearPCM (std::vector<std::byte> const & bytes, std::vector<double> & 
     }
 }
 
+void ReadLinearPCM (std::ifstream & in, std::vector<double> & destination, Info const & info)
+{
+    // Divide signed integer by the absolute value of the largest negative int for the bit depth.
+    // This is equal to one greater than the largest positive value for the bit depth.
+    // Example: for 16-bits, the range is [-32768, 32767] so we divide by 32768.
+    // This ensures that our float is within [-1.0, 1.0] regardless of how it was clamped.
+    // (For what it's worth, it will never equal +1.0.)
+    const double two_to_the_n_minus_one = pow (2.0, info.bitDepth - 1);
+
+    switch (info.containerSizeInBits)
+    {
+        case 8:
+            for (auto & sample : destination)
+            {
+                sample = (uint8 (in) - 128.) / two_to_the_n_minus_one;
+            }
+            break;
+
+        case 16:
+            for (auto & sample : destination)
+            {
+                sample = int16_le (in) / two_to_the_n_minus_one;
+            }
+            break;
+
+        case 24:
+            for (auto & sample : destination)
+                sample = int24_le (in) / two_to_the_n_minus_one;
+            break;
+
+        case 32:
+            for (auto & sample : destination)
+                sample = int32_le (in) / two_to_the_n_minus_one;
+            break;
+    }
+}
+
 void ReadFloatPCM (std::vector<std::byte> const & bytes, std::vector<double> & destination, Info const & info)
 {
     assert (info.containerSizeInBits == info.bitDepth);
@@ -365,6 +425,24 @@ void ReadFloatPCM (std::vector<std::byte> const & bytes, std::vector<double> & d
         case 64:
             for (auto & sample : destination)
                 sample = float64_le (bytes, pos);
+            break;
+    }
+}
+
+void ReadFloatPCM (std::ifstream & in, std::vector<double> & destination, Info const & info)
+{
+    assert (info.containerSizeInBits == info.bitDepth);
+
+    switch (info.containerSizeInBits)
+    {
+        case 32:
+            for (auto & sample : destination)
+                sample = float32_le (in);
+            break;
+
+        case 64:
+            for (auto & sample : destination)
+                sample = float64_le (in);
             break;
     }
 }

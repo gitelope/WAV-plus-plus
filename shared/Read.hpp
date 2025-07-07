@@ -25,9 +25,17 @@ struct Info
 };
 
 void Read (std::string const & filepath, std::vector<double> & destination, Info &, bool verbose = false);
-void ReadDataFastest (std::string const & filepath, std::vector<double> & destination, Info const &, DataChunk const &);
-void ReadLinearPCM (std::vector<std::byte> const & bytes, std::vector<double> & destination, Info const &, DataChunk const &);
+
+// Fastest read and greatest RAM usage
+void ReadDataFastest     (std::string const & filepath, std::vector<double> & destination, Info const &, DataChunk const &);
+// Slowest read and lowest RAM usage
+void ReadDataLeastMemory (std::string const & filepath, std::vector<double> & destination, Info const &, DataChunk const &);
+
+void ReadLinearPCM (std::vector<std::byte> const & bytes, std::vector<double> & destination, Info const &);
+void ReadLinearPCM (std::ifstream & in,                   std::vector<double> & destination, Info const &);
+
 void ReadFloatPCM  (std::vector<std::byte> const & bytes, std::vector<double> & destination, Info const &);
+void ReadFloatPCM  (std::ifstream &,                      std::vector<double> & destination, Info const &);
 
 } // namespace wav
 
