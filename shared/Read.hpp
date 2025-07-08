@@ -24,14 +24,16 @@ struct Info
     void ExtractFrom (ChunkInfo const &);
 };
 
-void Read (std::string const & filepath, std::vector<double> & destination, Info &, bool verbose = false);
+std::ostream & operator<< (std::ostream & os, Info const &);
 
-// Compromise between speed and RAM usage with read buffer of adjustable size
-void ReadDataBalanced    (std::string const & filepath, std::vector<double> & destination, Info const &, DataChunk const &, size_t requestedBufferSizeInBytes);
-// Fastest read and greatest RAM usage
-void ReadDataFastest     (std::string const & filepath, std::vector<double> & destination, Info const &, DataChunk const &);
-// Slowest read and lowest RAM usage
-void ReadDataLeastMemory (std::string const & filepath, std::vector<double> & destination, Info const &, DataChunk const &);
+void Read (std::string const & filepath, std::vector<double> & destination, Info &, size_t requestedBufferSize = 4096);
+
+// Adjustable buffer size. Likely to perform the fastest read with a very modest buffer size. Called by Read().
+void ReadDataBuffered      (std::string const & filepath, std::vector<double> & destination, Info const &, DataChunk const &, size_t requestedBufferSizeInBytes);
+// Reads in all bytes before decoding.
+void ReadDataLargestBuffer (std::string const & filepath, std::vector<double> & destination, Info const &, DataChunk const &);
+// Reads in one sample at a time from std::ifstream and decodes immediately.
+void ReadDataNoBuffer      (std::string const & filepath, std::vector<double> & destination, Info const &, DataChunk const &);
 
 void ReadLinearPCM (std::vector<std::byte> const & bytes,  std::vector<double> & destination, Info const &);
 void ReadLinearPCM (std::ifstream & in,                    std::vector<double> & destination, Info const &);

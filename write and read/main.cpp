@@ -13,13 +13,15 @@
 
 int main (int argc, const char * argv[])
 {
-    const std::vector<double> out {-1, 0, 1};
-    const auto filename = "out.WAV";
-    wav::Write (out, wav::ExportFormat::LINEAR_PCM_24, 48000, 1, filename);
+    const std::vector<double> out {-1, 0, 1, 0};
+    const auto filepath = "out.wav";
+    wav::Write (out, wav::ExportFormat::LINEAR_PCM_24, 48000, 1, filepath);
 
     wav::Info info;
     std::vector<double> in;
-    wav::Read (filename, in, info, true /*verbose*/);
+    wav::Read (filepath, in, info);
+
+    std::cout << '\n' << filepath << "\n\n" << info << std::endl;
 
     assert (in.size() == out.size());
 

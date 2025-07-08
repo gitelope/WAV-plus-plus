@@ -4,39 +4,28 @@
 
 #include <filesystem>
 #include <fstream>
-#include <iostream>
 #include <cassert>
 
 namespace wav
 {
 
-void Read (std::string const & filepath, std::vector<double> & destination, Info & playbackInfo, bool verbose)
+void Read (std::string const & filepath, std::vector<double> & destination, Info & playbackInfo, size_t requestedBufferSize)
 {
-    /*
-    if (! std::filesystem::is_regular_file (filepath))
-    {
-        throw std::runtime_error ("File does not exist: " + filepath);
-    }
-     */
-
     ChunkInfo chunkInfo {filepath};
-
-    if (verbose) std::cout << '\n' << filepath << "\n\n" << chunkInfo.summary() << std::endl;
 
     const long fileLength = std::filesystem::file_size (filepath);
     if (chunkInfo.riff.size + 8 != fileLength) throw std::runtime_error ("RIFF chunk size + 8 does not equal file size.");
 
     playbackInfo.ExtractFrom (chunkInfo);
 
-    // read data into destination
-    ReadDataBalanced (filepath, destination, playbackInfo, chunkInfo.data, 4096);
+    ReadDataBuffered (filepath, destination, playbackInfo, chunkInfo.data, requestedBufferSize);
 }
 
 void Info::ExtractFrom (ChunkInfo const & chunkInfo)
 {
     channels = chunkInfo.format.channels;
     sampleRate = chunkInfo.format.sampleRate;
-    frames = chunkInfo.data.size * channels / chunkInfo.format.blockAlign;
+    frames = chunkInfo.data.size / chunkInfo.format.blockAlign;
     containerSizeInBits = 8 * chunkInfo.format.blockAlign / channels;
     switch (chunkInfo.format.size)
     {
@@ -59,7 +48,31 @@ void Info::ExtractFrom (ChunkInfo const & chunkInfo)
     }
 }
 
-void ReadDataFastest (std::string const & filepath, std::vector<double> & destination, Info const & info, DataChunk const & data)
+std::ostream & operator<< (std::ostream & os, Info const & info)
+{
+    os << "WAVE ";
+    if      (info.isLinearPCM) os << std::format ("{}-bit linear PCM", info.bitDepth);
+    else if (info.isFloatPCM)  os << std::format ("{}-bit float PCM",  info.bitDepth);
+    else assert (false);
+    os << std::format (" / {} kHz / ", info.sampleRate / 1000);
+    switch (info.channels)
+    {
+        case 1:  os << "mono";   break;
+        case 2:  os << "stereo"; break;
+        default: os << std::format("{} channels", info.channels); break;
+    }
+    os << std::format (" / {} seconds / {} frames / ", static_cast<double>(info.frames) / info.sampleRate, info.frames);
+
+    const auto bytes = static_cast<long long>(info.frames) * info.channels * info.bitDepth / 8;
+    if (bytes >= 1e9) os << std::format ("{:.1f} GB\n", bytes / static_cast<double> (1e9));
+    else if (bytes >= 1e6) os << std::format ("{:.1f} MB\n", bytes / static_cast<double> (1e6));
+    else if (bytes >= 1e3) os << std::format ("{:.1f} kB\n", bytes / static_cast<double> (1e3));
+    else os << bytes << " bytes\n";
+
+    return os;
+}
+
+void ReadDataLargestBuffer (std::string const & filepath, std::vector<double> & destination, Info const & info, DataChunk const & data)
 {
     if (! std::filesystem::is_regular_file (filepath))
     {
@@ -81,7 +94,7 @@ void ReadDataFastest (std::string const & filepath, std::vector<double> & destin
     else if (info.isFloatPCM)  ReadFloatPCM  (bytes, destination, info);
 }
 
-void ReadDataLeastMemory (std::string const & filepath, std::vector<double> & destination, Info const & info, DataChunk const & data)
+void ReadDataNoBuffer (std::string const & filepath, std::vector<double> & destination, Info const & info, DataChunk const & data)
 {
     if (! std::filesystem::is_regular_file (filepath))
     {
@@ -97,7 +110,7 @@ void ReadDataLeastMemory (std::string const & filepath, std::vector<double> & de
     else if (info.isFloatPCM)  ReadFloatPCM  (in, destination, info);
 }
 
-void ReadDataBalanced (std::string const & filepath, std::vector<double> & destination, Info const & info, DataChunk const & data, size_t requestedBufferSizeInBytes)
+void ReadDataBuffered (std::string const & filepath, std::vector<double> & destination, Info const & info, DataChunk const & data, size_t requestedBufferSizeInBytes)
 {
     const auto sampleSizeInBytes {info.containerSizeInBits / 8};
     if (requestedBufferSizeInBytes < sampleSizeInBytes)
