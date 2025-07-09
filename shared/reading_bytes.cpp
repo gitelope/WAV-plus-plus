@@ -7,6 +7,28 @@
 namespace wav
 {
 
+std::string fourCharacterCode (std::ifstream & in)
+{
+    std::string code (4, '\0');
+    in.read (code.data(), 4);
+    if (!in) throw std::ios_base::failure ("Failed to read 4 characters from stream.");
+    return code;
+}
+
+GUID guid (std::ifstream & in)
+{
+    const auto data1 {uint32_le (in)};
+    const auto data2 {uint16_le (in)};
+    const auto data3 {uint16_le (in)};
+    std::array<uint8_t,8> data4;
+    for (auto & byte : data4)
+    {
+        byte = uint8 (in);
+    }
+    return {data1, data2, data3, data4};
+}
+
+// Helper for functions that read directly from a std::ifstream.
 template <typename T, size_t N>
 void read (std::istream & in, std::array<T,N> & buffer)
 {
@@ -14,14 +36,6 @@ void read (std::istream & in, std::array<T,N> & buffer)
     {
         throw std::ios_base::failure (std::format ("Failed to read {} bytes from stream.", N));
     }
-}
-
-std::string fourCharacterCode (std::ifstream & in)
-{
-    std::string code (4, '\0');
-    in.read (code.data(), 4);
-    if (!in) throw std::ios_base::failure ("Failed to read 4 characters from stream.");
-    return code;
 }
 
 uint8_t uint8 (std::vector<std::byte> const & bytes, size_t & pos)
@@ -43,17 +57,13 @@ uint8_t uint8 (std::ifstream & in)
     return result;
 }
 
-GUID guid (std::ifstream & in)
+uint16_t uint16_le (std::ifstream & in)
 {
-    const auto data1 {uint32_le (in)};
-    const auto data2 {uint16_le (in)};
-    const auto data3 {uint16_le (in)};
-    std::array<uint8_t,8> data4;
-    for (auto & byte : data4)
-    {
-        byte = uint8 (in);
-    }
-    return {data1, data2, data3, data4};
+    std::array <uint8_t, 2> buffer {};
+    read (in, buffer);
+    return
+    static_cast<uint16_t> (buffer [0])     |
+    static_cast<uint16_t> (buffer [1]) << 8;
 }
 
 uint32_t uint32_le (std::ifstream & in)
@@ -65,14 +75,6 @@ uint32_t uint32_le (std::ifstream & in)
     static_cast<uint32_t> (buffer[1]) << 8  |
     static_cast<uint32_t> (buffer[2]) << 16 |
     static_cast<uint32_t> (buffer[3]) << 24 ;
-}
-uint16_t uint16_le (std::ifstream & in)
-{
-    std::array <uint8_t, 2> buffer {};
-    read (in, buffer);
-    return
-    static_cast<uint16_t> (buffer [0])     |
-    static_cast<uint16_t> (buffer [1]) << 8;
 }
 
 int16_t int16_le (std::vector<std::byte> const & bytes, size_t & pos)
