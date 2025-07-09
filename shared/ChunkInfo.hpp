@@ -1,6 +1,6 @@
 
-#ifndef wavplusplus_File_hpp
-#define wavplusplus_File_hpp
+#ifndef wavplusplus_ChunkInfo_hpp
+#define wavplusplus_ChunkInfo_hpp
 
 #include "ReadingBytes.hpp"
 
