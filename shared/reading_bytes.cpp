@@ -7,7 +7,7 @@
 namespace wav
 {
 
-template <typename T, std::size_t N>
+template <typename T, size_t N>
 void read (std::istream & in, std::array<T,N> & buffer)
 {
     if (!in.read (reinterpret_cast<char*> (buffer.data()), buffer.size()))
@@ -90,15 +90,6 @@ int16_t int16_le (std::vector<std::byte> const & bytes, size_t & pos)
     return result;
 }
 
-int16_t int16_le (std::ifstream & in)
-{
-    std::array <uint8_t, 2> buffer {};
-    read (in, buffer);
-    return
-    static_cast<int16_t> (buffer [0])       |
-    static_cast<int16_t> (buffer [1])   << 8;
-}
-
 int32_t int24_le (std::vector<std::byte> const & bytes, size_t & pos)
 {
     // converts 3 bytes representing a 24-bit signed int (2's-complement)
@@ -136,39 +127,6 @@ int32_t int24_le (std::vector<std::byte> const & bytes, size_t & pos)
     return result;
 }
 
-int32_t int24_le (std::ifstream & in)
-{
-    // converts 3 bytes representing a 24-bit signed int (2's-complement)
-    // to a 32-bit signed int (2's-complement) with the same value
-    std::array <uint8_t, 3> buffer {};
-    read (in, buffer);
-
-    auto result =
-    static_cast<int32_t> (buffer[0])       |
-    static_cast<int32_t> (buffer[1]) <<  8 |
-    static_cast<int32_t> (buffer[2]) << 16 ;
-
-    // sign extension:
-    // To obtain a (2's-complement) 32-bit signed int with the
-    // same value as a given (2's-complement) 24-bit signed int,
-    // add 8 bits, all set, to the top, when the highest bit–the sign bit–is set
-    // and add 8 bits, all cleared, to the top when the highest bit is not set, e.g.
-    //
-    // a negative ineger:
-    //          10100100 01110010 11110010 = -6,037,566
-    // 11111111 10100100 01110010 11110010 = -6,037,566
-    //
-    // a positive integer:
-    //          00100100 01110010 11110010 =  2,398,722
-    // 00000000 00100100 01110010 11110010 =  2,398,722
-    if (result & 0x800000)
-    {
-        result |= 0xFF000000;
-    }
-
-    return result;
-}
-
 int32_t int32_le (std::vector<std::byte> const & bytes, size_t & pos)
 {
     if (pos + 4 > bytes.size())
@@ -184,17 +142,6 @@ int32_t int32_le (std::vector<std::byte> const & bytes, size_t & pos)
     pos += 4;
 
     return result;
-}
-
-int32_t int32_le (std::ifstream & in)
-{
-    std::array <uint8_t, 4> buffer {};
-    read (in, buffer);
-    return
-    static_cast<int32_t> (buffer [0])       |
-    static_cast<int32_t> (buffer [1]) << 8  |
-    static_cast<int32_t> (buffer [2]) << 16 |
-    static_cast<int32_t> (buffer [3]) << 24 ;
 }
 
 float float32_le (std::vector<std::byte> const & bytes, size_t & pos)
@@ -245,24 +192,6 @@ double float64_le (std::vector<std::byte> const & bytes, size_t & pos)
     static_cast<uint64_t> (bytes[pos+7]) << 56 ;
 
     pos += 8;
-
-    return std::bit_cast<double> (integer);
-}
-
-double float64_le (std::ifstream & in)
-{
-    std::array <uint8_t, 8> buffer{};
-    read (in, buffer);
-
-    const auto integer =
-    static_cast<uint64_t> (buffer[0])       |
-    static_cast<uint64_t> (buffer[1]) <<  8 |
-    static_cast<uint64_t> (buffer[2]) << 16 |
-    static_cast<uint64_t> (buffer[3]) << 24 |
-    static_cast<uint64_t> (buffer[4]) << 32 |
-    static_cast<uint64_t> (buffer[5]) << 40 |
-    static_cast<uint64_t> (buffer[6]) << 48 |
-    static_cast<uint64_t> (buffer[7]) << 56 ;
 
     return std::bit_cast<double> (integer);
 }

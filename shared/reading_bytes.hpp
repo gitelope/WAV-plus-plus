@@ -25,17 +25,13 @@ uint32_t    uint32_le         (std::ifstream &);                              //
 //
 // signed int
 int16_t     int16_le          (std::vector<std::byte> const &, size_t & pos); // 2 bytes -> 16-bit signed int
-int16_t     int16_le          (std::ifstream &);
 int32_t     int24_le          (std::vector<std::byte> const &, size_t & pos); // 3 bytes -> 32-bit signed int
-int32_t     int24_le          (std::ifstream &);
 int32_t     int32_le          (std::vector<std::byte> const &, size_t & pos); // 4 bytes -> 32-bit signed int
-int32_t     int32_le          (std::ifstream &);
 //
 // floating point
 float       float32_le        (std::vector<std::byte> const &, size_t & pos); // 4 bytes -> 32-bit float
 float       float32_le        (std::ifstream &);
 double      float64_le        (std::vector<std::byte> const &, size_t & pos); // 8 bytes -> 64-bit double
-double      float64_le        (std::ifstream &);
 
 std::vector<std::byte> ReadBytes (std::string const & filePath);
 void PrintBytesAsHex (std::vector<std::byte> const & bytes);

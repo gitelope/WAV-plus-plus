@@ -185,43 +185,6 @@ void ReadLinearPCM (std::vector<std::byte> const & bytes, std::vector<double> & 
     }
 }
 
-void ReadLinearPCM (std::ifstream & in, std::vector<double> & destination, Info const & info)
-{
-    // Divide signed integer by the absolute value of the largest negative int for the bit depth.
-    // This is equal to one greater than the largest positive value for the bit depth.
-    // Example: for 16-bits, the range is [-32768, 32767] so we divide by 32768.
-    // This ensures that our float is within [-1.0, 1.0] regardless of how it was clamped.
-    // (For what it's worth, it will never equal +1.0.)
-    const double two_to_the_n_minus_one = pow (2.0, info.bitDepth - 1);
-
-    switch (info.containerSizeInBits)
-    {
-        case 8:
-            for (auto & sample : destination)
-            {
-                sample = (uint8 (in) - 128.) / two_to_the_n_minus_one;
-            }
-            break;
-
-        case 16:
-            for (auto & sample : destination)
-            {
-                sample = int16_le (in) / two_to_the_n_minus_one;
-            }
-            break;
-
-        case 24:
-            for (auto & sample : destination)
-                sample = int24_le (in) / two_to_the_n_minus_one;
-            break;
-
-        case 32:
-            for (auto & sample : destination)
-                sample = int32_le (in) / two_to_the_n_minus_one;
-            break;
-    }
-}
-
 void ReadLinearPCM (std::vector<std::byte> const & buffer, std::vector<double> & destination, Info const & info, size_t samplesToRead, size_t writePosition)
 {
     // Divide signed integer by the absolute value of the largest negative int for the bit depth.
@@ -275,24 +238,6 @@ void ReadFloatPCM (std::vector<std::byte> const & bytes, std::vector<double> & d
         case 64:
             for (auto & sample : destination)
                 sample = float64_le (bytes, pos);
-            break;
-    }
-}
-
-void ReadFloatPCM (std::ifstream & in, std::vector<double> & destination, Info const & info)
-{
-    assert (info.containerSizeInBits == info.bitDepth);
-
-    switch (info.containerSizeInBits)
-    {
-        case 32:
-            for (auto & sample : destination)
-                sample = float32_le (in);
-            break;
-
-        case 64:
-            for (auto & sample : destination)
-                sample = float64_le (in);
             break;
     }
 }

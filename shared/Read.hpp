@@ -35,11 +35,9 @@ void ReadDataBuffered      (std::string const & filepath, std::vector<double> & 
 void ReadDataLargestBuffer (std::string const & filepath, std::vector<double> & destination, Info const &, DataChunk const &);
 
 void ReadLinearPCM (std::vector<std::byte> const & bytes,  std::vector<double> & destination, Info const &);
-void ReadLinearPCM (std::ifstream & in,                    std::vector<double> & destination, Info const &);
 void ReadLinearPCM (std::vector<std::byte> const & buffer, std::vector<double> & destination, Info const &, size_t samplesToRead, size_t writePosition);
 
 void ReadFloatPCM  (std::vector<std::byte> const & bytes,  std::vector<double> & destination, Info const &);
-void ReadFloatPCM  (std::ifstream &,                       std::vector<double> & destination, Info const &);
 void ReadFloatPCM  (std::vector<std::byte> const & buffer, std::vector<double> & destination, Info const &, size_t samplesToRead, size_t writePosition);
 
 } // namespace wav
