@@ -17,7 +17,6 @@ void Read (std::string const & filepath, std::vector<double> & destination, Info
     if (chunkInfo.riff.size + 8 != fileLength) throw std::runtime_error ("RIFF chunk size + 8 does not equal file size.");
 
     playbackInfo.ExtractFrom (chunkInfo);
-
     ReadDataBuffered (filepath, destination, playbackInfo, chunkInfo.data, requestedBufferSize);
 }
 
@@ -72,44 +71,6 @@ std::ostream & operator<< (std::ostream & os, Info const & info)
     return os;
 }
 
-void ReadDataLargestBuffer (std::string const & filepath, std::vector<double> & destination, Info const & info, DataChunk const & data)
-{
-    if (! std::filesystem::is_regular_file (filepath))
-    {
-        throw std::runtime_error ("File does not exist: " + filepath);
-    }
-    std::ifstream in {filepath, std::ios::binary};
-    in.seekg (data.offset);
-
-    std::vector<std::byte> bytes (data.size);
-    if (!in.read (reinterpret_cast<char*> (bytes.data()), bytes.size()))
-    {
-        throw std::ios_base::failure ("Failed to read file.");
-    }
-
-    assert (info.frames > 0 && info.channels > 0);
-    destination.resize (info.frames * info.channels);
-
-    if      (info.isLinearPCM) ReadLinearPCM (bytes, destination, info);
-    else if (info.isFloatPCM)  ReadFloatPCM  (bytes, destination, info);
-}
-
-void ReadDataNoBuffer (std::string const & filepath, std::vector<double> & destination, Info const & info, DataChunk const & data)
-{
-    if (! std::filesystem::is_regular_file (filepath))
-    {
-        throw std::runtime_error ("File does not exist: " + filepath);
-    }
-    std::ifstream in {filepath, std::ios::binary};
-    in.seekg (data.offset);
-
-    assert (info.frames > 0 && info.channels > 0);
-    destination.resize (info.frames * info.channels);
-
-    if      (info.isLinearPCM) ReadLinearPCM (in, destination, info);
-    else if (info.isFloatPCM)  ReadFloatPCM  (in, destination, info);
-}
-
 void ReadDataBuffered (std::string const & filepath, std::vector<double> & destination, Info const & info, DataChunk const & data, size_t requestedBufferSizeInBytes)
 {
     const auto sampleSizeInBytes {info.containerSizeInBits / 8};
@@ -162,6 +123,28 @@ void ReadDataBuffered (std::string const & filepath, std::vector<double> & desti
         writePosition += samplesToRead;
         samplesRemaining -= samplesToRead;
     }
+}
+
+void ReadDataLargestBuffer (std::string const & filepath, std::vector<double> & destination, Info const & info, DataChunk const & data)
+{
+    if (! std::filesystem::is_regular_file (filepath))
+    {
+        throw std::runtime_error ("File does not exist: " + filepath);
+    }
+    std::ifstream in {filepath, std::ios::binary};
+    in.seekg (data.offset);
+
+    std::vector<std::byte> bytes (data.size);
+    if (!in.read (reinterpret_cast<char*> (bytes.data()), bytes.size()))
+    {
+        throw std::ios_base::failure ("Failed to read file.");
+    }
+
+    assert (info.frames > 0 && info.channels > 0);
+    destination.resize (info.frames * info.channels);
+
+    if      (info.isLinearPCM) ReadLinearPCM (bytes, destination, info);
+    else if (info.isFloatPCM)  ReadFloatPCM  (bytes, destination, info);
 }
 
 void ReadLinearPCM (std::vector<std::byte> const & bytes, std::vector<double> & destination, Info const & info)

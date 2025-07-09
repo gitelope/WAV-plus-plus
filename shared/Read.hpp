@@ -26,14 +26,13 @@ struct Info
 
 std::ostream & operator<< (std::ostream & os, Info const &);
 
-void Read (std::string const & filepath, std::vector<double> & destination, Info &, size_t requestedBufferSize = 4096);
+void Read (std::string const & filepath, std::vector<double> & destination, Info &, size_t requestedBufferSize = 32768);
 
-// Adjustable buffer size. Likely to perform the fastest read with a very modest buffer size. Called by Read().
+// Reads in a buffer of bytes (of adjustable size), decodes, and repeats until done.
+// Likely to perform the fastest. Called by Read().
 void ReadDataBuffered      (std::string const & filepath, std::vector<double> & destination, Info const &, DataChunk const &, size_t requestedBufferSizeInBytes);
-// Reads in all bytes before decoding.
+// Reads in all bytes (into a buffer the size of the data) before decoding.
 void ReadDataLargestBuffer (std::string const & filepath, std::vector<double> & destination, Info const &, DataChunk const &);
-// Reads in one sample at a time from std::ifstream and decodes immediately.
-void ReadDataNoBuffer      (std::string const & filepath, std::vector<double> & destination, Info const &, DataChunk const &);
 
 void ReadLinearPCM (std::vector<std::byte> const & bytes,  std::vector<double> & destination, Info const &);
 void ReadLinearPCM (std::ifstream & in,                    std::vector<double> & destination, Info const &);
