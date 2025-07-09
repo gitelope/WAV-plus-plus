@@ -9,17 +9,6 @@
 namespace wav
 {
 
-void Read (std::string const & filepath, std::vector<double> & destination, Info & playbackInfo, size_t requestedBufferSize)
-{
-    ChunkInfo chunkInfo {filepath};
-
-    const long fileLength = std::filesystem::file_size (filepath);
-    if (chunkInfo.riff.size + 8 != fileLength) throw std::runtime_error ("RIFF chunk size + 8 does not equal file size.");
-
-    playbackInfo.ExtractFrom (chunkInfo);
-    ReadDataBuffered (filepath, destination, playbackInfo, chunkInfo.data, requestedBufferSize);
-}
-
 void Info::ExtractFrom (ChunkInfo const & chunkInfo)
 {
     channels = chunkInfo.format.channels;
@@ -69,6 +58,17 @@ std::ostream & operator<< (std::ostream & os, Info const & info)
     else os << bytes << " bytes\n";
 
     return os;
+}
+
+void Read (std::string const & filepath, std::vector<double> & destination, Info & playbackInfo, size_t requestedBufferSize)
+{
+    ChunkInfo chunkInfo {filepath};
+
+    const long fileLength = std::filesystem::file_size (filepath);
+    if (chunkInfo.riff.size + 8 != fileLength) throw std::runtime_error ("RIFF chunk size + 8 does not equal file size.");
+
+    playbackInfo.ExtractFrom (chunkInfo);
+    ReadDataBuffered (filepath, destination, playbackInfo, chunkInfo.data, requestedBufferSize);
 }
 
 void ReadDataBuffered (std::string const & filepath, std::vector<double> & destination, Info const & info, DataChunk const & data, size_t requestedBufferSizeInBytes)
