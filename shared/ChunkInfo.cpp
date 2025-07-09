@@ -110,73 +110,6 @@ std::string ChunkInfo::summary() const
     return oss.str();
 }
 
-/*
-void ChunkInfo::PrintSamples()
-{
-    switch (format.code)
-    {
-        case FormatCode::LINEAR_PCM:
-        {
-            for (auto const & sample : data.samples_int)
-            {
-                std::cout << sample << ",";
-            }
-            std::cout << std::endl;
-            break;
-        }
-
-        case FormatCode::FLOAT_PCM:
-        {
-            switch (format.bits_per_sample)
-            {
-                case 32:
-                    for (auto const & sample : data.samples_float)
-                        std::cout << std::format("{}", sample) << ",";
-                    std::cout << std::endl;
-                    break;
-
-                case 64:
-                    for (auto const & sample : data.samples_double)
-                        std::cout << std::format("{}", sample) << ",";
-                    std::cout << std::endl;
-                    break;
-            }
-            break;
-        }
-        case FormatCode::EXTENSIBLE:
-        {
-            if (format.sub_format == ExtensibleFormat::LINEAR_PCM)
-            {
-                for (auto const & sample : data.samples_int)
-                {
-                    std::cout << sample << ",";
-                }
-                std::cout << std::endl;
-            }
-            else if (format.sub_format == ExtensibleFormat::FLOAT_PCM)
-            {
-                switch (format.bits_per_sample)
-                {
-                    case 32:
-                        for (auto const & sample : data.samples_float)
-                            std::cout << std::format("{}", sample) << ",";
-                        std::cout << std::endl;
-                        break;
-
-                    case 64:
-                        for (auto const & sample : data.samples_double)
-                            std::cout << std::format("{}", sample) << ",";
-                        std::cout << std::endl;
-                        break;
-                }
-            }
-            else assert (false);
-            break;
-        }
-    }
-}
-*/
-
 void ChunkInfo::ReadRiffChunk (std::ifstream & in)
 {
     // Technically, the whole file is a RIFF chunk. This is just the first part of it.
@@ -185,6 +118,7 @@ void ChunkInfo::ReadRiffChunk (std::ifstream & in)
     const auto format = fourCharacterCode (in);
     if (format != riff.format) throw std::runtime_error ("The format in the RIFF chunk should be \"" + riff.format + "\".");
 }
+
 void ChunkInfo::ReadFormatChunk (std::ifstream & in)
 {
     // These fields are found in formats WAVEFORMAT, PCMWAVEFORMAT, WAVEFORMATEX, and WAVEFORMATEXTENSIBLE:
