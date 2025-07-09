@@ -1,6 +1,6 @@
 
-#ifndef formats_hpp
-#define formats_hpp
+#ifndef Formats_hpp
+#define Formats_hpp
 
 #include <cstdint>
 #include <string>

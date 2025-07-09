@@ -2,7 +2,7 @@
 #ifndef wavplusplus_ReadingBytes_hpp
 #define wavplusplus_ReadingBytes_hpp
 
-#include "formats.hpp"
+#include "Formats.hpp"
 #include <vector>
 #include <string>
 

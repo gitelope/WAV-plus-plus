@@ -2,7 +2,7 @@
 #ifndef wavplusplus_Write_hpp
 #define wavplusplus_Write_hpp
 
-#include "formats.hpp"
+#include "Formats.hpp"
 #include <vector>
 
 /*
