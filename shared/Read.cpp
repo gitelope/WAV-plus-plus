@@ -263,49 +263,6 @@ void ReadFloatPCM (std::vector<std::byte> const & buffer, std::vector<double> & 
 
 } // namespace wav
 
-
-/*
-void ReadSubchunks (std::ifstream & in, std::vector<double> & destination, PlayBackInfo & info, ReadInfo & readInfo, bool verbose)
-{
-    if (verbose) std::cout << "\nchunks encountered: " << std::endl;
-
-    while (in.peek() != EOF)
-    {
-        const auto chunkID {fourCharacterCode (in)};
-        if (verbose) std::cout << chunkID;
-
-        if      (chunkID == "fmt ") ReadFormatChunk (in, info, readInfo);
-        else if (chunkID == "fact") ReadFactChunk   (in, info);
-        else if (chunkID == "data") ReadDataChunk   (in, destination, info, readInfo);
-        else
-        {
-            // skip to next chunk
-            const auto size = uint32_le (in);
-
-            if (verbose)
-            {
-                auto position {in.tellg()};
-                position -= static_cast <decltype(position)> (4);
-                std::cout << " (skipped - index " << position << ", size " << size << ")";
-            }
-
-            in.ignore (size);
-
-            // RIFF sub-chunks (not to be confused with "RIFF" chunks)
-            // are not allowed to have an odd number of bytes.
-            // If there are an odd number of meaningful bytes, that odd
-            // number will be the reported size but there will be an
-            // unreported byte of padding at the end to make for an even
-            // number. However, all padding should be reflected in the main
-            // "RIFF" chunk size.
-            in.ignore (size % 2); // When chunk size is odd, there will be one byte of padding.
-        }
-        if (verbose) std::cout << std::endl;
-    }
-    if (verbose) std::cout << std::endl;
-}
-*/
-
 /*
 void ReadFormatChunk (std::ifstream & in, PlayBackInfo & info, ReadInfo & readInfo)
 {

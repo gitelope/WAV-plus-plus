@@ -16,7 +16,7 @@ struct RiffChunk
 {
     std::string id {"RIFF"};
     uint32_t size {0}; // = file size in bytes - 8
-    std::string format; // WAVE
+    std::string format {"WAVE"};
 };
 
 struct FormatChunk

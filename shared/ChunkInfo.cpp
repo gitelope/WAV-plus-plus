@@ -17,7 +17,7 @@ ChunkInfo::ChunkInfo (std::string const & filepath)
     std::ifstream in {filepath, std::ios::binary};
 
     const auto chunkID = fourCharacterCode (in);
-    if (chunkID != "RIFF") throw std::runtime_error ("RIFF chunk ID not found.");
+    if (chunkID != riff.id) throw std::runtime_error ("RIFF chunk ID not found.");
     ReadRiffChunk (in);
     RegisterChunk (chunkID, 0);
 
@@ -27,10 +27,10 @@ ChunkInfo::ChunkInfo (std::string const & filepath)
         const auto chunkID = fourCharacterCode (in);
         RegisterChunk (chunkID, chunkStart);
 
-        if      (chunkID == "fmt ") ReadFormatChunk       (in);
-        else if (chunkID == "fact") ReadFactChunk         (in);
-        else if (chunkID == "PEAK") ReadPeakChunk         (in);
-        else if (chunkID == "data") ReadDataChunkInfoOnly (in);
+        if      (chunkID == format.id) ReadFormatChunk       (in);
+        else if (chunkID == fact.id)   ReadFactChunk         (in);
+        else if (chunkID == peak.id)   ReadPeakChunk         (in);
+        else if (chunkID == data.id)   ReadDataChunkInfoOnly (in);
         else
         {
             // skip to next chunk
@@ -182,8 +182,8 @@ void ChunkInfo::ReadRiffChunk (std::ifstream & in)
     // Technically, the whole file is a RIFF chunk. This is just the first part of it.
     // no need to read id since it has already been read and has the expected value
     riff.size = uint32_le (in);
-    riff.format = fourCharacterCode (in);
-    if (riff.format != "WAVE") throw std::runtime_error ("The format in the RIFF chunk should be \"WAVE\".");
+    const auto format = fourCharacterCode (in);
+    if (format != riff.format) throw std::runtime_error ("The format in the RIFF chunk should be \"" + riff.format + "\".");
 }
 void ChunkInfo::ReadFormatChunk (std::ifstream & in)
 {
