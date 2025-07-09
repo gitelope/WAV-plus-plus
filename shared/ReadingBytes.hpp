@@ -1,6 +1,6 @@
 
-#ifndef wavplusplus_reading_bytes_hpp
-#define wavplusplus_reading_bytes_hpp
+#ifndef wavplusplus_ReadingBytes_hpp
+#define wavplusplus_ReadingBytes_hpp
 
 #include "formats.hpp"
 #include <vector>

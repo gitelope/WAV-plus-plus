@@ -2,7 +2,7 @@
 #ifndef wavplusplus_File_hpp
 #define wavplusplus_File_hpp
 
-#include "reading_bytes.hpp"
+#include "ReadingBytes.hpp"
 
 #include <string>
 #include <iostream>
