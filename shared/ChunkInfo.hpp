@@ -48,9 +48,6 @@ struct DataChunk
     std::string id {"data"};
     uint32_t size {0};
     int offset {0}; // first byte of first sample
-    //std::vector<int32_t> samples_int;
-    //std::vector<float> samples_float;
-    //std::vector<double> samples_double;
 };
 
 struct FactChunk
