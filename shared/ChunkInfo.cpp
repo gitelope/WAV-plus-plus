@@ -126,12 +126,7 @@ void ChunkInfo::ReadFormatChunk (std::ifstream & in)
     // no need to read ID since it has already been read and has the expected value
     //
     format.size = uint32_le (in);
-    // format chunk size
-    // WAVEFORMAT:                                                       14
-    // PCMWAVEFORMAT:                                             14+2 = 16
-    // WAVEFORMATEX:                                            14+2+2 = 18
-    // WAVEFORMATEXTENSIBLE (signed int PCM and IEEE float): 14+2+2+22 = 40
-    if (format.size != 14 && format.size != 16 && format.size != 18 && format.size != 40)
+    if (! isValidFormatChunkSize (format.size))
     {
         throw std::runtime_error ("fmt chunk size (" + std::to_string (format.size) + ") is unsupported.");
     }
@@ -146,7 +141,9 @@ void ChunkInfo::ReadFormatChunk (std::ifstream & in)
     format.blockAlign = uint16_le (in);
 
     // This field is found in PCMWAVEFORMAT, WAVEFORMATEX, and WAVEFORMATEXTENSIBLE:
-    if (format.size == 16 || format.size == 18 || format.size == 40)
+    if (format.size == FormatChunkSize::PCMWAVEFORMAT      ||
+        format.size == FormatChunkSize::WAVEFORMATEX       ||
+        format.size == FormatChunkSize::WAVEFORMATEXTENSIBLE)
     {
         format.bitsPerSample = uint16_le (in);
 
@@ -172,29 +169,34 @@ void ChunkInfo::ReadFormatChunk (std::ifstream & in)
                 throw std::runtime_error ("For float PCM, bits per sample must equal 8 * block_align / channels.");
         }
 
-        if ((format.code == FormatCode::EXTENSIBLE || format.code == FormatCode::FLOAT_PCM) && format.bitsPerSample != 8 * format.blockAlign / format.channels)
+        if ((format.code == FormatCode::EXTENSIBLE || format.code == FormatCode::FLOAT_PCM)
+            && format.bitsPerSample != 8 * format.blockAlign / format.channels)
         {
             throw std::runtime_error ("bits_per_sample should equal 8 * block_align / channels for this format.");
-            // This doesn't apply to LINEAR_PCM in order to support non-standard usage in which meaningful bit depth is lower
-            // than container size and yet the WAV is not of the format WAVEFORMATEXTENSIBLE.
-            // In this scenario, bits_per_sample is made to equal the number of significant bits and is less than
-            // 8 * format.blockAlign / format.channels (the container size). For uncompressed linear and float PCM,
-            // (stored in PCMWAVEFORMAT, WAVEFORMATEX, and WAVEFORMATEXTENSIBLE) these should be equal in standard usage.
+            // This doesn't apply to LINEAR_PCM in order to support non-standard usage in which
+            // meaningful bit depth is lower than container size and yet the WAV is not of the
+            // format WAVEFORMATEXTENSIBLE.
+            // In this scenario, bits_per_sample is made to equal the number of significant bits
+            // and is less than 8 * format.blockAlign / format.channels, the container size. For
+            // linear and float PCM, (stored in PCMWAVEFORMAT, WAVEFORMATEX, and
+            // WAVEFORMATEXTENSIBLE) these are equal in standard usage.
         }
     }
 
     // This field is found in WAVEFORMATEX and WAVEFORMATEXTENSIBLE:
-    // WAVEFORMATEX should have a format chunk size of 18 and a cbSize value of 0 for signed int PCM and float.
+    // WAVEFORMATEX should have a format chunk size of 18 and a cbSize value of 0 for linear and float PCM.
     // WAVEFORMATEXTENSIBLE should have a format chunk size of 40 (18 + 22) and a cbSize of 22.
-    if (format.size == 18 || format.size == 40)
+    if (format.size == FormatChunkSize::WAVEFORMATEX || format.size == FormatChunkSize::WAVEFORMATEXTENSIBLE)
     {
-        format.extraFormatInformationSize = uint16_le (in);
-        if (format.extraFormatInformationSize != format.size - 18)
-            throw std::runtime_error("Invalid cbSize: " + std::to_string (format.extraFormatInformationSize));
+        format.extraFormatInformationSize = uint16_le (in); // a.k.a. cbSize
+        if (format.extraFormatInformationSize != format.size - FormatChunkSize::WAVEFORMATEX)
+        {
+            throw std::runtime_error ("Invalid cbSize: " + std::to_string (format.extraFormatInformationSize));
+        }
     }
 
     // These 3 fields are found in WAVEFORMATEXTENSIBLE:
-    if (format.size == 40)
+    if (format.size == FormatChunkSize::WAVEFORMATEXTENSIBLE)
     {
         format.validBitsPerSample = uint16_le (in);
         format.channelMask = std::bitset<32> (uint32_le (in));
@@ -451,10 +453,10 @@ std::ostream & operator<< (std::ostream & os, FormatChunk const & format)
     {
         switch (formatChunkSize)
         {
-            case 14: return "WAVEFORMAT";
-            case 16: return "PCMWAVEFORMAT";
-            case 18: return "WAVEFORMATEX";
-            case 40: return "WAVEFORMATEXTENSIBLE";
+            case FormatChunkSize::WAVEFORMAT:           return "WAVEFORMAT";
+            case FormatChunkSize::PCMWAVEFORMAT:        return "PCMWAVEFORMAT";
+            case FormatChunkSize::WAVEFORMATEX:         return "WAVEFORMATEX";
+            case FormatChunkSize::WAVEFORMATEXTENSIBLE: return "WAVEFORMATEXTENSIBLE";
             default: return "unknown";
         }
     };
@@ -471,19 +473,22 @@ std::ostream & operator<< (std::ostream & os, FormatChunk const & format)
     << "byte rate: " << format.byteRate << '\n'
     << "block align: " << format.blockAlign;
     // PCMWAVEFORMAT, WAVEFORMATEX, WAVEFORMATEXTENSIBLE
-    if (format.size == 16 || format.size == 18 || format.size == 40)
+    if (format.size == FormatChunkSize::PCMWAVEFORMAT      ||
+        format.size == FormatChunkSize::WAVEFORMATEX       ||
+        format.size == FormatChunkSize::WAVEFORMATEXTENSIBLE)
     {
         os << '\n'
         << "bits per sample: " << format.bitsPerSample;
     }
     // WAVEFORMATEX, WAVEFORMATEXTENSIBLE
-    if (format.size == 18 || format.size == 40)
+    if (format.size == FormatChunkSize::WAVEFORMATEX       ||
+        format.size == FormatChunkSize::WAVEFORMATEXTENSIBLE)
     {
         os << '\n'
         << "extra format information size (cbSize): " << format.extraFormatInformationSize;
     }
     // WAVEFORMATEXTENSIBLE
-    if (format.size == 40)
+    if (format.size == FormatChunkSize::WAVEFORMATEXTENSIBLE)
     {
         os << '\n'
         << "valid bits per sample: " << format.validBitsPerSample << '\n'

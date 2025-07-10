@@ -14,13 +14,58 @@ void Info::ExtractFrom (ChunkInfo const & chunkInfo)
     channels = chunkInfo.format.channels;
     sampleRate = chunkInfo.format.sampleRate;
     frames = chunkInfo.data.size / chunkInfo.format.blockAlign;
-    containerSizeInBits = 8 * chunkInfo.format.blockAlign / channels;
+
+    // According to the non-formally defined WAV standard, WAVEFORMATEXTENSIBLE
+    // is the only format to be used to pack linear PCM samples into larger
+    // containers. bitsPerSample represents the container size while
+    // validBitsPerSample represents the number of meaningful bits, a.k.a the
+    // sample bit depth.
+    //
+    // While PCMWAVEFORMAT and WAVEFORMATEX contain bitsPerSample, they do not
+    // have a validBitsPerSample. However, due to the fact that bitsPerSample
+    // is redundant for linear PCM audio
+    // –it can be calculated as 8 * blockAlign / channels–
+    // it is possible to pack linear PCM samples into larger containers by
+    // interpreting bitsPerSample as the number of valid bits per sample and
+    // 8 * blockAlign / channels as the container size.
+    //
+    // (WAVEFORMAT, unlikely to be enountered, does not have a bitsPerSample and
+    // thus the container size and the number of valid bits are one and the same
+    // and calculated as 8 * blockAlign / channels.)
+    //
+    // The following scheme shows how WAV++ determines sample size and sample
+    // container size in order to correctly parse both WAV files following the
+    // standard and WAV files encoded using the non-standard packing method.
+    //
+    // format                 container size               sample size
+    //
+    // WAVEFORMAT             8 * blockAlign / channels    8 * blockAlign / channels
+    // PCMWAVEFORMAT          8 * blockAlign / channels    bitsPerSample
+    // WAVEFORMATEX           8 * blockAlign / channels    bitsPerSample
+    // WAVEFORMATEXTENSIBLE   bitsPerSample                validBitsPerSample
+
     switch (chunkInfo.format.size)
     {
-        case 14: bitDepth = containerSizeInBits;                  break; // WAVEFORMAT - Not likely to encounter but who knows?
-        case 16: bitDepth = chunkInfo.format.bitsPerSample;       break; // PCMWAVEFORMAT. In standard usage, this is always equal to container size.
-        case 18: bitDepth = chunkInfo.format.bitsPerSample;       break; // WAVEFORMATEX. In standard usage, this is always equal to container size.
-        case 40: bitDepth = chunkInfo.format.validBitsPerSample;  break; // WAVEFORMATEXTENSIBLE
+        case FormatChunkSize::WAVEFORMAT:
+            containerSizeInBits = 8 * chunkInfo.format.blockAlign / channels;
+            bitDepth = containerSizeInBits;
+            break;
+
+        case FormatChunkSize::PCMWAVEFORMAT:
+            containerSizeInBits = 8 * chunkInfo.format.blockAlign / channels;
+            bitDepth = chunkInfo.format.bitsPerSample;
+            break;
+
+        case FormatChunkSize::WAVEFORMATEX:
+            containerSizeInBits = 8 * chunkInfo.format.blockAlign / channels;
+            bitDepth = chunkInfo.format.bitsPerSample;
+            break;
+
+        case FormatChunkSize::WAVEFORMATEXTENSIBLE:
+            containerSizeInBits = chunkInfo.format.bitsPerSample;
+            bitDepth = chunkInfo.format.validBitsPerSample;
+            break;
+
         default: assert (false); // should have been caught earlier
     }
     switch (chunkInfo.format.code)

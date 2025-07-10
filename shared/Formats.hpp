@@ -26,6 +26,23 @@ static constexpr uint16_t FLOAT_PCM  = 0x0003;
 static constexpr uint16_t EXTENSIBLE = 0xFFFE;
 }
 
+namespace FormatChunkSize
+{
+static constexpr uint32_t WAVEFORMAT           = 14;
+static constexpr uint32_t PCMWAVEFORMAT        = 16; // 14+2      (adds bitsPerSample)
+static constexpr uint32_t WAVEFORMATEX         = 18; // 14+2+2    (adds cbSize, here renamed extraFormatInformationSize)
+static constexpr uint32_t WAVEFORMATEXTENSIBLE = 40; // 14+2+2+22 (adds validBitsPerSample, channel bit mask, and sub-format GUID)
+}
+
+static constexpr bool isValidFormatChunkSize (uint32_t chunkSize)
+{
+    return
+    chunkSize == FormatChunkSize::WAVEFORMAT         ||
+    chunkSize == FormatChunkSize::PCMWAVEFORMAT      ||
+    chunkSize == FormatChunkSize::WAVEFORMATEX       ||
+    chunkSize == FormatChunkSize::WAVEFORMATEXTENSIBLE;
+}
+
 struct GUID // for WAVEFORMATEXTENSIBLE
 {
     uint32_t data1;

@@ -34,7 +34,7 @@ struct FormatChunk
     uint16_t bitsPerSample {0};
 
     // WAVEFORMATEX, WAVEFORMATEXTENSIBLE:
-    uint16_t extraFormatInformationSize {0};
+    uint16_t extraFormatInformationSize {0}; // a.k.a. cbSize
 
     // WAVEFORMATEXTENSIBLE:
     uint16_t validBitsPerSample {0};
