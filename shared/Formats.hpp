@@ -1,6 +1,6 @@
 
-#ifndef Formats_hpp
-#define Formats_hpp
+#ifndef wavplusplus_Formats_hpp
+#define wavplusplus_Formats_hpp
 
 #include <cstdint>
 #include <string>
