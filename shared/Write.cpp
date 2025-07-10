@@ -13,6 +13,7 @@ void Normalize (std::vector<double> & samples)
     {
         maximum = std::max (maximum, std::abs (sample));
     }
+    if (maximum == 0) return;
     for (auto & sample : samples)
     {
         sample /= maximum;
