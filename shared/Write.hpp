@@ -17,13 +17,19 @@
  format:
  PCMWAVEFORMAT (very common, but technically non-standard for some of the above options)
 
- quantization of double to signed int:
- 1. Multiply by 2^(bits-1) - 1.
- 2. Round to nearest integer.*
- 3. Clamp to [1 - 2^(bits-1), 2^(bits-1) - 1].
+ ---
 
- quantization of double to unsigned 8-bit int:
- 1. Multiply by 127.
+ quantization (linear PCM only):
+
+ double -> signed int (16, 24 and 32 bits):
+ 1. Multiply by 2^(bits-1) - 1
+    (e.g. 32,767 for 16-bit linear PCM)
+ 2. Round to nearest integer.*
+ 3. Clamp to [1 - 2^(bits-1), 2^(bits-1) - 1]
+    (e.g. [-32,767, 32,767] for 16-bit linear PCM)
+
+double -> unsigned 8-bit int:
+ 1. Multiply by 127
  2. Add 128.
  3. Round to nearest integer.*
  4. Clamp to [1, 255].
@@ -36,7 +42,11 @@ namespace wav
 {
 
 // May throw wav::WriteError.
-void Write (std::vector<double> const & samples, ExportFormat format, int sample_rate, int channels, std::string const & filepath);
+void Write (std::vector<double> const & samples,
+            ExportFormat format,
+            int sampleRate,
+            int channels,
+            std::string const & filepath);
 
 void Normalize (std::vector<double> &);
 

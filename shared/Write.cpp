@@ -135,71 +135,76 @@ void WriteData (std::ofstream & out, std::vector<double> const & samples, uint16
     else assert (false);
 }
 
-void Write (std::vector<double> const & samples, ExportFormat format, int sample_rate, int channels, std::string const & filepath)
+void Write (std::vector<double> const & samples,
+            ExportFormat format,
+            int sampleRate,
+            int channels,
+            std::string const & filepath)
 {
     if (samples.size() % channels != 0) throw std::invalid_argument ("Number of samples should be divisible by the number of channels.");
 
-    uint16_t bits_per_sample {0};
-    uint16_t format_code {0};
+    uint16_t bitsPerSample {0};
+    uint16_t formatCode {0};
     switch (format)
     {
-        case ExportFormat::LINEAR_PCM_8:  bits_per_sample =  8; format_code = FormatCode::LINEAR_PCM; break;
-        case ExportFormat::LINEAR_PCM_16: bits_per_sample = 16; format_code = FormatCode::LINEAR_PCM; break;
-        case ExportFormat::LINEAR_PCM_24: bits_per_sample = 24; format_code = FormatCode::LINEAR_PCM; break;
-        case ExportFormat::LINEAR_PCM_32: bits_per_sample = 32; format_code = FormatCode::LINEAR_PCM; break;
-        case ExportFormat::FLOAT_PCM_32:  bits_per_sample = 32; format_code = FormatCode::FLOAT_PCM;  break;
-        case ExportFormat::FLOAT_PCM_64:  bits_per_sample = 64; format_code = FormatCode::FLOAT_PCM;  break;
+        case ExportFormat::LINEAR_PCM_8:  bitsPerSample =  8; formatCode = FormatCode::LINEAR_PCM; break;
+        case ExportFormat::LINEAR_PCM_16: bitsPerSample = 16; formatCode = FormatCode::LINEAR_PCM; break;
+        case ExportFormat::LINEAR_PCM_24: bitsPerSample = 24; formatCode = FormatCode::LINEAR_PCM; break;
+        case ExportFormat::LINEAR_PCM_32: bitsPerSample = 32; formatCode = FormatCode::LINEAR_PCM; break;
+        case ExportFormat::FLOAT_PCM_32:  bitsPerSample = 32; formatCode = FormatCode::FLOAT_PCM;  break;
+        case ExportFormat::FLOAT_PCM_64:  bitsPerSample = 64; formatCode = FormatCode::FLOAT_PCM;  break;
     }
-    assert (bits_per_sample % 8 == 0);
-    const int bytes_per_sample = bits_per_sample / 8;
+    assert (bitsPerSample % 8 == 0);
 
-    const int num_samples = static_cast<int> (samples.size());
+    const auto bytesPerSample {bitsPerSample / 8};
 
-    constexpr uint32_t format_chunk_size = 16; // PCMWAVEFORMAT size
-    const uint32_t data_chunk_size = num_samples * bytes_per_sample; // excludes potential padding byte when num_samples is odd
+    constexpr uint32_t formatChunkSize {16}; // PCMWAVEFORMAT
 
-    const uint32_t RIFF_chunk_size
+    // Note: excludes potential padding byte when samples.size() is odd:
+    const uint32_t dataChunkSize {static_cast<uint32_t>(samples.size()) * bytesPerSample};
+
+    const uint32_t riffChunkSize
     // RIFF chunk
     = 4 // "WAVE"
 
     // fmt  chunk
     + 4  // "fmt "
     + 4  // chunk size
-    + format_chunk_size // in bytes
+    + formatChunkSize // in bytes
 
     // data chunk
     + 4 // "data"
     + 4 // chunk size
-    + data_chunk_size // (in bytes) num samples x bytes per sample
-    + data_chunk_size % 2; // equals 1 byte of padding when data_chunk_size is an odd number.
-    // e.g. mono 24-bit, 7 samples -> 1 sample per block x 7 blocks x 3 bytes per sample = 21 bytes
-    // Note that a padding byte is NOT reflected in the data chunk size but WILL be reflected in the RIFF chunk size.
+    + dataChunkSize // (in bytes) num samples x bytes per sample
+    + dataChunkSize % 2; // 1 byte of padding when dataChunkSize is an odd number
+    // Note that a padding bytes are NOT reflected in the data chunk size but
+    // WILL be reflected in the RIFF chunk size.
 
     // blocks/sec * samples/block * bytes/sample = bytes/sec
-    const uint32_t bytes_per_second = sample_rate * channels * bytes_per_sample;
+    const uint32_t bytesPerSecond {static_cast<uint32_t> (sampleRate * channels * bytesPerSample)};
 
     // block size in bytes = samples/block * bytes/sample
-    const uint16_t block_align = channels * bytes_per_sample;
+    const uint16_t blockAlign {static_cast<uint16_t> (channels * bytesPerSample)};
 
     std::ofstream out {filepath, std::ofstream::binary};
     if (!out) throw WriteError ("Failed to open file for writing: " + filepath);
 
     WriteToFile (out, "RIFF");
-    WriteToFile (out, RIFF_chunk_size);
+    WriteToFile (out, riffChunkSize);
     WriteToFile (out, "WAVE");
 
     WriteToFile (out, "fmt ");
-    WriteToFile (out, format_chunk_size);
-    WriteToFile (out, format_code);
+    WriteToFile (out, formatChunkSize);
+    WriteToFile (out, formatCode);
     WriteToFile (out, static_cast<uint16_t> (channels));
-    WriteToFile (out, static_cast<uint32_t> (sample_rate)); // blocks (a.k.a. frames) per second
-    WriteToFile (out, bytes_per_second);
-    WriteToFile (out, block_align);
-    WriteToFile (out, bits_per_sample);
+    WriteToFile (out, static_cast<uint32_t> (sampleRate)); // blocks (a.k.a. frames) per second
+    WriteToFile (out, bytesPerSecond);
+    WriteToFile (out, blockAlign);
+    WriteToFile (out, bitsPerSample);
 
     WriteToFile (out, "data");
-    WriteToFile (out, data_chunk_size);
-    WriteData (out, samples, bits_per_sample, format_code);
+    WriteToFile (out, dataChunkSize);
+    WriteData (out, samples, bitsPerSample, formatCode);
 
     out.close();
     if (!out) throw WriteError ("File did not close successfully.");
