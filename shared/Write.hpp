@@ -35,8 +35,10 @@
 namespace wav
 {
 
-void Normalize (std::vector<double> &);
+// May throw wav::WriteError.
 void Write (std::vector<double> const & samples, ExportFormat format, int sample_rate, int channels, std::string const & filepath);
+
+void Normalize (std::vector<double> &);
 
 } // namespace wav
 

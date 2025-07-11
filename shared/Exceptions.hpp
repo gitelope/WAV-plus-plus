@@ -1,0 +1,25 @@
+
+#ifndef wavplusplus_Exceptions_hpp
+#define wavplusplus_Exceptions_hpp
+
+namespace wav
+{
+
+class ReadError : public std::runtime_error
+{
+public:
+    explicit ReadError (std::string const & message)
+    :std::runtime_error (message)
+    {}
+};
+
+class WriteError : public std::runtime_error
+{
+public:
+    explicit WriteError (std::string const & message)
+    :std::runtime_error (message)
+    {}
+};
+
+}
+#endif

@@ -1,6 +1,7 @@
 
 #include "Read.hpp"
 #include "ReadingBytes.hpp"
+#include "Exceptions.hpp"
 
 #include <filesystem>
 #include <fstream>
@@ -110,7 +111,7 @@ void Read (std::string const & filepath, std::vector<double> & destination, Info
     ChunkInfo chunkInfo {filepath};
 
     const long fileLength = std::filesystem::file_size (filepath);
-    if (chunkInfo.riff.size + 8 != fileLength) throw std::runtime_error ("RIFF chunk size + 8 does not equal file size.");
+    if (chunkInfo.riff.size + 8 != fileLength) throw ReadError ("RIFF chunk size + 8 does not equal file size.");
 
     playbackInfo.ExtractFrom (chunkInfo);
     ReadDataBuffered (filepath, destination, playbackInfo, chunkInfo.data, requestedBufferSize);
@@ -118,26 +119,31 @@ void Read (std::string const & filepath, std::vector<double> & destination, Info
 
 void ReadDataBuffered (std::string const & filepath, std::vector<double> & destination, Info const & info, DataChunk const & data, size_t requestedBufferSizeInBytes)
 {
-    const auto sampleSizeInBytes {info.containerSizeInBits / 8};
-    if (requestedBufferSizeInBytes < sampleSizeInBytes)
-    {
-        throw std::invalid_argument ("Buffer size must be at least large enough to hold one sample.");
-    }
-
     if (! std::filesystem::is_regular_file (filepath))
     {
-        throw std::runtime_error ("File does not exist: " + filepath);
+        throw ReadError ("File does not exist: " + filepath);
     }
 
     std::ifstream in {filepath, std::ios::binary};
+    if (!in) throw ReadError ("Failed to open: " + filepath);
+
+    // Advance to the beginning of the data portion of the data chunk:
     in.seekg (data.offset);
+    if (!in) throw ReadError ("Failed to advance to data portion of data chunk.");
 
     const size_t numSamples {static_cast<size_t>(info.frames) * info.channels};
     assert (numSamples > 0);
 
     destination.resize (numSamples);
 
+    const auto sampleSizeInBytes {info.containerSizeInBits / 8};
+
     const auto totalBytesToRead {numSamples * sampleSizeInBytes};
+
+    if (requestedBufferSizeInBytes < sampleSizeInBytes)
+    {
+        requestedBufferSizeInBytes = sampleSizeInBytes;
+    }
     // If requestedBufferSizeInBytes does not correspond to a whole number of samples,
     // lower it to accomodate exactly the largest whole number of samples whose size in bytes
     // is less than requestedBufferSizeInBytes.
@@ -156,7 +162,7 @@ void ReadDataBuffered (std::string const & filepath, std::vector<double> & desti
         const auto bytesToRead {std::min (samplesRemaining * sampleSizeInBytes, buffer.size())};
         if (!in.read (reinterpret_cast<char*> (buffer.data()), bytesToRead))
         {
-            throw std::ios_base::failure ("Failed to read buffer from file.");
+            throw ReadError ("Failed to read buffer from file.");
         }
 
         // Decode into samples:
@@ -174,15 +180,21 @@ void ReadDataLargestBuffer (std::string const & filepath, std::vector<double> & 
 {
     if (! std::filesystem::is_regular_file (filepath))
     {
-        throw std::runtime_error ("File does not exist: " + filepath);
+        throw ReadError ("File does not exist: " + filepath);
     }
+
     std::ifstream in {filepath, std::ios::binary};
+    if (!in) throw ReadError ("Failed to open: " + filepath);
+
+    // Advance to the beginning of the data portion of the data chunk:
     in.seekg (data.offset);
+    if (!in) throw ReadError ("Failed to advance to data portion of data chunk.");
 
     std::vector<std::byte> bytes (data.size);
+
     if (!in.read (reinterpret_cast<char*> (bytes.data()), bytes.size()))
     {
-        throw std::ios_base::failure ("Failed to read file.");
+        throw ReadError ("Failed to file into buffer.");
     }
 
     assert (info.frames > 0 && info.channels > 0);

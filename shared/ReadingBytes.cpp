@@ -1,5 +1,7 @@
 
 #include "ReadingBytes.hpp"
+#include "Exceptions.hpp"
+
 #include <fstream>
 #include <cassert>
 #include <iostream>
@@ -11,7 +13,7 @@ std::string fourCharacterCode (std::ifstream & in)
 {
     std::string code (4, '\0');
     in.read (code.data(), 4);
-    if (!in) throw std::ios_base::failure ("Failed to read 4 characters from stream.");
+    if (!in) throw ReadError ("Failed to read 4 characters from stream.");
     return code;
 }
 
@@ -34,15 +36,15 @@ void read (std::istream & in, std::array<T,N> & buffer)
 {
     if (!in.read (reinterpret_cast<char*> (buffer.data()), buffer.size()))
     {
-        throw std::ios_base::failure (std::format ("Failed to read {} bytes from stream.", N));
+        throw ReadError (std::format ("Failed to read {} bytes from stream.", N));
     }
 }
 
 uint8_t uint8 (std::vector<std::byte> const & bytes, size_t & pos)
 {
-    if (pos + 1 > bytes.size())
+    if (pos >= bytes.size())
     {
-        throw std::out_of_range ("Attempting to read past end of vector.");
+        throw ReadError ("Attempting to read past end of vector.");
     }
     return static_cast<uint8_t> (bytes [pos++]);
 }
@@ -52,7 +54,7 @@ uint8_t uint8 (std::ifstream & in)
     uint8_t result {0};
     if (!in.read (reinterpret_cast<char*> (&result), 1))
     {
-        throw std::ios_base::failure ("Failed to read uint8_t from ifstream.");
+        throw ReadError ("Failed to read uint8_t from ifstream.");
     }
     return result;
 }
@@ -79,9 +81,9 @@ uint32_t uint32_le (std::ifstream & in)
 
 int16_t int16_le (std::vector<std::byte> const & bytes, size_t & pos)
 {
-    if (pos + 2 > bytes.size())
+    if (pos + 1 >= bytes.size())
     {
-        throw std::out_of_range ("Not enough bytes to read int16_t.");
+        throw ReadError ("Not enough bytes to read int16_t.");
     }
     const auto result =
     static_cast<int16_t> (bytes [pos])       |
@@ -96,9 +98,9 @@ int32_t int24_le (std::vector<std::byte> const & bytes, size_t & pos)
 {
     // converts 3 bytes representing a 24-bit signed int (2's-complement)
     // to a 32-bit signed int (2's-complement) with the same value
-    if (pos + 3 > bytes.size())
+    if (pos + 2 >= bytes.size())
     {
-        throw std::out_of_range ("Not enough bytes to read 24-bit int.");
+        throw ReadError ("Not enough bytes to read 24-bit int.");
     }
 
     auto result =
@@ -131,9 +133,9 @@ int32_t int24_le (std::vector<std::byte> const & bytes, size_t & pos)
 
 int32_t int32_le (std::vector<std::byte> const & bytes, size_t & pos)
 {
-    if (pos + 4 > bytes.size())
+    if (pos + 3 >= bytes.size())
     {
-        throw std::out_of_range ("Not enough bytes to read int32_t.");
+        throw ReadError ("Not enough bytes to read int32_t.");
     }
     const auto result =
     static_cast<int32_t> (bytes [pos])         |
@@ -148,9 +150,9 @@ int32_t int32_le (std::vector<std::byte> const & bytes, size_t & pos)
 
 float float32_le (std::vector<std::byte> const & bytes, size_t & pos)
 {
-    if (pos + 4 > bytes.size())
+    if (pos + 3 >= bytes.size())
     {
-        throw std::out_of_range ("Not enough bytes to read 32-bit float.");
+        throw ReadError ("Not enough bytes to read 32-bit float.");
     }
     const auto integer =
     static_cast<uint32_t> (bytes[pos])         |
@@ -179,9 +181,9 @@ float float32_le (std::ifstream & in)
 
 double float64_le (std::vector<std::byte> const & bytes, size_t & pos)
 {
-    if (pos + 8 > bytes.size())
+    if (pos + 7 >= bytes.size())
     {
-        throw std::out_of_range ("Not enough bytes to read 64-bit float.");
+        throw ReadError ("Not enough bytes to read 64-bit float.");
     }
     const auto integer =
     static_cast<uint64_t> (bytes[pos])         |
@@ -201,14 +203,14 @@ double float64_le (std::vector<std::byte> const & bytes, size_t & pos)
 std::vector<std::byte> ReadBytes (std::string const & filePath)
 {
     std::ifstream in {filePath, std::ios::binary};
-    if (!in) throw std::ios_base::failure ("Failed to open file.");
+    if (!in) throw ReadError ("Failed to open file.");
 
     const auto length = std::filesystem::file_size (filePath);
     std::vector<std::byte> bytes (length);
 
     if (!in.read (reinterpret_cast<char*> (bytes.data()), length))
     {
-        throw std::ios_base::failure ("Failed to read file.");
+        throw ReadError ("Failed to read file.");
     }
 
     return bytes;

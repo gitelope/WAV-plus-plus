@@ -1,5 +1,6 @@
 
 #include "ChunkInfo.hpp"
+#include "Exceptions.hpp"
 #include <cassert>
 #include <sstream>
 #include <filesystem>
@@ -12,12 +13,13 @@ ChunkInfo::ChunkInfo (std::string const & filepath)
 {
     if (! std::filesystem::is_regular_file (filepath))
     {
-        throw std::runtime_error ("File does not exist: " + filepath);
+        throw ReadError ("File does not exist: " + filepath);
     }
     std::ifstream in {filepath, std::ios::binary};
+    if (!in) throw ReadError ("Failed to open: " + filepath);
 
     const auto chunkID = fourCharacterCode (in);
-    if (chunkID != riff.id) throw std::runtime_error ("RIFF chunk ID not found.");
+    if (chunkID != riff.id) throw ReadError ("RIFF chunk ID not found.");
     ReadRiffChunk (in);
     RegisterChunk (chunkID, 0);
 
@@ -33,20 +35,20 @@ ChunkInfo::ChunkInfo (std::string const & filepath)
         else if (chunkID == data.id)   ReadDataChunkInfoOnly (in);
         else
         {
-            // skip to next chunk
-
+            // Skip to next chunk:
             RegisterSkippedChunk (chunkID, chunkStart);
-
             const auto size = uint32_le (in);
-            in.ignore (size);
+            // Skip chunk and any padding byte if present.
+            //
             // RIFF sub-chunks (not to be confused with "RIFF" chunks)
             // are not allowed to have an odd number of bytes.
             // If there are an odd number of meaningful bytes, that odd
             // number will be the reported size but there will be an
             // unreported byte of padding at the end to make for an even
-            // number. However, all padding should be reflected in the main
-            // "RIFF" chunk size.
-            in.ignore (size % 2); // When chunk size is odd, increment position by 1.
+            // number. In contrast, all chunk padding should be reflected
+            // in the main "RIFF" chunk size.
+            in.ignore (size + (size % 2));
+            if (!in) throw ReadError ("Failed to skip chunk: " + chunkID);
         }
     }
 }
@@ -116,7 +118,10 @@ void ChunkInfo::ReadRiffChunk (std::ifstream & in)
     // no need to read id since it has already been read and has the expected value
     riff.size = uint32_le (in);
     const auto format = fourCharacterCode (in);
-    if (format != riff.format) throw std::runtime_error ("The format in the RIFF chunk should be \"" + riff.format + "\".");
+    if (format != riff.format)
+    {
+        throw ReadError ("The format in the RIFF chunk should be \"" + riff.format + "\".");
+    }
 }
 
 void ChunkInfo::ReadFormatChunk (std::ifstream & in)
@@ -128,12 +133,12 @@ void ChunkInfo::ReadFormatChunk (std::ifstream & in)
     format.size = uint32_le (in);
     if (! isValidFormatChunkSize (format.size))
     {
-        throw std::runtime_error ("fmt chunk size (" + std::to_string (format.size) + ") is unsupported.");
+        throw ReadError ("fmt chunk size (" + std::to_string (format.size) + ") is unsupported.");
     }
     format.code = uint16_le (in);
     if (format.code != FormatCode::LINEAR_PCM && format.code != FormatCode::FLOAT_PCM && format.code != FormatCode::EXTENSIBLE)
     {
-        throw std::runtime_error (std::format ("Format not supported: 0x{:04X}", format.code));
+        throw ReadError (std::format ("Format not supported: 0x{:04X}", format.code));
     }
     format.channels = uint16_le (in);
     format.sampleRate = uint32_le (in);
@@ -154,9 +159,13 @@ void ChunkInfo::ReadFormatChunk (std::ifstream & in)
             //     1. bits_per_sample must be a multiple of 8
             //     2. bits_per_sample = 8 * block_align / channels
             if (format.bitsPerSample % 8 != 0)
-                throw std::runtime_error ("For WAVEFORMATEXTENSIBLE, bits per sample must be a multiple of 8.");
+            {
+                throw ReadError ("For WAVEFORMATEXTENSIBLE, bits per sample must be a multiple of 8.");
+            }
             if (format.bitsPerSample != 8 * format.blockAlign / format.channels)
-                throw std::runtime_error ("For WAVEFORMATEXTENSIBLE, bits per sample must equal 8 * block_align / channels.");
+            {
+                throw ReadError ("For WAVEFORMATEXTENSIBLE, bits per sample must equal 8 * blockAlign / channels.");
+            }
         }
         else if (format.code == FormatCode::FLOAT_PCM)
         {
@@ -164,15 +173,19 @@ void ChunkInfo::ReadFormatChunk (std::ifstream & in)
             //     1. bits_per_sample will equal either 32 or 64
             //     2. bits_per_sample = 8 * block_align / channels
             if (format.bitsPerSample != 32 && format.bitsPerSample != 64)
-                throw std::runtime_error ("For float PCM, bits per sample must be 32 or 64.");
+            {
+                throw ReadError ("For float PCM, bits per sample must be 32 or 64.");
+            }
             if (format.bitsPerSample != 8 * format.blockAlign / format.channels)
-                throw std::runtime_error ("For float PCM, bits per sample must equal 8 * block_align / channels.");
+            {
+                throw ReadError ("For float PCM, bits per sample must equal 8 * blockAlign / channels.");
+            }
         }
 
         if ((format.code == FormatCode::EXTENSIBLE || format.code == FormatCode::FLOAT_PCM)
             && format.bitsPerSample != 8 * format.blockAlign / format.channels)
         {
-            throw std::runtime_error ("bits_per_sample should equal 8 * block_align / channels for this format.");
+            throw ReadError ("bits_per_sample should equal 8 * block_align / channels for this format.");
             // This doesn't apply to LINEAR_PCM in order to support non-standard usage in which
             // meaningful bit depth is lower than container size and yet the WAV is not of the
             // format WAVEFORMATEXTENSIBLE.
@@ -191,7 +204,7 @@ void ChunkInfo::ReadFormatChunk (std::ifstream & in)
         format.extraFormatInformationSize = uint16_le (in); // a.k.a. cbSize
         if (format.extraFormatInformationSize != format.size - FormatChunkSize::WAVEFORMATEX)
         {
-            throw std::runtime_error ("Invalid cbSize: " + std::to_string (format.extraFormatInformationSize));
+            throw ReadError ("Invalid cbSize: " + std::to_string (format.extraFormatInformationSize));
         }
     }
 
@@ -203,28 +216,44 @@ void ChunkInfo::ReadFormatChunk (std::ifstream & in)
         format.subFormat = guid (in);
 
         if (format.subFormat != ExtensibleFormat::LINEAR_PCM && format.subFormat != ExtensibleFormat::FLOAT_PCM)
-            throw std::runtime_error ("Extensible subformat not supported: " + format.subFormat.str());
+        {
+            throw ReadError ("Extensible subformat not supported: " + format.subFormat.str());
+        }
         if (format.validBitsPerSample > format.bitsPerSample)
-            throw std::runtime_error ("Valid bits per sample (in WAVEFORMATEXTENSIBLE) must not be greater than bits per sample.");
-        if (format.subFormat == ExtensibleFormat::FLOAT_PCM && format.bitsPerSample != 32 && format.bitsPerSample != 64)
-            throw std::runtime_error ("For float PCM, bits per sample must be 32 or 64.");
+        {
+            throw ReadError ("Valid bits per sample (in WAVEFORMATEXTENSIBLE) must not be greater than bits per sample.");
+        }
+        if (format.subFormat == ExtensibleFormat::FLOAT_PCM
+            && format.bitsPerSample != 32 && format.bitsPerSample != 64)
+        {
+            throw ReadError ("For float PCM, bits per sample must be 32 or 64.");
+        }
     }
 
     const int container_size = 8 * format.blockAlign / format.channels;
-    if ((format.code == FormatCode::LINEAR_PCM || (format.code == FormatCode::EXTENSIBLE && format.subFormat == ExtensibleFormat::LINEAR_PCM))
+    if ((format.code == FormatCode::LINEAR_PCM ||
+         (format.code == FormatCode::EXTENSIBLE && format.subFormat == ExtensibleFormat::LINEAR_PCM))
         && container_size != 8 && container_size != 16 && container_size != 24 && container_size != 32)
     {
-        throw std::runtime_error (std::format ("Unsupported linear PCM container size: {}", container_size));
+        throw ReadError (std::format ("Unsupported linear PCM container size: {}", container_size));
     }
-    // In the future, if this code is used to read format chunks of odd-byte-length, we must skip the last padding byte.
-    in.ignore (format.size % 2); // When chunk size is odd, increment position by 1.
+    // In the future, if this code is used to read format chunks of odd-byte-length,
+    // we must skip the last padding byte.
+    if (format.size % 2)
+    {
+        in.ignore (1);
+        if (!in) throw ReadError ("Failed to skip format chunk padding.");
+    }
 }
 
 void ChunkInfo::ReadFactChunk (std::ifstream & in)
 {
     fact.present = true;
     fact.size = uint32_le (in);
-    if (fact.size != 4) throw std::runtime_error ("fact chunk size (" + std::to_string(fact.size) + ") should be 4.");
+    if (fact.size != 4)
+    {
+        throw ReadError ("fact chunk size (" + std::to_string(fact.size) + ") should be 4.");
+    }
     fact.fileSize = uint32_le (in);
 }
 
@@ -248,55 +277,15 @@ void ChunkInfo::ReadDataChunkInfoOnly (std::ifstream & in)
     data.size = uint32_le (in);
     if (data.size % format.blockAlign != 0)
     {
-        throw std::runtime_error ("Size of data chunk is not divisible by block_align.");
+        throw ReadError ("Size of data chunk is not divisible by block_align.");
     }
     data.offset = static_cast<int> (in.tellg());
     in.ignore (data.size + (data.size % 2)); // skip data (and padding byte if chunk size is odd number)
-    /*
-    switch (format.code)
-    {
-        case FormatCode::LINEAR_PCM:
-        {
-            // In non-standard usage, PCMWAVEFORMAT and WAVEFORMATEX are used to store
-            // samples of bit-depth lower than that of the container with:
-            //
-            // container size    =   8 * format.block_align / format.channels
-            // significant bits  =   bits_per_sample
-            //
-            // (In "standard" usage of PCMWAVEFORMAT and WAVEFORMATEX, bits_per_sample
-            // should instead equal 8 * format.block_align / format.channels.)
-            //
-            // The "standard" way to store samples in larger containers is to use the
-            // WAVEFORMATEXTENSIBLE format with bits_per_sample being the container
-            // size and valid_bits_per_sample being the number of significant bits.
-            // This is in contrast with non-standard usage of bits_per_samples as the
-            // number of valid bits.
-            //
-            // In either case, the significant bits are assumed to have been right-justified
-            // towards the LSB with sign extension padding towards the MSB so that the sample
-            // bytes can be interpreted as a signed int of the same size as the container but
-            // with the original value preserved.
-            //
-            // The container size is needed when parsing.
-            //
-            // The number of significant bits is needed when dequantizing from signed int to
-            // normalized [-1.0, 1.0] floating point.
-            //
-            const int container_size_in_bits = 8 * format.block_align / format.channels;
-            ReadLinearPCM (bytes, position, container_size_in_bits);
-            break;
-        }
-        case FormatCode::FLOAT_PCM:  ReadIEEE754Float         (bytes, position); break;
-        case FormatCode::EXTENSIBLE: ReadExtensibleFormatData (bytes, position); break;
-    }
+    if (!in) throw ReadError ("Failed to skip data portion of data chunk.");
 
-    // If the chunk size is odd, there will be a padding byte of 0x00,
-    // e.g. 24-bit samples require 3 bytes and therefore a mono file with seven samples
-    // implies a chunk size of 1 x 7 x 3 = 21 bytes,
-    // so an extra byte will be appended to the end of the data.
-    // After reading the 21 bytes, we must skip the next "unreported" 22nd padding byte.
-    position += (data.size % 2); // When chunk size is odd, increment position by 1.
-     */
+    // An odd chunk size will most likely be the result of writing mono, linear PCM 8-bit or 24-bit WAV,
+    // with an odd number of samples, but will also occur with a larger odd number of channels:
+    // odd channels x odd sample (container) size in bytes x odd number of samples = odd number of bytes
 }
 
 std::ostream & operator<< (std::ostream & os, ChunkInfo const & info)

@@ -57,6 +57,7 @@
 		C499DB922E13445F00A88D60 /* Write.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Write.cpp; sourceTree = "<group>"; };
 		C499DB932E13445F00A88D60 /* ChunkInfo.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = ChunkInfo.hpp; sourceTree = "<group>"; };
 		C499DB942E13445F00A88D60 /* ChunkInfo.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = ChunkInfo.cpp; sourceTree = "<group>"; };
+		C4B1FD8B2E20533200B6D691 /* Exceptions.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Exceptions.hpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -125,6 +126,7 @@
 				C499DB902E13445F00A88D60 /* ReadingBytes.cpp */,
 				C479D8532E149E7C00093894 /* Formats.hpp */,
 				C479D8542E149E7C00093894 /* Formats.cpp */,
+				C4B1FD8B2E20533200B6D691 /* Exceptions.hpp */,
 			);
 			path = shared;
 			sourceTree = "<group>";

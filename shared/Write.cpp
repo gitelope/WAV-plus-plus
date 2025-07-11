@@ -1,5 +1,7 @@
 
 #include "Write.hpp"
+#include "Exceptions.hpp"
+
 #include <fstream>
 #include <cassert>
 
@@ -20,17 +22,30 @@ void Normalize (std::vector<double> & samples)
     }
 }
 
-template <typename T>
-void WriteToFile (std::ofstream & out, T value)
+// write string
+void WriteToFile (std::ofstream & out, std::string const & str)
 {
-    out.write (reinterpret_cast<const char *> (&value), sizeof (value));
+    out.write (str.data(), str.size());
+    if (!out)
+    {
+        throw WriteError ("Failed to write string to file.");
+    }
 }
 
+// write number
+//
+// (By default, the number of bytes is the container size,
+// but it may also be less than the container size.)
 template <typename T>
-void WriteToFile (std::ofstream & out, T value, int bytes)
+requires (std::integral<T> || std::floating_point<T>)
+void WriteToFile (std::ofstream & out, T value, int size = sizeof(value))
 {
-    assert (bytes > 0 && bytes <= sizeof(value));
-    out.write (reinterpret_cast<const char *> (&value), bytes);
+    assert (size > 0 && size <= sizeof(value));
+    out.write (reinterpret_cast<const char *> (&value), size);
+    if (!out)
+    {
+        throw WriteError ("Failed to write to file.");
+    }
 }
 
 double clamped (double value, double min, double max)
@@ -51,7 +66,7 @@ void WriteData (std::ofstream & out, std::vector<double> const & samples, uint16
                 const double offset = pow (2.0, bits_per_sample - 1);
                 for (auto const & sample : samples)
                 {
-                    out << static_cast<uint8_t> (clamped (round (sample * max + offset /* + dither */), min+offset, max+offset));
+                    WriteToFile (out, static_cast<uint8_t> (clamped (round (sample * max + offset /* + dither */), min+offset, max+offset)));
                 }
                 break;
             }
@@ -167,12 +182,13 @@ void Write (std::vector<double> const & samples, ExportFormat format, int sample
     const uint16_t block_align = channels * bytes_per_sample;
 
     std::ofstream out {filepath, std::ofstream::binary};
+    if (!out) throw WriteError ("Failed to open file for writing: " + filepath);
 
-    out << "RIFF";
+    WriteToFile (out, "RIFF");
     WriteToFile (out, RIFF_chunk_size);
-    out << "WAVE";
+    WriteToFile (out, "WAVE");
 
-    out << "fmt ";
+    WriteToFile (out, "fmt ");
     WriteToFile (out, format_chunk_size);
     WriteToFile (out, format_code);
     WriteToFile (out, static_cast<uint16_t> (channels));
@@ -181,11 +197,12 @@ void Write (std::vector<double> const & samples, ExportFormat format, int sample
     WriteToFile (out, block_align);
     WriteToFile (out, bits_per_sample);
 
-    out << "data";
+    WriteToFile (out, "data");
     WriteToFile (out, data_chunk_size);
     WriteData (out, samples, bits_per_sample, format_code);
 
     out.close();
+    if (!out) throw WriteError ("File did not close successfully.");
 }
 
 } // namespace wav
