@@ -10,7 +10,10 @@ namespace wav
 {
 
 // May throw wav::ReadError.
-void Read (std::string const & filepath, std::vector<double> & destination, struct Info &, size_t requestedBufferSize = 32768);
+void Read (std::string const & filepath,
+           std::vector<double> & destination,
+           struct Info & info,
+           size_t requestedBufferSize = 32768); // 32kB default buffer size
 
 struct Info
 {
@@ -29,7 +32,7 @@ struct Info
 std::ostream & operator<< (std::ostream & os, Info const &);
 
 
-//////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////
 // HELPER FUNCTIONS
 // (may throw wav::ReadError)
 
@@ -70,8 +73,6 @@ void ReadFloatPCM  (std::vector<std::byte> const & buffer,
 void ReadFloatPCM  (std::vector<std::byte> const & bytes,
                     std::vector<double> & destination,
                     Info const & info);
-//////////////////////////////////////////////////////////////////////////
-
 
 } // namespace wav
 
