@@ -21,7 +21,7 @@ void Read (std::string const & filepath,
     if (chunkInfo.riff.size + 8 != fileLength) throw ReadError ("RIFF chunk size + 8 does not equal file size.");
 
     playbackInfo.ExtractFrom (chunkInfo);
-    ReadDataBuffered (filepath, destination, playbackInfo, chunkInfo.data, requestedBufferSize);
+    ReadData (filepath, destination, playbackInfo, chunkInfo.data, requestedBufferSize);
 }
 
 void Info::ExtractFrom (ChunkInfo const & chunkInfo)
@@ -123,7 +123,7 @@ std::ostream & operator<< (std::ostream & os, Info const & info)
     return os;
 }
 
-void ReadDataBuffered (std::string const & filepath,
+void ReadData (std::string const & filepath,
                        std::vector<double> & destination,
                        Info const & info,
                        DataChunk const & data,
@@ -186,37 +186,6 @@ void ReadDataBuffered (std::string const & filepath,
     }
 }
 
-void ReadDataLargestBuffer (std::string const & filepath,
-                            std::vector<double> & destination,
-                            Info const & info,
-                            DataChunk const & data)
-{
-    if (! std::filesystem::is_regular_file (filepath))
-    {
-        throw ReadError ("File does not exist: " + filepath);
-    }
-
-    std::ifstream in {filepath, std::ios::binary};
-    if (!in) throw ReadError ("Failed to open: " + filepath);
-
-    // Advance to the beginning of the data portion of the data chunk:
-    in.seekg (data.offset);
-    if (!in) throw ReadError ("Failed to advance to data portion of data chunk.");
-
-    std::vector<std::byte> bytes (data.size);
-
-    if (!in.read (reinterpret_cast<char*> (bytes.data()), bytes.size()))
-    {
-        throw ReadError ("Failed to file into buffer.");
-    }
-
-    assert (info.frames > 0 && info.channels > 0);
-    destination.resize (info.frames * info.channels);
-
-    if      (info.isLinearPCM) ReadLinearPCM (bytes, destination, info);
-    else if (info.isFloatPCM)  ReadFloatPCM  (bytes, destination, info);
-}
-
 void ReadLinearPCM (std::vector<std::byte> const & buffer,
                     std::vector<double> & destination,
                     Info const & info,
@@ -255,67 +224,6 @@ void ReadLinearPCM (std::vector<std::byte> const & buffer,
         case 32:
             for (size_t i=0; i<samplesToRead; ++i)
                 destination [writePosition + i] = int32_le (buffer, pos) / two_to_the_n_minus_one;
-            break;
-    }
-}
-
-void ReadLinearPCM (std::vector<std::byte> const & bytes,
-                    std::vector<double> & destination,
-                    Info const & info)
-{
-    // Divide signed integer by the absolute value of the largest negative int for the bit depth.
-    // This is equal to one greater than the largest positive value for the bit depth.
-    // Example: for 16-bits, the range is [-32768, 32767] so we divide by 32768.
-    // This ensures that our float is within [-1.0, 1.0] regardless of how it was clamped.
-    // (For what it's worth, it will never equal +1.0.)
-    const double two_to_the_n_minus_one = pow (2.0, info.bitDepth - 1);
-
-    size_t pos {0};
-    switch (info.containerSizeInBits)
-    {
-        case 8:
-            for (auto & sample : destination)
-            {
-                sample = (uint8 (bytes, pos) - 128.) / two_to_the_n_minus_one;
-            }
-            break;
-
-        case 16:
-            for (auto & sample : destination)
-            {
-                sample = int16_le (bytes, pos) / two_to_the_n_minus_one;
-            }
-            break;
-
-        case 24:
-            for (auto & sample : destination)
-                sample = int24_le (bytes, pos) / two_to_the_n_minus_one;
-            break;
-
-        case 32:
-            for (auto & sample : destination)
-                sample = int32_le (bytes, pos) / two_to_the_n_minus_one;
-            break;
-    }
-}
-
-void ReadFloatPCM (std::vector<std::byte> const & bytes,
-                   std::vector<double> & destination,
-                   Info const & info)
-{
-    assert (info.containerSizeInBits == info.bitDepth);
-
-    size_t pos {0};
-    switch (info.containerSizeInBits)
-    {
-        case 32:
-            for (auto & sample : destination)
-                sample = float32_le (bytes, pos);
-            break;
-
-        case 64:
-            for (auto & sample : destination)
-                sample = float64_le (bytes, pos);
             break;
     }
 }

@@ -56,19 +56,18 @@ void Write (std::vector<double> const & samples,
 void Normalize (std::vector<double> &);
 
 ////////////////////////////////////////////////////////
-// HELPERS
+// HELPER FUNCTIONS
+// (may throw wav::WriteError)
 
-// May throw wav::WriteError.
 void WriteData (std::ofstream & out,
                 std::vector<double> const & samples,
                 uint16_t bits_per_sample,
                 uint16_t format_code);
 
-// Write string. (May throw wav::WriteError.)
+// Write string.
 void WriteToFile (std::ofstream & out, std::string const & str);
 
 // Write number.
-// (May throw wav::WriteError.)
 //
 // By default, the number of bytes is the container size,
 // but it may also be less than the container size.
