@@ -1,12 +1,83 @@
 
 #include "Write.hpp"
-#include "Exceptions.hpp"
-
-#include <fstream>
-#include <cassert>
 
 namespace wav
 {
+
+void Write (std::vector<double> const & samples,
+            ExportFormat format,
+            int sampleRate,
+            int channels,
+            std::string const & filepath)
+{
+    if (samples.size() % channels != 0) throw std::invalid_argument ("Number of samples should be divisible by the number of channels.");
+
+    uint16_t bitsPerSample {0};
+    uint16_t formatCode {0};
+    switch (format)
+    {
+        case ExportFormat::LINEAR_PCM_8:  bitsPerSample =  8; formatCode = FormatCode::LINEAR_PCM; break;
+        case ExportFormat::LINEAR_PCM_16: bitsPerSample = 16; formatCode = FormatCode::LINEAR_PCM; break;
+        case ExportFormat::LINEAR_PCM_24: bitsPerSample = 24; formatCode = FormatCode::LINEAR_PCM; break;
+        case ExportFormat::LINEAR_PCM_32: bitsPerSample = 32; formatCode = FormatCode::LINEAR_PCM; break;
+        case ExportFormat::FLOAT_PCM_32:  bitsPerSample = 32; formatCode = FormatCode::FLOAT_PCM;  break;
+        case ExportFormat::FLOAT_PCM_64:  bitsPerSample = 64; formatCode = FormatCode::FLOAT_PCM;  break;
+    }
+    assert (bitsPerSample % 8 == 0);
+
+    const auto bytesPerSample {bitsPerSample / 8};
+
+    constexpr uint32_t formatChunkSize {16}; // PCMWAVEFORMAT
+
+    // Note: excludes potential padding byte when samples.size() is odd:
+    const uint32_t dataChunkSize {static_cast<uint32_t>(samples.size()) * bytesPerSample};
+
+    const uint32_t riffChunkSize
+    // RIFF chunk
+    = 4 // "WAVE"
+
+    // fmt  chunk
+    + 4  // "fmt "
+    + 4  // chunk size
+    + formatChunkSize // in bytes
+
+    // data chunk
+    + 4 // "data"
+    + 4 // chunk size
+    + dataChunkSize // (in bytes) num samples x bytes per sample
+    + dataChunkSize % 2; // 1 byte of padding when dataChunkSize is an odd number
+    // Note that a padding bytes are NOT reflected in the data chunk size but
+    // WILL be reflected in the RIFF chunk size.
+
+    // blocks/sec * samples/block * bytes/sample = bytes/sec
+    const uint32_t bytesPerSecond {static_cast<uint32_t> (sampleRate * channels * bytesPerSample)};
+
+    // block size in bytes = samples/block * bytes/sample
+    const uint16_t blockAlign {static_cast<uint16_t> (channels * bytesPerSample)};
+
+    std::ofstream out {filepath, std::ofstream::binary};
+    if (!out) throw WriteError ("Failed to open file for writing: " + filepath);
+
+    WriteToFile (out, "RIFF");
+    WriteToFile (out, riffChunkSize);
+    WriteToFile (out, "WAVE");
+
+    WriteToFile (out, "fmt ");
+    WriteToFile (out, formatChunkSize);
+    WriteToFile (out, formatCode);
+    WriteToFile (out, static_cast<uint16_t> (channels));
+    WriteToFile (out, static_cast<uint32_t> (sampleRate)); // blocks (a.k.a. frames) per second
+    WriteToFile (out, bytesPerSecond);
+    WriteToFile (out, blockAlign);
+    WriteToFile (out, bitsPerSample);
+
+    WriteToFile (out, "data");
+    WriteToFile (out, dataChunkSize);
+    WriteData (out, samples, bitsPerSample, formatCode);
+
+    out.close();
+    if (!out) throw WriteError ("File did not close successfully.");
+}
 
 void Normalize (std::vector<double> & samples)
 {
@@ -20,37 +91,6 @@ void Normalize (std::vector<double> & samples)
     {
         sample /= maximum;
     }
-}
-
-// write string
-void WriteToFile (std::ofstream & out, std::string const & str)
-{
-    out.write (str.data(), str.size());
-    if (!out)
-    {
-        throw WriteError ("Failed to write string to file.");
-    }
-}
-
-// write number
-//
-// (By default, the number of bytes is the container size,
-// but it may also be less than the container size.)
-template <typename T>
-requires (std::integral<T> || std::floating_point<T>)
-void WriteToFile (std::ofstream & out, T value, int size = sizeof(value))
-{
-    assert (size > 0 && size <= sizeof(value));
-    out.write (reinterpret_cast<const char *> (&value), size);
-    if (!out)
-    {
-        throw WriteError ("Failed to write to file.");
-    }
-}
-
-double clamped (double value, double min, double max)
-{
-    return std::min (std::max (min, value), max);
 }
 
 void WriteData (std::ofstream & out, std::vector<double> const & samples, uint16_t bits_per_sample, uint16_t format_code)
@@ -135,79 +175,18 @@ void WriteData (std::ofstream & out, std::vector<double> const & samples, uint16
     else assert (false);
 }
 
-void Write (std::vector<double> const & samples,
-            ExportFormat format,
-            int sampleRate,
-            int channels,
-            std::string const & filepath)
+void WriteToFile (std::ofstream & out, std::string const & str)
 {
-    if (samples.size() % channels != 0) throw std::invalid_argument ("Number of samples should be divisible by the number of channels.");
-
-    uint16_t bitsPerSample {0};
-    uint16_t formatCode {0};
-    switch (format)
+    out.write (str.data(), str.size());
+    if (!out)
     {
-        case ExportFormat::LINEAR_PCM_8:  bitsPerSample =  8; formatCode = FormatCode::LINEAR_PCM; break;
-        case ExportFormat::LINEAR_PCM_16: bitsPerSample = 16; formatCode = FormatCode::LINEAR_PCM; break;
-        case ExportFormat::LINEAR_PCM_24: bitsPerSample = 24; formatCode = FormatCode::LINEAR_PCM; break;
-        case ExportFormat::LINEAR_PCM_32: bitsPerSample = 32; formatCode = FormatCode::LINEAR_PCM; break;
-        case ExportFormat::FLOAT_PCM_32:  bitsPerSample = 32; formatCode = FormatCode::FLOAT_PCM;  break;
-        case ExportFormat::FLOAT_PCM_64:  bitsPerSample = 64; formatCode = FormatCode::FLOAT_PCM;  break;
+        throw WriteError ("Failed to write string to file.");
     }
-    assert (bitsPerSample % 8 == 0);
+}
 
-    const auto bytesPerSample {bitsPerSample / 8};
-
-    constexpr uint32_t formatChunkSize {16}; // PCMWAVEFORMAT
-
-    // Note: excludes potential padding byte when samples.size() is odd:
-    const uint32_t dataChunkSize {static_cast<uint32_t>(samples.size()) * bytesPerSample};
-
-    const uint32_t riffChunkSize
-    // RIFF chunk
-    = 4 // "WAVE"
-
-    // fmt  chunk
-    + 4  // "fmt "
-    + 4  // chunk size
-    + formatChunkSize // in bytes
-
-    // data chunk
-    + 4 // "data"
-    + 4 // chunk size
-    + dataChunkSize // (in bytes) num samples x bytes per sample
-    + dataChunkSize % 2; // 1 byte of padding when dataChunkSize is an odd number
-    // Note that a padding bytes are NOT reflected in the data chunk size but
-    // WILL be reflected in the RIFF chunk size.
-
-    // blocks/sec * samples/block * bytes/sample = bytes/sec
-    const uint32_t bytesPerSecond {static_cast<uint32_t> (sampleRate * channels * bytesPerSample)};
-
-    // block size in bytes = samples/block * bytes/sample
-    const uint16_t blockAlign {static_cast<uint16_t> (channels * bytesPerSample)};
-
-    std::ofstream out {filepath, std::ofstream::binary};
-    if (!out) throw WriteError ("Failed to open file for writing: " + filepath);
-
-    WriteToFile (out, "RIFF");
-    WriteToFile (out, riffChunkSize);
-    WriteToFile (out, "WAVE");
-
-    WriteToFile (out, "fmt ");
-    WriteToFile (out, formatChunkSize);
-    WriteToFile (out, formatCode);
-    WriteToFile (out, static_cast<uint16_t> (channels));
-    WriteToFile (out, static_cast<uint32_t> (sampleRate)); // blocks (a.k.a. frames) per second
-    WriteToFile (out, bytesPerSecond);
-    WriteToFile (out, blockAlign);
-    WriteToFile (out, bitsPerSample);
-
-    WriteToFile (out, "data");
-    WriteToFile (out, dataChunkSize);
-    WriteData (out, samples, bitsPerSample, formatCode);
-
-    out.close();
-    if (!out) throw WriteError ("File did not close successfully.");
+double clamped (double value, double min, double max)
+{
+    return std::min (std::max (min, value), max);
 }
 
 } // namespace wav

@@ -3,7 +3,12 @@
 #define wavplusplus_Write_hpp
 
 #include "Formats.hpp"
+#include "Exceptions.hpp"
+
 #include <vector>
+#include <string>
+#include <fstream>
+#include <cassert>
 
 /*
 
@@ -49,6 +54,37 @@ void Write (std::vector<double> const & samples,
             std::string const & filepath);
 
 void Normalize (std::vector<double> &);
+
+////////////////////////////////////////////////////////
+// HELPERS
+
+// May throw wav::WriteError.
+void WriteData (std::ofstream & out,
+                std::vector<double> const & samples,
+                uint16_t bits_per_sample,
+                uint16_t format_code);
+
+// Write string. (May throw wav::WriteError.)
+void WriteToFile (std::ofstream & out, std::string const & str);
+
+// Write number.
+// (May throw wav::WriteError.)
+//
+// By default, the number of bytes is the container size,
+// but it may also be less than the container size.
+template <typename T>
+requires (std::integral<T> || std::floating_point<T>)
+void WriteToFile (std::ofstream & out, T value, int size = sizeof(value))
+{
+    assert (size > 0 && size <= sizeof(value));
+    out.write (reinterpret_cast<const char *> (&value), size);
+    if (!out)
+    {
+        throw WriteError ("Failed to write to file.");
+    }
+}
+
+double clamped (double value, double min, double max);
 
 } // namespace wav
 
