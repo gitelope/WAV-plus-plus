@@ -10,6 +10,14 @@
 namespace wav
 {
 
+DataAndInfo Read (std::string const & filepath, size_t requestedBufferSize)
+{
+    std::vector<double> data;
+    Info info;
+    Read (filepath, data, info, requestedBufferSize);
+    return {std::move (data), info};
+}
+
 void Read (std::string const & filepath,
            std::vector<double> & destination,
            Info & playbackInfo,
@@ -18,7 +26,7 @@ void Read (std::string const & filepath,
     ChunkInfo chunkInfo {filepath};
 
     const long fileLength = std::filesystem::file_size (filepath);
-    if (chunkInfo.riff.size + 8 != fileLength) throw ReadError ("RIFF chunk size + 8 does not equal file size.");
+    if (chunkInfo.riff.size + 8 != fileLength) throw ReadError ("RIFF chunk size + 8 does not equal file size for " + filepath);
 
     playbackInfo.ExtractFrom (chunkInfo);
     ReadData (filepath, destination, playbackInfo, chunkInfo.data, requestedBufferSize);
