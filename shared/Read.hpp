@@ -9,13 +9,12 @@
 namespace wav
 {
 
-using DataAndInfo = std::pair <std::vector<double>, struct Info>;
-
 // Returns interleaved audio and associated information as a pair.
 // Calls in-place version.
 // May throw wav::ReadError.
-DataAndInfo Read (std::string const & filepath,
-                  size_t requestedBufferSize = 32768); // 32kB default buffer size
+std::pair <std::vector<double>, struct Info>
+Read (std::string const & filepath,
+      size_t requestedBufferSize = 32768); // 32kB default buffer size
 
 // Reads interleaved audio and associated information in-place.
 // May throw wav::ReadError.
