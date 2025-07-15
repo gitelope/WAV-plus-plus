@@ -22,7 +22,7 @@ Read (std::string const & filepath,
 
 void Read (std::string const & filepath,
            std::vector<double> & destination,
-           Info & playbackInfo,
+           Info & info,
            size_t requestedBufferSize)
 {
     ChunkInfo chunkInfo {filepath};
@@ -33,10 +33,27 @@ void Read (std::string const & filepath,
         throw ReadError ("RIFF chunk size + 8 does not equal file size for " + filepath);
     }
 
-    playbackInfo.ExtractFrom (chunkInfo);
-    ReadData (filepath, destination, playbackInfo, chunkInfo.data, requestedBufferSize);
+    info.ExtractFrom (chunkInfo);
+    ReadData (filepath, destination, info, chunkInfo.data, requestedBufferSize);
 }
+/*
+void Read (std::string const & filepath,
+           std::vector<std::vector<double>> & destination,
+           struct Info & info,
+           size_t requestedBufferSize)
+{
+    ChunkInfo chunkInfo {filepath};
 
+    const long fileLength = std::filesystem::file_size (filepath);
+    if (chunkInfo.riff.size + 8 != fileLength)
+    {
+        throw ReadError ("RIFF chunk size + 8 does not equal file size for " + filepath);
+    }
+
+    info.ExtractFrom (chunkInfo);
+    ReadData (filepath, destination, info, chunkInfo.data, requestedBufferSize);
+}
+*/
 void Info::ExtractFrom (ChunkInfo const & chunkInfo)
 {
     channels = chunkInfo.format.channels;
@@ -137,10 +154,10 @@ std::ostream & operator<< (std::ostream & os, Info const & info)
 }
 
 void ReadData (std::string const & filepath,
-                       std::vector<double> & destination,
-                       Info const & info,
-                       DataChunk const & data,
-                       size_t requestedBufferSizeInBytes)
+               std::vector<double> & destination,
+               Info const & info,
+               DataChunk const & data,
+               size_t requestedBufferSizeInBytes)
 {
     if (! std::filesystem::is_regular_file (filepath))
     {
@@ -158,6 +175,65 @@ void ReadData (std::string const & filepath,
     assert (numSamples > 0);
 
     destination.resize (numSamples);
+
+    const auto sampleSizeInBytes {static_cast<size_t> (info.containerSizeInBits / 8)};
+    const auto totalBytesToRead {numSamples * sampleSizeInBytes};
+
+    // Determine buffer size from requested size, sample size, and number of samples:
+    // 1. Buffer must be able to hold an entire sample's worth of bytes.
+    size_t bufferSizeInBytes = std::max (requestedBufferSizeInBytes, sampleSizeInBytes);
+    // 2. Buffer size must correspond to a whole number of samples.
+    bufferSizeInBytes = (bufferSizeInBytes / sampleSizeInBytes) * sampleSizeInBytes;
+    // 3. Buffer size must not exceed the total number of bytes to read.
+    bufferSizeInBytes = std::min (bufferSizeInBytes, totalBytesToRead);
+
+    std::vector<std::byte> buffer (bufferSizeInBytes);
+
+    size_t samplesRemaining {numSamples};
+    size_t writePosition {0};
+
+    while (samplesRemaining)
+    {
+        // Read in bytes:
+        const auto bytesToRead {std::min (samplesRemaining * sampleSizeInBytes, buffer.size())};
+        if (!in.read (reinterpret_cast<char*> (buffer.data()), bytesToRead))
+        {
+            throw ReadError ("Failed to read buffer from file.");
+        }
+
+        // Decode into samples:
+        const auto samplesToRead {bytesToRead / sampleSizeInBytes};
+        if      (info.isLinearPCM) ReadLinearPCM (buffer, destination, info, samplesToRead, writePosition);
+        else if (info.isFloatPCM)  ReadFloatPCM  (buffer, destination, info, samplesToRead, writePosition);
+        else assert (false);
+
+        writePosition += samplesToRead;
+        samplesRemaining -= samplesToRead;
+    }
+}
+/*
+void ReadData (std::string const & filepath,
+               std::vector <std::vector<double>> & destination,
+               Info const & info,
+               DataChunk const & data,
+               size_t requestedBufferSizeInBytes)
+{
+    if (! std::filesystem::is_regular_file (filepath))
+    {
+        throw ReadError ("File does not exist: " + filepath);
+    }
+
+    std::ifstream in {filepath, std::ios::binary};
+    if (!in) throw ReadError ("Failed to open: " + filepath);
+
+    // Advance to the beginning of the data portion of the data chunk:
+    in.seekg (data.offset);
+    if (!in) throw ReadError ("Failed to advance to data portion of data chunk.");
+
+    const size_t numSamples {static_cast<size_t>(info.frames) * info.channels};
+    assert (numSamples > 0);
+
+    destination.resize (info.channels, std::vector<double> (info.frames));
 
     const auto sampleSizeInBytes {info.containerSizeInBits / 8};
 
@@ -198,7 +274,7 @@ void ReadData (std::string const & filepath,
         samplesRemaining -= samplesToRead;
     }
 }
-
+*/
 void ReadLinearPCM (std::vector<std::byte> const & buffer,
                     std::vector<double> & destination,
                     Info const & info,

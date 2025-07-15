@@ -19,13 +19,13 @@ Read (std::string const & filepath,
 // Reads interleaved audio and associated information in-place.
 // May throw wav::ReadError.
 void Read (std::string const & filepath,
-           std::vector<double> & data,
+           std::vector<double> & destination,
            struct Info & info,
            size_t requestedBufferSize = 32768); // 32kB default buffer size
 
 /*
 void Read (std::string const & filepath,
-           std::vector<std::vector<double>> & data,
+           std::vector<std::vector<double>> & destination,
            struct Info & info,
            size_t requestedBufferSize = 32768); // 32kB default buffer size
  */
