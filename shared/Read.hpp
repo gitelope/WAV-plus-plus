@@ -9,26 +9,30 @@
 namespace wav
 {
 
-// Returns interleaved audio and associated information as a pair.
-// Calls in-place version.
+// Returns interleaved audio and associated Info as a pair.
+// Calls in-place Read().
 // May throw wav::ReadError.
 std::pair <std::vector<double>, struct Info>
+ReadInterleaved (std::string const & filepath,
+                 size_t requestedBufferSize = 32768); // 32kB default buffer size
+
+std::pair <std::vector<std::vector<double>>, struct Info>
 Read (std::string const & filepath,
       size_t requestedBufferSize = 32768); // 32kB default buffer size
 
-// Reads interleaved audio and associated information in-place.
+// Reads in interleaved audio to supplied vector and Info.
 // May throw wav::ReadError.
 void Read (std::string const & filepath,
            std::vector<double> & destination,
            struct Info & info,
            size_t requestedBufferSize = 32768); // 32kB default buffer size
 
-/*
+// Reads in de-interleaved audio to supplied vector of vectors and Info.
+// May throw wav::ReadError.
 void Read (std::string const & filepath,
            std::vector<std::vector<double>> & destination,
            struct Info & info,
            size_t requestedBufferSize = 32768); // 32kB default buffer size
- */
 
 struct Info
 {
@@ -61,16 +65,34 @@ void ReadData (std::string const & filepath,
                DataChunk const & dataChunk,
                size_t requestedBufferSizeInBytes);
 
+void ReadData (std::string const & filepath,
+               std::vector <std::vector<double>> & destination,
+               Info const & info,
+               DataChunk const & data,
+               size_t requestedBufferSizeInBytes);
+
 void ReadLinearPCM (std::vector<std::byte> const & buffer,
                     std::vector<double> & destination,
                     Info const & info,
                     size_t samplesToRead,
                     size_t writePosition);
 
+void ReadLinearPCM (std::vector<std::byte> const & buffer,
+                    std::vector<std::vector<double>> & destination,
+                    Info const & info,
+                    size_t frameToRead,
+                    size_t writePosition);
+
 void ReadFloatPCM  (std::vector<std::byte> const & buffer,
                     std::vector<double> & destination,
                     Info const & info,
                     size_t samplesToRead,
+                    size_t writePosition);
+
+void ReadFloatPCM  (std::vector<std::byte> const & buffer,
+                    std::vector<std::vector<double>> & destination,
+                    Info const & info,
+                    size_t framesToRead,
                     size_t writePosition);
 
 } // namespace wav

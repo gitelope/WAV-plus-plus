@@ -11,10 +11,21 @@ namespace wav
 {
 
 std::pair <std::vector<double>, struct Info>
+ReadInterleaved (std::string const & filepath,
+                 size_t requestedBufferSize)
+{
+    std::vector<double> data;
+    Info info;
+    Read (filepath, data, info, requestedBufferSize);
+    return {std::move (data), info};
+}
+
+// De-interleaved version
+std::pair <std::vector<std::vector<double>>, struct Info>
 Read (std::string const & filepath,
       size_t requestedBufferSize)
 {
-    std::vector<double> data;
+    std::vector<std::vector<double>> data;
     Info info;
     Read (filepath, data, info, requestedBufferSize);
     return {std::move (data), info};
@@ -36,7 +47,7 @@ void Read (std::string const & filepath,
     info.ExtractFrom (chunkInfo);
     ReadData (filepath, destination, info, chunkInfo.data, requestedBufferSize);
 }
-/*
+
 void Read (std::string const & filepath,
            std::vector<std::vector<double>> & destination,
            struct Info & info,
@@ -53,7 +64,7 @@ void Read (std::string const & filepath,
     info.ExtractFrom (chunkInfo);
     ReadData (filepath, destination, info, chunkInfo.data, requestedBufferSize);
 }
-*/
+
 void Info::ExtractFrom (ChunkInfo const & chunkInfo)
 {
     channels = chunkInfo.format.channels;
@@ -176,8 +187,8 @@ void ReadData (std::string const & filepath,
 
     destination.resize (numSamples);
 
-    const auto sampleSizeInBytes {static_cast<size_t> (info.containerSizeInBits / 8)};
-    const auto totalBytesToRead {numSamples * sampleSizeInBytes};
+    const size_t sampleSizeInBytes {static_cast<size_t> (info.containerSizeInBits / 8)};
+    const size_t totalBytesToRead {numSamples * sampleSizeInBytes};
 
     // Determine buffer size from requested size, sample size, and number of samples:
     // 1. Buffer must be able to hold an entire sample's worth of bytes.
@@ -211,7 +222,7 @@ void ReadData (std::string const & filepath,
         samplesRemaining -= samplesToRead;
     }
 }
-/*
+
 void ReadData (std::string const & filepath,
                std::vector <std::vector<double>> & destination,
                Info const & info,
@@ -230,51 +241,44 @@ void ReadData (std::string const & filepath,
     in.seekg (data.offset);
     if (!in) throw ReadError ("Failed to advance to data portion of data chunk.");
 
-    const size_t numSamples {static_cast<size_t>(info.frames) * info.channels};
-    assert (numSamples > 0);
-
     destination.resize (info.channels, std::vector<double> (info.frames));
 
-    const auto sampleSizeInBytes {info.containerSizeInBits / 8};
+    const size_t frameSizeInBytes {static_cast<size_t> (info.channels * info.containerSizeInBits / 8)};
+    const size_t totalBytesToRead {info.frames * frameSizeInBytes};
 
-    const auto totalBytesToRead {numSamples * sampleSizeInBytes};
+    // Determine buffer size from requested size, frame (a.k.a. block) size, and number of samples:
+    // 1. Buffer must be able to hold an entire frame's worth of bytes.
+    size_t bufferSizeInBytes = std::max (requestedBufferSizeInBytes, frameSizeInBytes);
+    // 2. Buffer size must correspond to a whole number of frames.
+    bufferSizeInBytes = (bufferSizeInBytes / frameSizeInBytes) * frameSizeInBytes;
+    // 3. Buffer size must not exceed the total number of bytes to read.
+    bufferSizeInBytes = std::min (bufferSizeInBytes, totalBytesToRead);
 
-    if (requestedBufferSizeInBytes < sampleSizeInBytes)
-    {
-        requestedBufferSizeInBytes = sampleSizeInBytes;
-    }
-    // If requestedBufferSizeInBytes does not correspond to a whole number of samples,
-    // lower it to accomodate exactly the largest whole number of samples whose size in bytes
-    // is less than requestedBufferSizeInBytes.
-    // e.g. When bit depth is 24-bit (3 bytes), 4096 bytes would correspond to 1,365 samples with one byte left over,
-    // so we would adjust the requested size to 1,365 * 3 = 4095 bytes.
-    const auto adjustedRequestSizeInBytes {(requestedBufferSizeInBytes / sampleSizeInBytes) * sampleSizeInBytes};
-    // If the number of bytes to read is smaller than the adjusted buffer size, set buffer size to the former instead.
-    std::vector<std::byte> buffer (std::min (totalBytesToRead, adjustedRequestSizeInBytes));
+    std::vector<std::byte> buffer (bufferSizeInBytes);
 
-    size_t samplesRemaining {numSamples};
+    size_t framesRemaining {static_cast<size_t> (info.frames)};
     size_t writePosition {0};
 
-    while (samplesRemaining)
+    while (framesRemaining)
     {
         // Read in bytes:
-        const auto bytesToRead {std::min (samplesRemaining * sampleSizeInBytes, buffer.size())};
+        const auto bytesToRead {std::min (framesRemaining * frameSizeInBytes, buffer.size())};
         if (!in.read (reinterpret_cast<char*> (buffer.data()), bytesToRead))
         {
             throw ReadError ("Failed to read buffer from file.");
         }
 
         // Decode into samples:
-        const auto samplesToRead {bytesToRead / sampleSizeInBytes};
-        if      (info.isLinearPCM) ReadLinearPCM (buffer, destination, info, samplesToRead, writePosition);
-        else if (info.isFloatPCM)  ReadFloatPCM  (buffer, destination, info, samplesToRead, writePosition);
+        const auto framesToRead {bytesToRead / frameSizeInBytes};
+        if      (info.isLinearPCM) ReadLinearPCM (buffer, destination, info, framesToRead, writePosition);
+        else if (info.isFloatPCM)  ReadFloatPCM  (buffer, destination, info, framesToRead, writePosition);
         else assert (false);
 
-        writePosition += samplesToRead;
-        samplesRemaining -= samplesToRead;
+        writePosition += framesToRead;
+        framesRemaining -= framesToRead;
     }
 }
-*/
+
 void ReadLinearPCM (std::vector<std::byte> const & buffer,
                     std::vector<double> & destination,
                     Info const & info,
@@ -292,27 +296,85 @@ void ReadLinearPCM (std::vector<std::byte> const & buffer,
     switch (info.containerSizeInBits)
     {
         case 8:
-            for (size_t i=0; i<samplesToRead; ++i)
+            for (size_t n = writePosition; n < samplesToRead + writePosition; ++n)
             {
-                destination [writePosition + i] = (uint8 (buffer, pos) - 128.) / two_to_the_n_minus_one;
+                destination [n] = (uint8 (buffer, pos) - 128.) / two_to_the_n_minus_one;
             }
             break;
 
         case 16:
-            for (size_t i=0; i<samplesToRead; ++i)
+            for (size_t n = writePosition; n < samplesToRead + writePosition; ++n)
             {
-                destination [writePosition + i] = int16_le (buffer, pos) / two_to_the_n_minus_one;
+                destination [n] = int16_le (buffer, pos) / two_to_the_n_minus_one;
             }
             break;
 
         case 24:
-            for (size_t i=0; i<samplesToRead; ++i)
-                destination [writePosition + i] = int24_le (buffer, pos) / two_to_the_n_minus_one;
+            for (size_t n = writePosition; n < samplesToRead + writePosition; ++n)
+                destination [n] = int24_le (buffer, pos) / two_to_the_n_minus_one;
             break;
 
         case 32:
-            for (size_t i=0; i<samplesToRead; ++i)
-                destination [writePosition + i] = int32_le (buffer, pos) / two_to_the_n_minus_one;
+            for (size_t n = writePosition; n < samplesToRead + writePosition; ++n)
+                destination [n] = int32_le (buffer, pos) / two_to_the_n_minus_one;
+            break;
+    }
+}
+
+void ReadLinearPCM (std::vector<std::byte> const & buffer,
+                    std::vector<std::vector<double>> & destination,
+                    Info const & info,
+                    size_t framesToRead,
+                    size_t writePosition)
+{
+    // Divide signed integer by the absolute value of the largest negative int for the bit depth.
+    // This is equal to one greater than the largest positive value for the bit depth.
+    // Example: for 16-bits, the range is [-32768, 32767] so we divide by 32768.
+    // This ensures that our float is within [-1.0, 1.0] regardless of how it was clamped.
+    // (For what it's worth, it will never equal +1.0.)
+    const double two_to_the_n_minus_one = pow (2.0, info.bitDepth - 1);
+
+    size_t pos {0};
+    switch (info.containerSizeInBits)
+    {
+        case 8:
+            for (size_t frame = writePosition; frame < writePosition + framesToRead; ++frame)
+            {
+                for (size_t channel = 0; channel < info.channels; ++channel)
+                {
+                    destination [channel][frame] = (uint8 (buffer, pos) - 128.) / two_to_the_n_minus_one;
+                }
+            }
+            break;
+
+        case 16:
+            for (size_t frame = writePosition; frame < writePosition + framesToRead; ++frame)
+            {
+                for (size_t channel = 0; channel < info.channels; ++channel)
+                {
+                    destination [channel][frame] = int16_le (buffer, pos) / two_to_the_n_minus_one;
+                }
+            }
+            break;
+
+        case 24:
+            for (size_t frame = writePosition; frame < writePosition + framesToRead; ++frame)
+            {
+                for (size_t channel = 0; channel < info.channels; ++channel)
+                {
+                    destination [channel][frame] = int24_le (buffer, pos) / two_to_the_n_minus_one;
+                }
+            }
+            break;
+
+        case 32:
+            for (size_t frame = writePosition; frame < writePosition + framesToRead; ++frame)
+            {
+                for (size_t channel = 0; channel < info.channels; ++channel)
+                {
+                    destination [channel][frame] = int32_le (buffer, pos) / two_to_the_n_minus_one;
+                }
+            }
             break;
     }
 }
@@ -329,13 +391,46 @@ void ReadFloatPCM (std::vector<std::byte> const & buffer,
     switch (info.containerSizeInBits)
     {
         case 32:
-            for (size_t i=0; i<samplesToRead; ++i)
-                destination [writePosition + i] = float32_le (buffer, pos);
+            for (size_t n = writePosition; n < samplesToRead + writePosition; ++n)
+                destination [n] = float32_le (buffer, pos);
             break;
 
         case 64:
-            for (size_t i=0; i<samplesToRead; ++i)
-                destination [writePosition + i] = float64_le (buffer, pos);
+            for (size_t n = writePosition; n < samplesToRead + writePosition; ++n)
+                destination [n] = float64_le (buffer, pos);
+            break;
+    }
+}
+
+void ReadFloatPCM (std::vector<std::byte> const & buffer,
+                   std::vector<std::vector<double>> & destination,
+                   Info const & info,
+                   size_t framesToRead,
+                   size_t writePosition)
+{
+    assert (info.containerSizeInBits == info.bitDepth);
+
+    size_t pos {0};
+    switch (info.containerSizeInBits)
+    {
+        case 32:
+            for (size_t frame = writePosition; frame < writePosition + framesToRead; ++frame)
+            {
+                for (size_t channel = 0; channel < info.channels; ++channel)
+                {
+                    destination [channel][frame] = float32_le (buffer, pos);
+                }
+            }
+            break;
+
+        case 64:
+            for (size_t frame = writePosition; frame < writePosition + framesToRead; ++frame)
+            {
+                for (size_t channel = 0; channel < info.channels; ++channel)
+                {
+                    destination [channel][frame] = float64_le (buffer, pos);
+                }
+            }
             break;
     }
 }
