@@ -9,30 +9,36 @@
 namespace wav
 {
 
-// Returns interleaved audio and associated Info as a pair.
-// Calls in-place Read().
+// 32kB default (requested) buffer size
+inline constexpr size_t defaultRequestedReadBufferSize = 32768;
+
+// Returns pair containing interleaved audio vector and Info.
+// Calls in-place Read() overload.
 // May throw wav::ReadError.
 std::pair <std::vector<double>, struct Info>
 ReadInterleaved (std::string const & filepath,
-                 size_t requestedBufferSize = 32768); // 32kB default buffer size
+                 size_t requestedBufferSize = defaultRequestedReadBufferSize);
 
+// Returns pair containing audio separated into channels and Info.
+// Calls in-place Read() overload.
+// May throw wav::ReadError.
 std::pair <std::vector<std::vector<double>>, struct Info>
 Read (std::string const & filepath,
-      size_t requestedBufferSize = 32768); // 32kB default buffer size
+      size_t requestedBufferSize = defaultRequestedReadBufferSize);
 
-// Reads in interleaved audio to supplied vector and Info.
+// In-place read of interleaved audio and Info.
 // May throw wav::ReadError.
 void Read (std::string const & filepath,
            std::vector<double> & destination,
            struct Info & info,
-           size_t requestedBufferSize = 32768); // 32kB default buffer size
+           size_t requestedBufferSize = defaultRequestedReadBufferSize);
 
-// Reads in de-interleaved audio to supplied vector of vectors and Info.
+// In-place read to separate channels and Info.
 // May throw wav::ReadError.
 void Read (std::string const & filepath,
            std::vector<std::vector<double>> & destination,
            struct Info & info,
-           size_t requestedBufferSize = 32768); // 32kB default buffer size
+           size_t requestedBufferSize = defaultRequestedReadBufferSize);
 
 struct Info
 {
