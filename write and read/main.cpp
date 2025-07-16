@@ -17,8 +17,8 @@ int main (int argc, const char * argv[])
     const auto filepath = "out.wav";
     wav::Write (out, wav::ExportFormat::LINEAR_PCM_24, 48000, 2, filepath);
 
-    const auto [interleaved,   info ] = wav::ReadInterleaved (filepath);
-    const auto [deinterleaved, info2] = wav::Read            (filepath);
+    const auto [interleaved,   info]  = wav::ReadInterleaved<double> (filepath);
+    const auto [deinterleaved, info2] = wav::Read<double> (filepath);
 
     std::cout << '\n' << filepath << "\n\n" << info << std::endl;
 
