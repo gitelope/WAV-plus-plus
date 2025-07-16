@@ -10,6 +10,21 @@
 namespace wav
 {
 
+// Forward declarations for helper functions:
+template <typename FloatType> void ReadData
+ (std::string const &, std::vector<FloatType> &, Info const &, DataChunk const &, size_t);
+template <typename FloatType> void ReadData
+ (std::string const &, std::vector<std::vector<FloatType>> &, Info const &, DataChunk const &, size_t);
+template <typename FloatType> void ReadLinearPCM
+ (std::vector<std::byte> const &, std::vector<FloatType> &, Info const &, size_t, size_t);
+template <typename FloatType> void ReadLinearPCM
+ (std::vector<std::byte> const &, std::vector<std::vector<FloatType>> &, Info const &, size_t, size_t);
+template <typename FloatType> void ReadFloatPCM
+ (std::vector<std::byte> const &, std::vector<FloatType> &, Info const &, size_t, size_t);
+template <typename FloatType> void ReadFloatPCM
+ (std::vector<std::byte> const &, std::vector<std::vector<FloatType>> &, Info const &, size_t, size_t);
+////////////////////////////////////////////
+
 template <typename FloatType>
 std::pair <std::vector<FloatType>, struct Info>
 ReadInterleaved (std::string const & filepath,
@@ -239,9 +254,6 @@ void ReadData (std::string const & filepath,
         samplesRemaining -= samplesToRead;
     }
 }
-// explicit instantiation required for linking when separating declarations and definitions
-template void ReadData (std::string const &, std::vector<float> &,  Info const &, DataChunk const &, size_t);
-template void ReadData (std::string const &, std::vector<double> &, Info const &, DataChunk const &, size_t);
 
 template <typename FloatType>
 void ReadData (std::string const & filepath,
@@ -299,9 +311,6 @@ void ReadData (std::string const & filepath,
         framesRemaining -= framesToRead;
     }
 }
-// explicit instantiation required for linking when separating declarations and definitions
-template void ReadData (std::string const &, std::vector<std::vector<float>> &, Info const &, DataChunk const &, size_t);
-template void ReadData (std::string const &, std::vector<std::vector<double>> &, Info const &, DataChunk const &, size_t);
 
 template <typename FloatType>
 void ReadLinearPCM (std::vector<std::byte> const & buffer,
@@ -343,9 +352,6 @@ void ReadLinearPCM (std::vector<std::byte> const & buffer,
             break;
     }
 }
-// explicit instantiation required for linking when separating declarations and definitions
-template void ReadLinearPCM (std::vector<std::byte> const &, std::vector<float> &, Info const &, size_t, size_t);
-template void ReadLinearPCM (std::vector<std::byte> const &, std::vector<double> &, Info const &, size_t, size_t);
 
 template <typename FloatType>
 void ReadLinearPCM (std::vector<std::byte> const & buffer,
@@ -403,9 +409,6 @@ void ReadLinearPCM (std::vector<std::byte> const & buffer,
             break;
     }
 }
-// explicit instantiation required for linking when separating declarations and definitions
-template void ReadLinearPCM (std::vector<std::byte> const &, std::vector<std::vector<float>> &, Info const &, size_t, size_t);
-template void ReadLinearPCM (std::vector<std::byte> const &, std::vector<std::vector<double>> &, Info const &, size_t, size_t);
 
 template <typename FloatType>
 void ReadFloatPCM (std::vector<std::byte> const & buffer,
@@ -430,9 +433,6 @@ void ReadFloatPCM (std::vector<std::byte> const & buffer,
             break;
     }
 }
-// explicit instantiation required for linking when separating declarations and definitions
-template void ReadFloatPCM (std::vector<std::byte> const &, std::vector<float> &, Info const &, size_t, size_t);
-template void ReadFloatPCM (std::vector<std::byte> const &, std::vector<double> &, Info const &, size_t, size_t);
 
 template <typename FloatType>
 void ReadFloatPCM (std::vector<std::byte> const & buffer,
@@ -467,9 +467,6 @@ void ReadFloatPCM (std::vector<std::byte> const & buffer,
             break;
     }
 }
-// explicit instantiation required for linking when separating declarations and definitions
-template void ReadFloatPCM (std::vector<std::byte> const &, std::vector<std::vector<float>> &, Info const &, size_t, size_t);
-template void ReadFloatPCM (std::vector<std::byte> const &, std::vector<std::vector<double>> &, Info const &, size_t, size_t);
 
 } // namespace wav
 

@@ -64,54 +64,6 @@ struct Info
 };
 std::ostream & operator<< (std::ostream & os, Info const &);
 
-
-////////////////////////////////////////////////////////
-// HELPER FUNCTIONS
-// (may throw wav::ReadError)
-
-// Reads in a buffer of bytes (of adjustable size), decodes, and repeats until done.
-template <typename FloatType>
-void ReadData (std::string const & filepath,
-               std::vector<FloatType> & destination,
-               Info const & info,
-               DataChunk const & dataChunk,
-               size_t requestedBufferSizeInBytes);
-
-template <typename FloatType>
-void ReadData (std::string const & filepath,
-               std::vector <std::vector<FloatType>> & destination,
-               Info const & info,
-               DataChunk const & data,
-               size_t requestedBufferSizeInBytes);
-
-template <typename FloatType>
-void ReadLinearPCM (std::vector<std::byte> const & buffer,
-                    std::vector<FloatType> & destination,
-                    Info const & info,
-                    size_t samplesToRead,
-                    size_t writePosition);
-
-template <typename FloatType>
-void ReadLinearPCM (std::vector<std::byte> const & buffer,
-                    std::vector<std::vector<FloatType>> & destination,
-                    Info const & info,
-                    size_t frameToRead,
-                    size_t writePosition);
-
-template <typename FloatType>
-void ReadFloatPCM  (std::vector<std::byte> const & buffer,
-                    std::vector<FloatType> & destination,
-                    Info const & info,
-                    size_t samplesToRead,
-                    size_t writePosition);
-
-template <typename FloatType>
-void ReadFloatPCM  (std::vector<std::byte> const & buffer,
-                    std::vector<std::vector<FloatType>> & destination,
-                    Info const & info,
-                    size_t framesToRead,
-                    size_t writePosition);
-
 } // namespace wav
 
 #endif
