@@ -21,20 +21,20 @@ enum class ExportFormat
 
 namespace FormatCode // format code in "fmt " chunk
 {
-static constexpr uint16_t LINEAR_PCM = 0x0001;
-static constexpr uint16_t FLOAT_PCM  = 0x0003;
-static constexpr uint16_t EXTENSIBLE = 0xFFFE;
+inline constexpr uint16_t LINEAR_PCM = 0x0001;
+inline constexpr uint16_t FLOAT_PCM  = 0x0003;
+inline constexpr uint16_t EXTENSIBLE = 0xFFFE;
 }
 
 namespace FormatChunkSize
 {
-static constexpr uint32_t WAVEFORMAT           = 14;
-static constexpr uint32_t PCMWAVEFORMAT        = 16; // 14+2      (adds bitsPerSample)
-static constexpr uint32_t WAVEFORMATEX         = 18; // 14+2+2    (adds cbSize, here renamed extraFormatInformationSize)
-static constexpr uint32_t WAVEFORMATEXTENSIBLE = 40; // 14+2+2+22 (adds validBitsPerSample, channel bit mask, and sub-format GUID)
+inline constexpr uint32_t WAVEFORMAT           = 14;
+inline constexpr uint32_t PCMWAVEFORMAT        = 16; // 14+2      (adds bitsPerSample)
+inline constexpr uint32_t WAVEFORMATEX         = 18; // 14+2+2    (adds cbSize, here renamed extraFormatInformationSize)
+inline constexpr uint32_t WAVEFORMATEXTENSIBLE = 40; // 14+2+2+22 (adds validBitsPerSample, channel bit mask, and sub-format GUID)
 }
 
-static constexpr bool isValidFormatChunkSize (uint32_t chunkSize)
+constexpr bool isValidFormatChunkSize (uint32_t chunkSize)
 {
     return
     chunkSize == FormatChunkSize::WAVEFORMAT         ||
@@ -56,9 +56,9 @@ struct GUID // for WAVEFORMATEXTENSIBLE
 
 namespace ExtensibleFormat // WAVEFORMATEXTENSIBLE sub-formats
 {
-static constexpr GUID LINEAR_PCM
+inline constexpr GUID LINEAR_PCM
 {0x00000001, 0x0000, 0x0010, {0x80, 0x00, 0x00, 0xaa, 0x00, 0x38, 0x9b, 0x71}};
-static constexpr GUID FLOAT_PCM
+inline constexpr GUID FLOAT_PCM
 {0x00000003, 0x0000, 0x0010, {0x80, 0x00, 0x00, 0xaa, 0x00, 0x38, 0x9b, 0x71}};
 }
 
