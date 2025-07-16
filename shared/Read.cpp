@@ -11,28 +11,28 @@ namespace wav
 {
 
 // Forward declarations for helper functions:
-template <typename FloatType> void ReadData
- (std::string const &, std::vector<FloatType> &, Info const &, DataChunk const &, size_t);
-template <typename FloatType> void ReadData
- (std::string const &, std::vector<std::vector<FloatType>> &, Info const &, DataChunk const &, size_t);
-template <typename FloatType> void ReadLinearPCM
- (std::vector<std::byte> const &, std::vector<FloatType> &, Info const &, size_t, size_t);
-template <typename FloatType> void ReadLinearPCM
- (std::vector<std::byte> const &, std::vector<std::vector<FloatType>> &, Info const &, size_t, size_t);
-template <typename FloatType> void ReadFloatPCM
- (std::vector<std::byte> const &, std::vector<FloatType> &, Info const &, size_t, size_t);
-template <typename FloatType> void ReadFloatPCM
- (std::vector<std::byte> const &, std::vector<std::vector<FloatType>> &, Info const &, size_t, size_t);
+template <typename T> void ReadData
+ (std::string const &, std::vector<T> &, Info const &, DataChunk const &, size_t);
+template <typename T> void ReadData
+ (std::string const &, std::vector<std::vector<T>> &, Info const &, DataChunk const &, size_t);
+template <typename T> void ReadLinearPCM
+ (std::vector<std::byte> const &, std::vector<T> &, Info const &, size_t, size_t);
+template <typename T> void ReadLinearPCM
+ (std::vector<std::byte> const &, std::vector<std::vector<T>> &, Info const &, size_t, size_t);
+template <typename T> void ReadFloatPCM
+ (std::vector<std::byte> const &, std::vector<T> &, Info const &, size_t, size_t);
+template <typename T> void ReadFloatPCM
+ (std::vector<std::byte> const &, std::vector<std::vector<T>> &, Info const &, size_t, size_t);
 ////////////////////////////////////////////
 
-template <typename FloatType>
-std::pair <std::vector<FloatType>, struct Info>
+template <FloatingPoint T>
+std::pair <std::vector<T>, struct Info>
 ReadInterleaved (std::string const & filepath,
                  size_t requestedBufferSize)
 {
-    std::vector<FloatType> data;
+    std::vector<T> data;
     Info info;
-    Read (filepath, data, info, requestedBufferSize);
+    ReadInterleaved (filepath, data, info, requestedBufferSize);
     return {std::move (data), info};
 }
 // explicit instantiation required for linking when separating declarations and definitions
@@ -40,12 +40,12 @@ template std::pair <std::vector<float>,  struct Info> ReadInterleaved (std::stri
 template std::pair <std::vector<double>, struct Info> ReadInterleaved (std::string const &, size_t);
 
 // De-interleaved version
-template <typename FloatType>
-std::pair <std::vector<std::vector<FloatType>>, struct Info>
+template <FloatingPoint T>
+std::pair <std::vector<std::vector<T>>, struct Info>
 Read (std::string const & filepath,
       size_t requestedBufferSize)
 {
-    std::vector<std::vector<FloatType>> data;
+    std::vector<std::vector<T>> data;
     Info info;
     Read (filepath, data, info, requestedBufferSize);
     return {std::move (data), info};
@@ -54,11 +54,11 @@ Read (std::string const & filepath,
 template std::pair <std::vector<std::vector<float>>,  struct Info> Read (std::string const &, size_t);
 template std::pair <std::vector<std::vector<double>>, struct Info> Read (std::string const &, size_t);
 
-template <typename FloatType>
-void Read (std::string const & filepath,
-           std::vector<FloatType> & destination,
-           Info & info,
-           size_t requestedBufferSize)
+template <FloatingPoint T>
+void ReadInterleaved (std::string const & filepath,
+                      std::vector<T> & destination,
+                      Info & info,
+                      size_t requestedBufferSize)
 {
     ChunkInfo chunkInfo {filepath};
 
@@ -72,12 +72,12 @@ void Read (std::string const & filepath,
     ReadData (filepath, destination, info, chunkInfo.data, requestedBufferSize);
 }
 // explicit instantiation required for linking when separating declarations and definitions
-template void Read (std::string const &, std::vector<float> &,  struct Info &, size_t);
-template void Read (std::string const &, std::vector<double> &, struct Info &, size_t);
+template void ReadInterleaved (std::string const &, std::vector<float> &,  struct Info &, size_t);
+template void ReadInterleaved (std::string const &, std::vector<double> &, struct Info &, size_t);
 
-template <typename FloatType>
+template <FloatingPoint T>
 void Read (std::string const & filepath,
-           std::vector<std::vector<FloatType>> & destination,
+           std::vector<std::vector<T>> & destination,
            struct Info & info,
            size_t requestedBufferSize)
 {

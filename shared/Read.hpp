@@ -12,36 +12,39 @@ namespace wav
 // 32kB default (requested) buffer size
 inline constexpr size_t defaultRequestedReadBufferSize = 32768;
 
+template <typename T>
+concept FloatingPoint = std::same_as <T,float> || std::same_as <T,double>;
+
 // Returns pair containing interleaved audio vector and Info.
 // Calls in-place Read() overload.
 // May throw wav::ReadError.
-template <typename FloatType>
-std::pair <std::vector<FloatType>, struct Info>
+template <FloatingPoint T>
+std::pair <std::vector<T>, struct Info>
 ReadInterleaved (std::string const & filepath,
                  size_t requestedBufferSize = defaultRequestedReadBufferSize);
 
 // Returns pair containing audio separated into channels and Info.
 // Calls in-place Read() overload.
 // May throw wav::ReadError.
-template <typename FloatType>
-std::pair <std::vector<std::vector<FloatType>>, struct Info>
+template <FloatingPoint T>
+std::pair <std::vector<std::vector<T>>, struct Info>
 Read (std::string const & filepath,
       size_t requestedBufferSize = defaultRequestedReadBufferSize);
 
 
 // In-place read of interleaved audio and Info.
 // May throw wav::ReadError.
-template <typename FloatType>
-void Read (std::string const & filepath,
-           std::vector<FloatType> & destination,
-           struct Info & info,
-           size_t requestedBufferSize = defaultRequestedReadBufferSize);
+template <FloatingPoint T>
+void ReadInterleaved (std::string const & filepath,
+                      std::vector<T> & destination,
+                      struct Info & info,
+                      size_t requestedBufferSize = defaultRequestedReadBufferSize);
 
 // In-place read to separate channels and Info.
 // May throw wav::ReadError.
-template <typename FloatType>
+template <FloatingPoint T>
 void Read (std::string const & filepath,
-           std::vector<std::vector<FloatType>> & destination,
+           std::vector<std::vector<T>> & destination,
            struct Info & info,
            size_t requestedBufferSize = defaultRequestedReadBufferSize);
 
