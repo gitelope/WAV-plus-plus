@@ -107,62 +107,63 @@ void Normalize (std::vector<T> & samples)
     }
 }
 
+template <typename IntType, FloatingPoint T>
+void WriteLinearPCM (std::ofstream & out, std::vector<T> const & samples, uint16_t bitsPerSample)
+{
+    // 2^(bits-1) - 1
+    const auto max {static_cast<T> ((1 << (bitsPerSample - 1)) - 1)};
+    const auto min {-max};
+    const int bytes {bitsPerSample / 8};
+    T offset {0};
+    if constexpr (std::is_same_v <IntType, uint8_t>)
+    {
+        offset = 128;
+    }
+    for (auto const & sample : samples)
+    {
+        WriteToFile (out, static_cast<IntType> (clamped (round (sample * max /* + dither */), min, max) + offset), bytes);
+    }
+}
+
 template <FloatingPoint T>
 void WriteData (std::ofstream & out, std::vector<T> const & samples, uint16_t bitsPerSample, uint16_t formatCode)
 {
     if (formatCode == FormatCode::LINEAR_PCM)
     {
-        // 2^(bits-1) - 1
-        const auto max {static_cast<T> ((1 << (bitsPerSample - 1)) - 1)};
-        const auto min {-max};
         switch (bitsPerSample)
         {
             case 8:
             {
-                const T offset {128}; // 2^(bits-1)
-                for (auto const & sample : samples)
-                {
-                    WriteToFile (out, static_cast<uint8_t> (clamped (round (sample * max + offset /* + dither */), min+offset, max+offset)));
-                }
+                WriteLinearPCM<uint8_t> (out, samples, bitsPerSample);
                 break;
             }
             case 16:
             {
-                for (auto const & sample : samples)
-                {
-                    WriteToFile (out, static_cast<int16_t> (clamped (round (sample * max /* + dither */), min, max)));
-                }
+                WriteLinearPCM<int16_t> (out, samples, bitsPerSample);
                 break;
             }
             case 24:
             {
-                for (auto const & sample : samples)
-                {
-                    // When we store our value (range [-2^23 + 1, 2^23 - 1])
-                    // in a 32-bit 2's-complement int, the eight most
-                    // significant bits are just sign extension. The lowest
-                    // 3 bytes perfectly represent the number as a 24-bit
-                    // (2's-complement) signed integer.
-                    //
-                    // positive number:
-                    // 24-bit:          01001001 11100111 10100001 = 4,843,425
-                    // 32-bit: 00000000 01001001 11100111 10100001 = 4,843,425
-                    //
-                    // negative number:
-                    // 24-bit:          11100011 01101000 01111011 = -1,873,797
-                    // 32-bit: 11111111 11100011 01101000 01111011 = -1,873,797
-                    //
-                    constexpr int valid_bytes = 3;
-                    WriteToFile (out, static_cast<int32_t> (clamped (round (sample * max /* + dither */), min, max)), valid_bytes);
-                }
+                // When we store our value (range [-2^23 + 1, 2^23 - 1])
+                // in a 32-bit 2's-complement int, the eight most
+                // significant bits are just sign extension. The lowest
+                // 3 bytes perfectly represent the number as a 24-bit
+                // (2's-complement) signed integer.
+                //
+                // positive number:
+                // 24-bit:          01001001 11100111 10100001 = 4,843,425
+                // 32-bit: 00000000 01001001 11100111 10100001 = 4,843,425
+                //
+                // negative number:
+                // 24-bit:          11100011 01101000 01111011 = -1,873,797
+                // 32-bit: 11111111 11100011 01101000 01111011 = -1,873,797
+                //
+                WriteLinearPCM<int32_t> (out, samples, bitsPerSample);
                 break;
             }
             case 32:
             {
-                for (auto const & sample : samples)
-                {
-                    WriteToFile (out, static_cast<int32_t> (clamped (round (sample * max /* + dither */), min, max)));
-                }
+                WriteLinearPCM<int32_t> (out, samples, bitsPerSample);
                 break;
             }
         }
