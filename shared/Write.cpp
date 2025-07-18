@@ -1,14 +1,24 @@
 
 #include "Write.hpp"
+#include <iostream>
 
 namespace wav
 {
 
-void Write (std::vector<double> const & samples,
+// Forward declarations for helper functions:
+template <FloatingPoint T> void WriteData (std::ofstream &, std::vector<T> const &, uint16_t, uint16_t);
+template <FloatingPoint T> T clamped (T, T, T);
+void WriteToFile (std::ofstream &, std::string const &);
+template <typename T> requires (std::integral<T> || std::floating_point<T>)
+void WriteToFile (std::ofstream &, T value, int size = sizeof(value));
+////////////////////////////////////////////
+
+template <FloatingPoint T>
+void Write (std::string const & filepath,
+            std::vector<T> const & samples,
             ExportFormat format,
             int sampleRate,
-            int channels,
-            std::string const & filepath)
+            int channels)
 {
     if (samples.size() % channels != 0) throw std::invalid_argument ("Number of samples should be divisible by the number of channels.");
 
@@ -27,10 +37,10 @@ void Write (std::vector<double> const & samples,
 
     const auto bytesPerSample {bitsPerSample / 8};
 
-    constexpr uint32_t formatChunkSize {16}; // PCMWAVEFORMAT
+    constexpr auto formatChunkSize {FormatChunkSize::PCMWAVEFORMAT};
 
     // Note: excludes potential padding byte when samples.size() is odd:
-    const uint32_t dataChunkSize {static_cast<uint32_t>(samples.size()) * bytesPerSample};
+    const auto dataChunkSize {static_cast<uint32_t>(samples.size() * bytesPerSample)};
 
     const uint32_t riffChunkSize
     // RIFF chunk
@@ -50,10 +60,10 @@ void Write (std::vector<double> const & samples,
     // WILL be reflected in the RIFF chunk size.
 
     // blocks/sec * samples/block * bytes/sample = bytes/sec
-    const uint32_t bytesPerSecond {static_cast<uint32_t> (sampleRate * channels * bytesPerSample)};
+    const auto bytesPerSecond {static_cast<uint32_t> (sampleRate * channels * bytesPerSample)};
 
     // block size in bytes = samples/block * bytes/sample
-    const uint16_t blockAlign {static_cast<uint16_t> (channels * bytesPerSample)};
+    const auto blockAlign {static_cast<uint16_t> (channels * bytesPerSample)};
 
     std::ofstream out {filepath, std::ofstream::binary};
     if (!out) throw WriteError ("Failed to open file for writing: " + filepath);
@@ -78,10 +88,14 @@ void Write (std::vector<double> const & samples,
     out.close();
     if (!out) throw WriteError ("File did not close successfully.");
 }
+// Explicit instantiation allows separation of declaration and definition.
+template void Write (std::string const &, std::vector<float>  const &, ExportFormat, int, int);
+template void Write (std::string const &, std::vector<double> const &, ExportFormat, int, int);
 
-void Normalize (std::vector<double> & samples)
+template <FloatingPoint T>
+void Normalize (std::vector<T> & samples)
 {
-    double maximum {0};
+    T maximum {0};
     for (auto const & sample : samples)
     {
         maximum = std::max (maximum, std::abs (sample));
@@ -93,17 +107,19 @@ void Normalize (std::vector<double> & samples)
     }
 }
 
-void WriteData (std::ofstream & out, std::vector<double> const & samples, uint16_t bits_per_sample, uint16_t format_code)
+template <FloatingPoint T>
+void WriteData (std::ofstream & out, std::vector<T> const & samples, uint16_t bitsPerSample, uint16_t formatCode)
 {
-    if (format_code == FormatCode::LINEAR_PCM)
+    if (formatCode == FormatCode::LINEAR_PCM)
     {
-        const double max = pow (2.0, bits_per_sample - 1) - 1;
-        const double min = -max;
-        switch (bits_per_sample)
+        // 2^(bits-1) - 1
+        const auto max {static_cast<T> ((1 << (bitsPerSample - 1)) - 1)};
+        const auto min {-max};
+        switch (bitsPerSample)
         {
             case 8:
             {
-                const double offset = pow (2.0, bits_per_sample - 1);
+                const T offset {128}; // 2^(bits-1)
                 for (auto const & sample : samples)
                 {
                     WriteToFile (out, static_cast<uint8_t> (clamped (round (sample * max + offset /* + dither */), min+offset, max+offset)));
@@ -149,12 +165,12 @@ void WriteData (std::ofstream & out, std::vector<double> const & samples, uint16
             }
         }
         // If an odd number of data bytes, add a padding byte.
-        assert (bits_per_sample % 8 == 0);
-        if (samples.size() * bits_per_sample / 8 % 2) out << static_cast<uint8_t> (0);
+        assert (bitsPerSample % 8 == 0);
+        if (samples.size() * bitsPerSample / 8 % 2) out << static_cast<uint8_t> (0);
     }
-    else if (format_code == FormatCode::FLOAT_PCM)
+    else if (formatCode == FormatCode::FLOAT_PCM)
     {
-        switch (bits_per_sample)
+        switch (bitsPerSample)
         {
             case 32:
             {
@@ -167,7 +183,7 @@ void WriteData (std::ofstream & out, std::vector<double> const & samples, uint16
             {
                 static_assert (sizeof (double) == 8 && CHAR_BIT == 8, "double is not 64-bit.");
                 for (auto const & sample : samples)
-                    WriteToFile (out, sample);
+                    WriteToFile (out, static_cast<double> (sample));
                 break;
             }
         }
@@ -175,6 +191,7 @@ void WriteData (std::ofstream & out, std::vector<double> const & samples, uint16
     else assert (false);
 }
 
+// Write string.
 void WriteToFile (std::ofstream & out, std::string const & str)
 {
     out.write (str.data(), str.size());
@@ -183,8 +200,24 @@ void WriteToFile (std::ofstream & out, std::string const & str)
         throw WriteError ("Failed to write string to file.");
     }
 }
+// Write integer or float.
+//
+// By default, the number of bytes is the container size,
+// but it may also be less than the container size.
+template <typename T>
+requires (std::integral<T> || std::floating_point<T>)
+void WriteToFile (std::ofstream & out, T value, int size)
+{
+    assert (size > 0 && size <= sizeof(value));
+    out.write (reinterpret_cast<const char *> (&value), size);
+    if (!out)
+    {
+        throw WriteError ("Failed to write to file.");
+    }
+}
 
-double clamped (double value, double min, double max)
+template <FloatingPoint T>
+T clamped (T value, T min, T max)
 {
     return std::min (std::max (min, value), max);
 }

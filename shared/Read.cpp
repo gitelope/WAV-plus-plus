@@ -11,17 +11,17 @@ namespace wav
 {
 
 // Forward declarations for helper functions:
-template <typename T> void ReadData
+template <FloatingPoint T> void ReadData
  (std::string const &, std::vector<T> &, Info const &, DataChunk const &, size_t);
-template <typename T> void ReadData
+template <FloatingPoint T> void ReadData
  (std::string const &, std::vector<std::vector<T>> &, Info const &, DataChunk const &, size_t);
-template <typename T> void ReadLinearPCM
+template <FloatingPoint T> void ReadLinearPCM
  (std::vector<std::byte> const &, std::vector<T> &, Info const &, size_t, size_t);
-template <typename T> void ReadLinearPCM
+template <FloatingPoint T> void ReadLinearPCM
  (std::vector<std::byte> const &, std::vector<std::vector<T>> &, Info const &, size_t, size_t);
-template <typename T> void ReadFloatPCM
+template <FloatingPoint T> void ReadFloatPCM
  (std::vector<std::byte> const &, std::vector<T> &, Info const &, size_t, size_t);
-template <typename T> void ReadFloatPCM
+template <FloatingPoint T> void ReadFloatPCM
  (std::vector<std::byte> const &, std::vector<std::vector<T>> &, Info const &, size_t, size_t);
 ////////////////////////////////////////////
 
@@ -93,7 +93,7 @@ void Read (std::string const & filepath,
     ReadData (filepath, destination, info, chunkInfo.data, requestedBufferSize);
 }
 // explicit instantiation required for linking when separating declarations and definitions
-template void Read (std::string const &, std::vector<std::vector<float>> &, struct Info &, size_t);
+template void Read (std::string const &, std::vector<std::vector<float>> &,  struct Info &, size_t);
 template void Read (std::string const &, std::vector<std::vector<double>> &, struct Info &, size_t);
 
 void Info::ExtractFrom (ChunkInfo const & chunkInfo)
@@ -195,9 +195,9 @@ std::ostream & operator<< (std::ostream & os, Info const & info)
     return os;
 }
 
-template <typename FloatType>
+template <FloatingPoint T>
 void ReadData (std::string const & filepath,
-               std::vector<FloatType> & destination,
+               std::vector<T> & destination,
                Info const & info,
                DataChunk const & data,
                size_t requestedBufferSizeInBytes)
@@ -255,9 +255,9 @@ void ReadData (std::string const & filepath,
     }
 }
 
-template <typename FloatType>
+template <FloatingPoint T>
 void ReadData (std::string const & filepath,
-               std::vector <std::vector<FloatType>> & destination,
+               std::vector <std::vector<T>> & destination,
                Info const & info,
                DataChunk const & data,
                size_t requestedBufferSizeInBytes)
@@ -274,7 +274,7 @@ void ReadData (std::string const & filepath,
     in.seekg (data.offset);
     if (!in) throw ReadError ("Failed to advance to data portion of data chunk.");
 
-    destination.resize (info.channels, std::vector<FloatType> (info.frames));
+    destination.resize (info.channels, std::vector<T> (info.frames));
 
     const size_t frameSizeInBytes {static_cast<size_t> (info.channels * info.containerSizeInBits / 8)};
     const size_t totalBytesToRead {info.frames * frameSizeInBytes};
@@ -312,9 +312,15 @@ void ReadData (std::string const & filepath,
     }
 }
 
-template <typename FloatType>
+template <typename T>
+T powerOfTwo (int power)
+{
+    return static_cast<T> (1 << power);
+}
+
+template <FloatingPoint T>
 void ReadLinearPCM (std::vector<std::byte> const & buffer,
-                    std::vector<FloatType> & destination,
+                    std::vector<T> & destination,
                     Info const & info,
                     size_t samplesToRead,
                     size_t writePosition)
@@ -322,7 +328,7 @@ void ReadLinearPCM (std::vector<std::byte> const & buffer,
     // Normalize signed integers to [-1.0, 1.0) by dividing by 2^(bits-1).
     // Example:
     // 16-bit range: [-32768, 32767], divided by 32768: [-1.0, 0.9999694824]
-    const auto two_to_the_n_minus_one  {static_cast<FloatType> (1 << (info.bitDepth - 1))}; // 2^(bits-1)
+    const auto two_to_the_n_minus_one  {powerOfTwo<T> (info.bitDepth - 1)};
 
     size_t pos {0};
     switch (info.containerSizeInBits)
@@ -353,9 +359,9 @@ void ReadLinearPCM (std::vector<std::byte> const & buffer,
     }
 }
 
-template <typename FloatType>
+template <FloatingPoint T>
 void ReadLinearPCM (std::vector<std::byte> const & buffer,
-                    std::vector<std::vector<FloatType>> & destination,
+                    std::vector<std::vector<T>> & destination,
                     Info const & info,
                     size_t framesToRead,
                     size_t writePosition)
@@ -363,7 +369,7 @@ void ReadLinearPCM (std::vector<std::byte> const & buffer,
     // Normalize signed integers to [-1.0, 1.0) by dividing by 2^(bits-1).
     // Example:
     // 16-bit range: [-32768, 32767], divided by 32768: [-1.0, 0.9999694824]
-    const auto two_to_the_n_minus_one  {static_cast<FloatType> (1 << (info.bitDepth - 1))}; // 2^(bits-1)
+    const auto two_to_the_n_minus_one  {powerOfTwo<T> (info.bitDepth - 1)};
 
     size_t pos {0};
     switch (info.containerSizeInBits)
@@ -410,9 +416,9 @@ void ReadLinearPCM (std::vector<std::byte> const & buffer,
     }
 }
 
-template <typename FloatType>
+template <FloatingPoint T>
 void ReadFloatPCM (std::vector<std::byte> const & buffer,
-                   std::vector<FloatType> & destination,
+                   std::vector<T> & destination,
                    Info const & info,
                    size_t samplesToRead,
                    size_t writePosition)
@@ -434,9 +440,9 @@ void ReadFloatPCM (std::vector<std::byte> const & buffer,
     }
 }
 
-template <typename FloatType>
+template <FloatingPoint T>
 void ReadFloatPCM (std::vector<std::byte> const & buffer,
-                   std::vector<std::vector<FloatType>> & destination,
+                   std::vector<std::vector<T>> & destination,
                    Info const & info,
                    size_t framesToRead,
                    size_t writePosition)

@@ -47,43 +47,14 @@ namespace wav
 {
 
 // May throw wav::WriteError.
-void Write (std::vector<double> const & samples,
+template <FloatingPoint T>
+void Write (std::string const & filepath,
+            std::vector<T> const & samples,
             ExportFormat format,
             int sampleRate,
-            int channels,
-            std::string const & filepath);
+            int channels);
 
-void Normalize (std::vector<double> &);
-
-////////////////////////////////////////////////////////
-// HELPER FUNCTIONS
-// (may throw wav::WriteError)
-
-void WriteData (std::ofstream & out,
-                std::vector<double> const & samples,
-                uint16_t bits_per_sample,
-                uint16_t format_code);
-
-// Write string.
-void WriteToFile (std::ofstream & out, std::string const & str);
-
-// Write number.
-//
-// By default, the number of bytes is the container size,
-// but it may also be less than the container size.
-template <typename T>
-requires (std::integral<T> || std::floating_point<T>)
-void WriteToFile (std::ofstream & out, T value, int size = sizeof(value))
-{
-    assert (size > 0 && size <= sizeof(value));
-    out.write (reinterpret_cast<const char *> (&value), size);
-    if (!out)
-    {
-        throw WriteError ("Failed to write to file.");
-    }
-}
-
-double clamped (double value, double min, double max);
+template <FloatingPoint T> void Normalize (std::vector<T> &);
 
 } // namespace wav
 

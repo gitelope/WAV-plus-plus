@@ -12,9 +12,6 @@ namespace wav
 // 32kB default (requested) buffer size
 inline constexpr size_t defaultRequestedReadBufferSize = 32768;
 
-template <typename T>
-concept FloatingPoint = std::same_as <T,float> || std::same_as <T,double>;
-
 // Returns pair containing interleaved audio vector and Info.
 // Calls in-place Read() overload.
 // May throw wav::ReadError.
