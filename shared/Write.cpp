@@ -138,19 +138,21 @@ void WriteData (std::ofstream & out, std::vector<T> const & samples, uint16_t bi
             {
                 for (auto const & sample : samples)
                 {
+                    // When we store our value (range [-2^23 + 1, 2^23 - 1])
+                    // in a 32-bit 2's-complement int, the eight most
+                    // significant bits are just sign extension. The lowest
+                    // 3 bytes perfectly represent the number as a 24-bit
+                    // (2's-complement) signed integer.
+                    //
+                    // positive number:
+                    // 24-bit:          01001001 11100111 10100001 = 4,843,425
+                    // 32-bit: 00000000 01001001 11100111 10100001 = 4,843,425
+                    //
+                    // negative number:
+                    // 24-bit:          11100011 01101000 01111011 = -1,873,797
+                    // 32-bit: 11111111 11100011 01101000 01111011 = -1,873,797
+                    //
                     constexpr int valid_bytes = 3;
-                    // When we store our 24-bit 2's-complement int in the range [-2^23 + 1, 2^23 - 1]
-                    // in a 32-bit 2's-complement int, we can ignore the 8 leftmost bits since they are just
-                    // sign extension–1111 1111 if the MSB of our 24-bit int is 1 and 0000 0000 if it is 0.
-                    //
-                    // For example these represent the exact same value:
-                    //
-                    // 32-bit: 1111 1111 1010 0011 0110 1000 0111 1011 = -6,068,101
-                    // 24-bit:           1010 0011 0110 1000 0111 1011 = -6,068,101
-                    //
-                    // 32-bit: 0000 0000 0010 1001 1110 0111 1010 0001 = 2,746,273
-                    // 24-bit:           0010 1001 1110 0111 1010 0001 = 2,746,273
-                    //
                     WriteToFile (out, static_cast<int32_t> (clamped (round (sample * max /* + dither */), min, max)), valid_bytes);
                 }
                 break;
