@@ -315,7 +315,9 @@ void ReadData (std::string const & filepath,
 template <typename T>
 T powerOfTwo (int power)
 {
-    return static_cast<T> (1 << power);
+    // Must be positive. Must not shift past the MSB.
+    assert (power > 0 && power < 64);
+    return static_cast<T> (static_cast<uint64_t>(1) << power);
 }
 
 template <FloatingPoint T>
