@@ -2,13 +2,7 @@
 #ifndef wavplusplus_Write_hpp
 #define wavplusplus_Write_hpp
 
-#include "Formats.hpp"
-#include "Exceptions.hpp"
-
-#include <vector>
-#include <string>
-#include <fstream>
-#include <cassert>
+#include "WriteHelpers.hpp"
 
 /*
 
@@ -50,20 +44,47 @@ namespace wav
 template <FloatingPoint T>
 void Write (std::string const & filepath,
             std::vector<T> const & samples,
-            ExportFormat format,
+            ExportFormat exportFormat,
             int sampleRate,
-            int channels);
+            int channels)
+{
+    if (samples.size() % channels != 0)
+    {
+        throw std::invalid_argument ("Number of samples should be divisible by the number of channels.");
+    }
+    const auto [bitsPerSample, formatCode] = bitDepthAndFormatCode (exportFormat);
+    assert (bitsPerSample % 8 == 0);
 
-/*
+    std::ofstream out {filepath, std::ofstream::binary};
+    if (!out)
+    {
+        throw WriteError ("Failed to open file for writing: " + filepath);
+    }
+
+    WriteHeader (out, bitsPerSample, formatCode, sampleRate, channels, samples.size());
+    WriteData (out, samples, bitsPerSample, formatCode);
+
+    out.close();
+    if (!out)
+    {
+        throw WriteError ("File did not close successfully.");
+    }
+}
+
 template <FloatingPoint T>
-void WriteBulk (std::string const & filepath,
-                std::vector<T> const & samples,
-                ExportFormat format,
-                int sampleRate,
-                int channels);
- */
-
-template <FloatingPoint T> void Normalize (std::vector<T> &);
+void Normalize (std::vector<T> & samples)
+{
+    T maximum {0};
+    for (auto const & sample : samples)
+    {
+        maximum = std::max (maximum, std::abs (sample));
+    }
+    if (maximum == 0) return;
+    for (auto & sample : samples)
+    {
+        sample /= maximum;
+    }
+}
 
 } // namespace wav
 
