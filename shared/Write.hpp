@@ -54,6 +54,15 @@ void Write (std::string const & filepath,
             int sampleRate,
             int channels);
 
+/*
+template <FloatingPoint T>
+void WriteBulk (std::string const & filepath,
+                std::vector<T> const & samples,
+                ExportFormat format,
+                int sampleRate,
+                int channels);
+ */
+
 template <FloatingPoint T> void Normalize (std::vector<T> &);
 
 } // namespace wav

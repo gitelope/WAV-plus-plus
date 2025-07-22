@@ -13,36 +13,31 @@ template <typename T> requires (std::integral<T> || std::floating_point<T>)
 void WriteToFile (std::ofstream &, T value, int size = sizeof(value));
 ////////////////////////////////////////////
 
-template <FloatingPoint T>
-void Write (std::string const & filepath,
-            std::vector<T> const & samples,
-            ExportFormat format,
-            int sampleRate,
-            int channels)
+std::pair<uint16_t,uint16_t> bitDepthAndFormatCode (ExportFormat ef)
 {
-    if (samples.size() % channels != 0) throw std::invalid_argument ("Number of samples should be divisible by the number of channels.");
-
-    uint16_t bitsPerSample {0};
-    uint16_t formatCode {0};
-    switch (format)
+    switch (ef)
     {
-        case ExportFormat::LINEAR_PCM_8:  bitsPerSample =  8; formatCode = FormatCode::LINEAR_PCM; break;
-        case ExportFormat::LINEAR_PCM_16: bitsPerSample = 16; formatCode = FormatCode::LINEAR_PCM; break;
-        case ExportFormat::LINEAR_PCM_24: bitsPerSample = 24; formatCode = FormatCode::LINEAR_PCM; break;
-        case ExportFormat::LINEAR_PCM_32: bitsPerSample = 32; formatCode = FormatCode::LINEAR_PCM; break;
-        case ExportFormat::FLOAT_PCM_32:  bitsPerSample = 32; formatCode = FormatCode::FLOAT_PCM;  break;
-        case ExportFormat::FLOAT_PCM_64:  bitsPerSample = 64; formatCode = FormatCode::FLOAT_PCM;  break;
+        case ExportFormat::LINEAR_PCM_8:  return {8,  FormatCode::LINEAR_PCM};
+        case ExportFormat::LINEAR_PCM_16: return {16, FormatCode::LINEAR_PCM};
+        case ExportFormat::LINEAR_PCM_24: return {24, FormatCode::LINEAR_PCM};
+        case ExportFormat::LINEAR_PCM_32: return {32, FormatCode::LINEAR_PCM};
+        case ExportFormat::FLOAT_PCM_32:  return {32, FormatCode::FLOAT_PCM};
+        case ExportFormat::FLOAT_PCM_64:  return {64, FormatCode::FLOAT_PCM};
     }
-    assert (bitsPerSample % 8 == 0);
+}
 
+void WriteHeader (std::ofstream & out, uint16_t bitsPerSample, uint16_t formatCode, int sampleRate, int channels, size_t numSamples)
+{
     const auto bytesPerSample {bitsPerSample / 8};
-
     constexpr auto formatChunkSize {FormatChunkSize::PCMWAVEFORMAT};
 
-    // Note: excludes potential padding byte when samples.size() is odd:
-    const auto dataChunkSize {static_cast<uint32_t>(samples.size() * bytesPerSample)};
+    // Note: data chunk size will not and should not account for a padding byte
+    // when samples.size() is odd. However, that padding byte will and should be
+    // reflected in RIFF chunk size.
 
+    const auto dataChunkSize {static_cast<uint32_t> (numSamples /*samples.size()*/ * bytesPerSample)};
     const uint32_t riffChunkSize
+
     // RIFF chunk
     = 4 // "WAVE"
 
@@ -56,17 +51,12 @@ void Write (std::string const & filepath,
     + 4 // chunk size
     + dataChunkSize // (in bytes) num samples x bytes per sample
     + dataChunkSize % 2; // 1 byte of padding when dataChunkSize is an odd number
-    // Note that a padding bytes are NOT reflected in the data chunk size but
-    // WILL be reflected in the RIFF chunk size.
 
     // blocks/sec * samples/block * bytes/sample = bytes/sec
     const auto bytesPerSecond {static_cast<uint32_t> (sampleRate * channels * bytesPerSample)};
 
     // block size in bytes = samples/block * bytes/sample
     const auto blockAlign {static_cast<uint16_t> (channels * bytesPerSample)};
-
-    std::ofstream out {filepath, std::ofstream::binary};
-    if (!out) throw WriteError ("Failed to open file for writing: " + filepath);
 
     WriteToFile (out, "RIFF");
     WriteToFile (out, riffChunkSize);
@@ -83,10 +73,36 @@ void Write (std::string const & filepath,
 
     WriteToFile (out, "data");
     WriteToFile (out, dataChunkSize);
+}
+
+template <FloatingPoint T>
+void Write (std::string const & filepath,
+            std::vector<T> const & samples,
+            ExportFormat exportFormat,
+            int sampleRate,
+            int channels)
+{
+    if (samples.size() % channels != 0)
+    {
+        throw std::invalid_argument ("Number of samples should be divisible by the number of channels.");
+    }
+    const auto [bitsPerSample, formatCode] = bitDepthAndFormatCode (exportFormat);
+    assert (bitsPerSample % 8 == 0);
+
+    std::ofstream out {filepath, std::ofstream::binary};
+    if (!out)
+    {
+        throw WriteError ("Failed to open file for writing: " + filepath);
+    }
+
+    WriteHeader (out, bitsPerSample, formatCode, sampleRate, channels, samples.size());
     WriteData (out, samples, bitsPerSample, formatCode);
 
     out.close();
-    if (!out) throw WriteError ("File did not close successfully.");
+    if (!out)
+    {
+        throw WriteError ("File did not close successfully.");
+    }
 }
 // Explicit instantiation allows separation of declaration and definition.
 template void Write (std::string const &, std::vector<float>  const &, ExportFormat, int, int);

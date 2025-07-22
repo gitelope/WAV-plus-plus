@@ -13,7 +13,7 @@
 
 int main (int argc, const char * argv[])
 {
-    const std::vector<double> out {-1 -0.5, 0, 0.5, 1.0};
+    const std::vector<double> out {-1, -0.5, 0, 0.5, 1.0};
     const auto filepath = "out.wav";
     wav::Write (filepath, out, wav::ExportFormat::LINEAR_PCM_32, 48000, 1);
 
