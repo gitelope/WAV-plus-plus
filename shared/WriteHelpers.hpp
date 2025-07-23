@@ -175,71 +175,83 @@ void WriteData (std::ofstream & out, std::vector<T> const & samples, uint16_t bi
 }
 
 template <FloatingPoint T>
+void WriteBulkLinearPCM (std::ofstream & out, std::vector<T> const & samples, uint16_t bitsPerSample)
+{
+    switch (bitsPerSample)
+    {
+        case 8:  WriteBulkLinearPCM<uint8_t> (out, samples, bitsPerSample);
+            break;
+        case 16: WriteBulkLinearPCM<int16_t> (out, samples, bitsPerSample);
+            break;
+        case 24: WriteBulkLinearPCM<int32_t> (out, samples, bitsPerSample);
+            break;
+        case 32: WriteBulkLinearPCM<int32_t> (out, samples, bitsPerSample);
+            break;
+    }
+    // If an odd number of data bytes, add a padding byte.
+    assert (bitsPerSample % 8 == 0);
+    if (samples.size() * bitsPerSample / 8 % 2) out << static_cast<uint8_t> (0);
+}
+
+template <FloatingPoint T>
+void WriteBulkFloatPCM (std::ofstream & out, std::vector<T> const & samples, uint16_t bitsPerSample)
+{
+    auto Write = [&out] (const auto & samples)
+    {
+        using FloatType = typename std::decay_t<decltype(samples)>::value_type;
+        if (!out.write (reinterpret_cast<const char*> (samples.data()), samples.size() * sizeof (FloatType)))
+        {
+            throw WriteError ("Failed to write samples to file.");
+        }
+    };
+
+    switch (bitsPerSample)
+    {
+        case 32:
+        {
+            static_assert (sizeof (float) == 4 && CHAR_BIT == 8, "float is not 32-bit.");
+
+            if constexpr (std::is_same_v<T, float>)
+            {
+                Write (samples);
+            }
+            else if constexpr (std::is_same_v<T, double>)
+            {
+                Write (std::vector<float> (samples.begin(), samples.end()));
+            }
+            else static_assert (false, "Unsupported floating-point type.");
+
+            break;
+        }
+        case 64:
+        {
+            static_assert (sizeof (double) == 8 && CHAR_BIT == 8, "double is not 64-bit.");
+
+            if constexpr (std::is_same_v<T, double>)
+            {
+                Write (samples);
+            }
+            else if constexpr (std::is_same_v<T, float>)
+            {
+                Write (std::vector<double> (samples.begin(), samples.end()));
+            }
+            else static_assert (false, "Unsupported floating-point type.");
+
+            break;
+        }
+    }
+}
+
+template <FloatingPoint T>
 void WriteDataBulk (std::ofstream & out, std::vector<T> const & samples, uint16_t bitsPerSample, uint16_t formatCode)
 {
     if (formatCode == FormatCode::LINEAR_PCM)
     {
-        switch (bitsPerSample)
-        {
-            case 8:  WriteBulkLinearPCM<uint8_t> (out, samples, bitsPerSample);
-                break;
-            case 16: WriteBulkLinearPCM<int16_t> (out, samples, bitsPerSample);
-                break;
-            case 24: WriteBulkLinearPCM<int32_t> (out, samples, bitsPerSample);
-                break;
-            case 32: WriteBulkLinearPCM<int32_t> (out, samples, bitsPerSample);
-                break;
-        }
-        assert (bitsPerSample % 8 == 0);
-        // If an odd number of data bytes, add a padding byte.
-        if (samples.size() * bitsPerSample / 8 % 2) out << static_cast<uint8_t> (0);
+        WriteBulkLinearPCM (out, samples, bitsPerSample);
     }
     else if (formatCode == FormatCode::FLOAT_PCM)
     {
-        auto Write = [&out] (const auto & samples)
-        {
-            using FloatType = typename std::decay_t<decltype(samples)>::value_type;
-            if (!out.write (reinterpret_cast<const char*> (samples.data()), samples.size() * sizeof (FloatType)))
-            {
-                throw WriteError ("Failed to write samples to file.");
-            }
-        };
-
-        switch (bitsPerSample)
-        {
-            case 32:
-            {
-                static_assert (sizeof (float) == 4 && CHAR_BIT == 8, "float is not 32-bit.");
-
-                if constexpr (std::is_same_v<T, float>)
-                {
-                    Write (samples);
-                }
-                else if constexpr (std::is_same_v<T, double>)
-                {
-                    Write (std::vector<float> (samples.begin(), samples.end()));
-                }
-                else static_assert (false, "Unsupported floating-point type.");
-
-                break;
-            }
-            case 64:
-            {
-                static_assert (sizeof (double) == 8 && CHAR_BIT == 8, "double is not 64-bit.");
-
-                if constexpr (std::is_same_v<T, double>)
-                {
-                    Write (samples);
-                }
-                else if constexpr (std::is_same_v<T, float>)
-                {
-                    Write (std::vector<double> (samples.begin(), samples.end()));
-                }
-                else static_assert (false, "Unsupported floating-point type.");
-
-                break;
-            }
-        }
+        WriteBulkFloatPCM (out, samples, bitsPerSample);
     }
     else assert (false);
 }
