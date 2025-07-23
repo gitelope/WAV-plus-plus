@@ -196,10 +196,11 @@ void WriteBulkLinearPCM (std::ofstream & out, std::vector<T> const & samples, ui
 template <typename OutType, typename InType>
 void WriteBulkFloatsAs (std::ofstream & out, std::vector<InType> const & samples)
 {
+    // Helper lambda to avoid redundancy.
     auto Write = [&out] (const auto & vec)
     {
-        using FloatType = typename std::decay_t<decltype(vec)>::value_type;
-        if (!out.write (reinterpret_cast<const char*> (vec.data()), vec.size() * sizeof (FloatType)))
+        using ValueType = typename std::decay_t<decltype(vec)>::value_type;
+        if (!out.write (reinterpret_cast<const char*> (vec.data()), vec.size() * sizeof (ValueType)))
         {
             throw WriteError ("Failed to write samples to file.");
         }
@@ -207,11 +208,11 @@ void WriteBulkFloatsAs (std::ofstream & out, std::vector<InType> const & samples
 
     if constexpr (std::is_same_v<InType, OutType>)
     {
-        Write (samples);
+        Write (samples); // no conversion needed
     }
     else
     {
-        Write (std::vector<OutType> (samples.begin(), samples.end()));
+        Write (std::vector<OutType> (samples.begin(), samples.end())); // conversion to output type
     }
 }
 
