@@ -160,12 +160,12 @@ void Info::ExtractFrom (ChunkInfo const & chunkInfo)
     }
     switch (chunkInfo.format.code)
     {
-        case FormatCode::LINEAR_PCM: isLinearPCM = true; break;
-        case FormatCode::FLOAT_PCM:  isFloatPCM  = true; break;
-        case FormatCode::EXTENSIBLE:
+        case FormatCode::LinearPCM: isLinearPCM = true; break;
+        case FormatCode::FloatPCM:  isFloatPCM  = true; break;
+        case FormatCode::Extensible:
         {
-            if      (chunkInfo.format.subFormat == ExtensibleFormat::LINEAR_PCM) isLinearPCM = true;
-            else if (chunkInfo.format.subFormat == ExtensibleFormat::FLOAT_PCM)  isFloatPCM  = true;
+            if      (chunkInfo.format.subFormat == ExtensibleFormat::LinearPCM) isLinearPCM = true;
+            else if (chunkInfo.format.subFormat == ExtensibleFormat::FloatPCM)  isFloatPCM  = true;
             break;
         }
     }

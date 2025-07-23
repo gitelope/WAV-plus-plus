@@ -108,7 +108,7 @@ void WriteBulkLinearPCM (std::ofstream & out, std::vector<T> const & samples, ui
 template <FloatOrDouble T>
 void WriteData (std::ofstream & out, std::vector<T> const & samples, uint16_t bitsPerSample, uint16_t formatCode)
 {
-    if (formatCode == FormatCode::LINEAR_PCM)
+    if (formatCode == FormatCode::LinearPCM)
     {
         switch (bitsPerSample)
         {
@@ -151,7 +151,7 @@ void WriteData (std::ofstream & out, std::vector<T> const & samples, uint16_t bi
         assert (bitsPerSample % 8 == 0);
         if (samples.size() * bitsPerSample / 8 % 2) out << static_cast<uint8_t> (0);
     }
-    else if (formatCode == FormatCode::FLOAT_PCM)
+    else if (formatCode == FormatCode::FloatPCM)
     {
         switch (bitsPerSample)
         {
@@ -234,11 +234,11 @@ void WriteBulkFloatPCM (std::ofstream & out, std::vector<T> const & samples, uin
 template <FloatOrDouble T>
 void WriteDataBulk (std::ofstream & out, std::vector<T> const & samples, uint16_t bitsPerSample, uint16_t formatCode)
 {
-    if (formatCode == FormatCode::LINEAR_PCM)
+    if (formatCode == FormatCode::LinearPCM)
     {
         WriteBulkLinearPCM (out, samples, bitsPerSample);
     }
-    else if (formatCode == FormatCode::FLOAT_PCM)
+    else if (formatCode == FormatCode::FloatPCM)
     {
         WriteBulkFloatPCM (out, samples, bitsPerSample);
     }

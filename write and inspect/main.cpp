@@ -8,7 +8,7 @@ int main (int argc, const char * argv[])
 {
     const auto filename {"out.WAV"};
     const std::vector<double> samples {-1, 0, 1};
-    wav::Write (filename, samples, wav::ExportFormat::FLOAT_PCM_32, 48000, 1);
+    wav::Write (filename, samples, wav::ExportFormat::FloatPCM_32, 48000, 1);
 
     wav::ChunkInfo info {filename};
     std::cout << '\n' << filename << "\n\n" << info << "\n" << info.summary() << std::endl;

@@ -70,7 +70,7 @@ std::string ChunkInfo::summary() const
 
     switch (format.code)
     {
-        case FormatCode::LINEAR_PCM:
+        case FormatCode::LinearPCM:
         {
             format_string = std::to_string (format.bitsPerSample) + "-bit linear PCM";
             const int container_size_in_bits = 8 * format.blockAlign / format.channels;
@@ -78,18 +78,18 @@ std::string ChunkInfo::summary() const
                 format_string += std::format (" / {}-bit container", container_size_in_bits);
             break;
         }
-        case FormatCode::FLOAT_PCM:
+        case FormatCode::FloatPCM:
         {
             format_string = std::to_string (format.bitsPerSample) + "-bit float PCM";
             break;
         }
-        case FormatCode::EXTENSIBLE:
+        case FormatCode::Extensible:
         {
             format_string = "extensible ";
             format_string += std::to_string (format.validBitsPerSample) + "-bit ";
 
-            if (format.subFormat == ExtensibleFormat::LINEAR_PCM) format_string += "linear PCM";
-            else if (format.subFormat == ExtensibleFormat::FLOAT_PCM) format_string += "float PCM";
+            if (format.subFormat == ExtensibleFormat::LinearPCM) format_string += "linear PCM";
+            else if (format.subFormat == ExtensibleFormat::FloatPCM) format_string += "float PCM";
             else assert (false);
 
             if (format.validBitsPerSample < format.bitsPerSample)
@@ -136,7 +136,7 @@ void ChunkInfo::ReadFormatChunk (std::ifstream & in)
         throw ReadError ("fmt chunk size (" + std::to_string (format.size) + ") is unsupported.");
     }
     format.code = uint16_le (in);
-    if (format.code != FormatCode::LINEAR_PCM && format.code != FormatCode::FLOAT_PCM && format.code != FormatCode::EXTENSIBLE)
+    if (! isValidFormatCode (format.code))
     {
         throw ReadError (std::format ("Format not supported: 0x{:04X}", format.code));
     }
@@ -152,7 +152,7 @@ void ChunkInfo::ReadFormatChunk (std::ifstream & in)
     {
         format.bitsPerSample = uint16_le (in);
 
-        if (format.code == FormatCode::EXTENSIBLE)
+        if (format.code == FormatCode::Extensible)
         {
             // Since WAVEFORMATEXTENSIBLE has bits_per_sample AND valid_bits_per_sample,
             // it makes good sense even for a permissive parser to enforce the following.
@@ -167,7 +167,7 @@ void ChunkInfo::ReadFormatChunk (std::ifstream & in)
                 throw ReadError ("For WAVEFORMATEXTENSIBLE, bits per sample must equal 8 * blockAlign / channels.");
             }
         }
-        else if (format.code == FormatCode::FLOAT_PCM)
+        else if (format.code == FormatCode::FloatPCM)
         {
             // Assuming for reasonably well-formed float PCM WAVs (of format PCMFORMAT and WAVEFORMATEX):
             //     1. bits_per_sample will equal either 32 or 64
@@ -182,7 +182,7 @@ void ChunkInfo::ReadFormatChunk (std::ifstream & in)
             }
         }
 
-        if ((format.code == FormatCode::EXTENSIBLE || format.code == FormatCode::FLOAT_PCM)
+        if ((format.code == FormatCode::Extensible || format.code == FormatCode::FloatPCM)
             && format.bitsPerSample != 8 * format.blockAlign / format.channels)
         {
             throw ReadError ("bits_per_sample should equal 8 * block_align / channels for this format.");
@@ -215,7 +215,7 @@ void ChunkInfo::ReadFormatChunk (std::ifstream & in)
         format.channelMask = std::bitset<32> (uint32_le (in));
         format.subFormat = guid (in);
 
-        if (format.subFormat != ExtensibleFormat::LINEAR_PCM && format.subFormat != ExtensibleFormat::FLOAT_PCM)
+        if (format.subFormat != ExtensibleFormat::LinearPCM && format.subFormat != ExtensibleFormat::FloatPCM)
         {
             throw ReadError ("Extensible subformat not supported: " + format.subFormat.str());
         }
@@ -223,7 +223,7 @@ void ChunkInfo::ReadFormatChunk (std::ifstream & in)
         {
             throw ReadError ("Valid bits per sample (in WAVEFORMATEXTENSIBLE) must not be greater than bits per sample.");
         }
-        if (format.subFormat == ExtensibleFormat::FLOAT_PCM
+        if (format.subFormat == ExtensibleFormat::FloatPCM
             && format.bitsPerSample != 32 && format.bitsPerSample != 64)
         {
             throw ReadError ("For float PCM, bits per sample must be 32 or 64.");
@@ -231,8 +231,8 @@ void ChunkInfo::ReadFormatChunk (std::ifstream & in)
     }
 
     const int container_size = 8 * format.blockAlign / format.channels;
-    if ((format.code == FormatCode::LINEAR_PCM ||
-         (format.code == FormatCode::EXTENSIBLE && format.subFormat == ExtensibleFormat::LINEAR_PCM))
+    if ((format.code == FormatCode::LinearPCM ||
+         (format.code == FormatCode::Extensible && format.subFormat == ExtensibleFormat::LinearPCM))
         && container_size != 8 && container_size != 16 && container_size != 24 && container_size != 32)
     {
         throw ReadError (std::format ("Unsupported linear PCM container size: {}", container_size));
@@ -432,9 +432,9 @@ std::ostream & operator<< (std::ostream & os, FormatChunk const & format)
     {
         switch (format)
         {
-            case FormatCode::LINEAR_PCM: return "linear PCM";
-            case FormatCode::FLOAT_PCM: return "IEEE float";
-            case FormatCode::EXTENSIBLE: return "extensible";
+            case FormatCode::LinearPCM: return "linear PCM";
+            case FormatCode::FloatPCM: return "IEEE float";
+            case FormatCode::Extensible: return "extensible";
             default: return "unknown";
         }
     };
