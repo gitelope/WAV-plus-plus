@@ -196,48 +196,47 @@ void WriteDataBulk (std::ofstream & out, std::vector<T> const & samples, uint16_
     }
     else if (formatCode == FormatCode::FLOAT_PCM)
     {
+        auto Write = [&out] (const auto & samples)
+        {
+            using FloatType = typename std::decay_t<decltype(samples)>::value_type;
+            if (!out.write (reinterpret_cast<const char*> (samples.data()), samples.size() * sizeof (FloatType)))
+            {
+                throw WriteError ("Failed to write samples to file.");
+            }
+        };
+
         switch (bitsPerSample)
         {
             case 32:
             {
                 static_assert (sizeof (float) == 4 && CHAR_BIT == 8, "float is not 32-bit.");
+
                 if constexpr (std::is_same_v<T, float>)
                 {
-                    if (!out.write (reinterpret_cast<const char*> (samples.data()), samples.size() * sizeof (float)))
-                    {
-                        throw WriteError ("Failed to write samples to file.");
-                    }
+                    Write (samples);
                 }
                 else if constexpr (std::is_same_v<T, double>)
                 {
-                    std::vector<float> floats (samples.begin(), samples.end());
-                    if (!out.write (reinterpret_cast<const char*> (floats.data()), floats.size() * sizeof (float)))
-                    {
-                        throw WriteError ("Failed to write samples to file.");
-                    }
+                    Write (std::vector<float> (samples.begin(), samples.end()));
                 }
                 else static_assert (false, "Unsupported floating-point type.");
+
                 break;
             }
             case 64:
             {
                 static_assert (sizeof (double) == 8 && CHAR_BIT == 8, "double is not 64-bit.");
+
                 if constexpr (std::is_same_v<T, double>)
                 {
-                    if (!out.write (reinterpret_cast<const char*> (samples.data()), samples.size() * sizeof (double)))
-                    {
-                        throw WriteError ("Failed to write samples to file.");
-                    }
+                    Write (samples);
                 }
                 else if constexpr (std::is_same_v<T, float>)
                 {
-                    std::vector<double> doubles (samples.begin(), samples.end());
-                    if (!out.write (reinterpret_cast<const char*> (doubles.data()), doubles.size() * sizeof (double)))
-                    {
-                        throw WriteError ("Failed to write samples to file.");
-                    }
+                    Write (std::vector<double> (samples.begin(), samples.end()));
                 }
                 else static_assert (false, "Unsupported floating-point type.");
+
                 break;
             }
         }
