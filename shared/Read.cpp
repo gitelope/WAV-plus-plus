@@ -11,21 +11,21 @@ namespace wav
 {
 
 // Forward declarations for helper functions:
-template <FloatingPoint T> void ReadData
+template <FloatOrDouble T> void ReadData
  (std::string const &, std::vector<T> &, Info const &, DataChunk const &, size_t);
-template <FloatingPoint T> void ReadData
+template <FloatOrDouble T> void ReadData
  (std::string const &, std::vector<std::vector<T>> &, Info const &, DataChunk const &, size_t);
-template <FloatingPoint T> void ReadLinearPCM
+template <FloatOrDouble T> void ReadLinearPCM
  (std::vector<std::byte> const &, std::vector<T> &, Info const &, size_t, size_t);
-template <FloatingPoint T> void ReadLinearPCM
+template <FloatOrDouble T> void ReadLinearPCM
  (std::vector<std::byte> const &, std::vector<std::vector<T>> &, Info const &, size_t, size_t);
-template <FloatingPoint T> void ReadFloatPCM
+template <FloatOrDouble T> void ReadFloatPCM
  (std::vector<std::byte> const &, std::vector<T> &, Info const &, size_t, size_t);
-template <FloatingPoint T> void ReadFloatPCM
+template <FloatOrDouble T> void ReadFloatPCM
  (std::vector<std::byte> const &, std::vector<std::vector<T>> &, Info const &, size_t, size_t);
 ////////////////////////////////////////////
 
-template <FloatingPoint T>
+template <FloatOrDouble T>
 std::pair <std::vector<T>, struct Info>
 ReadInterleaved (std::string const & filepath,
                  size_t requestedBufferSize)
@@ -40,7 +40,7 @@ template std::pair <std::vector<float>,  struct Info> ReadInterleaved (std::stri
 template std::pair <std::vector<double>, struct Info> ReadInterleaved (std::string const &, size_t);
 
 // De-interleaved version
-template <FloatingPoint T>
+template <FloatOrDouble T>
 std::pair <std::vector<std::vector<T>>, struct Info>
 Read (std::string const & filepath,
       size_t requestedBufferSize)
@@ -54,7 +54,7 @@ Read (std::string const & filepath,
 template std::pair <std::vector<std::vector<float>>,  struct Info> Read (std::string const &, size_t);
 template std::pair <std::vector<std::vector<double>>, struct Info> Read (std::string const &, size_t);
 
-template <FloatingPoint T>
+template <FloatOrDouble T>
 void ReadInterleaved (std::string const & filepath,
                       std::vector<T> & destination,
                       Info & info,
@@ -75,7 +75,7 @@ void ReadInterleaved (std::string const & filepath,
 template void ReadInterleaved (std::string const &, std::vector<float> &,  struct Info &, size_t);
 template void ReadInterleaved (std::string const &, std::vector<double> &, struct Info &, size_t);
 
-template <FloatingPoint T>
+template <FloatOrDouble T>
 void Read (std::string const & filepath,
            std::vector<std::vector<T>> & destination,
            struct Info & info,
@@ -195,7 +195,7 @@ std::ostream & operator<< (std::ostream & os, Info const & info)
     return os;
 }
 
-template <FloatingPoint T>
+template <FloatOrDouble T>
 void ReadData (std::string const & filepath,
                std::vector<T> & destination,
                Info const & info,
@@ -255,7 +255,7 @@ void ReadData (std::string const & filepath,
     }
 }
 
-template <FloatingPoint T>
+template <FloatOrDouble T>
 void ReadData (std::string const & filepath,
                std::vector <std::vector<T>> & destination,
                Info const & info,
@@ -320,7 +320,7 @@ T powerOfTwo (int power)
     return static_cast<T> (static_cast<uint64_t>(1) << power);
 }
 
-template <FloatingPoint T>
+template <FloatOrDouble T>
 void ReadLinearPCM (std::vector<std::byte> const & buffer,
                     std::vector<T> & destination,
                     Info const & info,
@@ -361,7 +361,7 @@ void ReadLinearPCM (std::vector<std::byte> const & buffer,
     }
 }
 
-template <FloatingPoint T>
+template <FloatOrDouble T>
 void ReadLinearPCM (std::vector<std::byte> const & buffer,
                     std::vector<std::vector<T>> & destination,
                     Info const & info,
@@ -418,7 +418,7 @@ void ReadLinearPCM (std::vector<std::byte> const & buffer,
     }
 }
 
-template <FloatingPoint T>
+template <FloatOrDouble T>
 void ReadFloatPCM (std::vector<std::byte> const & buffer,
                    std::vector<T> & destination,
                    Info const & info,
@@ -442,7 +442,7 @@ void ReadFloatPCM (std::vector<std::byte> const & buffer,
     }
 }
 
-template <FloatingPoint T>
+template <FloatOrDouble T>
 void ReadFloatPCM (std::vector<std::byte> const & buffer,
                    std::vector<std::vector<T>> & destination,
                    Info const & info,

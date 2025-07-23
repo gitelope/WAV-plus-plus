@@ -65,7 +65,7 @@ inline constexpr GUID FLOAT_PCM
 std::ostream & operator<< (std::ostream & os, GUID const & guid);
 
 template <typename T>
-concept FloatingPoint = std::same_as <T,float> || std::same_as <T,double>;
+concept FloatOrDouble = std::same_as <T,float> || std::same_as <T,double>;
 
 } // namespace wav
 

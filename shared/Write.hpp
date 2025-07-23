@@ -41,7 +41,7 @@ namespace wav
 {
 
 // May throw wav::WriteError.
-template <FloatingPoint T>
+template <FloatOrDouble T>
 void Write (std::string const & filepath,
             std::vector<T> const & samples,
             ExportFormat exportFormat,
@@ -72,7 +72,7 @@ void Write (std::string const & filepath,
 }
 
 // May throw wav::WriteError.
-template <FloatingPoint T>
+template <FloatOrDouble T>
 void WriteBulk (std::string const & filepath,
                 std::vector<T> const & samples,
                 ExportFormat exportFormat,
@@ -104,7 +104,7 @@ void WriteBulk (std::string const & filepath,
     }
 }
 
-template <FloatingPoint T>
+template <FloatOrDouble T>
 void Normalize (std::vector<T> & samples)
 {
     T maximum {0};
