@@ -15,28 +15,33 @@ inline constexpr size_t defaultRequestedReadBufferSize = 32768;
 // Returns pair containing interleaved audio vector and Info.
 // Calls in-place Read() overload.
 // May throw wav::ReadError.
-std::pair <std::vector<double>, struct Info>
+template <FloatOrDouble T>
+std::pair <std::vector<T>, struct Info>
 ReadInterleaved (std::string const & filepath,
                  size_t requestedBufferSize = defaultRequestedReadBufferSize);
 
 // Returns pair containing audio separated into channels and Info.
 // Calls in-place Read() overload.
 // May throw wav::ReadError.
-std::pair <std::vector<std::vector<double>>, struct Info>
+template <FloatOrDouble T>
+std::pair <std::vector<std::vector<T>>, struct Info>
 Read (std::string const & filepath,
       size_t requestedBufferSize = defaultRequestedReadBufferSize);
 
+
 // In-place read of interleaved audio and Info.
 // May throw wav::ReadError.
-void Read (std::string const & filepath,
-           std::vector<double> & destination,
-           struct Info & info,
-           size_t requestedBufferSize = defaultRequestedReadBufferSize);
+template <FloatOrDouble T>
+void ReadInterleaved (std::string const & filepath,
+                      std::vector<T> & destination,
+                      struct Info & info,
+                      size_t requestedBufferSize = defaultRequestedReadBufferSize);
 
 // In-place read to separate channels and Info.
 // May throw wav::ReadError.
+template <FloatOrDouble T>
 void Read (std::string const & filepath,
-           std::vector<std::vector<double>> & destination,
+           std::vector<std::vector<T>> & destination,
            struct Info & info,
            size_t requestedBufferSize = defaultRequestedReadBufferSize);
 
@@ -58,48 +63,6 @@ struct Info
     void ExtractFrom (ChunkInfo const &);
 };
 std::ostream & operator<< (std::ostream & os, Info const &);
-
-
-////////////////////////////////////////////////////////
-// HELPER FUNCTIONS
-// (may throw wav::ReadError)
-
-// Reads in a buffer of bytes (of adjustable size), decodes, and repeats until done.
-void ReadData (std::string const & filepath,
-               std::vector<double> & destination,
-               Info const & info,
-               DataChunk const & dataChunk,
-               size_t requestedBufferSizeInBytes);
-
-void ReadData (std::string const & filepath,
-               std::vector <std::vector<double>> & destination,
-               Info const & info,
-               DataChunk const & data,
-               size_t requestedBufferSizeInBytes);
-
-void ReadLinearPCM (std::vector<std::byte> const & buffer,
-                    std::vector<double> & destination,
-                    Info const & info,
-                    size_t samplesToRead,
-                    size_t writePosition);
-
-void ReadLinearPCM (std::vector<std::byte> const & buffer,
-                    std::vector<std::vector<double>> & destination,
-                    Info const & info,
-                    size_t frameToRead,
-                    size_t writePosition);
-
-void ReadFloatPCM  (std::vector<std::byte> const & buffer,
-                    std::vector<double> & destination,
-                    Info const & info,
-                    size_t samplesToRead,
-                    size_t writePosition);
-
-void ReadFloatPCM  (std::vector<std::byte> const & buffer,
-                    std::vector<std::vector<double>> & destination,
-                    Info const & info,
-                    size_t framesToRead,
-                    size_t writePosition);
 
 } // namespace wav
 

@@ -2,13 +2,7 @@
 #ifndef wavplusplus_Write_hpp
 #define wavplusplus_Write_hpp
 
-#include "Formats.hpp"
-#include "Exceptions.hpp"
-
-#include <vector>
-#include <string>
-#include <fstream>
-#include <cassert>
+#include "WriteHelpers.hpp"
 
 /*
 
@@ -47,43 +41,113 @@ namespace wav
 {
 
 // May throw wav::WriteError.
-void Write (std::vector<double> const & samples,
-            ExportFormat format,
+template <FloatOrDouble T>
+void Write (std::string const & filepath,
+            std::vector<T> const & samples,
+            ExportFormat exportFormat,
             int sampleRate,
-            int channels,
-            std::string const & filepath);
-
-void Normalize (std::vector<double> &);
-
-////////////////////////////////////////////////////////
-// HELPER FUNCTIONS
-// (may throw wav::WriteError)
-
-void WriteData (std::ofstream & out,
-                std::vector<double> const & samples,
-                uint16_t bits_per_sample,
-                uint16_t format_code);
-
-// Write string.
-void WriteToFile (std::ofstream & out, std::string const & str);
-
-// Write number.
-//
-// By default, the number of bytes is the container size,
-// but it may also be less than the container size.
-template <typename T>
-requires (std::integral<T> || std::floating_point<T>)
-void WriteToFile (std::ofstream & out, T value, int size = sizeof(value))
+            int channels)
 {
-    assert (size > 0 && size <= sizeof(value));
-    out.write (reinterpret_cast<const char *> (&value), size);
+    if (samples.size() % channels != 0)
+    {
+        throw std::invalid_argument ("Number of samples should be divisible by the number of channels.");
+    }
+    const auto [bitsPerSample, formatCode] = bitDepthAndFormatCode (exportFormat);
+    assert (bitsPerSample % 8 == 0);
+
+    std::ofstream out {filepath, std::ofstream::binary};
     if (!out)
     {
-        throw WriteError ("Failed to write to file.");
+        throw WriteError ("Failed to open file for writing: " + filepath);
+    }
+
+    WriteHeader (out, bitsPerSample, formatCode, sampleRate, channels, samples.size());
+    WriteData (out, samples, bitsPerSample, formatCode);
+
+    out.close();
+    if (!out)
+    {
+        throw WriteError ("File did not close successfully.");
     }
 }
 
-double clamped (double value, double min, double max);
+// May throw wav::WriteError.
+template <FloatOrDouble T>
+void WriteBulk (std::string const & filepath,
+                std::vector<T> const & samples,
+                ExportFormat exportFormat,
+                int sampleRate,
+                int channels)
+{
+    if (samples.size() % channels != 0)
+    {
+        throw std::invalid_argument ("Number of samples should be divisible by the number of channels.");
+    }
+    const auto [bitsPerSample, formatCode] = bitDepthAndFormatCode (exportFormat);
+    assert (bitsPerSample % 8 == 0);
+
+    std::ofstream out {filepath, std::ofstream::binary};
+    if (!out)
+    {
+        throw WriteError ("Failed to open file for writing: " + filepath);
+    }
+
+    WriteHeader (out, bitsPerSample, formatCode, sampleRate, channels, samples.size());
+    WriteDataBulk (out, samples, bitsPerSample, formatCode);
+
+    out.close();
+    if (!out)
+    {
+        throw WriteError ("File did not close successfully.");
+    }
+}
+
+// May throw wav::WriteError.
+template <FloatOrDouble T>
+void WriteBuffered (std::string const & filepath,
+                    std::vector<T> const & samples,
+                    ExportFormat exportFormat,
+                    int sampleRate,
+                    int channels,
+                    size_t requestedBufferSize = defaultRequestedReadBufferSize)
+{
+    if (samples.size() % channels != 0)
+    {
+        throw std::invalid_argument ("Number of samples should be divisible by the number of channels.");
+    }
+    const auto [bitsPerSample, formatCode] = bitDepthAndFormatCode (exportFormat);
+    assert (bitsPerSample % 8 == 0);
+
+    std::ofstream out {filepath, std::ofstream::binary};
+    if (!out)
+    {
+        throw WriteError ("Failed to open file for writing: " + filepath);
+    }
+
+    WriteHeader (out, bitsPerSample, formatCode, sampleRate, channels, samples.size());
+    WriteDataBuffered (out, samples, bitsPerSample, formatCode, requestedBufferSize);
+
+    out.close();
+    if (!out)
+    {
+        throw WriteError ("File did not close successfully.");
+    }
+}
+
+template <FloatOrDouble T>
+void Normalize (std::vector<T> & samples)
+{
+    T maximum {0};
+    for (auto const & sample : samples)
+    {
+        maximum = std::max (maximum, std::abs (sample));
+    }
+    if (maximum == 0) return;
+    for (auto & sample : samples)
+    {
+        sample /= maximum;
+    }
+}
 
 } // namespace wav
 

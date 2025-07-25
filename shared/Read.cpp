@@ -10,31 +10,55 @@
 namespace wav
 {
 
-std::pair <std::vector<double>, struct Info>
+// Forward declarations for helper functions:
+template <FloatOrDouble T> void ReadData
+ (std::string const &, std::vector<T> &, Info const &, DataChunk const &, size_t);
+template <FloatOrDouble T> void ReadData
+ (std::string const &, std::vector<std::vector<T>> &, Info const &, DataChunk const &, size_t);
+template <FloatOrDouble T> void ReadLinearPCM
+ (std::vector<std::byte> const &, std::vector<T> &, Info const &, size_t, size_t);
+template <FloatOrDouble T> void ReadLinearPCM
+ (std::vector<std::byte> const &, std::vector<std::vector<T>> &, Info const &, size_t, size_t);
+template <FloatOrDouble T> void ReadFloatPCM
+ (std::vector<std::byte> const &, std::vector<T> &, Info const &, size_t, size_t);
+template <FloatOrDouble T> void ReadFloatPCM
+ (std::vector<std::byte> const &, std::vector<std::vector<T>> &, Info const &, size_t, size_t);
+////////////////////////////////////////////
+
+template <FloatOrDouble T>
+std::pair <std::vector<T>, struct Info>
 ReadInterleaved (std::string const & filepath,
                  size_t requestedBufferSize)
 {
-    std::vector<double> data;
+    std::vector<T> data;
     Info info;
-    Read (filepath, data, info, requestedBufferSize);
+    ReadInterleaved (filepath, data, info, requestedBufferSize);
     return {std::move (data), info};
 }
+// explicit instantiation required for linking when separating declarations and definitions
+template std::pair <std::vector<float>,  struct Info> ReadInterleaved (std::string const &, size_t);
+template std::pair <std::vector<double>, struct Info> ReadInterleaved (std::string const &, size_t);
 
 // De-interleaved version
-std::pair <std::vector<std::vector<double>>, struct Info>
+template <FloatOrDouble T>
+std::pair <std::vector<std::vector<T>>, struct Info>
 Read (std::string const & filepath,
       size_t requestedBufferSize)
 {
-    std::vector<std::vector<double>> data;
+    std::vector<std::vector<T>> data;
     Info info;
     Read (filepath, data, info, requestedBufferSize);
     return {std::move (data), info};
 }
+// explicit instantiation required for linking when separating declarations and definitions
+template std::pair <std::vector<std::vector<float>>,  struct Info> Read (std::string const &, size_t);
+template std::pair <std::vector<std::vector<double>>, struct Info> Read (std::string const &, size_t);
 
-void Read (std::string const & filepath,
-           std::vector<double> & destination,
-           Info & info,
-           size_t requestedBufferSize)
+template <FloatOrDouble T>
+void ReadInterleaved (std::string const & filepath,
+                      std::vector<T> & destination,
+                      Info & info,
+                      size_t requestedBufferSize)
 {
     ChunkInfo chunkInfo {filepath};
 
@@ -47,9 +71,13 @@ void Read (std::string const & filepath,
     info.ExtractFrom (chunkInfo);
     ReadData (filepath, destination, info, chunkInfo.data, requestedBufferSize);
 }
+// explicit instantiation required for linking when separating declarations and definitions
+template void ReadInterleaved (std::string const &, std::vector<float> &,  struct Info &, size_t);
+template void ReadInterleaved (std::string const &, std::vector<double> &, struct Info &, size_t);
 
+template <FloatOrDouble T>
 void Read (std::string const & filepath,
-           std::vector<std::vector<double>> & destination,
+           std::vector<std::vector<T>> & destination,
            struct Info & info,
            size_t requestedBufferSize)
 {
@@ -64,6 +92,9 @@ void Read (std::string const & filepath,
     info.ExtractFrom (chunkInfo);
     ReadData (filepath, destination, info, chunkInfo.data, requestedBufferSize);
 }
+// explicit instantiation required for linking when separating declarations and definitions
+template void Read (std::string const &, std::vector<std::vector<float>> &,  struct Info &, size_t);
+template void Read (std::string const &, std::vector<std::vector<double>> &, struct Info &, size_t);
 
 void Info::ExtractFrom (ChunkInfo const & chunkInfo)
 {
@@ -129,12 +160,12 @@ void Info::ExtractFrom (ChunkInfo const & chunkInfo)
     }
     switch (chunkInfo.format.code)
     {
-        case FormatCode::LINEAR_PCM: isLinearPCM = true; break;
-        case FormatCode::FLOAT_PCM:  isFloatPCM  = true; break;
-        case FormatCode::EXTENSIBLE:
+        case FormatCode::LinearPCM: isLinearPCM = true; break;
+        case FormatCode::FloatPCM:  isFloatPCM  = true; break;
+        case FormatCode::Extensible:
         {
-            if      (chunkInfo.format.subFormat == ExtensibleFormat::LINEAR_PCM) isLinearPCM = true;
-            else if (chunkInfo.format.subFormat == ExtensibleFormat::FLOAT_PCM)  isFloatPCM  = true;
+            if      (chunkInfo.format.subFormat == ExtensibleFormat::LinearPCM) isLinearPCM = true;
+            else if (chunkInfo.format.subFormat == ExtensibleFormat::FloatPCM)  isFloatPCM  = true;
             break;
         }
     }
@@ -164,8 +195,9 @@ std::ostream & operator<< (std::ostream & os, Info const & info)
     return os;
 }
 
+template <FloatOrDouble T>
 void ReadData (std::string const & filepath,
-               std::vector<double> & destination,
+               std::vector<T> & destination,
                Info const & info,
                DataChunk const & data,
                size_t requestedBufferSizeInBytes)
@@ -223,8 +255,9 @@ void ReadData (std::string const & filepath,
     }
 }
 
+template <FloatOrDouble T>
 void ReadData (std::string const & filepath,
-               std::vector <std::vector<double>> & destination,
+               std::vector <std::vector<T>> & destination,
                Info const & info,
                DataChunk const & data,
                size_t requestedBufferSizeInBytes)
@@ -241,7 +274,7 @@ void ReadData (std::string const & filepath,
     in.seekg (data.offset);
     if (!in) throw ReadError ("Failed to advance to data portion of data chunk.");
 
-    destination.resize (info.channels, std::vector<double> (info.frames));
+    destination.resize (info.channels, std::vector<T> (info.frames));
 
     const size_t frameSizeInBytes {static_cast<size_t> (info.channels * info.containerSizeInBits / 8)};
     const size_t totalBytesToRead {info.frames * frameSizeInBytes};
@@ -279,18 +312,25 @@ void ReadData (std::string const & filepath,
     }
 }
 
+template <typename T>
+T powerOfTwo (int power)
+{
+    // Must be positive. Must not shift past the MSB.
+    assert (power > 0 && power < 64);
+    return static_cast<T> (static_cast<uint64_t>(1) << power);
+}
+
+template <FloatOrDouble T>
 void ReadLinearPCM (std::vector<std::byte> const & buffer,
-                    std::vector<double> & destination,
+                    std::vector<T> & destination,
                     Info const & info,
                     size_t samplesToRead,
                     size_t writePosition)
 {
-    // Divide signed integer by the absolute value of the largest negative int for the bit depth.
-    // This is equal to one greater than the largest positive value for the bit depth.
-    // Example: for 16-bits, the range is [-32768, 32767] so we divide by 32768.
-    // This ensures that our float is within [-1.0, 1.0] regardless of how it was clamped.
-    // (For what it's worth, it will never equal +1.0.)
-    const double two_to_the_n_minus_one = pow (2.0, info.bitDepth - 1);
+    // Normalize signed integers to [-1.0, 1.0) by dividing by 2^(bits-1).
+    // Example:
+    // 16-bit range: [-32768, 32767], divided by 32768: [-1.0, 0.9999694824]
+    const auto two_to_the_n_minus_one  {powerOfTwo<T> (info.bitDepth - 1)};
 
     size_t pos {0};
     switch (info.containerSizeInBits)
@@ -321,18 +361,17 @@ void ReadLinearPCM (std::vector<std::byte> const & buffer,
     }
 }
 
+template <FloatOrDouble T>
 void ReadLinearPCM (std::vector<std::byte> const & buffer,
-                    std::vector<std::vector<double>> & destination,
+                    std::vector<std::vector<T>> & destination,
                     Info const & info,
                     size_t framesToRead,
                     size_t writePosition)
 {
-    // Divide signed integer by the absolute value of the largest negative int for the bit depth.
-    // This is equal to one greater than the largest positive value for the bit depth.
-    // Example: for 16-bits, the range is [-32768, 32767] so we divide by 32768.
-    // This ensures that our float is within [-1.0, 1.0] regardless of how it was clamped.
-    // (For what it's worth, it will never equal +1.0.)
-    const double two_to_the_n_minus_one = pow (2.0, info.bitDepth - 1);
+    // Normalize signed integers to [-1.0, 1.0) by dividing by 2^(bits-1).
+    // Example:
+    // 16-bit range: [-32768, 32767], divided by 32768: [-1.0, 0.9999694824]
+    const auto two_to_the_n_minus_one  {powerOfTwo<T> (info.bitDepth - 1)};
 
     size_t pos {0};
     switch (info.containerSizeInBits)
@@ -379,8 +418,9 @@ void ReadLinearPCM (std::vector<std::byte> const & buffer,
     }
 }
 
+template <FloatOrDouble T>
 void ReadFloatPCM (std::vector<std::byte> const & buffer,
-                   std::vector<double> & destination,
+                   std::vector<T> & destination,
                    Info const & info,
                    size_t samplesToRead,
                    size_t writePosition)
@@ -402,8 +442,9 @@ void ReadFloatPCM (std::vector<std::byte> const & buffer,
     }
 }
 
+template <FloatOrDouble T>
 void ReadFloatPCM (std::vector<std::byte> const & buffer,
-                   std::vector<std::vector<double>> & destination,
+                   std::vector<std::vector<T>> & destination,
                    Info const & info,
                    size_t framesToRead,
                    size_t writePosition)
