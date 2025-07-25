@@ -73,7 +73,7 @@ void WriteBulkLinearPCM (std::ofstream & out, std::vector<T> const & samples, ui
         // Requires special handling since we keep only the 3 least
         // significant bytes of an int32_t.
         constexpr size_t bytesPerSample {3};
-        std::vector<char> bytes (bytesPerSample * samples.size());
+        std::vector<std::byte> bytes (bytesPerSample * samples.size());
         for (size_t n = 0; n < samples.size(); ++n)
         {
             // Note: Right-shifting a negative signed int in C++20 is guaranteed to
@@ -82,9 +82,9 @@ void WriteBulkLinearPCM (std::ofstream & out, std::vector<T> const & samples, ui
             // is not implementation-defined. We need not cast to uint32_t before shifting.
             const auto quantizedSample = static_cast<int32_t> (clamped (round (samples [n] * max /* + dither */), min, max) + offset);
             const size_t i {n * bytesPerSample};
-            bytes [i]   = static_cast<char> (quantizedSample         & 0xFF);
-            bytes [i+1] = static_cast<char> ((quantizedSample >> 8)  & 0xFF);
-            bytes [i+2] = static_cast<char> ((quantizedSample >> 16) & 0xFF);
+            bytes [i]   = static_cast<std::byte> (quantizedSample         & 0xFF);
+            bytes [i+1] = static_cast<std::byte> ((quantizedSample >> 8)  & 0xFF);
+            bytes [i+2] = static_cast<std::byte> ((quantizedSample >> 16) & 0xFF);
         }
         if (!out.write (reinterpret_cast<const char*> (bytes.data()), bytes.size()))
         {
