@@ -193,29 +193,6 @@ void WriteBulkLinearPCM (std::ofstream & out, std::vector<T> const & samples, ui
     if (samples.size() * bitsPerSample / 8 % 2) out << static_cast<uint8_t> (0);
 }
 
-template <typename OutType, typename InType>
-void WriteBulkFloatsAs (std::ofstream & out, std::vector<InType> const & samples)
-{
-    // Helper lambda to avoid redundancy.
-    auto Write = [&out] (const auto & vec)
-    {
-        using ValueType = typename std::decay_t<decltype(vec)>::value_type;
-        if (!out.write (reinterpret_cast<const char*> (vec.data()), vec.size() * sizeof (ValueType)))
-        {
-            throw WriteError ("Failed to write samples to file.");
-        }
-    };
-
-    if constexpr (std::is_same_v<InType, OutType>)
-    {
-        Write (samples); // no conversion needed
-    }
-    else
-    {
-        Write (std::vector<OutType> (samples.begin(), samples.end())); // conversion to output type
-    }
-}
-
 template <FloatOrDouble T>
 void WriteBulkFloatPCM (std::ofstream & out, std::vector<T> const & samples, uint16_t bitsPerSample)
 {
@@ -225,9 +202,50 @@ void WriteBulkFloatPCM (std::ofstream & out, std::vector<T> const & samples, uin
 
     switch (bitsPerSample)
     {
-        case 32: WriteBulkFloatsAs<float>  (out, samples);   break;
-        case 64: WriteBulkFloatsAs<double> (out, samples);   break;
-        default: throw WriteError ("Unsupported floating-point bit depth.");
+        case 32:
+            // Write as little-endian 32-bit.
+            for (auto const & sample : samples)
+            {
+                const auto converted = static_cast<float>(sample);
+                const auto integer {std::bit_cast<uint32_t> (converted)};
+                std::array<char, 4> bytes =
+                {
+                    static_cast<char>(integer         & 0xFF),
+                    static_cast<char>((integer >> 8)  & 0xFF),
+                    static_cast<char>((integer >> 16) & 0xFF),
+                    static_cast<char>((integer >> 24) & 0xFF)
+                };
+                if (!out.write (bytes.data(), sizeof (bytes)))
+                {
+                    throw WriteError ("Failed to write float to file.");
+                }
+            }
+            break;
+        case 64:
+            // Write as little-endian 64-bit.
+            for (auto const & sample : samples)
+            {
+                const auto converted = static_cast<double>(sample);
+                const auto integer {std::bit_cast<uint64_t> (converted)};
+                std::array<char, 8> bytes =
+                {
+                    static_cast<char>(integer         & 0xFF),
+                    static_cast<char>((integer >> 8)  & 0xFF),
+                    static_cast<char>((integer >> 16) & 0xFF),
+                    static_cast<char>((integer >> 24) & 0xFF),
+                    static_cast<char>((integer >> 32) & 0xFF),
+                    static_cast<char>((integer >> 40) & 0xFF),
+                    static_cast<char>((integer >> 48) & 0xFF),
+                    static_cast<char>((integer >> 56) & 0xFF)
+                };
+                if (!out.write (bytes.data(), sizeof (bytes)))
+                {
+                    throw WriteError ("Failed to write double to file.");
+                }
+            }
+            break;
+        default: 
+            throw WriteError ("Unsupported floating-point bit depth.");
     }
 }
 
