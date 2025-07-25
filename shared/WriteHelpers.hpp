@@ -257,11 +257,11 @@ void FillBufferFloatPCM (std::vector<T> const & samples, std::vector<std::byte> 
             {
                 const auto current = static_cast<float> (samples [n+readPosition]);
                 const auto i {n * bytesPerSample};
-                const std::byte * bytes = reinterpret_cast<const std::byte *> (&current);
-                buffer [i]   = bytes[0];
-                buffer [i+1] = bytes[1];
-                buffer [i+2] = bytes[2];
-                buffer [i+3] = bytes[3];
+                const auto integer = std::bit_cast<uint32_t> (current);
+                buffer [i]   = static_cast<std::byte> (integer         & 0xFF);
+                buffer [i+1] = static_cast<std::byte> ((integer >> 8)  & 0xFF);
+                buffer [i+2] = static_cast<std::byte> ((integer >> 16) & 0xFF);
+                buffer [i+3] = static_cast<std::byte> ((integer >> 24) & 0xFF);
             }
             break;
         case 64:
@@ -269,15 +269,15 @@ void FillBufferFloatPCM (std::vector<T> const & samples, std::vector<std::byte> 
             {
                 const auto current = static_cast<double> (samples [n+readPosition]);
                 const auto i {n * bytesPerSample};
-                const std::byte * bytes = reinterpret_cast<const std::byte *> (&current);
-                buffer [i]   = bytes[0];
-                buffer [i+1] = bytes[1];
-                buffer [i+2] = bytes[2];
-                buffer [i+3] = bytes[3];
-                buffer [i+4] = bytes[4];
-                buffer [i+5] = bytes[5];
-                buffer [i+6] = bytes[6];
-                buffer [i+7] = bytes[7];
+                const auto integer = std::bit_cast<uint64_t>(current);
+                buffer [i]   = static_cast<std::byte> (integer         & 0xFF);
+                buffer [i+1] = static_cast<std::byte> ((integer >> 8)  & 0xFF);
+                buffer [i+2] = static_cast<std::byte> ((integer >> 16) & 0xFF);
+                buffer [i+3] = static_cast<std::byte> ((integer >> 24) & 0xFF);
+                buffer [i+4] = static_cast<std::byte> ((integer >> 32) & 0xFF);
+                buffer [i+5] = static_cast<std::byte> ((integer >> 40) & 0xFF);
+                buffer [i+6] = static_cast<std::byte> ((integer >> 48) & 0xFF);
+                buffer [i+7] = static_cast<std::byte> ((integer >> 56) & 0xFF);
             }
             break;
     }
