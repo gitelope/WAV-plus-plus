@@ -245,6 +245,146 @@ void WriteDataBulk (std::ofstream & out, std::vector<T> const & samples, uint16_
     else assert (false);
 }
 
+template <FloatOrDouble T>
+void FillBufferFloatPCM (std::vector<T> const & samples, std::vector<char> & buffer, size_t readPosition, size_t samplesToWrite, uint16_t bitsPerSample)
+{
+    const auto bytesPerSample {bitsPerSample / 8};
+    switch (bitsPerSample)
+    {
+        case 32:
+            for (size_t n = 0; n < samplesToWrite; ++n)
+            {
+                const auto current = static_cast<float> (samples [n+readPosition]);
+                const auto i {n * bytesPerSample};
+                buffer [i]   = static_cast<char> (reinterpret_cast<const uint8_t*>(&current)[0]);
+                buffer [i+1] = static_cast<char> (reinterpret_cast<const uint8_t*>(&current)[1]);
+                buffer [i+2] = static_cast<char> (reinterpret_cast<const uint8_t*>(&current)[2]);
+                buffer [i+3] = static_cast<char> (reinterpret_cast<const uint8_t*>(&current)[3]);
+            }
+            break;
+        case 64:
+            for (size_t n = 0; n < samplesToWrite; ++n)
+            {
+                const auto current = static_cast<double> (samples [n+readPosition]);
+                const auto i {n * bytesPerSample};
+                buffer [i]   = static_cast<char> (reinterpret_cast<const uint8_t*>(&current)[0]);
+                buffer [i+1] = static_cast<char> (reinterpret_cast<const uint8_t*>(&current)[1]);
+                buffer [i+2] = static_cast<char> (reinterpret_cast<const uint8_t*>(&current)[2]);
+                buffer [i+3] = static_cast<char> (reinterpret_cast<const uint8_t*>(&current)[3]);
+                buffer [i+4] = static_cast<char> (reinterpret_cast<const uint8_t*>(&current)[4]);
+                buffer [i+5] = static_cast<char> (reinterpret_cast<const uint8_t*>(&current)[5]);
+                buffer [i+6] = static_cast<char> (reinterpret_cast<const uint8_t*>(&current)[6]);
+                buffer [i+7] = static_cast<char> (reinterpret_cast<const uint8_t*>(&current)[7]);
+            }
+            break;
+    }
+}
+
+template <FloatOrDouble T>
+void FillBufferLinearPCM (std::vector<T> const & samples, std::vector<char> & buffer, size_t readPosition, size_t samplesToWrite, uint16_t bitsPerSample)
+{
+    T offset {0};
+    if (bitsPerSample == 8)
+    {
+        offset = 128;
+    }
+    const auto bytesPerSample {bitsPerSample / 8};
+    // 2^(bits-1) - 1
+    const auto max {static_cast<T> ((1 << (bitsPerSample - 1)) - 1)};
+    const auto min {-max};
+    switch (bitsPerSample)
+    {
+        case 8:
+            for (size_t n = 0; n < samplesToWrite; ++n)
+            {
+                buffer [n] = static_cast<char> (clamped (round (samples [n + readPosition] * max /* + dither */), min, max) + offset);
+            }
+            break;
+        case 16:
+            for (size_t n = 0; n < samplesToWrite; ++n)
+            {
+                const auto quantizedSample = static_cast<int16_t> (clamped (round (samples [n + readPosition] * max /* + dither */), min, max) + offset);
+                const size_t i {n * bytesPerSample};
+                buffer [i]   = static_cast<char> (quantizedSample         & 0xFF);
+                buffer [i+1] = static_cast<char> ((quantizedSample >> 8)  & 0xFF);
+            }
+            break;
+        case 24:
+            for (size_t n = 0; n < samplesToWrite; ++n)
+            {
+                const auto quantizedSample = static_cast<int32_t> (clamped (round (samples [n + readPosition] * max /* + dither */), min, max) + offset);
+                const size_t i {n * bytesPerSample};
+                buffer [i]   = static_cast<char> (quantizedSample          & 0xFF);
+                buffer [i+1] = static_cast<char> ((quantizedSample >> 8)   & 0xFF);
+                buffer [i+2] = static_cast<char> ((quantizedSample >> 16)  & 0xFF);
+            }
+            break;
+        case 32:
+            for (size_t n = 0; n < samplesToWrite; ++n)
+            {
+                const auto quantizedSample = static_cast<int32_t> (clamped (round (samples [n + readPosition] * max /* + dither */), min, max) + offset);
+                const size_t i {n * bytesPerSample};
+                buffer [i]   = static_cast<char> (quantizedSample          & 0xFF);
+                buffer [i+1] = static_cast<char> ((quantizedSample >> 8)   & 0xFF);
+                buffer [i+2] = static_cast<char> ((quantizedSample >> 16)  & 0xFF);
+                buffer [i+3] = static_cast<char> ((quantizedSample >> 24)  & 0xFF);
+            }
+            break;
+    }
+}
+
+template <FloatOrDouble T>
+void WriteDataBuffered (std::ofstream & out, std::vector<T> const & samples,
+                        uint16_t bitsPerSample, uint16_t formatCode, size_t requestedBufferSizeInBytes)
+{
+    // first attempt: use a std::vector<char> for all types
+
+    assert (bitsPerSample % 8 == 0);
+    const auto numSamples {samples.size()};
+    const auto sampleSizeInBytes {static_cast<size_t> (bitsPerSample / 8)};
+    const auto totalBytesToWrite {numSamples * sampleSizeInBytes};
+
+    // Determine buffer size from requested size, sample size, and number of samples:
+    // 1. Buffer must be able to hold an entire sample's worth of bytes.
+    size_t bufferSizeInBytes = std::max (requestedBufferSizeInBytes, sampleSizeInBytes);
+    // 2. Buffer size must correspond to a whole number of samples.
+    bufferSizeInBytes = (bufferSizeInBytes / sampleSizeInBytes) * sampleSizeInBytes;
+    // 3. Buffer size must not exceed the total number of bytes to write.
+    bufferSizeInBytes = std::min (bufferSizeInBytes, totalBytesToWrite);
+
+    std::vector<char> buffer (bufferSizeInBytes);
+
+    size_t samplesRemaining {numSamples};
+    size_t readPosition {0};
+
+    while (samplesRemaining)
+    {
+        const auto bytesToWrite {std::min (samplesRemaining * sampleSizeInBytes, buffer.size())};
+        const auto samplesToWrite {bytesToWrite / sampleSizeInBytes};
+        // fill a buffer
+        if      (formatCode == FormatCode::LinearPCM) FillBufferLinearPCM (samples, buffer, readPosition, samplesToWrite, bitsPerSample);
+        else if (formatCode == FormatCode::FloatPCM)  FillBufferFloatPCM  (samples, buffer, readPosition, samplesToWrite, bitsPerSample);
+        else assert (false);
+
+        if (!out.write (reinterpret_cast<char*> (buffer.data()), bytesToWrite))
+        {
+            throw WriteError ("Failed to write buffer to file.");
+        }
+
+        readPosition += samplesToWrite;
+        samplesRemaining -= samplesToWrite;
+    }
+    if (totalBytesToWrite % 2)
+    {
+        // If an odd number of data bytes, add a padding byte.
+        constexpr char padding {0x00};
+        if (!out.write (&padding, 1))
+        {
+            throw WriteError ("Failed to write padding byte.");
+        }
+    }
+}
+
 } // namespace wav
 
 #endif

@@ -13,9 +13,9 @@
 
 int main (int argc, const char * argv[])
 {
-    const std::vector<double> out {-1, -0.5, 0, 0.5, 1.0};
+    const std::vector<double> out {-1, -0.5, 0, 0.5, 1.0, 0};
     const auto filepath = "out.wav";
-    wav::WriteBulk (filepath, out, wav::ExportFormat::LinearPCM_32, 48000, 1);
+    wav::WriteBuffered (filepath, out, wav::ExportFormat::FloatPCM_64, 48000, 2);
 
     const auto [interleaved,   info]  = wav::ReadInterleaved<float> (filepath);
     const auto [deinterleaved, info2] = wav::Read<double> (filepath);
