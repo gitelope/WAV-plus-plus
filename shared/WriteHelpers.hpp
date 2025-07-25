@@ -206,14 +206,14 @@ void WriteBulkFloatPCM (std::ofstream & out, std::vector<T> const & samples, uin
             // Write as little-endian 32-bit.
             for (auto const & sample : samples)
             {
-                const auto converted = static_cast<float>(sample);
+                const auto converted = static_cast<float> (sample);
                 const auto integer {std::bit_cast<uint32_t> (converted)};
                 std::array<char, 4> bytes =
                 {
-                    static_cast<char>(integer         & 0xFF),
-                    static_cast<char>((integer >> 8)  & 0xFF),
-                    static_cast<char>((integer >> 16) & 0xFF),
-                    static_cast<char>((integer >> 24) & 0xFF)
+                    static_cast<char> (integer         & 0xFF),
+                    static_cast<char> ((integer >> 8)  & 0xFF),
+                    static_cast<char> ((integer >> 16) & 0xFF),
+                    static_cast<char> ((integer >> 24) & 0xFF)
                 };
                 if (!out.write (bytes.data(), sizeof (bytes)))
                 {
@@ -225,18 +225,18 @@ void WriteBulkFloatPCM (std::ofstream & out, std::vector<T> const & samples, uin
             // Write as little-endian 64-bit.
             for (auto const & sample : samples)
             {
-                const auto converted = static_cast<double>(sample);
+                const auto converted = static_cast<double> (sample);
                 const auto integer {std::bit_cast<uint64_t> (converted)};
                 std::array<char, 8> bytes =
                 {
-                    static_cast<char>(integer         & 0xFF),
-                    static_cast<char>((integer >> 8)  & 0xFF),
-                    static_cast<char>((integer >> 16) & 0xFF),
-                    static_cast<char>((integer >> 24) & 0xFF),
-                    static_cast<char>((integer >> 32) & 0xFF),
-                    static_cast<char>((integer >> 40) & 0xFF),
-                    static_cast<char>((integer >> 48) & 0xFF),
-                    static_cast<char>((integer >> 56) & 0xFF)
+                    static_cast<char> (integer         & 0xFF),
+                    static_cast<char> ((integer >> 8)  & 0xFF),
+                    static_cast<char> ((integer >> 16) & 0xFF),
+                    static_cast<char> ((integer >> 24) & 0xFF),
+                    static_cast<char> ((integer >> 32) & 0xFF),
+                    static_cast<char> ((integer >> 40) & 0xFF),
+                    static_cast<char> ((integer >> 48) & 0xFF),
+                    static_cast<char> ((integer >> 56) & 0xFF)
                 };
                 if (!out.write (bytes.data(), sizeof (bytes)))
                 {
