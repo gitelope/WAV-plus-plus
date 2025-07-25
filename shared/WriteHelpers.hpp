@@ -22,11 +22,33 @@ void WriteToFile (std::ofstream & out, std::string const & str);
 // By default, the number of bytes is the container size,
 // but it may also be less than the container size.
 template <typename T>
-requires (std::integral<T> || std::floating_point<T>)
+requires (std::integral<T>)
 void WriteToFile (std::ofstream & out, T value, int size = sizeof(value))
 {
     assert (size > 0 && size <= sizeof(value));
-    out.write (reinterpret_cast<const char *> (&value), size);
+    std::array<std::byte, sizeof(T)> bytes; // using sizeof(T) means that size is 4 for 24-bit samples
+    for (int i=0; i<size; ++i)
+    {
+        bytes[i] = static_cast<std::byte> (value >> (8*i) & 0xFF);
+    }
+    out.write (reinterpret_cast<const char *> (bytes.data()), size);
+    if (!out)
+    {
+        throw WriteError ("Failed to write to file.");
+    }
+}
+
+template <FloatOrDouble T>
+void WriteToFile (std::ofstream & out, T value)
+{
+    std::array<std::byte, sizeof(T)> bytes;
+    // Convert float/double to integer so we can bit-shift it.
+    auto intValue = std::bit_cast<std::conditional_t<sizeof(T) == 4, uint32_t, uint64_t>>(value);
+    for (int i = 0; i < sizeof(T); ++i)
+    {
+        bytes[i] = static_cast<std::byte> (intValue >> (8*i) & 0xFF);
+    }
+    out.write (reinterpret_cast<const char *> (bytes.data()), bytes.size());
     if (!out)
     {
         throw WriteError ("Failed to write to file.");
