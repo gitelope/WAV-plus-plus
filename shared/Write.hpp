@@ -46,7 +46,8 @@ void Write (std::string const & filepath,
             std::vector<T> const & samples,
             ExportFormat exportFormat,
             int sampleRate,
-            int channels)
+            int channels,
+            size_t requestedBufferSize = defaultRequestedReadBufferSize)
 {
     if (samples.size() % channels != 0)
     {
@@ -62,70 +63,7 @@ void Write (std::string const & filepath,
     }
 
     WriteHeader (out, bitsPerSample, formatCode, sampleRate, channels, samples.size());
-    WriteData (out, samples, bitsPerSample, formatCode);
-
-    out.close();
-    if (!out)
-    {
-        throw WriteError ("File did not close successfully.");
-    }
-}
-
-// May throw wav::WriteError.
-template <FloatOrDouble T>
-void WriteBulk (std::string const & filepath,
-                std::vector<T> const & samples,
-                ExportFormat exportFormat,
-                int sampleRate,
-                int channels)
-{
-    if (samples.size() % channels != 0)
-    {
-        throw std::invalid_argument ("Number of samples should be divisible by the number of channels.");
-    }
-    const auto [bitsPerSample, formatCode] = bitDepthAndFormatCode (exportFormat);
-    assert (bitsPerSample % 8 == 0);
-
-    std::ofstream out {filepath, std::ofstream::binary};
-    if (!out)
-    {
-        throw WriteError ("Failed to open file for writing: " + filepath);
-    }
-
-    WriteHeader (out, bitsPerSample, formatCode, sampleRate, channels, samples.size());
-    WriteDataBulk (out, samples, bitsPerSample, formatCode);
-
-    out.close();
-    if (!out)
-    {
-        throw WriteError ("File did not close successfully.");
-    }
-}
-
-// May throw wav::WriteError.
-template <FloatOrDouble T>
-void WriteBuffered (std::string const & filepath,
-                    std::vector<T> const & samples,
-                    ExportFormat exportFormat,
-                    int sampleRate,
-                    int channels,
-                    size_t requestedBufferSize = defaultRequestedReadBufferSize)
-{
-    if (samples.size() % channels != 0)
-    {
-        throw std::invalid_argument ("Number of samples should be divisible by the number of channels.");
-    }
-    const auto [bitsPerSample, formatCode] = bitDepthAndFormatCode (exportFormat);
-    assert (bitsPerSample % 8 == 0);
-
-    std::ofstream out {filepath, std::ofstream::binary};
-    if (!out)
-    {
-        throw WriteError ("Failed to open file for writing: " + filepath);
-    }
-
-    WriteHeader (out, bitsPerSample, formatCode, sampleRate, channels, samples.size());
-    WriteDataBuffered (out, samples, bitsPerSample, formatCode, requestedBufferSize);
+    WriteData (out, samples, bitsPerSample, formatCode, requestedBufferSize);
 
     out.close();
     if (!out)
