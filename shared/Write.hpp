@@ -43,11 +43,11 @@ namespace wav
 // May throw wav::WriteError.
 template <FloatOrDouble T>
 void Write (std::string const & filepath,
-                    std::vector<T> const & samples,
-                    ExportFormat exportFormat,
-                    int sampleRate,
-                    int channels,
-                    size_t requestedBufferSize = defaultRequestedReadBufferSize)
+            std::vector<T> const & samples,
+            ExportFormat exportFormat,
+            int sampleRate,
+            int channels,
+            size_t requestedBufferSize = defaultRequestedReadBufferSize)
 {
     if (samples.size() % channels != 0)
     {
