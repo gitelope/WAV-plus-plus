@@ -42,7 +42,7 @@ namespace wav
 
 // May throw wav::WriteError.
 template <FloatOrDouble T>
-void WriteBuffered (std::string const & filepath,
+void Write (std::string const & filepath,
                     std::vector<T> const & samples,
                     ExportFormat exportFormat,
                     int sampleRate,
@@ -63,7 +63,7 @@ void WriteBuffered (std::string const & filepath,
     }
 
     WriteHeader (out, bitsPerSample, formatCode, sampleRate, channels, samples.size());
-    WriteDataBuffered (out, samples, bitsPerSample, formatCode, requestedBufferSize);
+    WriteData (out, samples, bitsPerSample, formatCode, requestedBufferSize);
 
     out.close();
     if (!out)

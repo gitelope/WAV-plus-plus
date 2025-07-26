@@ -14,7 +14,6 @@ namespace wav
 
 std::pair<uint16_t,uint16_t> bitDepthAndFormatCode (ExportFormat ef);
 void WriteHeader (std::ofstream & out, uint16_t bitsPerSample, uint16_t formatCode, int sampleRate, int channels, size_t numSamples);
-
 void WriteToFile (std::ofstream & out, std::string const & str);
 
 // Write integer or float.
@@ -154,8 +153,8 @@ void FillBufferLinearPCM (std::vector<T> const & samples, std::vector<std::byte>
 }
 
 template <FloatOrDouble T>
-void WriteDataBuffered (std::ofstream & out, std::vector<T> const & samples,
-                        uint16_t bitsPerSample, uint16_t formatCode, size_t requestedBufferSizeInBytes)
+void WriteData (std::ofstream & out, std::vector<T> const & samples,
+                uint16_t bitsPerSample, uint16_t formatCode, size_t requestedBufferSizeInBytes)
 {
     // first attempt: use a std::vector<char> for all types
 
