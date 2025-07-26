@@ -165,8 +165,6 @@ template <FloatOrDouble T>
 void WriteData (std::ofstream & out, std::vector<T> const & samples,
                 uint16_t bitsPerSample, uint16_t formatCode, size_t requestedBufferSizeInBytes)
 {
-    // first attempt: use a std::vector<char> for all types
-
     assert (bitsPerSample % 8 == 0);
     const auto numSamples {samples.size()};
     const auto sampleSizeInBytes {static_cast<size_t> (bitsPerSample / 8)};
