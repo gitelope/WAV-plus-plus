@@ -107,46 +107,55 @@ void FillBufferLinearPCM (std::vector<T> const & samples, std::vector<std::byte>
     {
         offset = 128;
     }
-    const auto bytesPerSample {bitsPerSample / 8};
-    // 2^(bits-1) - 1
-    const auto max {static_cast<T> ((1 << (bitsPerSample - 1)) - 1)};
+    const auto max {static_cast<T> ((1 << (bitsPerSample - 1)) - 1)}; // 2^(bits-1) - 1
     const auto min {-max};
+    auto quantized = [&min, &max, &offset] (T sample) -> T
+    {
+        return clamped (round (sample * max /* + dither */), min, max) + offset;
+    };
+
+    const auto bytesPerSample {bitsPerSample / 8};
+
+    // Quantize samples and write their bytes to buffer in little-endian order:
     switch (bitsPerSample)
     {
         case 8:
             for (size_t n = 0; n < samplesToWrite; ++n)
             {
-                buffer [n] = static_cast<std::byte> (clamped (round (samples [n + readPosition] * max /* + dither */), min, max) + offset);
+                buffer [n] = static_cast<std::byte> (quantized (samples [n+readPosition]));
             }
             break;
         case 16:
             for (size_t n = 0; n < samplesToWrite; ++n)
             {
-                const auto quantizedSample = static_cast<int16_t> (clamped (round (samples [n + readPosition] * max /* + dither */), min, max) + offset);
-                const size_t i {n * bytesPerSample};
-                buffer [i]   = static_cast<std::byte> (quantizedSample         & 0xFF);
-                buffer [i+1] = static_cast<std::byte> ((quantizedSample >> 8)  & 0xFF);
+                const auto quantizedSample = static_cast<int16_t> (quantized (samples [n+readPosition]));
+
+                const auto i {n * bytesPerSample};
+                buffer [i]   = static_cast<std::byte> (quantizedSample        & 0xFF);
+                buffer [i+1] = static_cast<std::byte> ((quantizedSample >> 8) & 0xFF);
             }
             break;
         case 24:
             for (size_t n = 0; n < samplesToWrite; ++n)
             {
-                const auto quantizedSample = static_cast<int32_t> (clamped (round (samples [n + readPosition] * max /* + dither */), min, max) + offset);
-                const size_t i {n * bytesPerSample};
-                buffer [i]   = static_cast<std::byte> (quantizedSample          & 0xFF);
-                buffer [i+1] = static_cast<std::byte> ((quantizedSample >> 8)   & 0xFF);
-                buffer [i+2] = static_cast<std::byte> ((quantizedSample >> 16)  & 0xFF);
+                const auto quantizedSample = static_cast<int32_t> (quantized (samples [n+readPosition]));
+
+                const auto i {n * bytesPerSample};
+                buffer [i]   = static_cast<std::byte> (quantizedSample         & 0xFF);
+                buffer [i+1] = static_cast<std::byte> ((quantizedSample >> 8)  & 0xFF);
+                buffer [i+2] = static_cast<std::byte> ((quantizedSample >> 16) & 0xFF);
             }
             break;
         case 32:
             for (size_t n = 0; n < samplesToWrite; ++n)
             {
-                const auto quantizedSample = static_cast<int32_t> (clamped (round (samples [n + readPosition] * max /* + dither */), min, max) + offset);
+                const auto quantizedSample = static_cast<int32_t> (quantized (samples [n+readPosition]));
+
                 const size_t i {n * bytesPerSample};
-                buffer [i]   = static_cast<std::byte> (quantizedSample          & 0xFF);
-                buffer [i+1] = static_cast<std::byte> ((quantizedSample >> 8)   & 0xFF);
-                buffer [i+2] = static_cast<std::byte> ((quantizedSample >> 16)  & 0xFF);
-                buffer [i+3] = static_cast<std::byte> ((quantizedSample >> 24)  & 0xFF);
+                buffer [i]   = static_cast<std::byte> (quantizedSample         & 0xFF);
+                buffer [i+1] = static_cast<std::byte> ((quantizedSample >> 8)  & 0xFF);
+                buffer [i+2] = static_cast<std::byte> ((quantizedSample >> 16) & 0xFF);
+                buffer [i+3] = static_cast<std::byte> ((quantizedSample >> 24) & 0xFF);
             }
             break;
     }
