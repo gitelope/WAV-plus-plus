@@ -40,6 +40,9 @@ double -> unsigned 8-bit int:
 namespace wav
 {
 
+// 2kB default (requested) buffer size
+inline constexpr size_t defaultRequestedWriteBufferSize = 2048;
+
 // May throw wav::WriteError.
 template <FloatOrDouble T>
 void Write (std::string const & filepath,
@@ -47,7 +50,7 @@ void Write (std::string const & filepath,
             ExportFormat exportFormat,
             int sampleRate,
             int channels,
-            size_t requestedBufferSize = defaultRequestedReadBufferSize)
+            size_t requestedBufferSize = defaultRequestedWriteBufferSize)
 {
     if (samples.size() % channels != 0)
     {
