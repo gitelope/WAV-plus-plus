@@ -40,8 +40,8 @@ double -> unsigned 8-bit int:
 namespace wav
 {
 
-// 2kB default (requested) buffer size
-inline constexpr size_t defaultRequestedWriteBufferSize = 2048;
+// 32kB default (requested) buffer size
+inline constexpr size_t defaultRequestedWriteBufferSize = 32768;
 
 // May throw wav::WriteError.
 template <FloatOrDouble T>
