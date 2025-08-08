@@ -6,15 +6,15 @@
 #include "Exceptions.hpp"
 #include <vector>
 #include <string>
-#include <fstream>
+#include <cstdio>
 #include <cassert>
 
 namespace wav
 {
 
 std::pair<uint16_t,uint16_t> bitDepthAndFormatCode (ExportFormat ef);
-void WriteHeader (std::ofstream & out, uint16_t bitsPerSample, uint16_t formatCode, int sampleRate, int channels, size_t numSamples);
-void WriteToFile (std::ofstream & out, std::string const & str);
+void WriteHeader (FILE * out, uint16_t bitsPerSample, uint16_t formatCode, int sampleRate, int channels, size_t numSamples);
+void WriteToFile (FILE * out, std::string const & str);
 
 // Write integer or float.
 //
@@ -22,23 +22,22 @@ void WriteToFile (std::ofstream & out, std::string const & str);
 // but it may also be less than the container size.
 template <typename T>
 requires (std::integral<T>)
-void WriteToFile (std::ofstream & out, T value, int size = sizeof(value))
+void WriteToFile (FILE * out, T value, int size = sizeof (value))
 {
-    assert (size > 0 && size <= sizeof(value));
-    std::array<std::byte, sizeof(T)> bytes; // using sizeof(T) means that size is 4 for 24-bit samples
+    assert (size > 0 && size <= sizeof (value));
+    std::array<std::byte, sizeof (T)> bytes; // using sizeof(T) means that size is 4 for 24-bit samples
     for (int i=0; i<size; ++i)
     {
         bytes[i] = static_cast<std::byte> (value >> (8*i) & 0xFF);
     }
-    out.write (reinterpret_cast<const char *> (bytes.data()), size);
-    if (!out)
+    if (fwrite (bytes.data(), 1, size, out) != static_cast<size_t>(size))
     {
         throw WriteError ("Failed to write to file.");
     }
 }
 
 template <FloatOrDouble T>
-void WriteToFile (std::ofstream & out, T value)
+void WriteToFile (FILE * out, T value)
 {
     std::array<std::byte, sizeof(T)> bytes;
     // Convert float/double to integer so we can bit-shift it.
@@ -47,8 +46,7 @@ void WriteToFile (std::ofstream & out, T value)
     {
         bytes[i] = static_cast<std::byte> (intValue >> (8*i) & 0xFF);
     }
-    out.write (reinterpret_cast<const char *> (bytes.data()), bytes.size());
-    if (!out)
+    if (fwrite (bytes.data(), 1, bytes.size(), out) != bytes.size())
     {
         throw WriteError ("Failed to write to file.");
     }
@@ -102,16 +100,12 @@ template <FloatOrDouble T>
 void FillBufferLinearPCM (std::vector<T> const & samples, std::vector<std::byte> & buffer,
                           size_t readPosition, size_t samplesToWrite, uint16_t bitsPerSample)
 {
-    T offset {0};
-    if (bitsPerSample == 8)
-    {
-        offset = 128;
-    }
+    const auto offset {bitsPerSample == 8 ? static_cast<T> (128) : static_cast<T> (0)};
     const auto max {static_cast<T> ((1 << (bitsPerSample - 1)) - 1)}; // 2^(bits-1) - 1
     const auto min {-max};
     auto quantized = [&min, &max, &offset] (T sample) -> T
     {
-        return clamped (round (sample * max /* + dither */), min, max) + offset;
+        return clamped (std::round (sample * max /* + dither */), min, max) + offset;
     };
 
     const auto bytesPerSample {bitsPerSample / 8};
@@ -162,7 +156,7 @@ void FillBufferLinearPCM (std::vector<T> const & samples, std::vector<std::byte>
 }
 
 template <FloatOrDouble T>
-void WriteData (std::ofstream & out, std::vector<T> const & samples,
+void WriteData (FILE * out, std::vector<T> const & samples,
                 uint16_t bitsPerSample, uint16_t formatCode, size_t requestedBufferSizeInBytes)
 {
     assert (bitsPerSample % 8 == 0);
@@ -192,7 +186,7 @@ void WriteData (std::ofstream & out, std::vector<T> const & samples,
         else if (formatCode == FormatCode::FloatPCM)  FillBufferFloatPCM  (samples, buffer, readPosition, samplesToWrite, bitsPerSample);
         else assert (false);
 
-        if (!out.write (reinterpret_cast<const char *> (buffer.data()), bytesToWrite))
+        if (fwrite (buffer.data(), 1, bytesToWrite, out) != bytesToWrite)
         {
             throw WriteError ("Failed to write buffer to file.");
         }
@@ -204,7 +198,7 @@ void WriteData (std::ofstream & out, std::vector<T> const & samples,
     {
         // If an odd number of data bytes, add a padding byte.
         constexpr auto padding {std::byte {0x00}};
-        if (!out.write (reinterpret_cast<const char *> (&padding), sizeof (padding)))
+        if (fwrite (&padding, 1, 1, out) != 1)
         {
             throw WriteError ("Failed to write padding byte.");
         }

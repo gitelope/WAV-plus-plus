@@ -4,7 +4,7 @@
 namespace wav
 {
 
-void WriteHeader (std::ofstream & out, uint16_t bitsPerSample, uint16_t formatCode, int sampleRate, int channels, size_t numSamples)
+void WriteHeader (FILE * out, uint16_t bitsPerSample, uint16_t formatCode, int sampleRate, int channels, size_t numSamples)
 {
     const auto bytesPerSample {bitsPerSample / 8};
     constexpr auto formatChunkSize {FormatChunkSize::PCMWAVEFORMAT};
@@ -53,10 +53,9 @@ void WriteHeader (std::ofstream & out, uint16_t bitsPerSample, uint16_t formatCo
     WriteToFile (out, dataChunkSize);
 }
 
-void WriteToFile (std::ofstream & out, std::string const & str)
+void WriteToFile (FILE * out, std::string const & str)
 {
-    out.write (str.data(), str.size());
-    if (!out)
+    if (fwrite (str.data(), 1, str.size(), out) != str.size())
     {
         throw WriteError ("Failed to write string to file.");
     }

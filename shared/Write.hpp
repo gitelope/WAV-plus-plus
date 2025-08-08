@@ -3,6 +3,7 @@
 #define wavplusplus_Write_hpp
 
 #include "WriteHelpers.hpp"
+#include <cstdio>
 
 /*
 
@@ -59,7 +60,7 @@ void Write (std::string const & filepath,
     const auto [bitsPerSample, formatCode] = bitDepthAndFormatCode (exportFormat);
     assert (bitsPerSample % 8 == 0);
 
-    std::ofstream out {filepath, std::ofstream::binary};
+    FILE * out {fopen (filepath.c_str(), "wb")};
     if (!out)
     {
         throw WriteError ("Failed to open file for writing: " + filepath);
@@ -68,8 +69,7 @@ void Write (std::string const & filepath,
     WriteHeader (out, bitsPerSample, formatCode, sampleRate, channels, samples.size());
     WriteData (out, samples, bitsPerSample, formatCode, requestedBufferSize);
 
-    out.close();
-    if (!out)
+    if (fclose (out) != 0)
     {
         throw WriteError ("File did not close successfully.");
     }
