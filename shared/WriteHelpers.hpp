@@ -160,6 +160,26 @@ void WriteData (FILE * out, std::vector<T> const & samples,
                 uint16_t bitsPerSample, uint16_t formatCode, size_t requestedBufferSizeInBytes)
 {
     assert (bitsPerSample % 8 == 0);
+
+    // Input and output endianness are the same.
+    if constexpr (std::endian::native == std::endian::little)
+    {
+        // Output format is float.
+        if (formatCode == FormatCode::FloatPCM)
+        {
+            // Output bit depth same as input.
+            if ((std::is_same_v<T, float> && bitsPerSample == 32) || (std::is_same_v<T, double> && bitsPerSample == 64))
+            {
+                // No need for any conversion. Write data straight to file.
+                fwrite (samples.data(), sizeof (T), samples.size(), out);
+                return;
+            }
+            // else
+            // WriteLECastingFloatData()
+            // return;
+        }
+    }
+
     const auto numSamples {samples.size()};
     const auto sampleSizeInBytes {static_cast<size_t> (bitsPerSample / 8)};
     const auto totalBytesToWrite {numSamples * sampleSizeInBytes};
