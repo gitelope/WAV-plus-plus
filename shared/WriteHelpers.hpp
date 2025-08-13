@@ -156,30 +156,65 @@ void FillBufferLinearPCM (std::vector<T> const & samples, std::vector<std::byte>
 }
 
 template <FloatOrDouble T>
+void WriteFloatToFloatLE (FILE * out, std::vector<T> const & samples, size_t bufferSizeInBytes, uint16_t bitsPerSample)
+{
+    // Output bit depth same as input.
+    if ((std::is_same_v<T, float> && bitsPerSample == 32) || (std::is_same_v<T, double> && bitsPerSample == 64))
+    {
+        // No need for any conversion. Write data straight to file.
+        fwrite (samples.data(), sizeof (T), samples.size(), out);
+    }
+    else if (std::is_same_v<T, double> && bitsPerSample == 32)
+    {
+        // double -> float
+        std::vector<float> buffer (bufferSizeInBytes / 4);
+
+        size_t samplesRemaining {samples.size()};
+        size_t readPosition {0};
+        while (samplesRemaining)
+        {
+            const auto samplesToWrite {std::min (samplesRemaining, buffer.size())};
+            for (size_t i=0; i < samplesToWrite; ++i)
+            {
+                buffer [i] = static_cast<float> (samples [readPosition + i]);
+            }
+            if (fwrite (buffer.data(), 4, samplesToWrite, out) != samplesToWrite)
+            {
+                throw WriteError ("Failed to write buffer to file.");
+            }
+            readPosition += samplesToWrite;
+            samplesRemaining -= samplesToWrite;
+        }
+    }
+    else if (std::is_same_v<T, float> && bitsPerSample == 64)
+    {
+        // float -> double
+        std::vector<double> buffer (bufferSizeInBytes / 8);
+
+        size_t samplesRemaining {samples.size()};
+        size_t readPosition {0};
+        while (samplesRemaining)
+        {
+            const auto samplesToWrite {std::min (samplesRemaining, buffer.size())};
+            for (size_t i=0; i < samplesToWrite; ++i)
+            {
+                buffer [i] = static_cast<double> (samples [readPosition + i]);
+            }
+            if (fwrite (buffer.data(), 8, samplesToWrite, out) != samplesToWrite)
+            {
+                throw WriteError ("Failed to write buffer to file.");
+            }
+            readPosition += samplesToWrite;
+            samplesRemaining -= samplesToWrite;
+        }
+    }
+}
+
+template <FloatOrDouble T>
 void WriteData (FILE * out, std::vector<T> const & samples,
                 uint16_t bitsPerSample, uint16_t formatCode, size_t requestedBufferSizeInBytes)
 {
     assert (bitsPerSample % 8 == 0);
-
-    // Input and output endianness are the same.
-    if constexpr (std::endian::native == std::endian::little)
-    {
-        // Output format is float.
-        if (formatCode == FormatCode::FloatPCM)
-        {
-            // Output bit depth same as input.
-            if ((std::is_same_v<T, float> && bitsPerSample == 32) || (std::is_same_v<T, double> && bitsPerSample == 64))
-            {
-                // No need for any conversion. Write data straight to file.
-                fwrite (samples.data(), sizeof (T), samples.size(), out);
-                return;
-            }
-            // else
-            // WriteLECastingFloatData()
-            // return;
-        }
-    }
-
     const auto numSamples {samples.size()};
     const auto sampleSizeInBytes {static_cast<size_t> (bitsPerSample / 8)};
     const auto totalBytesToWrite {numSamples * sampleSizeInBytes};
@@ -191,6 +226,17 @@ void WriteData (FILE * out, std::vector<T> const & samples,
     bufferSizeInBytes = (bufferSizeInBytes / sampleSizeInBytes) * sampleSizeInBytes;
     // 3. Buffer size must not exceed the total number of bytes to write.
     bufferSizeInBytes = std::min (bufferSizeInBytes, totalBytesToWrite);
+
+    // Input and output endianness are the same.
+    if constexpr (std::endian::native == std::endian::little)
+    {
+        // Output format is float.
+        if (formatCode == FormatCode::FloatPCM)
+        {
+            WriteFloatToFloatLE (out, samples, bufferSizeInBytes, bitsPerSample);
+            return;
+        }
+    }
 
     std::vector<std::byte> buffer (bufferSizeInBytes);
 
