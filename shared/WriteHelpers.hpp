@@ -210,73 +210,6 @@ void WriteFloatToFloatLE (FILE * out, std::vector<T> const & samples, size_t buf
     }
 }
 
-template <typename T>
-T powerOfTwo (int power)
-{
-    // Must be positive. Must not shift past the MSB.
-    assert (power > 0 && power < 64);
-    return static_cast<T> (static_cast<uint64_t>(1) << power);
-}
-
-template <FloatOrDouble T>
-void WriteLPCM16LE (FILE * out, std::vector<T> const & samples, size_t bufferSizeInBytes)
-{
-    constexpr size_t bytesPerSample {2};
-    constexpr int bitsPerSample {16};
-
-    std::vector<int16_t> buffer (bufferSizeInBytes / bytesPerSample);
-
-    const auto max {powerOfTwo<T> (bitsPerSample - 1) - 1}; // 2^(bits-1) - 1
-    const auto min {-max};
-
-    size_t samplesRemaining {samples.size()};
-    size_t readPosition {0};
-    while (samplesRemaining)
-    {
-        const auto samplesToWrite {std::min (samplesRemaining, buffer.size())};
-        for (size_t i=0; i < samplesToWrite; ++i)
-        {
-            buffer [i] = static_cast<int16_t> (clamped (std::round (samples [readPosition + i] * max /* + dither */), min, max));
-        }
-        if (fwrite (buffer.data(), bytesPerSample, samplesToWrite, out) != samplesToWrite)
-        {
-            throw WriteError ("Failed to write buffer to file.");
-        }
-        readPosition += samplesToWrite;
-        samplesRemaining -= samplesToWrite;
-    }
-}
-
-template <FloatOrDouble T>
-void WriteLPCM32LE (FILE * out, std::vector<T> const & samples, size_t bufferSizeInBytes)
-{
-    constexpr size_t bytesPerSample {4};
-    constexpr int bitsPerSample {32};
-
-    std::vector<int32_t> buffer (bufferSizeInBytes / bytesPerSample);
-
-    const auto max {powerOfTwo<T> (bitsPerSample - 1) - 1}; // 2^(bits-1) - 1
-    const auto min {-max};
-
-    size_t samplesRemaining {samples.size()};
-    size_t readPosition {0};
-    while (samplesRemaining)
-    {
-        const auto samplesToWrite {std::min (samplesRemaining, buffer.size())};
-        for (size_t i=0; i < samplesToWrite; ++i)
-        {
-            buffer [i] = static_cast<int32_t> (clamped (std::round (samples [readPosition + i] * max /* + dither */), min, max));
-        }
-        if (fwrite (buffer.data(), bytesPerSample, samplesToWrite, out) != samplesToWrite)
-        {
-            throw WriteError ("Failed to write buffer to file.");
-        }
-        readPosition += samplesToWrite;
-        samplesRemaining -= samplesToWrite;
-    }
-
-}
-
 template <FloatOrDouble T>
 void WriteData (FILE * out, std::vector<T> const & samples,
                 uint16_t bitsPerSample, uint16_t formatCode, size_t requestedBufferSizeInBytes)
@@ -297,24 +230,13 @@ void WriteData (FILE * out, std::vector<T> const & samples,
     // Input and output endianness are the same.
     if constexpr (std::endian::native == std::endian::little)
     {
-        // Output format is float.
         if (formatCode == FormatCode::FloatPCM)
         {
+            // In benchmarking on macOS Sequoia, a significant speed-up was observed
+            // when saving to 64-bit float with WriteFloatToFloatLE() over using the
+            // fallback path below. (No change was shown when saving to 32-bit float.)
             WriteFloatToFloatLE (out, samples, bufferSizeInBytes, bitsPerSample);
             return;
-        }
-        else if (formatCode == FormatCode::LinearPCM)
-        {
-            if (bitsPerSample == 16)
-            {
-                WriteLPCM16LE (out, samples, bufferSizeInBytes);
-                return;
-            }
-            else if (bitsPerSample == 32)
-            {
-                WriteLPCM32LE (out, samples, bufferSizeInBytes);
-                return;
-            }
         }
     }
 
@@ -354,3 +276,78 @@ void WriteData (FILE * out, std::vector<T> const & samples,
 } // namespace wav
 
 #endif
+
+// With -03, these LPCM 16-bit and 32-bit little-endian-system-specific functions don't seem
+// to be any faster than the fallback path. Haven't tried with link-time optimization.
+
+//template <FloatOrDouble T>
+//void WriteLPCM16LE (FILE * out, std::vector<T> const & samples, size_t bufferSizeInBytes)
+//{
+//    constexpr size_t bytesPerSample {2};
+//    constexpr int bitsPerSample {16};
+//
+//    std::vector<int16_t> buffer (bufferSizeInBytes / bytesPerSample);
+//
+//    const auto max {powerOfTwo<T> (bitsPerSample - 1) - 1}; // 2^(bits-1) - 1
+//    const auto min {-max};
+//
+//    size_t samplesRemaining {samples.size()};
+//    size_t readPosition {0};
+//    while (samplesRemaining)
+//    {
+//        const auto samplesToWrite {std::min (samplesRemaining, buffer.size())};
+//        for (size_t i=0; i < samplesToWrite; ++i)
+//        {
+//            buffer [i] = static_cast<int16_t> (clamped (std::round (samples [readPosition + i] * max /* + dither */), min, max));
+//        }
+//        if (fwrite (buffer.data(), bytesPerSample, samplesToWrite, out) != samplesToWrite)
+//        {
+//            throw WriteError ("Failed to write buffer to file.");
+//        }
+//        readPosition += samplesToWrite;
+//        samplesRemaining -= samplesToWrite;
+//    }
+//}
+
+// With -03, this doesn't seem to be any faster than the fallback path.
+// Haven't tried with link-time optimization.
+//template <FloatOrDouble T>
+//void WriteLPCM32LE (FILE * out, std::vector<T> const & samples, size_t bufferSizeInBytes)
+//{
+//    constexpr size_t bytesPerSample {4};
+//    constexpr int bitsPerSample {32};
+//
+//    std::vector<int32_t> buffer (bufferSizeInBytes / bytesPerSample);
+//
+//    const auto max {powerOfTwo<T> (bitsPerSample - 1) - 1}; // 2^(bits-1) - 1
+//    const auto min {-max};
+//
+//    size_t samplesRemaining {samples.size()};
+//    size_t readPosition {0};
+//    while (samplesRemaining)
+//    {
+//        const auto samplesToWrite {std::min (samplesRemaining, buffer.size())};
+//        for (size_t i=0; i < samplesToWrite; ++i)
+//        {
+//            buffer [i] = static_cast<int32_t> (clamped (std::round (samples [readPosition + i] * max /* + dither */), min, max));
+//        }
+//        if (fwrite (buffer.data(), bytesPerSample, samplesToWrite, out) != samplesToWrite)
+//        {
+//            throw WriteError ("Failed to write buffer to file.");
+//        }
+//        readPosition += samplesToWrite;
+//        samplesRemaining -= samplesToWrite;
+//    }
+//
+//}
+
+// A helper function for WriteLPCM16LE and WriteLPCM32LE.
+/*
+template <typename T>
+T powerOfTwo (int power)
+{
+    // Must be positive. Must not shift past the MSB.
+    assert (power > 0 && power < 64);
+    return static_cast<T> (static_cast<uint64_t>(1) << power);
+}
+*/
