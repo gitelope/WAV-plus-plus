@@ -236,22 +236,23 @@ void WriteData (FILE * out, std::vector<T> const & samples,
         }
         else if (formatCode == FormatCode::LinearPCM)
         {
-            if (bitsPerSample == 8)
+            switch (bitsPerSample)
             {
-                WriteLPCMU8 (out, samples, bufferSizeInBytes);
-                return;
-            }
-            else if (bitsPerSample == 16)
-            {
-                // optimized 16-bit LPCM write for little-endian systems
-                WriteLPCM16LE (out, samples, bufferSizeInBytes);
-                return;
-            }
-            else if (bitsPerSample == 32)
-            {
-                // optimized 32-bit LPCM write for little-endian systems
-                WriteLPCM32LE (out, samples, bufferSizeInBytes);
-                return;
+                case 8:
+                {
+                    WriteLPCMU8 (out, samples, bufferSizeInBytes);
+                    return;
+                }
+                case 16:
+                {
+                    WriteLPCM16LE (out, samples, bufferSizeInBytes);
+                    return;
+                }
+                case 32:
+                {
+                    WriteLPCM32LE (out, samples, bufferSizeInBytes);
+                    return;
+                }
             }
         }
     }
