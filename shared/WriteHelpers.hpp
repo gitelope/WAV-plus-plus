@@ -15,6 +15,7 @@ namespace wav
 std::pair<uint16_t,uint16_t> bitDepthAndFormatCode (ExportFormat ef);
 void WriteHeader (FILE * out, uint16_t bitsPerSample, uint16_t formatCode, int sampleRate, int channels, size_t numSamples);
 void WriteToFile (FILE * out, std::string const & str);
+template <FloatOrDouble T> void WriteLPCM16LE (FILE * out, std::vector<T> const & samples, size_t bufferSizeInBytes);
 template <FloatOrDouble T> void WriteLPCM32LE (FILE * out, std::vector<T> const & samples, size_t bufferSizeInBytes);
 
 // Write integer or float.
@@ -239,14 +240,24 @@ void WriteData (FILE * out, std::vector<T> const & samples,
             WriteFloatToFloatLE (out, samples, bufferSizeInBytes, bitsPerSample);
             return;
         }
-        else if (formatCode == FormatCode::LinearPCM && bitsPerSample == 32)
+        else if (formatCode == FormatCode::LinearPCM)
         {
-            // Use optimized 32-bit LPCM write for little-endian systems.
-            WriteLPCM32LE (out, samples, bufferSizeInBytes);
-            return;
+            if (bitsPerSample == 16)
+            {
+                // optimized 16-bit LPCM write for little-endian systems
+                WriteLPCM16LE (out, samples, bufferSizeInBytes);
+                return;
+            }
+            else if (bitsPerSample == 32)
+            {
+                // optimized 32-bit LPCM write for little-endian systems
+                WriteLPCM32LE (out, samples, bufferSizeInBytes);
+                return;
+            }
         }
     }
 
+    // The fallback path:
     std::vector<std::byte> buffer (bufferSizeInBytes);
 
     size_t samplesRemaining {numSamples};
@@ -277,6 +288,34 @@ void WriteData (FILE * out, std::vector<T> const & samples,
         {
             throw WriteError ("Failed to write padding byte.");
         }
+    }
+}
+
+template <FloatOrDouble T>
+void WriteLPCM16LE (FILE * out, std::vector<T> const & samples, size_t bufferSizeInBytes)
+{
+    constexpr size_t bytesPerSample {2};
+    const auto max {static_cast<T>(0x7FFF)}; // 2^15 - 1 for 16-bit samples
+    const auto min {-max};
+
+    std::vector<int16_t> buffer (bufferSizeInBytes / bytesPerSample);
+
+    size_t samplesRemaining {samples.size()};
+    size_t readPosition {0};
+
+    while (samplesRemaining)
+    {
+        const auto samplesToWrite {std::min (samplesRemaining, buffer.size())};
+        for (size_t i=0; i < samplesToWrite; ++i)
+        {
+            buffer [i] = static_cast<int16_t> (clamped (std::round (samples [readPosition + i] * max /* + dither */), min, max));
+        }
+        if (fwrite (buffer.data(), bytesPerSample, samplesToWrite, out) != samplesToWrite)
+        {
+            throw WriteError ("Failed to write buffer to file.");
+        }
+        readPosition += samplesToWrite;
+        samplesRemaining -= samplesToWrite;
     }
 }
 
@@ -312,34 +351,3 @@ void WriteLPCM32LE (FILE * out, std::vector<T> const & samples, size_t bufferSiz
 
 #endif
 
-// With -03, these LPCM 16-bit and 32-bit little-endian-system-specific functions don't seem
-// to be any faster than the fallback path. Haven't tried with link-time optimization.
-
-//template <FloatOrDouble T>
-//void WriteLPCM16LE (FILE * out, std::vector<T> const & samples, size_t bufferSizeInBytes)
-//{
-//    constexpr size_t bytesPerSample {2};
-//    constexpr int bitsPerSample {16};
-//
-//    std::vector<int16_t> buffer (bufferSizeInBytes / bytesPerSample);
-//
-//    const auto max {powerOfTwo<T> (bitsPerSample - 1) - 1}; // 2^(bits-1) - 1
-//    const auto min {-max};
-//
-//    size_t samplesRemaining {samples.size()};
-//    size_t readPosition {0};
-//    while (samplesRemaining)
-//    {
-//        const auto samplesToWrite {std::min (samplesRemaining, buffer.size())};
-//        for (size_t i=0; i < samplesToWrite; ++i)
-//        {
-//            buffer [i] = static_cast<int16_t> (clamped (std::round (samples [readPosition + i] * max /* + dither */), min, max));
-//        }
-//        if (fwrite (buffer.data(), bytesPerSample, samplesToWrite, out) != samplesToWrite)
-//        {
-//            throw WriteError ("Failed to write buffer to file.");
-//        }
-//        readPosition += samplesToWrite;
-//        samplesRemaining -= samplesToWrite;
-//    }
-//}
