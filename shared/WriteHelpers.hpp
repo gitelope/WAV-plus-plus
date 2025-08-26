@@ -57,10 +57,14 @@ void WriteToFile (FILE * out, T value)
 template <FloatOrDouble T>
 void WriteToFile (FILE * out, T value)
 {
+    static_assert (sizeof (float) == 4, "floats must be 4 bytes.");
+    static_assert (sizeof (double) == 8, "doubles must be 8 bytes.");
+    static_assert (CHAR_BIT == 8, "The value of CHAR_BIT must be 8.");
+
     std::array<std::byte, sizeof(T)> bytes;
     // Convert float/double to integer so we can bit-shift it.
     const auto intValue = std::bit_cast<std::conditional_t<sizeof(T) == 4, uint32_t, uint64_t>> (value);
-    for (int i = 0; i < sizeof(T); ++i)
+    for (int i = 0; i < bytes.size(); ++i)
     {
         bytes[i] = static_cast<std::byte> (intValue >> (8*i));
     }
