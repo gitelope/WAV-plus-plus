@@ -368,7 +368,7 @@ template <FloatOrDouble T>
 void WriteLPCM16LE (FILE * out, std::vector<T> const & samples, size_t bufferSizeInBytes)
 {
     constexpr size_t bytesPerSample {2};
-    const auto max {static_cast<T>(0x7FFF)}; // 2^15 - 1 = 32,767
+    const auto max {static_cast<T> (0x7FFF)}; // 2^15 - 1 = 32,767
     const auto min {-max};
 
     std::vector<int16_t> buffer (bufferSizeInBytes / bytesPerSample);
@@ -413,11 +413,11 @@ void WriteLPCM24LE (FILE * out, std::vector<T> const & samples, size_t bufferSiz
         const auto samplesToWrite {std::min (samplesRemaining, buffer.size())};
         for (size_t i = 0; i < samplesToWrite; ++i)
         {
-            const auto scaled = samples [readPosition + i] * max;
+            const auto scaled {samples [readPosition + i] * max};
             /* dither */
-            const auto rounded = std::round (scaled);
-            const auto clamped = std::clamp (rounded, min, max);
-            buffer[i] = static_cast<int24> (clamped);
+            const auto rounded {std::round (scaled)};
+            const auto quantized {std::clamp (rounded, min, max)};
+            buffer[i] = static_cast<int24> (quantized);
         }
 
         if (fwrite (buffer.data(), bytesPerSample, samplesToWrite, out) != samplesToWrite)
@@ -443,7 +443,7 @@ template <FloatOrDouble T>
 void WriteLPCM32LE (FILE * out, std::vector<T> const & samples, size_t bufferSizeInBytes)
 {
     constexpr size_t bytesPerSample {4};
-    const auto max {static_cast<T>(0x7FFFFFFF)}; // 2^31 - 1 = 2,147,483,647
+    const auto max {static_cast<T> (0x7FFFFFFF)}; // 2^31 - 1 = 2,147,483,647
     const auto min {-max};
 
     std::vector<int32_t> buffer (bufferSizeInBytes / bytesPerSample);
@@ -456,7 +456,11 @@ void WriteLPCM32LE (FILE * out, std::vector<T> const & samples, size_t bufferSiz
         const auto samplesToWrite {std::min (samplesRemaining, buffer.size())};
         for (size_t i=0; i < samplesToWrite; ++i)
         {
-            buffer [i] = static_cast<int32_t> (clamped (std::round (samples [readPosition + i] * max /* + dither */), min, max));
+            const auto scaled {samples [readPosition + i] * max};
+            /* dither */
+            const auto rounded {std::round (scaled)};
+            const auto quantized {std::clamp (rounded, min, max)};
+            buffer [i] = static_cast<int32_t> (quantized);
         }
         if (fwrite (buffer.data(), bytesPerSample, samplesToWrite, out) != samplesToWrite)
         {
