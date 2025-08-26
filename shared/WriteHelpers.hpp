@@ -14,19 +14,19 @@ namespace wav
 
 struct int24
 {
-    std::array<std::uint8_t, 3> bytes;
+    std::array<std::byte, 3> bytes;
 
     constexpr int24() noexcept
-    :bytes{0, 0, 0}
+    :bytes {std::byte{0}, std::byte{0}, std::byte{0}}
     {}
 
     template <FloatOrDouble T>
     constexpr int24 (T quantizedValue) noexcept
     {
         const auto integer {static_cast<std::int32_t> (quantizedValue)};
-        bytes[0] = static_cast<std::uint8_t> (integer);
-        bytes[1] = static_cast<std::uint8_t> (integer >> 8);
-        bytes[2] = static_cast<std::uint8_t> (integer >> 16);
+        bytes[0] = static_cast<std::byte> (integer);
+        bytes[1] = static_cast<std::byte> (integer >> 8);
+        bytes[2] = static_cast<std::byte> (integer >> 16);
     }
 };
 
