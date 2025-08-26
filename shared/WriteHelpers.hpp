@@ -381,7 +381,11 @@ void WriteLPCM16LE (FILE * out, std::vector<T> const & samples, size_t bufferSiz
         const auto samplesToWrite {std::min (samplesRemaining, buffer.size())};
         for (size_t i=0; i < samplesToWrite; ++i)
         {
-            buffer [i] = static_cast<int16_t> (clamped (std::round (samples [readPosition + i] * max /* + dither */), min, max));
+            const auto scaled {samples [readPosition + i] * max};
+            /* dither */
+            const auto rounded {std::round (scaled)};
+            const auto quantized {std::clamp (rounded, min, max)};
+            buffer [i] = static_cast<int16_t> (quantized);
         }
         if (fwrite (buffer.data(), bytesPerSample, samplesToWrite, out) != samplesToWrite)
         {
