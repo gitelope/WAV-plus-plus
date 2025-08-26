@@ -324,11 +324,11 @@ template <FloatOrDouble T>
 void WriteLPCMU8 (FILE * out, std::vector<T> const & samples, size_t bufferSizeInBytes)
 {
     constexpr size_t bytesPerSample {1};
-    const auto max {static_cast<T>(0x7F)}; // 2^7 - 1 = 127
+    const auto max {static_cast<T> (0x7F)}; // 2^7 - 1 = 127
     const auto min {-max};
-    const auto offset {static_cast<T>(0x80)}; // 2^7 = 128
+    const auto offset {static_cast<T> (0x80)}; // 2^7 = 128
 
-    std::vector<uint8_t> buffer (bufferSizeInBytes);
+    std::vector<std::byte> buffer (bufferSizeInBytes);
 
     size_t samplesRemaining {samples.size()};
     size_t readPosition {0};
@@ -338,7 +338,12 @@ void WriteLPCMU8 (FILE * out, std::vector<T> const & samples, size_t bufferSizeI
         const auto samplesToWrite {std::min (samplesRemaining, buffer.size())};
         for (size_t i=0; i < samplesToWrite; ++i)
         {
-            buffer [i] = static_cast<uint8_t> (clamped (std::round (samples [readPosition + i] * max /* + dither */), min, max) + offset);
+            const auto scaled = samples [readPosition + i] * max;
+            /* dither */
+            const auto rounded {std::round (scaled)};
+            const auto clamped {std::clamp (rounded, min, max)};
+            const auto quantized {clamped + offset};
+            buffer [i] = static_cast<std::byte> (quantized);
         }
         if (fwrite (buffer.data(), bytesPerSample, samplesToWrite, out) != samplesToWrite)
         {
