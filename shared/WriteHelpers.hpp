@@ -49,7 +49,7 @@ void WriteToFile (FILE * out, T value, int size = sizeof (value))
     std::array<std::byte, sizeof (T)> bytes; // using sizeof(T) means that size is 4 for 24-bit samples
     for (int i=0; i<size; ++i)
     {
-        bytes[i] = static_cast<std::byte> (value >> (8*i) & 0xFF);
+        bytes[i] = static_cast<std::byte> (value >> (8*i));
     }
     if (fwrite (bytes.data(), 1, size, out) != static_cast<size_t>(size))
     {
@@ -65,7 +65,7 @@ void WriteToFile (FILE * out, T value)
     auto intValue = std::bit_cast<std::conditional_t<sizeof(T) == 4, uint32_t, uint64_t>>(value);
     for (int i = 0; i < sizeof(T); ++i)
     {
-        bytes[i] = static_cast<std::byte> (intValue >> (8*i) & 0xFF);
+        bytes[i] = static_cast<std::byte> (intValue >> (8*i));
     }
     if (fwrite (bytes.data(), 1, bytes.size(), out) != bytes.size())
     {
