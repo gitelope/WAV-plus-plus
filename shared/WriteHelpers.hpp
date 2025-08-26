@@ -74,12 +74,6 @@ void WriteToFile (FILE * out, T value)
 }
 
 template <FloatOrDouble T>
-T clamped (T value, T min, T max)
-{
-    return std::min (std::max (min, value), max);
-}
-
-template <FloatOrDouble T>
 void FillBufferFloatPCM (std::vector<T> const & samples, std::vector<std::byte> & buffer,
                          size_t readPosition, size_t samplesToWrite, uint16_t bitsPerSample)
 {
@@ -92,10 +86,10 @@ void FillBufferFloatPCM (std::vector<T> const & samples, std::vector<std::byte> 
                 const auto current = static_cast<float> (samples [n+readPosition]);
                 const auto i {n * bytesPerSample};
                 const auto integer = std::bit_cast<uint32_t> (current);
-                buffer [i]   = static_cast<std::byte> (integer         & 0xFF);
-                buffer [i+1] = static_cast<std::byte> ((integer >> 8)  & 0xFF);
-                buffer [i+2] = static_cast<std::byte> ((integer >> 16) & 0xFF);
-                buffer [i+3] = static_cast<std::byte> ((integer >> 24) & 0xFF);
+                buffer [i]   = static_cast<std::byte> (integer);
+                buffer [i+1] = static_cast<std::byte> (integer >> 8);
+                buffer [i+2] = static_cast<std::byte> (integer >> 16);
+                buffer [i+3] = static_cast<std::byte> (integer >> 24);
             }
             break;
         case 64:
@@ -104,14 +98,14 @@ void FillBufferFloatPCM (std::vector<T> const & samples, std::vector<std::byte> 
                 const auto current = static_cast<double> (samples [n+readPosition]);
                 const auto i {n * bytesPerSample};
                 const auto integer = std::bit_cast<uint64_t>(current);
-                buffer [i]   = static_cast<std::byte> (integer         & 0xFF);
-                buffer [i+1] = static_cast<std::byte> ((integer >> 8)  & 0xFF);
-                buffer [i+2] = static_cast<std::byte> ((integer >> 16) & 0xFF);
-                buffer [i+3] = static_cast<std::byte> ((integer >> 24) & 0xFF);
-                buffer [i+4] = static_cast<std::byte> ((integer >> 32) & 0xFF);
-                buffer [i+5] = static_cast<std::byte> ((integer >> 40) & 0xFF);
-                buffer [i+6] = static_cast<std::byte> ((integer >> 48) & 0xFF);
-                buffer [i+7] = static_cast<std::byte> ((integer >> 56) & 0xFF);
+                buffer [i]   = static_cast<std::byte> (integer);
+                buffer [i+1] = static_cast<std::byte> (integer >> 8);
+                buffer [i+2] = static_cast<std::byte> (integer >> 16);
+                buffer [i+3] = static_cast<std::byte> (integer >> 24);
+                buffer [i+4] = static_cast<std::byte> (integer >> 32);
+                buffer [i+5] = static_cast<std::byte> (integer >> 40);
+                buffer [i+6] = static_cast<std::byte> (integer >> 48);
+                buffer [i+7] = static_cast<std::byte> (integer >> 56);
             }
             break;
     }
@@ -125,7 +119,11 @@ void FillBufferLinearPCM (std::vector<T> const & samples, std::vector<std::byte>
     const auto min {-max};
     auto quantized = [&min, &max] (T sample) -> T
     {
-        return clamped (std::round (sample * max /* + dither */), min, max);
+        const auto scaled {sample * max};
+        /* dither */
+        const auto rounded {std::round (scaled)};
+        const auto clamped {std::clamp (rounded, min, max)};
+        return clamped;
     };
 
     const auto bytesPerSample {bitsPerSample / 8};
@@ -139,8 +137,8 @@ void FillBufferLinearPCM (std::vector<T> const & samples, std::vector<std::byte>
                 const auto quantizedSample = static_cast<int16_t> (quantized (samples [n+readPosition]));
 
                 const auto i {n * bytesPerSample};
-                buffer [i]   = static_cast<std::byte> (quantizedSample        & 0xFF);
-                buffer [i+1] = static_cast<std::byte> ((quantizedSample >> 8) & 0xFF);
+                buffer [i]   = static_cast<std::byte> (quantizedSample);
+                buffer [i+1] = static_cast<std::byte> (quantizedSample >> 8);
             }
             break;
         case 24:
@@ -160,10 +158,10 @@ void FillBufferLinearPCM (std::vector<T> const & samples, std::vector<std::byte>
                 const auto quantizedSample = static_cast<int32_t> (quantized (samples [n+readPosition]));
 
                 const size_t i {n * bytesPerSample};
-                buffer [i]   = static_cast<std::byte> (quantizedSample         & 0xFF);
-                buffer [i+1] = static_cast<std::byte> ((quantizedSample >> 8)  & 0xFF);
-                buffer [i+2] = static_cast<std::byte> ((quantizedSample >> 16) & 0xFF);
-                buffer [i+3] = static_cast<std::byte> ((quantizedSample >> 24) & 0xFF);
+                buffer [i]   = static_cast<std::byte> (quantizedSample);
+                buffer [i+1] = static_cast<std::byte> (quantizedSample >> 8);
+                buffer [i+2] = static_cast<std::byte> (quantizedSample >> 16);
+                buffer [i+3] = static_cast<std::byte> (quantizedSample >> 24);
             }
             break;
     }
