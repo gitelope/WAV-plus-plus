@@ -38,31 +38,28 @@ template <FloatOrDouble T> void WriteLPCM16LE (FILE * out, std::vector<T> const 
 template <FloatOrDouble T> void WriteLPCM24LE (FILE * out, std::vector<T> const & samples, size_t bufferSizeInBytes);
 template <FloatOrDouble T> void WriteLPCM32LE (FILE * out, std::vector<T> const & samples, size_t bufferSizeInBytes);
 
-// Write integer.
-// By default, the number of bytes is the container size,
-// but it may also be less than the container size.
-template <typename T>
-requires (std::integral<T>)
-void WriteToFile (FILE * out, T value, int size = sizeof (value))
+// Write integer as header field. Not for writing data.
+template <std::integral T>
+void WriteToFile (FILE * out, T value)
 {
-    assert (size > 0 && size <= sizeof (value));
-    std::array<std::byte, sizeof (T)> bytes; // using sizeof(T) means that size is 4 for 24-bit samples
-    for (int i=0; i<size; ++i)
+    std::array<std::byte, sizeof(T)> bytes;
+    for (int i=0; i < bytes.size(); ++i)
     {
         bytes[i] = static_cast<std::byte> (value >> (8*i));
     }
-    if (fwrite (bytes.data(), 1, size, out) != static_cast<size_t>(size))
+    if (fwrite (bytes.data(), 1, bytes.size(), out) != bytes.size())
     {
         throw WriteError ("Failed to write to file.");
     }
 }
 
+// Write float or double as header field. Not for writing data.
 template <FloatOrDouble T>
 void WriteToFile (FILE * out, T value)
 {
     std::array<std::byte, sizeof(T)> bytes;
     // Convert float/double to integer so we can bit-shift it.
-    auto intValue = std::bit_cast<std::conditional_t<sizeof(T) == 4, uint32_t, uint64_t>>(value);
+    const auto intValue = std::bit_cast<std::conditional_t<sizeof(T) == 4, uint32_t, uint64_t>> (value);
     for (int i = 0; i < sizeof(T); ++i)
     {
         bytes[i] = static_cast<std::byte> (intValue >> (8*i));
