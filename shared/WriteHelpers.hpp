@@ -12,15 +12,33 @@
 namespace wav
 {
 
+struct int24
+{
+    std::array<std::uint8_t, 3> bytes;
+
+    constexpr int24() noexcept
+    :bytes{0, 0, 0}
+    {}
+
+    template <FloatOrDouble T>
+    constexpr int24 (T quantizedValue) noexcept
+    {
+        const auto integer {static_cast<std::int32_t> (quantizedValue)};
+        bytes[0] = static_cast<std::uint8_t> (integer);
+        bytes[1] = static_cast<std::uint8_t> (integer >> 8);
+        bytes[2] = static_cast<std::uint8_t> (integer >> 16);
+    }
+};
+
 std::pair<uint16_t,uint16_t> bitDepthAndFormatCode (ExportFormat ef);
 void WriteHeader (FILE * out, uint16_t bitsPerSample, uint16_t formatCode, int sampleRate, int channels, size_t numSamples);
 void WriteToFile (FILE * out, std::string const & str);
 template <FloatOrDouble T> void WriteLPCMU8   (FILE * out, std::vector<T> const & samples, size_t bufferSizeInBytes);
 template <FloatOrDouble T> void WriteLPCM16LE (FILE * out, std::vector<T> const & samples, size_t bufferSizeInBytes);
+template <FloatOrDouble T> void WriteLPCM24LE (FILE * out, std::vector<T> const & samples, size_t bufferSizeInBytes);
 template <FloatOrDouble T> void WriteLPCM32LE (FILE * out, std::vector<T> const & samples, size_t bufferSizeInBytes);
 
-// Write integer or float.
-//
+// Write integer.
 // By default, the number of bytes is the container size,
 // but it may also be less than the container size.
 template <typename T>
@@ -131,9 +149,9 @@ void FillBufferLinearPCM (std::vector<T> const & samples, std::vector<std::byte>
                 const auto quantizedSample = static_cast<int32_t> (quantized (samples [n+readPosition]));
 
                 const auto i {n * bytesPerSample};
-                buffer [i]   = static_cast<std::byte> (quantizedSample         & 0xFF);
-                buffer [i+1] = static_cast<std::byte> ((quantizedSample >> 8)  & 0xFF);
-                buffer [i+2] = static_cast<std::byte> ((quantizedSample >> 16) & 0xFF);
+                buffer [i]   = static_cast<std::byte> (quantizedSample);
+                buffer [i+1] = static_cast<std::byte> (quantizedSample >> 8);
+                buffer [i+2] = static_cast<std::byte> (quantizedSample >> 16);
             }
             break;
         case 32:
@@ -246,6 +264,11 @@ void WriteData (FILE * out, std::vector<T> const & samples,
                 case 16:
                 {
                     WriteLPCM16LE (out, samples, bufferSizeInBytes);
+                    return;
+                }
+                case 24:
+                {
+                    WriteLPCM24LE (out, samples, bufferSizeInBytes);
                     return;
                 }
                 case 32:
@@ -361,6 +384,49 @@ void WriteLPCM16LE (FILE * out, std::vector<T> const & samples, size_t bufferSiz
         }
         readPosition += samplesToWrite;
         samplesRemaining -= samplesToWrite;
+    }
+}
+
+template <FloatOrDouble T>
+void WriteLPCM24LE (FILE * out, std::vector<T> const & samples, size_t bufferSizeInBytes)
+{
+    constexpr size_t bytesPerSample {3};
+    const auto max {static_cast<T> (0x7FFFFF)}; // 2^23 - 1 = 8,388,607
+    const auto min {-max};
+
+    std::vector<int24> buffer (bufferSizeInBytes / bytesPerSample);
+
+    size_t samplesRemaining {samples.size()};
+    size_t readPosition {0};
+
+    while (samplesRemaining)
+    {
+        const auto samplesToWrite {std::min (samplesRemaining, buffer.size())};
+        for (size_t i = 0; i < samplesToWrite; ++i)
+        {
+            const auto scaled = samples [readPosition + i] * max;
+            /* dither */
+            const auto rounded = std::round (scaled);
+            const auto clamped = std::clamp (rounded, min, max);
+            buffer[i] = static_cast<int24> (clamped);
+        }
+
+        if (fwrite (buffer.data(), bytesPerSample, samplesToWrite, out) != samplesToWrite)
+        {
+            throw WriteError ("Failed to write buffer to file.");
+        }
+        readPosition += samplesToWrite;
+        samplesRemaining -= samplesToWrite;
+    }
+
+    if (samples.size() % 2) // If samples is odd, then total bytes is odd since bytesPerSample is 3 an therefore odd.
+    {
+        // If an odd number of data bytes, add a padding byte.
+        constexpr auto padding {std::byte {0x00}};
+        if (fwrite (&padding, 1, 1, out) != 1)
+        {
+            throw WriteError ("Failed to write padding byte.");
+        }
     }
 }
 
