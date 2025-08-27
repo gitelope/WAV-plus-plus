@@ -12,31 +12,24 @@
 namespace wav
 {
 
-struct int24
-{
-    std::array<std::byte, 3> bytes;
-
-    constexpr int24() noexcept
-    :bytes {std::byte{0}, std::byte{0}, std::byte{0}}
-    {}
-
-    template <FloatOrDouble T>
-    constexpr int24 (T quantizedValue) noexcept
-    {
-        const auto integer {static_cast<std::int32_t> (quantizedValue)};
-        bytes[0] = static_cast<std::byte> (integer);
-        bytes[1] = static_cast<std::byte> (integer >> 8);
-        bytes[2] = static_cast<std::byte> (integer >> 16);
-    }
-};
-
 std::pair<uint16_t,uint16_t> bitDepthAndFormatCode (ExportFormat ef);
+
+// header
 void WriteHeader (FILE * out, uint16_t bitsPerSample, uint16_t formatCode, int sampleRate, int channels, size_t numSamples);
 void WriteToFile (FILE * out, std::string const & str);
-template <FloatOrDouble T> void WriteLPCMU8   (FILE * out, std::vector<T> const & samples, size_t bufferSizeInBytes);
+
+// data on LE systems
+template <FloatOrDouble T> void WriteDataLE (FILE * out, std::vector<T> const & samples, uint16_t bitsPerSample, uint16_t formatCode, size_t bufferSizeInBytes);
+template <FloatOrDouble T> void WriteFloatToFloatLE (FILE * out, std::vector<T> const & samples, size_t bufferSizeInBytes, uint16_t bitsPerSample);
 template <FloatOrDouble T> void WriteLPCM16LE (FILE * out, std::vector<T> const & samples, size_t bufferSizeInBytes);
 template <FloatOrDouble T> void WriteLPCM24LE (FILE * out, std::vector<T> const & samples, size_t bufferSizeInBytes);
 template <FloatOrDouble T> void WriteLPCM32LE (FILE * out, std::vector<T> const & samples, size_t bufferSizeInBytes);
+
+// 8-bit LPCM data (LE and BE)
+template <FloatOrDouble T> void WriteLPCMU8   (FILE * out, std::vector<T> const & samples, size_t bufferSizeInBytes);
+
+// data on BE systems (also works for LE but not optimal)
+template <FloatOrDouble T> void WriteDataFallback (FILE * out, std::vector<T> const & samples,uint16_t bitsPerSample, uint16_t formatCode, size_t bufferSizeInBytes);
 
 // Write integer as header field. Not for writing data.
 template <std::integral T>
@@ -75,102 +68,66 @@ void WriteToFile (FILE * out, T value)
 }
 
 template <FloatOrDouble T>
-void FillBufferFloatPCM (std::vector<T> const & samples, std::vector<std::byte> & buffer,
-                         size_t readPosition, size_t samplesToWrite, uint16_t bitsPerSample)
+void WriteData (FILE * out, std::vector<T> const & samples,
+                uint16_t bitsPerSample, uint16_t formatCode, size_t requestedBufferSizeInBytes)
 {
-    const auto bytesPerSample {bitsPerSample / 8};
-    switch (bitsPerSample)
+    assert (bitsPerSample % 8 == 0);
+    const auto numSamples {samples.size()};
+    const auto sampleSizeInBytes {static_cast<size_t> (bitsPerSample / 8)};
+    const auto totalBytesToWrite {numSamples * sampleSizeInBytes};
+
+    // Determine buffer size from requested size, sample size, and number of samples:
+    // 1. Buffer must be able to hold an entire sample's worth of bytes.
+    size_t bufferSizeInBytes = std::max (requestedBufferSizeInBytes, sampleSizeInBytes);
+    // 2. Buffer size must correspond to a whole number of samples.
+    bufferSizeInBytes = (bufferSizeInBytes / sampleSizeInBytes) * sampleSizeInBytes;
+    // 3. Buffer size must not exceed the total number of bytes to write.
+    bufferSizeInBytes = std::min (bufferSizeInBytes, totalBytesToWrite);
+
+    // Input and output endianness are the same.
+    if constexpr (std::endian::native == std::endian::little)
     {
-        case 32:
-            for (size_t n = 0; n < samplesToWrite; ++n)
-            {
-                const auto current = static_cast<float> (samples [n+readPosition]);
-                const auto i {n * bytesPerSample};
-                const auto integer = std::bit_cast<uint32_t> (current);
-                buffer [i]   = static_cast<std::byte> (integer);
-                buffer [i+1] = static_cast<std::byte> (integer >> 8);
-                buffer [i+2] = static_cast<std::byte> (integer >> 16);
-                buffer [i+3] = static_cast<std::byte> (integer >> 24);
-            }
-            break;
-        case 64:
-            for (size_t n = 0; n < samplesToWrite; ++n)
-            {
-                const auto current = static_cast<double> (samples [n+readPosition]);
-                const auto i {n * bytesPerSample};
-                const auto integer = std::bit_cast<uint64_t>(current);
-                buffer [i]   = static_cast<std::byte> (integer);
-                buffer [i+1] = static_cast<std::byte> (integer >> 8);
-                buffer [i+2] = static_cast<std::byte> (integer >> 16);
-                buffer [i+3] = static_cast<std::byte> (integer >> 24);
-                buffer [i+4] = static_cast<std::byte> (integer >> 32);
-                buffer [i+5] = static_cast<std::byte> (integer >> 40);
-                buffer [i+6] = static_cast<std::byte> (integer >> 48);
-                buffer [i+7] = static_cast<std::byte> (integer >> 56);
-            }
-            break;
+        WriteDataLE (out, samples, bitsPerSample, formatCode, bufferSizeInBytes);
+        return;
+    }
+    // System is not little-endian.
+    else if (bitsPerSample == 8 && formatCode == FormatCode::LinearPCM)
+    {
+        WriteLPCMU8 (out, samples, bufferSizeInBytes); // Since samples are one byte, this is also used for LE.
+    }
+    else
+    {
+        WriteDataFallback (out, samples, bitsPerSample, formatCode, bufferSizeInBytes);
     }
 }
 
 template <FloatOrDouble T>
-void FillBufferLinearPCM (std::vector<T> const & samples, std::vector<std::byte> & buffer,
-                          size_t readPosition, size_t samplesToWrite, uint16_t bitsPerSample)
+void WriteDataLE (FILE * out, std::vector<T> const & samples,
+                  uint16_t bitsPerSample, uint16_t formatCode, size_t bufferSizeInBytes)
 {
-    const auto max {static_cast<T> ((1 << (bitsPerSample - 1)) - 1)}; // 2^(bits-1) - 1
-    const auto min {-max};
-    auto quantized = [&min, &max] (T sample) -> T
+    if (formatCode == FormatCode::FloatPCM)
     {
-        const auto scaled {sample * max};
-        /* dither */
-        const auto rounded {std::round (scaled)};
-        const auto clamped {std::clamp (rounded, min, max)};
-        return clamped;
-    };
-
-    const auto bytesPerSample {bitsPerSample / 8};
-
-    // Quantize samples and write their bytes to buffer in little-endian order:
-    switch (bitsPerSample)
+        WriteFloatToFloatLE (out, samples, bufferSizeInBytes, bitsPerSample);
+    }
+    else if (formatCode == FormatCode::LinearPCM)
     {
-        case 16:
-            for (size_t n = 0; n < samplesToWrite; ++n)
-            {
-                const auto quantizedSample = static_cast<int16_t> (quantized (samples [n+readPosition]));
-
-                const auto i {n * bytesPerSample};
-                buffer [i]   = static_cast<std::byte> (quantizedSample);
-                buffer [i+1] = static_cast<std::byte> (quantizedSample >> 8);
-            }
-            break;
-        case 24:
-            for (size_t n = 0; n < samplesToWrite; ++n)
-            {
-                const auto quantizedSample = static_cast<int32_t> (quantized (samples [n+readPosition]));
-
-                const auto i {n * bytesPerSample};
-                buffer [i]   = static_cast<std::byte> (quantizedSample);
-                buffer [i+1] = static_cast<std::byte> (quantizedSample >> 8);
-                buffer [i+2] = static_cast<std::byte> (quantizedSample >> 16);
-            }
-            break;
-        case 32:
-            for (size_t n = 0; n < samplesToWrite; ++n)
-            {
-                const auto quantizedSample = static_cast<int32_t> (quantized (samples [n+readPosition]));
-
-                const size_t i {n * bytesPerSample};
-                buffer [i]   = static_cast<std::byte> (quantizedSample);
-                buffer [i+1] = static_cast<std::byte> (quantizedSample >> 8);
-                buffer [i+2] = static_cast<std::byte> (quantizedSample >> 16);
-                buffer [i+3] = static_cast<std::byte> (quantizedSample >> 24);
-            }
-            break;
+        switch (bitsPerSample)
+        {
+            case 8:  WriteLPCMU8   (out, samples, bufferSizeInBytes); break;
+            case 16: WriteLPCM16LE (out, samples, bufferSizeInBytes); break;
+            case 24: WriteLPCM24LE (out, samples, bufferSizeInBytes); break;
+            case 32: WriteLPCM32LE (out, samples, bufferSizeInBytes); break;
+        }
     }
 }
 
 template <FloatOrDouble T>
 void WriteFloatToFloatLE (FILE * out, std::vector<T> const & samples, size_t bufferSizeInBytes, uint16_t bitsPerSample)
 {
+    // In benchmarking on macOS Sequoia, a significant speed-up was observed
+    // when saving to 64-bit float with WriteFloatToFloatLE() over using the
+    // fallback path. (No change was shown when saving to 32-bit float.)
+
     // Output bit depth same as input.
     if ((std::is_same_v<T, float> && bitsPerSample == 32) || (std::is_same_v<T, double> && bitsPerSample == 64))
     {
@@ -223,102 +180,7 @@ void WriteFloatToFloatLE (FILE * out, std::vector<T> const & samples, size_t buf
     }
 }
 
-template <FloatOrDouble T>
-void WriteData (FILE * out, std::vector<T> const & samples,
-                uint16_t bitsPerSample, uint16_t formatCode, size_t requestedBufferSizeInBytes)
-{
-    assert (bitsPerSample % 8 == 0);
-    const auto numSamples {samples.size()};
-    const auto sampleSizeInBytes {static_cast<size_t> (bitsPerSample / 8)};
-    const auto totalBytesToWrite {numSamples * sampleSizeInBytes};
-
-    // Determine buffer size from requested size, sample size, and number of samples:
-    // 1. Buffer must be able to hold an entire sample's worth of bytes.
-    size_t bufferSizeInBytes = std::max (requestedBufferSizeInBytes, sampleSizeInBytes);
-    // 2. Buffer size must correspond to a whole number of samples.
-    bufferSizeInBytes = (bufferSizeInBytes / sampleSizeInBytes) * sampleSizeInBytes;
-    // 3. Buffer size must not exceed the total number of bytes to write.
-    bufferSizeInBytes = std::min (bufferSizeInBytes, totalBytesToWrite);
-
-    // Input and output endianness are the same.
-    if constexpr (std::endian::native == std::endian::little)
-    {
-        if (formatCode == FormatCode::FloatPCM)
-        {
-            // In benchmarking on macOS Sequoia, a significant speed-up was observed
-            // when saving to 64-bit float with WriteFloatToFloatLE() over using the
-            // fallback path below. (No change was shown when saving to 32-bit float.)
-            WriteFloatToFloatLE (out, samples, bufferSizeInBytes, bitsPerSample);
-            return;
-        }
-        else if (formatCode == FormatCode::LinearPCM)
-        {
-            switch (bitsPerSample)
-            {
-                case 8:
-                {
-                    WriteLPCMU8 (out, samples, bufferSizeInBytes);
-                    return;
-                }
-                case 16:
-                {
-                    WriteLPCM16LE (out, samples, bufferSizeInBytes);
-                    return;
-                }
-                case 24:
-                {
-                    WriteLPCM24LE (out, samples, bufferSizeInBytes);
-                    return;
-                }
-                case 32:
-                {
-                    WriteLPCM32LE (out, samples, bufferSizeInBytes);
-                    return;
-                }
-            }
-        }
-    }
-    // system is not little-endian
-    else if (bitsPerSample == 8 && formatCode == FormatCode::LinearPCM)
-    {
-        WriteLPCMU8 (out, samples, bufferSizeInBytes);
-        return;
-    }
-
-    // The fallback path:
-    std::vector<std::byte> buffer (bufferSizeInBytes);
-
-    size_t samplesRemaining {numSamples};
-    size_t readPosition {0};
-
-    while (samplesRemaining)
-    {
-        const auto bytesToWrite {std::min (samplesRemaining * sampleSizeInBytes, buffer.size())};
-        const auto samplesToWrite {bytesToWrite / sampleSizeInBytes};
-        // fill a buffer
-        if      (formatCode == FormatCode::LinearPCM) FillBufferLinearPCM (samples, buffer, readPosition, samplesToWrite, bitsPerSample);
-        else if (formatCode == FormatCode::FloatPCM)  FillBufferFloatPCM  (samples, buffer, readPosition, samplesToWrite, bitsPerSample);
-        else assert (false);
-
-        if (fwrite (buffer.data(), 1, bytesToWrite, out) != bytesToWrite)
-        {
-            throw WriteError ("Failed to write buffer to file.");
-        }
-
-        readPosition += samplesToWrite;
-        samplesRemaining -= samplesToWrite;
-    }
-    if (totalBytesToWrite % 2)
-    {
-        // If an odd number of data bytes, add a padding byte.
-        constexpr auto padding {std::byte {0x00}};
-        if (fwrite (&padding, 1, 1, out) != 1)
-        {
-            throw WriteError ("Failed to write padding byte.");
-        }
-    }
-}
-
+// Both LE and BE since samples are a single byte in size.
 template <FloatOrDouble T>
 void WriteLPCMU8 (FILE * out, std::vector<T> const & samples, size_t bufferSizeInBytes)
 {
@@ -395,6 +257,24 @@ void WriteLPCM16LE (FILE * out, std::vector<T> const & samples, size_t bufferSiz
     }
 }
 
+struct int24
+{
+    std::array<std::byte, 3> bytes;
+
+    constexpr int24() noexcept
+    :bytes {std::byte{0}, std::byte{0}, std::byte{0}}
+    {}
+
+    template <FloatOrDouble T>
+    constexpr int24 (T quantizedValue) noexcept
+    {
+        const auto integer {static_cast<std::int32_t> (quantizedValue)};
+        bytes[0] = static_cast<std::byte> (integer);
+        bytes[1] = static_cast<std::byte> (integer >> 8);
+        bytes[2] = static_cast<std::byte> (integer >> 16);
+    }
+};
+
 template <FloatOrDouble T>
 void WriteLPCM24LE (FILE * out, std::vector<T> const & samples, size_t bufferSizeInBytes)
 {
@@ -467,6 +347,142 @@ void WriteLPCM32LE (FILE * out, std::vector<T> const & samples, size_t bufferSiz
         }
         readPosition += samplesToWrite;
         samplesRemaining -= samplesToWrite;
+    }
+}
+
+template <FloatOrDouble T>
+void WriteDataFallback (FILE * out, std::vector<T> const & samples,
+                        uint16_t bitsPerSample, uint16_t formatCode, size_t bufferSizeInBytes)
+{
+    assert (bitsPerSample % 8 == 0);
+    const auto numSamples {samples.size()};
+    const auto bytesPerSamples {static_cast<size_t> (bitsPerSample / 8)};
+    const auto totalBytesToWrite {numSamples * bytesPerSamples};
+
+    std::vector<std::byte> buffer (bufferSizeInBytes);
+
+    size_t samplesRemaining {numSamples};
+    size_t readPosition {0};
+
+    while (samplesRemaining)
+    {
+        const auto bytesToWrite {std::min (samplesRemaining * bytesPerSamples, buffer.size())};
+        const auto samplesToWrite {bytesToWrite / bytesPerSamples};
+        // fill a buffer
+        if      (formatCode == FormatCode::LinearPCM) FillBufferLinearPCM (samples, buffer, readPosition, samplesToWrite, bitsPerSample);
+        else if (formatCode == FormatCode::FloatPCM)  FillBufferFloatPCM  (samples, buffer, readPosition, samplesToWrite, bitsPerSample);
+        else assert (false);
+
+        if (fwrite (buffer.data(), 1, bytesToWrite, out) != bytesToWrite)
+        {
+            throw WriteError ("Failed to write buffer to file.");
+        }
+
+        readPosition += samplesToWrite;
+        samplesRemaining -= samplesToWrite;
+    }
+    if (totalBytesToWrite % 2)
+    {
+        // If an odd number of data bytes, add a padding byte.
+        constexpr auto padding {std::byte {0x00}};
+        if (fwrite (&padding, 1, 1, out) != 1)
+        {
+            throw WriteError ("Failed to write padding byte.");
+        }
+    }
+}
+
+template <FloatOrDouble T>
+void FillBufferLinearPCM (std::vector<T> const & samples, std::vector<std::byte> & buffer,
+                          size_t readPosition, size_t samplesToWrite, uint16_t bitsPerSample)
+{
+    const auto max {static_cast<T> ((1 << (bitsPerSample - 1)) - 1)}; // 2^(bits-1) - 1
+    const auto min {-max};
+    auto quantized = [&min, &max] (T sample) -> T
+    {
+        const auto scaled {sample * max};
+        /* dither */
+        const auto rounded {std::round (scaled)};
+        const auto clamped {std::clamp (rounded, min, max)};
+        return clamped;
+    };
+
+    const auto bytesPerSample {bitsPerSample / 8};
+
+    // Quantize samples and write their bytes to buffer in little-endian order:
+    switch (bitsPerSample)
+    {
+        case 16:
+            for (size_t n = 0; n < samplesToWrite; ++n)
+            {
+                const auto quantizedSample = static_cast<int16_t> (quantized (samples [n+readPosition]));
+
+                const auto i {n * bytesPerSample};
+                buffer [i]   = static_cast<std::byte> (quantizedSample);
+                buffer [i+1] = static_cast<std::byte> (quantizedSample >> 8);
+            }
+            break;
+        case 24:
+            for (size_t n = 0; n < samplesToWrite; ++n)
+            {
+                const auto quantizedSample = static_cast<int32_t> (quantized (samples [n+readPosition]));
+
+                const auto i {n * bytesPerSample};
+                buffer [i]   = static_cast<std::byte> (quantizedSample);
+                buffer [i+1] = static_cast<std::byte> (quantizedSample >> 8);
+                buffer [i+2] = static_cast<std::byte> (quantizedSample >> 16);
+            }
+            break;
+        case 32:
+            for (size_t n = 0; n < samplesToWrite; ++n)
+            {
+                const auto quantizedSample = static_cast<int32_t> (quantized (samples [n+readPosition]));
+
+                const size_t i {n * bytesPerSample};
+                buffer [i]   = static_cast<std::byte> (quantizedSample);
+                buffer [i+1] = static_cast<std::byte> (quantizedSample >> 8);
+                buffer [i+2] = static_cast<std::byte> (quantizedSample >> 16);
+                buffer [i+3] = static_cast<std::byte> (quantizedSample >> 24);
+            }
+            break;
+    }
+}
+
+template <FloatOrDouble T>
+void FillBufferFloatPCM (std::vector<T> const & samples, std::vector<std::byte> & buffer,
+                         size_t readPosition, size_t samplesToWrite, uint16_t bitsPerSample)
+{
+    const auto bytesPerSample {bitsPerSample / 8};
+    switch (bitsPerSample)
+    {
+        case 32:
+            for (size_t n = 0; n < samplesToWrite; ++n)
+            {
+                const auto current = static_cast<float> (samples [n+readPosition]);
+                const auto i {n * bytesPerSample};
+                const auto integer = std::bit_cast<uint32_t> (current);
+                buffer [i]   = static_cast<std::byte> (integer);
+                buffer [i+1] = static_cast<std::byte> (integer >> 8);
+                buffer [i+2] = static_cast<std::byte> (integer >> 16);
+                buffer [i+3] = static_cast<std::byte> (integer >> 24);
+            }
+            break;
+        case 64:
+            for (size_t n = 0; n < samplesToWrite; ++n)
+            {
+                const auto current = static_cast<double> (samples [n+readPosition]);
+                const auto i {n * bytesPerSample};
+                const auto integer = std::bit_cast<uint64_t>(current);
+                buffer [i]   = static_cast<std::byte> (integer);
+                buffer [i+1] = static_cast<std::byte> (integer >> 8);
+                buffer [i+2] = static_cast<std::byte> (integer >> 16);
+                buffer [i+3] = static_cast<std::byte> (integer >> 24);
+                buffer [i+4] = static_cast<std::byte> (integer >> 32);
+                buffer [i+5] = static_cast<std::byte> (integer >> 40);
+                buffer [i+6] = static_cast<std::byte> (integer >> 48);
+                buffer [i+7] = static_cast<std::byte> (integer >> 56);
+            }
+            break;
     }
 }
 
