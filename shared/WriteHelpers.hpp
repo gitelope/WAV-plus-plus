@@ -12,8 +12,6 @@
 namespace wav
 {
 
-std::pair<uint16_t,uint16_t> bitDepthAndFormatCode (ExportFormat ef);
-
 // header
 void WriteHeader (FILE * out, uint16_t bitsPerSample, uint16_t formatCode, int sampleRate, int channels, size_t numSamples);
 void WriteToFile (FILE * out, std::string const & str);
@@ -30,6 +28,10 @@ template <FloatOrDouble T> void WriteLPCMU8   (FILE * out, std::vector<T> const 
 
 // data on BE systems (also works for LE but not optimal)
 template <FloatOrDouble T> void WriteDataFallback (FILE * out, std::vector<T> const & samples,uint16_t bitsPerSample, uint16_t formatCode, size_t bufferSizeInBytes);
+
+std::pair<uint16_t,uint16_t> bitDepthAndFormatCode (ExportFormat ef);
+
+size_t bufferSizeInBytes (size_t requestedBufferSizeInBytes, size_t numSamples, uint16_t bitsPerSample);
 
 // Write integer as header field. Not for writing data.
 template <std::integral T>
@@ -71,33 +73,23 @@ template <FloatOrDouble T>
 void WriteData (FILE * out, std::vector<T> const & samples,
                 uint16_t bitsPerSample, uint16_t formatCode, size_t requestedBufferSizeInBytes)
 {
-    assert (bitsPerSample % 8 == 0);
-    const auto numSamples {samples.size()};
-    const auto sampleSizeInBytes {static_cast<size_t> (bitsPerSample / 8)};
-    const auto totalBytesToWrite {numSamples * sampleSizeInBytes};
 
-    // Determine buffer size from requested size, sample size, and number of samples:
-    // 1. Buffer must be able to hold an entire sample's worth of bytes.
-    size_t bufferSizeInBytes = std::max (requestedBufferSizeInBytes, sampleSizeInBytes);
-    // 2. Buffer size must correspond to a whole number of samples.
-    bufferSizeInBytes = (bufferSizeInBytes / sampleSizeInBytes) * sampleSizeInBytes;
-    // 3. Buffer size must not exceed the total number of bytes to write.
-    bufferSizeInBytes = std::min (bufferSizeInBytes, totalBytesToWrite);
+    const auto bytesPerBuffer = bufferSizeInBytes (requestedBufferSizeInBytes, samples.size(), bitsPerSample);
 
     // Input and output endianness are the same.
     if constexpr (std::endian::native == std::endian::little)
     {
-        WriteDataLE (out, samples, bitsPerSample, formatCode, bufferSizeInBytes);
+        WriteDataLE (out, samples, bitsPerSample, formatCode, bytesPerBuffer);
         return;
     }
     // System is not little-endian.
     else if (bitsPerSample == 8 && formatCode == FormatCode::LinearPCM)
     {
-        WriteLPCMU8 (out, samples, bufferSizeInBytes); // Since samples are one byte, this is also used for LE.
+        WriteLPCMU8 (out, samples, bytesPerBuffer); // Since samples are one byte, this is also used for LE.
     }
     else
     {
-        WriteDataFallback (out, samples, bitsPerSample, formatCode, bufferSizeInBytes);
+        WriteDataFallback (out, samples, bitsPerSample, formatCode, bytesPerBuffer);
     }
 }
 
