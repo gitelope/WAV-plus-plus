@@ -26,14 +26,22 @@ template <FloatOrDouble T> void WriteLPCM32LE (FILE * out, std::vector<T> const 
 // 8-bit LPCM data (LE and BE)
 template <FloatOrDouble T> void WriteLPCMU8   (FILE * out, std::vector<T> const & samples, size_t bufferSizeInBytes);
 
-template <FloatOrDouble T>T quantized (T sample, T min, T max);
-
 // data on BE systems (also works for LE but not optimal)
 template <FloatOrDouble T> void WriteDataFallback (FILE * out, std::vector<T> const & samples,uint16_t bitsPerSample, uint16_t formatCode, size_t bufferSizeInBytes);
 
 std::pair<uint16_t,uint16_t> bitDepthAndFormatCode (ExportFormat ef);
 
 size_t bufferSizeInBytes (size_t requestedBufferSizeInBytes, size_t numSamples, uint16_t bitsPerSample);
+
+template <FloatOrDouble T> T quantized (T value, T min, T max)
+{
+    // Quantize floating-point value to signed integer (still in the form of a float or double).
+    // Assumes scaling factor and clamping maximum are one and the same.
+    const T scaled {value * max};
+    /* dither */
+    const T rounded {std::round (scaled)};
+    return std::clamp (rounded, min, max);
+}
 
 // Write integer as header field. Not for writing data.
 template <std::integral T>
@@ -458,15 +466,6 @@ void FillBufferFloatPCM (std::vector<T> const & samples, std::vector<std::byte> 
             }
             break;
     }
-}
-
-template <FloatOrDouble T> T quantized (T sample, T min, T max)
-{
-    // quantize to signed integer (in the form of a float or double)
-    const T scaled {sample * max};
-    /* dither */
-    const T rounded {std::round (scaled)};
-    return std::clamp (rounded, min, max);
 }
 
 } // namespace wav
