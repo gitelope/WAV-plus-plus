@@ -36,24 +36,24 @@ void WriteHeader (FILE * out, uint16_t bitsPerSample, uint16_t formatCode, int s
     // block size in bytes = samples/block * bytes/sample
     const auto blockAlign {static_cast<uint16_t> (channels * bytesPerSample)};
 
-    WriteToFile (out, "RIFF");
-    WriteToFile (out, riffChunkSize);
-    WriteToFile (out, "WAVE");
+    WriteToHeader (out, "RIFF");
+    WriteToHeader (out, riffChunkSize);
+    WriteToHeader (out, "WAVE");
 
-    WriteToFile (out, "fmt ");
-    WriteToFile (out, formatChunkSize);
-    WriteToFile (out, formatCode);
-    WriteToFile (out, static_cast<uint16_t> (channels));
-    WriteToFile (out, static_cast<uint32_t> (sampleRate)); // blocks (a.k.a. frames) per second
-    WriteToFile (out, bytesPerSecond);
-    WriteToFile (out, blockAlign);
-    WriteToFile (out, bitsPerSample);
+    WriteToHeader (out, "fmt ");
+    WriteToHeader (out, formatChunkSize);
+    WriteToHeader (out, formatCode);
+    WriteToHeader (out, static_cast<uint16_t> (channels));
+    WriteToHeader (out, static_cast<uint32_t> (sampleRate)); // blocks (a.k.a. frames) per second
+    WriteToHeader (out, bytesPerSecond);
+    WriteToHeader (out, blockAlign);
+    WriteToHeader (out, bitsPerSample);
 
-    WriteToFile (out, "data");
-    WriteToFile (out, dataChunkSize);
+    WriteToHeader (out, "data");
+    WriteToHeader (out, dataChunkSize);
 }
 
-void WriteToFile (FILE * out, std::string const & str)
+void WriteToHeader (FILE * out, std::string const & str)
 {
     if (fwrite (str.data(), 1, str.size(), out) != str.size())
     {

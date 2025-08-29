@@ -14,7 +14,7 @@ namespace wav
 
 // header
 void WriteHeader (FILE * out, uint16_t bitsPerSample, uint16_t formatCode, int sampleRate, int channels, size_t numSamples);
-void WriteToFile (FILE * out, std::string const & str);
+void WriteToHeader (FILE * out, std::string const & str);
 
 // data on LE systems
 template <FloatOrDouble T> void WriteDataLE (FILE * out, std::vector<T> const & samples, uint16_t bitsPerSample, uint16_t formatCode, size_t bufferSizeInBytes);
@@ -45,33 +45,12 @@ template <FloatOrDouble T> T quantized (T value, T min, T max)
 
 // Write integer as header field. Not for writing data.
 template <std::integral T>
-void WriteToFile (FILE * out, T value)
+void WriteToHeader (FILE * out, T value)
 {
     std::array<std::byte, sizeof(T)> bytes;
     for (int i=0; i < bytes.size(); ++i)
     {
         bytes[i] = static_cast<std::byte> (value >> (8*i));
-    }
-    if (fwrite (bytes.data(), 1, bytes.size(), out) != bytes.size())
-    {
-        throw WriteError ("Failed to write to file.");
-    }
-}
-
-// Write float or double as header field. Not for writing data.
-template <FloatOrDouble T>
-void WriteToFile (FILE * out, T value)
-{
-    static_assert (sizeof (float) == 4, "floats must be 4 bytes.");
-    static_assert (sizeof (double) == 8, "doubles must be 8 bytes.");
-    static_assert (CHAR_BIT == 8, "The value of CHAR_BIT must be 8.");
-
-    std::array<std::byte, sizeof(T)> bytes;
-    // Convert float/double to integer so we can bit-shift it.
-    const auto intValue = std::bit_cast<std::conditional_t<sizeof(T) == 4, uint32_t, uint64_t>> (value);
-    for (int i = 0; i < bytes.size(); ++i)
-    {
-        bytes[i] = static_cast<std::byte> (intValue >> (8*i));
     }
     if (fwrite (bytes.data(), 1, bytes.size(), out) != bytes.size())
     {
@@ -467,6 +446,30 @@ void FillBufferFloatPCM (std::vector<T> const & samples, std::vector<std::byte> 
             break;
     }
 }
+
+/*
+// Write float or double as header field. Not for writing data.
+// (Could be used to write peak values to a PEAK chunk.)
+template <FloatOrDouble T>
+void WriteToHeader (FILE * out, T value)
+{
+    static_assert (sizeof (float) == 4, "floats must be 4 bytes.");
+    static_assert (sizeof (double) == 8, "doubles must be 8 bytes.");
+    static_assert (CHAR_BIT == 8, "The value of CHAR_BIT must be 8.");
+
+    std::array<std::byte, sizeof(T)> bytes;
+    // Convert float/double to integer so we can bit-shift it.
+    const auto intValue = std::bit_cast<std::conditional_t<sizeof(T) == 4, uint32_t, uint64_t>> (value);
+    for (int i = 0; i < bytes.size(); ++i)
+    {
+        bytes[i] = static_cast<std::byte> (intValue >> (8*i));
+    }
+    if (fwrite (bytes.data(), 1, bytes.size(), out) != bytes.size())
+    {
+        throw WriteError ("Failed to write to file.");
+    }
+}
+ */
 
 } // namespace wav
 
