@@ -26,6 +26,8 @@ template <FloatOrDouble T> void WriteLPCM32LE (FILE * out, std::vector<T> const 
 // 8-bit LPCM data (LE and BE)
 template <FloatOrDouble T> void WriteLPCMU8   (FILE * out, std::vector<T> const & samples, size_t bufferSizeInBytes);
 
+template <FloatOrDouble T>T quantized (T sample, T min, T max);
+
 // data on BE systems (also works for LE but not optimal)
 template <FloatOrDouble T> void WriteDataFallback (FILE * out, std::vector<T> const & samples,uint16_t bitsPerSample, uint16_t formatCode, size_t bufferSizeInBytes);
 
@@ -234,11 +236,7 @@ void WriteLPCM16LE (FILE * out, std::vector<T> const & samples, size_t bufferSiz
         const auto samplesToWrite {std::min (samplesRemaining, buffer.size())};
         for (size_t i=0; i < samplesToWrite; ++i)
         {
-            const auto scaled {samples [readPosition + i] * max};
-            /* dither */
-            const auto rounded {std::round (scaled)};
-            const auto quantized {std::clamp (rounded, min, max)};
-            buffer [i] = static_cast<int16_t> (quantized);
+            buffer [i] = static_cast<int16_t> (quantized (samples [readPosition + i], min, max));
         }
         if (fwrite (buffer.data(), bytesPerSample, samplesToWrite, out) != samplesToWrite)
         {
@@ -284,11 +282,7 @@ void WriteLPCM24LE (FILE * out, std::vector<T> const & samples, size_t bufferSiz
         const auto samplesToWrite {std::min (samplesRemaining, buffer.size())};
         for (size_t i = 0; i < samplesToWrite; ++i)
         {
-            const auto scaled {samples [readPosition + i] * max};
-            /* dither */
-            const auto rounded {std::round (scaled)};
-            const auto quantized {std::clamp (rounded, min, max)};
-            buffer[i] = static_cast<int24> (quantized);
+            buffer[i] = static_cast<int24> (quantized (samples [readPosition + i], min, max));
         }
 
         if (fwrite (buffer.data(), bytesPerSample, samplesToWrite, out) != samplesToWrite)
@@ -327,11 +321,7 @@ void WriteLPCM32LE (FILE * out, std::vector<T> const & samples, size_t bufferSiz
         const auto samplesToWrite {std::min (samplesRemaining, buffer.size())};
         for (size_t i=0; i < samplesToWrite; ++i)
         {
-            const auto scaled {samples [readPosition + i] * max};
-            /* dither */
-            const auto rounded {std::round (scaled)};
-            const auto quantized {std::clamp (rounded, min, max)};
-            buffer [i] = static_cast<int32_t> (quantized);
+            buffer [i] = static_cast<int32_t> (quantized (samples [readPosition + i], min, max));
         }
         if (fwrite (buffer.data(), bytesPerSample, samplesToWrite, out) != samplesToWrite)
         {
@@ -390,14 +380,6 @@ void FillBufferLinearPCM (std::vector<T> const & samples, std::vector<std::byte>
 {
     const auto max {static_cast<T> ((1 << (bitsPerSample - 1)) - 1)}; // 2^(bits-1) - 1
     const auto min {-max};
-    auto quantized = [&min, &max] (T sample) -> T
-    {
-        const auto scaled {sample * max};
-        /* dither */
-        const auto rounded {std::round (scaled)};
-        const auto clamped {std::clamp (rounded, min, max)};
-        return clamped;
-    };
 
     const auto bytesPerSample {bitsPerSample / 8};
 
@@ -407,7 +389,7 @@ void FillBufferLinearPCM (std::vector<T> const & samples, std::vector<std::byte>
         case 16:
             for (size_t n = 0; n < samplesToWrite; ++n)
             {
-                const auto quantizedSample = static_cast<int16_t> (quantized (samples [n+readPosition]));
+                const auto quantizedSample = static_cast<int16_t> (quantized (samples [n+readPosition], min, max));
 
                 const auto i {n * bytesPerSample};
                 buffer [i]   = static_cast<std::byte> (quantizedSample);
@@ -417,7 +399,7 @@ void FillBufferLinearPCM (std::vector<T> const & samples, std::vector<std::byte>
         case 24:
             for (size_t n = 0; n < samplesToWrite; ++n)
             {
-                const auto quantizedSample = static_cast<int32_t> (quantized (samples [n+readPosition]));
+                const auto quantizedSample = static_cast<int32_t> (quantized (samples [n+readPosition], min, max));
 
                 const auto i {n * bytesPerSample};
                 buffer [i]   = static_cast<std::byte> (quantizedSample);
@@ -428,7 +410,7 @@ void FillBufferLinearPCM (std::vector<T> const & samples, std::vector<std::byte>
         case 32:
             for (size_t n = 0; n < samplesToWrite; ++n)
             {
-                const auto quantizedSample = static_cast<int32_t> (quantized (samples [n+readPosition]));
+                const auto quantizedSample = static_cast<int32_t> (quantized (samples [n+readPosition], min, max));
 
                 const size_t i {n * bytesPerSample};
                 buffer [i]   = static_cast<std::byte> (quantizedSample);
@@ -476,6 +458,15 @@ void FillBufferFloatPCM (std::vector<T> const & samples, std::vector<std::byte> 
             }
             break;
     }
+}
+
+template <FloatOrDouble T> T quantized (T sample, T min, T max)
+{
+    // quantize to signed integer (in the form of a float or double)
+    const T scaled {sample * max};
+    /* dither */
+    const T rounded {std::round (scaled)};
+    return std::clamp (rounded, min, max);
 }
 
 } // namespace wav
