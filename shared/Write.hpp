@@ -69,6 +69,16 @@ void Write (std::string const & filepath,
         throw WriteError ("Failed to open file for writing: " + filepath);
     }
 
+    // EXPERIMENTAL:
+    // Calculate the actual buffer size that will be used.
+    const size_t actualBufferSize = bufferSizeInBytes (requestedBufferSize, samples.size(), bitsPerSample);
+    // Set I/O buffer to match.
+    if (setvbuf (out.get(), nullptr, _IOFBF, actualBufferSize) != 0)
+    {
+        // Optionally, could comment out to avoid throwing and just carry on with write.
+        throw WriteError ("Failed to set file buffer.");
+    }
+
     WriteHeader (out.get(), bitsPerSample, formatCode, sampleRate, channels, samples.size());
     WriteData (out.get(), samples, bitsPerSample, formatCode, requestedBufferSize);
 
