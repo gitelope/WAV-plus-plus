@@ -60,16 +60,20 @@ void Write (std::string const & filepath,
     const auto [bitsPerSample, formatCode] = bitDepthAndFormatCode (exportFormat);
     assert (bitsPerSample % 8 == 0);
 
-    FILE * out {fopen (filepath.c_str(), "wb")};
+    // Open FILE and ensure that attempt is made to close file if WriteHeader() or WriteData() throw.
+    // (fclose failure during stack unwinding is ignored to avoid throwing another exception and thus a call to std::terminate.)
+    std::unique_ptr<FILE, decltype (&fclose)> out (fopen (filepath.c_str(), "wb"), &fclose);
+
     if (!out)
     {
         throw WriteError ("Failed to open file for writing: " + filepath);
     }
 
-    WriteHeader (out, bitsPerSample, formatCode, sampleRate, channels, samples.size());
-    WriteData (out, samples, bitsPerSample, formatCode, requestedBufferSize);
+    WriteHeader (out.get(), bitsPerSample, formatCode, sampleRate, channels, samples.size());
+    WriteData (out.get(), samples, bitsPerSample, formatCode, requestedBufferSize);
 
-    if (fclose (out) != 0)
+    // If all goes well, close the file manually so we can throw an exception if it fails.
+    if (fclose (out.release()) != 0)
     {
         throw WriteError ("File did not close successfully.");
     }
