@@ -119,7 +119,10 @@ void WriteFloatToFloatLE (FILE * out, std::vector<T> const & samples, uint16_t b
     {
         // No need for any conversion. Write data straight to file.
         // (Also, no write buffer and no adjusting internal I/O buffer with setvbuf().)
-        fwrite (samples.data(), sizeof (T), samples.size(), out);
+        if (fwrite (samples.data(), sizeof (T), samples.size(), out) != samples.size())
+        {
+            throw WriteError ("Failed to write buffer to file.");
+        }
     }
     else if (std::is_same_v<T, double> && bitsPerSample == 32)
     {
