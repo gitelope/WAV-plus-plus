@@ -17,21 +17,24 @@ void WriteHeader (FILE * out, uint16_t bitsPerSample, uint16_t formatCode, int s
 void WriteToHeader (FILE * out, std::string const & str);
 
 // data on LE systems
-template <FloatOrDouble T> void WriteDataLE (FILE * out, std::vector<T> const & samples, uint16_t bitsPerSample, uint16_t formatCode, size_t bufferSizeInBytes);
-template <FloatOrDouble T> void WriteFloatToFloatLE (FILE * out, std::vector<T> const & samples, size_t bufferSizeInBytes, uint16_t bitsPerSample);
-template <FloatOrDouble T> void WriteLPCM16LE (FILE * out, std::vector<T> const & samples, size_t bufferSizeInBytes);
-template <FloatOrDouble T> void WriteLPCM24LE (FILE * out, std::vector<T> const & samples, size_t bufferSizeInBytes);
-template <FloatOrDouble T> void WriteLPCM32LE (FILE * out, std::vector<T> const & samples, size_t bufferSizeInBytes);
+template <FloatOrDouble T> void WriteDataLE (FILE * out, std::vector<T> const & samples, uint16_t bitsPerSample, uint16_t formatCode, size_t writeBufferSizeInBytes, size_t ioBufferSizeInBytes);
+template <FloatOrDouble T> void WriteFloatToFloatLE (FILE * out, std::vector<T> const & samples, uint16_t bitsPerSample, size_t writeBufferSizeInBytes, size_t ioBufferSizeInBytes);
+template <FloatOrDouble T> void WriteLPCM16LE (FILE * out, std::vector<T> const & samples, size_t writeBufferSizeInBytes, size_t ioBufferSizeInBytes);
+template <FloatOrDouble T> void WriteLPCM24LE (FILE * out, std::vector<T> const & samples, size_t writeBufferSizeInBytes, size_t ioBufferSizeInBytes);
+template <FloatOrDouble T> void WriteLPCM32LE (FILE * out, std::vector<T> const & samples, size_t writeBufferSizeInBytes, size_t ioBufferSizeInBytes);
 
 // 8-bit LPCM data (LE and BE)
-template <FloatOrDouble T> void WriteLPCMU8   (FILE * out, std::vector<T> const & samples, size_t bufferSizeInBytes);
+template <FloatOrDouble T> void WriteLPCMU8 (FILE * out, std::vector<T> const & samples, size_t writeBufferSizeInBytes, size_t ioBufferSizeInBytes);
 
 // data on BE systems (also works for LE but not optimal)
-template <FloatOrDouble T> void WriteDataFallback (FILE * out, std::vector<T> const & samples,uint16_t bitsPerSample, uint16_t formatCode, size_t bufferSizeInBytes);
+template <FloatOrDouble T> void WriteDataFallback (FILE * out, std::vector<T> const & samples,uint16_t bitsPerSample, uint16_t formatCode, size_t writeBufferSizeInBytes, size_t ioBufferSizeInBytes);
 
 std::pair<uint16_t,uint16_t> bitDepthAndFormatCode (ExportFormat ef);
 
-size_t bufferSizeInBytes (size_t requestedBufferSizeInBytes, size_t numSamples, uint16_t bitsPerSample);
+size_t writeBufferSizeInBytes (size_t requestedBufferSizeInBytes, size_t numSamples, uint16_t bitsPerSample);
+
+size_t ioBufferSizeInBytes (size_t numSamples, uint16_t bitsPerSample, size_t writeBufferSizeInBytes, size_t ioBufferSizeMultiplier);
+void SetInternalIOBufferSize (FILE * out, size_t ioBufferSizeInBytes);
 
 template <FloatOrDouble T> T quantized (T value, T min, T max)
 {
@@ -60,50 +63,52 @@ void WriteToHeader (FILE * out, T value)
 
 template <FloatOrDouble T>
 void WriteData (FILE * out, std::vector<T> const & samples,
-                uint16_t bitsPerSample, uint16_t formatCode, size_t requestedBufferSizeInBytes)
+                uint16_t bitsPerSample, uint16_t formatCode,
+                size_t requestedWriteBufferSizeInBytes, size_t ioBufferSizeMultiplier)
 {
-
-    const auto bytesPerBuffer = bufferSizeInBytes (requestedBufferSizeInBytes, samples.size(), bitsPerSample);
+    // A write buffer is used in all cases except for writing floating-point samples to the same format on LE systems.
+    const size_t writeBufferSize {writeBufferSizeInBytes (requestedWriteBufferSizeInBytes, samples.size(), bitsPerSample)};
+    const size_t ioBufferSize {ioBufferSizeInBytes (samples.size(), bitsPerSample, writeBufferSize, ioBufferSizeMultiplier)};
 
     // Input and output endianness are the same.
     if constexpr (std::endian::native == std::endian::little)
     {
-        WriteDataLE (out, samples, bitsPerSample, formatCode, bytesPerBuffer);
-        return;
+        WriteDataLE (out, samples, bitsPerSample, formatCode, writeBufferSize, ioBufferSize);
     }
     // System is not little-endian.
     else if (bitsPerSample == 8 && formatCode == FormatCode::LinearPCM)
     {
-        WriteLPCMU8 (out, samples, bytesPerBuffer); // Since samples are one byte, this is also used for LE.
+        WriteLPCMU8 (out, samples, writeBufferSize, ioBufferSize); // Since samples are one byte, this is also used for LE.
     }
     else
     {
-        WriteDataFallback (out, samples, bitsPerSample, formatCode, bytesPerBuffer);
+        WriteDataFallback (out, samples, bitsPerSample, formatCode, writeBufferSize, ioBufferSize);
     }
 }
 
 template <FloatOrDouble T>
 void WriteDataLE (FILE * out, std::vector<T> const & samples,
-                  uint16_t bitsPerSample, uint16_t formatCode, size_t bufferSizeInBytes)
+                  uint16_t bitsPerSample, uint16_t formatCode,
+                  size_t writeBufferSizeInBytes, size_t ioBufferSizeInBytes)
 {
     if (formatCode == FormatCode::FloatPCM)
     {
-        WriteFloatToFloatLE (out, samples, bufferSizeInBytes, bitsPerSample);
+        WriteFloatToFloatLE (out, samples, bitsPerSample, writeBufferSizeInBytes, ioBufferSizeInBytes);
     }
     else if (formatCode == FormatCode::LinearPCM)
     {
         switch (bitsPerSample)
         {
-            case 8:  WriteLPCMU8   (out, samples, bufferSizeInBytes); break;
-            case 16: WriteLPCM16LE (out, samples, bufferSizeInBytes); break;
-            case 24: WriteLPCM24LE (out, samples, bufferSizeInBytes); break;
-            case 32: WriteLPCM32LE (out, samples, bufferSizeInBytes); break;
+            case 8:  WriteLPCMU8   (out, samples, writeBufferSizeInBytes, ioBufferSizeInBytes); break;
+            case 16: WriteLPCM16LE (out, samples, writeBufferSizeInBytes, ioBufferSizeInBytes); break;
+            case 24: WriteLPCM24LE (out, samples, writeBufferSizeInBytes, ioBufferSizeInBytes); break;
+            case 32: WriteLPCM32LE (out, samples, writeBufferSizeInBytes, ioBufferSizeInBytes); break;
         }
     }
 }
 
 template <FloatOrDouble T>
-void WriteFloatToFloatLE (FILE * out, std::vector<T> const & samples, size_t bufferSizeInBytes, uint16_t bitsPerSample)
+void WriteFloatToFloatLE (FILE * out, std::vector<T> const & samples, uint16_t bitsPerSample, size_t writeBufferSizeInBytes, size_t ioBufferSizeInBytes)
 {
     // In benchmarking on macOS Sequoia, a significant speed-up was observed
     // when saving to 64-bit float with WriteFloatToFloatLE() over using the
@@ -113,12 +118,17 @@ void WriteFloatToFloatLE (FILE * out, std::vector<T> const & samples, size_t buf
     if ((std::is_same_v<T, float> && bitsPerSample == 32) || (std::is_same_v<T, double> && bitsPerSample == 64))
     {
         // No need for any conversion. Write data straight to file.
-        fwrite (samples.data(), sizeof (T), samples.size(), out);
+        // (Also, no write buffer and no adjusting internal I/O buffer with setvbuf().)
+        if (fwrite (samples.data(), sizeof (T), samples.size(), out) != samples.size())
+        {
+            throw WriteError ("Failed to write buffer to file.");
+        }
     }
     else if (std::is_same_v<T, double> && bitsPerSample == 32)
     {
         // double -> float
-        std::vector<float> buffer (bufferSizeInBytes / 4);
+        std::vector<float> buffer (writeBufferSizeInBytes / 4);
+        SetInternalIOBufferSize (out, ioBufferSizeInBytes);
 
         size_t samplesRemaining {samples.size()};
         size_t readPosition {0};
@@ -140,7 +150,8 @@ void WriteFloatToFloatLE (FILE * out, std::vector<T> const & samples, size_t buf
     else if (std::is_same_v<T, float> && bitsPerSample == 64)
     {
         // float -> double
-        std::vector<double> buffer (bufferSizeInBytes / 8);
+        std::vector<double> buffer (writeBufferSizeInBytes / 8);
+        SetInternalIOBufferSize (out, ioBufferSizeInBytes);
 
         size_t samplesRemaining {samples.size()};
         size_t readPosition {0};
@@ -163,14 +174,15 @@ void WriteFloatToFloatLE (FILE * out, std::vector<T> const & samples, size_t buf
 
 // Both LE and BE since samples are a single byte in size.
 template <FloatOrDouble T>
-void WriteLPCMU8 (FILE * out, std::vector<T> const & samples, size_t bufferSizeInBytes)
+void WriteLPCMU8 (FILE * out, std::vector<T> const & samples, size_t writeBufferSizeInBytes, size_t ioBufferSizeInBytes)
 {
     constexpr size_t bytesPerSample {1};
     const auto max {static_cast<T> (0x7F)}; // 2^7 - 1 = 127
     const auto min {-max};
     const auto offset {static_cast<T> (0x80)}; // 2^7 = 128
 
-    std::vector<std::byte> buffer (bufferSizeInBytes);
+    std::vector<std::byte> buffer (writeBufferSizeInBytes);
+    SetInternalIOBufferSize (out, ioBufferSizeInBytes);
 
     size_t samplesRemaining {samples.size()};
     size_t readPosition {0};
@@ -207,13 +219,14 @@ void WriteLPCMU8 (FILE * out, std::vector<T> const & samples, size_t bufferSizeI
 }
 
 template <FloatOrDouble T>
-void WriteLPCM16LE (FILE * out, std::vector<T> const & samples, size_t bufferSizeInBytes)
+void WriteLPCM16LE (FILE * out, std::vector<T> const & samples, size_t writeBufferSizeInBytes, size_t ioBufferSizeInBytes)
 {
     constexpr size_t bytesPerSample {2};
     const auto max {static_cast<T> (0x7FFF)}; // 2^15 - 1 = 32,767
     const auto min {-max};
 
-    std::vector<int16_t> buffer (bufferSizeInBytes / bytesPerSample);
+    std::vector<int16_t> buffer (writeBufferSizeInBytes / bytesPerSample);
+    SetInternalIOBufferSize (out, ioBufferSizeInBytes);
 
     size_t samplesRemaining {samples.size()};
     size_t readPosition {0};
@@ -253,13 +266,14 @@ struct int24
 };
 
 template <FloatOrDouble T>
-void WriteLPCM24LE (FILE * out, std::vector<T> const & samples, size_t bufferSizeInBytes)
+void WriteLPCM24LE (FILE * out, std::vector<T> const & samples, size_t writeBufferSizeInBytes, size_t ioBufferSizeInBytes)
 {
     constexpr size_t bytesPerSample {3};
     const auto max {static_cast<T> (0x7FFFFF)}; // 2^23 - 1 = 8,388,607
     const auto min {-max};
 
-    std::vector<int24> buffer (bufferSizeInBytes / bytesPerSample);
+    std::vector<int24> buffer (writeBufferSizeInBytes / bytesPerSample);
+    SetInternalIOBufferSize (out, ioBufferSizeInBytes);
 
     size_t samplesRemaining {samples.size()};
     size_t readPosition {0};
@@ -292,13 +306,14 @@ void WriteLPCM24LE (FILE * out, std::vector<T> const & samples, size_t bufferSiz
 }
 
 template <FloatOrDouble T>
-void WriteLPCM32LE (FILE * out, std::vector<T> const & samples, size_t bufferSizeInBytes)
+void WriteLPCM32LE (FILE * out, std::vector<T> const & samples, size_t writeBufferSizeInBytes, size_t ioBufferSizeInBytes)
 {
     constexpr size_t bytesPerSample {4};
     const auto max {static_cast<T> (0x7FFFFFFF)}; // 2^31 - 1 = 2,147,483,647
     const auto min {-max};
 
-    std::vector<int32_t> buffer (bufferSizeInBytes / bytesPerSample);
+    std::vector<int32_t> buffer (writeBufferSizeInBytes / bytesPerSample);
+    SetInternalIOBufferSize (out, ioBufferSizeInBytes);
 
     size_t samplesRemaining {samples.size()};
     size_t readPosition {0};
@@ -321,14 +336,16 @@ void WriteLPCM32LE (FILE * out, std::vector<T> const & samples, size_t bufferSiz
 
 template <FloatOrDouble T>
 void WriteDataFallback (FILE * out, std::vector<T> const & samples,
-                        uint16_t bitsPerSample, uint16_t formatCode, size_t bufferSizeInBytes)
+                        uint16_t bitsPerSample, uint16_t formatCode,
+                        size_t writeBufferSizeInBytes, size_t ioBufferSizeInBytes)
 {
     assert (bitsPerSample % 8 == 0);
     const auto numSamples {samples.size()};
     const auto bytesPerSamples {static_cast<size_t> (bitsPerSample / 8)};
     const auto totalBytesToWrite {numSamples * bytesPerSamples};
 
-    std::vector<std::byte> buffer (bufferSizeInBytes);
+    std::vector<std::byte> buffer (writeBufferSizeInBytes);
+    SetInternalIOBufferSize (out, ioBufferSizeInBytes);
 
     size_t samplesRemaining {numSamples};
     size_t readPosition {0};

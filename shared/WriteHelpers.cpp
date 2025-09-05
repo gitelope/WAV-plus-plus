@@ -74,7 +74,7 @@ std::pair<uint16_t,uint16_t> bitDepthAndFormatCode (ExportFormat ef)
     }
 }
 
-size_t bufferSizeInBytes (size_t requestedBufferSizeInBytes, size_t numSamples, uint16_t bitsPerSample)
+size_t writeBufferSizeInBytes (size_t requestedBufferSizeInBytes, size_t numSamples, uint16_t bitsPerSample)
 {
     assert (bitsPerSample % 8 == 0);
     const auto sampleSizeInBytes {static_cast<size_t> (bitsPerSample / 8)};
@@ -89,6 +89,22 @@ size_t bufferSizeInBytes (size_t requestedBufferSizeInBytes, size_t numSamples, 
     bytesPerBuffer = std::min (bytesPerBuffer, totalBytesToWrite);
 
     return bytesPerBuffer;
+}
+
+size_t ioBufferSizeInBytes (size_t numSamples, uint16_t bitsPerSample,
+                            size_t writeBufferSizeInBytes, size_t ioBufferSizeMultiplier)
+{
+    // Calculate internal I/O buffer as a multiple of the actual (not requested) write buffer size, making sure to clamp at file size.
+    const size_t totalBytesToWrite {numSamples * (bitsPerSample / 8)};
+    return std::min (ioBufferSizeMultiplier * writeBufferSizeInBytes, totalBytesToWrite);
+}
+
+void SetInternalIOBufferSize (FILE * out, size_t ioBufferSizeInBytes)
+{
+    if (setvbuf (out, nullptr, _IOFBF, ioBufferSizeInBytes) != 0)
+    {
+        throw WriteError ("Failed to set file buffer.");
+    }
 }
 
 } // namespace wav
