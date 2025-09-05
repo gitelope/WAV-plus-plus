@@ -4,7 +4,7 @@
 namespace wav
 {
 
-void WriteHeader (std::ofstream & out, uint16_t bitsPerSample, uint16_t formatCode, int sampleRate, int channels, size_t numSamples)
+void WriteHeader (FILE * out, uint16_t bitsPerSample, uint16_t formatCode, int sampleRate, int channels, size_t numSamples)
 {
     const auto bytesPerSample {bitsPerSample / 8};
     constexpr auto formatChunkSize {FormatChunkSize::PCMWAVEFORMAT};
@@ -36,27 +36,26 @@ void WriteHeader (std::ofstream & out, uint16_t bitsPerSample, uint16_t formatCo
     // block size in bytes = samples/block * bytes/sample
     const auto blockAlign {static_cast<uint16_t> (channels * bytesPerSample)};
 
-    WriteToFile (out, "RIFF");
-    WriteToFile (out, riffChunkSize);
-    WriteToFile (out, "WAVE");
+    WriteToHeader (out, "RIFF");
+    WriteToHeader (out, riffChunkSize);
+    WriteToHeader (out, "WAVE");
 
-    WriteToFile (out, "fmt ");
-    WriteToFile (out, formatChunkSize);
-    WriteToFile (out, formatCode);
-    WriteToFile (out, static_cast<uint16_t> (channels));
-    WriteToFile (out, static_cast<uint32_t> (sampleRate)); // blocks (a.k.a. frames) per second
-    WriteToFile (out, bytesPerSecond);
-    WriteToFile (out, blockAlign);
-    WriteToFile (out, bitsPerSample);
+    WriteToHeader (out, "fmt ");
+    WriteToHeader (out, formatChunkSize);
+    WriteToHeader (out, formatCode);
+    WriteToHeader (out, static_cast<uint16_t> (channels));
+    WriteToHeader (out, static_cast<uint32_t> (sampleRate)); // blocks (a.k.a. frames) per second
+    WriteToHeader (out, bytesPerSecond);
+    WriteToHeader (out, blockAlign);
+    WriteToHeader (out, bitsPerSample);
 
-    WriteToFile (out, "data");
-    WriteToFile (out, dataChunkSize);
+    WriteToHeader (out, "data");
+    WriteToHeader (out, dataChunkSize);
 }
 
-void WriteToFile (std::ofstream & out, std::string const & str)
+void WriteToHeader (FILE * out, std::string const & str)
 {
-    out.write (str.data(), str.size());
-    if (!out)
+    if (fwrite (str.data(), 1, str.size(), out) != str.size())
     {
         throw WriteError ("Failed to write string to file.");
     }
@@ -75,4 +74,37 @@ std::pair<uint16_t,uint16_t> bitDepthAndFormatCode (ExportFormat ef)
     }
 }
 
-} // name space wav
+size_t writeBufferSizeInBytes (size_t requestedBufferSizeInBytes, size_t numSamples, uint16_t bitsPerSample)
+{
+    assert (bitsPerSample % 8 == 0);
+    const auto sampleSizeInBytes {static_cast<size_t> (bitsPerSample / 8)};
+    const auto totalBytesToWrite {numSamples * sampleSizeInBytes};
+
+    // Determine buffer size from requested size, sample size, and number of samples:
+    // 1. Buffer must be able to hold an entire sample's worth of bytes.
+    size_t bytesPerBuffer = std::max (requestedBufferSizeInBytes, sampleSizeInBytes);
+    // 2. Buffer size must correspond to a whole number of samples.
+    bytesPerBuffer = (bytesPerBuffer / sampleSizeInBytes) * sampleSizeInBytes;
+    // 3. Buffer size must not exceed the total number of bytes to write.
+    bytesPerBuffer = std::min (bytesPerBuffer, totalBytesToWrite);
+
+    return bytesPerBuffer;
+}
+
+size_t ioBufferSizeInBytes (size_t numSamples, uint16_t bitsPerSample,
+                            size_t writeBufferSizeInBytes, size_t ioBufferSizeMultiplier)
+{
+    // Calculate internal I/O buffer as a multiple of the actual (not requested) write buffer size, making sure to clamp at file size.
+    const size_t totalBytesToWrite {numSamples * (bitsPerSample / 8)};
+    return std::min (ioBufferSizeMultiplier * writeBufferSizeInBytes, totalBytesToWrite);
+}
+
+void SetInternalIOBufferSize (FILE * out, size_t ioBufferSizeInBytes)
+{
+    if (setvbuf (out, nullptr, _IOFBF, ioBufferSizeInBytes) != 0)
+    {
+        throw WriteError ("Failed to set file buffer.");
+    }
+}
+
+} // namespace wav

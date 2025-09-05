@@ -3,6 +3,7 @@
 #define wavplusplus_Write_hpp
 
 #include "WriteHelpers.hpp"
+#include <cstdio>
 
 /*
 
@@ -40,8 +41,17 @@ double -> unsigned 8-bit int:
 namespace wav
 {
 
+// Buffering
+//
 // 32kB default (requested) buffer size
-inline constexpr size_t defaultRequestedWriteBufferSize = 32768;
+inline constexpr size_t defaultRequestedWriteBufferSize {32768};
+// Internal I/O buffer size will be this multiple of the actual–not requested–write buffer size.
+inline constexpr size_t defaultIOBufferSizeMultiplier {8};
+// When the system is little-endian and the input and output formats match,
+// i.e. writing floats to Float32 or doubles to Float64, neither will a write
+// buffer will be used–all the data will be written in a single write–nor
+// will setvbuf() be called to adjust the internal I/O buffer size.
+// requestedWriteBufferSize and ioBufferSizeMultiplier will be ignored.
 
 // May throw wav::WriteError.
 template <FloatOrDouble T>
@@ -50,7 +60,10 @@ void Write (std::string const & filepath,
             ExportFormat exportFormat,
             int sampleRate,
             int channels,
-            size_t requestedBufferSize = defaultRequestedWriteBufferSize)
+            // requested write buffer size used by WAV++
+            size_t requestedWriteBufferSize = defaultRequestedWriteBufferSize,
+            // internal IO buffer size used by OS is a multiple of actual–not requested–write buffer size
+            size_t ioBufferSizeMultiplier = defaultIOBufferSizeMultiplier)
 {
     if (samples.size() % channels != 0)
     {
@@ -59,17 +72,20 @@ void Write (std::string const & filepath,
     const auto [bitsPerSample, formatCode] = bitDepthAndFormatCode (exportFormat);
     assert (bitsPerSample % 8 == 0);
 
-    std::ofstream out {filepath, std::ofstream::binary};
+    // Open FILE and ensure that attempt is made to close file if WriteHeader() or WriteData() throw.
+    // (fclose failure during stack unwinding is ignored to avoid throwing another exception and thus a call to std::terminate.)
+    std::unique_ptr<FILE, decltype (&fclose)> out (fopen (filepath.c_str(), "wb"), &fclose);
+
     if (!out)
     {
         throw WriteError ("Failed to open file for writing: " + filepath);
     }
 
-    WriteHeader (out, bitsPerSample, formatCode, sampleRate, channels, samples.size());
-    WriteData (out, samples, bitsPerSample, formatCode, requestedBufferSize);
+    WriteHeader (out.get(), bitsPerSample, formatCode, sampleRate, channels, samples.size());
+    WriteData (out.get(), samples, bitsPerSample, formatCode, requestedWriteBufferSize, ioBufferSizeMultiplier);
 
-    out.close();
-    if (!out)
+    // If all goes well, close the file manually so we can throw an exception if it fails.
+    if (fclose (out.release()) != 0)
     {
         throw WriteError ("File did not close successfully.");
     }
