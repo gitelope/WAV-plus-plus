@@ -42,7 +42,10 @@ namespace wav
 {
 
 // 32kB default (requested) buffer size
-inline constexpr size_t defaultRequestedWriteBufferSize = 32768;
+inline constexpr size_t defaultRequestedWriteBufferSize {32768};
+
+// Internal I/O buffer size will be this multiple of the actual–not requested–write buffer size.
+inline constexpr size_t defaultIOBufferSizeMultiplier {8};
 
 // May throw wav::WriteError.
 template <FloatOrDouble T>
@@ -51,7 +54,10 @@ void Write (std::string const & filepath,
             ExportFormat exportFormat,
             int sampleRate,
             int channels,
-            size_t requestedBufferSize = defaultRequestedWriteBufferSize)
+            // requested write buffer size used by WAV++
+            size_t requestedWriteBufferSize = defaultRequestedWriteBufferSize,
+            // internal IO buffer size used by OS is a multiple of actual–not requested–write buffer size
+            size_t ioBufferSizeMultiplier = defaultIOBufferSizeMultiplier)
 {
     if (samples.size() % channels != 0)
     {
@@ -69,18 +75,17 @@ void Write (std::string const & filepath,
         throw WriteError ("Failed to open file for writing: " + filepath);
     }
 
-    // EXPERIMENTAL:
-    // Calculate the actual buffer size that will be used.
-    const size_t actualBufferSize = bufferSizeInBytes (requestedBufferSize, samples.size(), bitsPerSample);
-    // Set I/O buffer to match.
-    if (setvbuf (out.get(), nullptr, _IOFBF, actualBufferSize) != 0)
+    // Set internal I/O buffer as a multiple of the actual (not requested) write buffer size, making sure to clamp at file size.
+    const size_t actualBufferSize {bufferSizeInBytes (requestedWriteBufferSize, samples.size(), bitsPerSample)};
+    const size_t totalBytesToWrite {samples.size() * (bitsPerSample / 8)};
+    const size_t ioBufferSize {std::min (ioBufferSizeMultiplier * actualBufferSize, totalBytesToWrite)};
+    if (setvbuf (out.get(), nullptr, _IOFBF, ioBufferSize) != 0)
     {
-        // Optionally, could comment out to avoid throwing and just carry on with write.
         throw WriteError ("Failed to set file buffer.");
     }
 
     WriteHeader (out.get(), bitsPerSample, formatCode, sampleRate, channels, samples.size());
-    WriteData (out.get(), samples, bitsPerSample, formatCode, requestedBufferSize);
+    WriteData (out.get(), samples, bitsPerSample, formatCode, requestedWriteBufferSize);
 
     // If all goes well, close the file manually so we can throw an exception if it fails.
     if (fclose (out.release()) != 0)
