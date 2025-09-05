@@ -48,7 +48,7 @@ inline constexpr size_t defaultRequestedWriteBufferSize {32768};
 // Internal I/O buffer size will be this multiple of the actual–not requested–write buffer size.
 inline constexpr size_t defaultIOBufferSizeMultiplier {8};
 // When the system is little-endian and the input and output formats match,
-// i.e. writing floats to Float32 or doubles to Float64, neither a write
+// i.e. writing floats to Float32 or doubles to Float64, neither will a write
 // buffer will be used–all the data will be written in a single write–nor
 // will setvbuf() be called to adjust the internal I/O buffer size.
 // requestedWriteBufferSize and ioBufferSizeMultiplier will be ignored.
