@@ -4,6 +4,9 @@
 
 #include "WriteHelpers.hpp"
 #include <cstdio>
+#include <span>
+#include <vector>
+#include <array>
 
 /*
 
@@ -53,17 +56,70 @@ inline constexpr size_t defaultIOBufferSizeMultiplier {8};
 // will setvbuf() be called to adjust the internal I/O buffer size.
 // requestedWriteBufferSize and ioBufferSizeMultiplier will be ignored.
 
-// May throw wav::WriteError.
+/// Write a std::vector.
+/// (May throw wav::WriteError.)
 template <FloatOrDouble T>
 void Write (std::string const & filepath,
             std::vector<T> const & samples,
             ExportFormat exportFormat,
-            int sampleRate,
-            int channels,
+            int sampleRate, int channels,
             // requested write buffer size used by WAV++
             size_t requestedWriteBufferSize = defaultRequestedWriteBufferSize,
             // internal IO buffer size used by OS is a multiple of actual–not requested–write buffer size
-            size_t ioBufferSizeMultiplier = defaultIOBufferSizeMultiplier)
+            size_t ioBufferSizeMultiplier = defaultIOBufferSizeMultiplier);
+
+/// Write a C-style array.
+/// (May throw wav::WriteError.)
+template <FloatOrDouble T, size_t N>
+void Write (std::string const & filepath,
+            const T (&samples)[N],
+            ExportFormat exportFormat,
+            int sampleRate, int channels,
+            // requested write buffer size used by WAV++
+            size_t requestedWriteBufferSize = defaultRequestedWriteBufferSize,
+            // internal IO buffer size used by OS is a multiple of actual–not requested–write buffer size
+            size_t ioBufferSizeMultiplier = defaultIOBufferSizeMultiplier);
+
+/// Write a std::array.
+/// (May throw wav::WriteError.)
+template <FloatOrDouble T, size_t N>
+void Write (std::string const & filepath,
+            std::array<T,N> const & samples,
+            ExportFormat exportFormat,
+            int sampleRate, int channels,
+            // requested write buffer size used by WAV++
+            size_t requestedWriteBufferSize = defaultRequestedWriteBufferSize,
+            // internal IO buffer size used by OS is a multiple of actual–not requested–write buffer size
+            size_t ioBufferSizeMultiplier = defaultIOBufferSizeMultiplier);
+
+template <FloatOrDouble T>
+void Normalize (std::vector<T> & samples)
+{
+    T maximum {0};
+    for (auto const & sample : samples)
+    {
+        maximum = std::max (maximum, std::abs (sample));
+    }
+    if (maximum == 0) return;
+    for (auto & sample : samples)
+    {
+        sample /= maximum;
+    }
+}
+
+/////////////////////////////////////////////////////////////////////////
+// std::span overload does all the work.
+// (May throw wav::WriteError.)
+template <FloatOrDouble T>
+void Write (std::string const & filepath,
+            std::span<const T> samples,
+            ExportFormat exportFormat,
+            int sampleRate,
+            int channels,
+            // requested write buffer size used by WAV++
+            size_t requestedWriteBufferSize,
+            // internal IO buffer size used by OS is a multiple of actual–not requested–write buffer size
+            size_t ioBufferSizeMultiplier)
 {
     if (samples.size() % channels != 0)
     {
@@ -91,19 +147,40 @@ void Write (std::string const & filepath,
     }
 }
 
+/////////////////////////////////////////////////////////////////////
+// convenience overloads defined
+
+// std::vector overload calls std::span overload.
+// (May throw wav::WriteError.)
 template <FloatOrDouble T>
-void Normalize (std::vector<T> & samples)
+void Write (std::string const & filepath, std::vector<T> const & samples,
+            ExportFormat exportFormat,
+            int sampleRate, int channels,
+            size_t requestedWriteBufferSize, size_t ioBufferSizeMultiplier)
 {
-    T maximum {0};
-    for (auto const & sample : samples)
-    {
-        maximum = std::max (maximum, std::abs (sample));
-    }
-    if (maximum == 0) return;
-    for (auto & sample : samples)
-    {
-        sample /= maximum;
-    }
+    Write (filepath, std::span<const T>(samples), exportFormat, sampleRate, channels, requestedWriteBufferSize, ioBufferSizeMultiplier);
+}
+
+// C-array overload calls std::span overload.
+// (May throw wav::WriteError.)
+template <FloatOrDouble T, size_t N>
+void Write (std::string const & filepath, const T (&samples)[N],
+            ExportFormat exportFormat,
+            int sampleRate, int channels,
+            size_t requestedWriteBufferSize, size_t ioBufferSizeMultiplier)
+{
+    Write (filepath, std::span<const T>(samples), exportFormat, sampleRate, channels, requestedWriteBufferSize, ioBufferSizeMultiplier);
+}
+
+// std::array overload calls std::span overload.
+// (May throw wav::WriteError.)
+template <FloatOrDouble T, size_t N>
+void Write (std::string const & filepath, std::array<T,N> const & samples,
+            ExportFormat exportFormat,
+            int sampleRate, int channels,
+            size_t requestedWriteBufferSize, size_t ioBufferSizeMultiplier)
+{
+    Write (filepath, std::span<const T>(samples), exportFormat, sampleRate, channels, requestedWriteBufferSize, ioBufferSizeMultiplier);
 }
 
 } // namespace wav
