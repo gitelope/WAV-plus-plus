@@ -19,8 +19,8 @@ template <typename T> void Print (std::vector<std::vector<T>> const &);
 
 int main (int argc, const char * argv[])
 {
-    // wav::Write() is overloaded to work with std::vector, C-style arrays, and std::array.
-    // Templated to accept floats or doubles.
+    // wav::Write() is overloaded to work with std::vector, C-style arrays, and std::array
+    // and templated to accept floats or doubles.
     //
     // const std::array<float, 5> out {-1, -0.5, 0, 0.5, 1}; // std::array
     // const double out[] {-1, -0.5, 0, 0.5, 1};             // C-style array
@@ -30,8 +30,8 @@ int main (int argc, const char * argv[])
 
     wav::Write (filepath, out, wav::ExportFormat::LinearPCM_24, 48000, 1);
 
-    // Data can be read in an interleaved format or with channel data separated,
-    // as either floats or doubles.
+    // Data can be read in as either floats or doubles in an interleaved format
+    // or with channel data separated.
     const auto [interleaved,   info1] = wav::ReadInterleaved<float> (filepath);
     const auto [deinterleaved, info2] = wav::Read<double> (filepath);
 
