@@ -110,7 +110,7 @@ void ReadInterleaved (std::string const & filepath,
     }
 
     info.ExtractFrom (chunkInfo);
-    ReadData (filepath, destination, info, chunkInfo.data, requestedBufferSize);
+    ReadDataInterleaved (filepath, destination, info, chunkInfo.data, requestedBufferSize);
 }
 
 template <FloatOrDouble T>
@@ -132,11 +132,11 @@ void Read (std::string const & filepath,
 }
 
 template <FloatOrDouble T>
-void ReadData (std::string const & filepath,
-               std::vector<T> & destination,
-               Info const & info,
-               DataChunk const & data,
-               size_t requestedBufferSizeInBytes)
+void ReadDataInterleaved (std::string const & filepath,
+                          std::vector<T> & destination,
+                          Info const & info,
+                          DataChunk const & data,
+                          size_t requestedBufferSizeInBytes)
 {
     if (! std::filesystem::is_regular_file (filepath))
     {
@@ -182,8 +182,8 @@ void ReadData (std::string const & filepath,
 
         // Decode into samples:
         const auto samplesToRead {bytesToRead / sampleSizeInBytes};
-        if      (info.isLinearPCM) ReadLinearPCM (buffer, destination, info, samplesToRead, writePosition);
-        else if (info.isFloatPCM)  ReadFloatPCM  (buffer, destination, info, samplesToRead, writePosition);
+        if      (info.isLinearPCM) ReadLinearPCMInterleaved (buffer, destination, info, samplesToRead, writePosition);
+        else if (info.isFloatPCM)  ReadFloatPCMInterleaved  (buffer, destination, info, samplesToRead, writePosition);
         else assert (false);
 
         writePosition += samplesToRead;
@@ -251,11 +251,11 @@ void ReadData (std::string const & filepath,
 template <typename T> T powerOfTwo (int power);
 
 template <FloatOrDouble T>
-void ReadLinearPCM (std::vector<std::byte> const & buffer,
-                    std::vector<T> & destination,
-                    Info const & info,
-                    size_t samplesToRead,
-                    size_t writePosition)
+void ReadLinearPCMInterleaved (std::vector<std::byte> const & buffer,
+                               std::vector<T> & destination,
+                               Info const & info,
+                               size_t samplesToRead,
+                               size_t writePosition)
 {
     // Normalize signed integers to [-1.0, 1.0) by dividing by 2^(bits-1).
     // Example:
@@ -349,11 +349,11 @@ void ReadLinearPCM (std::vector<std::byte> const & buffer,
 }
 
 template <FloatOrDouble T>
-void ReadFloatPCM (std::vector<std::byte> const & buffer,
-                   std::vector<T> & destination,
-                   Info const & info,
-                   size_t samplesToRead,
-                   size_t writePosition)
+void ReadFloatPCMInterleaved (std::vector<std::byte> const & buffer,
+                              std::vector<T> & destination,
+                              Info const & info,
+                              size_t samplesToRead,
+                              size_t writePosition)
 {
     assert (info.containerSizeInBits == info.bitDepth);
 
