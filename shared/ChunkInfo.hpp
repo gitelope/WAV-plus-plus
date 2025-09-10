@@ -78,6 +78,7 @@ class ChunkInfo
 {
 public:
     ChunkInfo (std::string const & filepath);
+    ChunkInfo (std::ifstream & in);
 
     std::string summary() const;
 
@@ -91,6 +92,7 @@ public:
     std::vector<std::string> chunksSkipped;
 
 private:
+    void ReadFile              (std::ifstream & in);
     void ReadRiffChunk         (std::ifstream & in);
     void ReadFormatChunk       (std::ifstream & in);
     void ReadFactChunk         (std::ifstream & in);

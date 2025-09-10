@@ -18,6 +18,16 @@ ChunkInfo::ChunkInfo (std::string const & filepath)
     std::ifstream in {filepath, std::ios::binary};
     if (!in) throw ReadError ("Failed to open: " + filepath);
 
+    ReadFile (in);
+}
+
+ChunkInfo::ChunkInfo (std::ifstream & in)
+{
+    ReadFile (in);
+}
+
+void ChunkInfo::ReadFile (std::ifstream & in)
+{
     const auto chunkID = fourCharacterCode (in);
     if (chunkID != riff.id) throw ReadError ("RIFF chunk ID not found.");
     ReadRiffChunk (in);

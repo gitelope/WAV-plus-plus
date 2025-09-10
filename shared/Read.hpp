@@ -101,16 +101,28 @@ void ReadInterleaved (std::string const & filepath,
                       Info & info,
                       size_t requestedBufferSize)
 {
-    ChunkInfo chunkInfo {filepath};
+    if (! std::filesystem::is_regular_file (filepath))
+    {
+        throw ReadError ("File does not exist: " + filepath);
+    }
+    
+    std::ifstream in {filepath, std::ios::binary};
+    if (!in) throw ReadError ("Failed to open: " + filepath);
 
     const long fileLength = std::filesystem::file_size (filepath);
+    
+    ChunkInfo chunkInfo {in};
+    
     if (chunkInfo.riff.size + 8 != fileLength)
     {
         throw ReadError ("RIFF chunk size + 8 does not equal file size for " + filepath);
     }
 
     info.ExtractFrom (chunkInfo);
-    ReadDataInterleaved (filepath, destination, info, chunkInfo.data, requestedBufferSize);
+    ReadDataInterleaved (in, destination, info, chunkInfo.data, requestedBufferSize);
+    
+    // File will be automatically closed when std::ifstream goes out of scope.
+    // Consider closing manually and throwing if file close fails.
 }
 
 template <FloatOrDouble T>
@@ -119,33 +131,39 @@ void Read (std::string const & filepath,
            struct Info & info,
            size_t requestedBufferSize)
 {
-    ChunkInfo chunkInfo {filepath};
+    if (! std::filesystem::is_regular_file (filepath))
+    {
+        throw ReadError ("File does not exist: " + filepath);
+    }
+    
+    std::ifstream in {filepath, std::ios::binary};
+    if (!in) throw ReadError ("Failed to open: " + filepath);
 
     const long fileLength = std::filesystem::file_size (filepath);
+    
+    ChunkInfo chunkInfo {in};
+    
     if (chunkInfo.riff.size + 8 != fileLength)
     {
         throw ReadError ("RIFF chunk size + 8 does not equal file size for " + filepath);
     }
 
     info.ExtractFrom (chunkInfo);
-    ReadData (filepath, destination, info, chunkInfo.data, requestedBufferSize);
+    ReadData (in, destination, info, chunkInfo.data, requestedBufferSize);
+    
+    // File will be automatically closed when std::ifstream goes out of scope.
+    // Consider closing manually and throwing if file close fails.
 }
 
+
+// New overloads that take std::ifstream& instead of filepath
 template <FloatOrDouble T>
-void ReadDataInterleaved (std::string const & filepath,
+void ReadDataInterleaved (std::ifstream & in,
                           std::vector<T> & destination,
                           Info const & info,
                           DataChunk const & data,
                           size_t requestedBufferSizeInBytes)
 {
-    if (! std::filesystem::is_regular_file (filepath))
-    {
-        throw ReadError ("File does not exist: " + filepath);
-    }
-
-    std::ifstream in {filepath, std::ios::binary};
-    if (!in) throw ReadError ("Failed to open: " + filepath);
-
     // Advance to the beginning of the data portion of the data chunk:
     in.seekg (data.offset);
     if (!in) throw ReadError ("Failed to advance to data portion of data chunk.");
@@ -192,20 +210,12 @@ void ReadDataInterleaved (std::string const & filepath,
 }
 
 template <FloatOrDouble T>
-void ReadData (std::string const & filepath,
+void ReadData (std::ifstream & in,
                std::vector <std::vector<T>> & destination,
                Info const & info,
                DataChunk const & data,
                size_t requestedBufferSizeInBytes)
 {
-    if (! std::filesystem::is_regular_file (filepath))
-    {
-        throw ReadError ("File does not exist: " + filepath);
-    }
-
-    std::ifstream in {filepath, std::ios::binary};
-    if (!in) throw ReadError ("Failed to open: " + filepath);
-
     // Advance to the beginning of the data portion of the data chunk:
     in.seekg (data.offset);
     if (!in) throw ReadError ("Failed to advance to data portion of data chunk.");
