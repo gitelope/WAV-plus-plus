@@ -5,23 +5,24 @@
 #include "Formats.hpp"
 #include <vector>
 #include <string>
+#include <cstdio>
 
 namespace wav
 {
 
 // These read functions convert bytes to the desired type, return it, and
 // either increment the read position for the byte vector
-// or advance the ifstream pointer (handled by ifstream).
+// or advance the FILE pointer.
 //
 // The "le" suffix signifies a little-endian encoding in the WAV file.
-std::string fourCharacterCode (std::ifstream &); // 4 bytes  -> 4-character string
-GUID        guid              (std::ifstream &); // 16 bytes -> GUID struct (WAVEFORMATEXTENSIBLE only)
+std::string fourCharacterCode (FILE *); // 4 bytes  -> 4-character string
+GUID        guid              (FILE *); // 16 bytes -> GUID struct (WAVEFORMATEXTENSIBLE only)
 //
 // unsigned int
 uint8_t     uint8             (std::vector<std::byte> const &, size_t & pos); // 1 byte   -> 8-bit  unsigned int
-uint8_t     uint8             (std::ifstream &);
-uint16_t    uint16_le         (std::ifstream &);                              // 2 bytes  -> 16-bit unsigned int
-uint32_t    uint32_le         (std::ifstream &);                              // 4 bytes  -> 32-bit unsigned int
+uint8_t     uint8             (FILE *);
+uint16_t    uint16_le         (FILE *);                              // 2 bytes  -> 16-bit unsigned int
+uint32_t    uint32_le         (FILE *);                              // 4 bytes  -> 32-bit unsigned int
 //
 // signed int
 int16_t     int16_le          (std::vector<std::byte> const &, size_t & pos); // 2 bytes -> 16-bit signed int
@@ -30,8 +31,10 @@ int32_t     int32_le          (std::vector<std::byte> const &, size_t & pos); //
 //
 // floating point
 float       float32_le        (std::vector<std::byte> const &, size_t & pos); // 4 bytes -> 32-bit float
-float       float32_le        (std::ifstream &);
+float       float32_le        (FILE *);
 double      float64_le        (std::vector<std::byte> const &, size_t & pos); // 8 bytes -> 64-bit double
+
+int peek (FILE * in); // check if there's data available
 
 std::vector<std::byte> ReadBytes (std::string const & filePath);
 void PrintBytesAsHex (std::vector<std::byte> const & bytes);

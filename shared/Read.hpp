@@ -9,7 +9,7 @@
 #include <string>
 #include <vector>
 #include <filesystem>
-#include <fstream>
+#include <cstdio>
 #include <cassert>
 
 namespace wav
@@ -105,24 +105,29 @@ void ReadInterleaved (std::string const & filepath,
     {
         throw ReadError ("File does not exist: " + filepath);
     }
-    
-    std::ifstream in {filepath, std::ios::binary};
+    // Open FILE and ensure that attempt is made to close file if an excpetion is thrown.
+    // (fclose failure during stack unwinding is ignored to avoid throwing another exception
+    // and thus a call to std::terminate.)
+    std::unique_ptr<FILE, decltype (&fclose)> in (fopen (filepath.c_str(), "rb"), &fclose);
     if (!in) throw ReadError ("Failed to open: " + filepath);
 
     const long fileLength = std::filesystem::file_size (filepath);
     
-    ChunkInfo chunkInfo {in};
-    
+    ChunkInfo chunkInfo {in.get()};
+
     if (chunkInfo.riff.size + 8 != fileLength)
     {
         throw ReadError ("RIFF chunk size + 8 does not equal file size for " + filepath);
     }
 
     info.ExtractFrom (chunkInfo);
-    ReadDataInterleaved (in, destination, info, chunkInfo.data, requestedBufferSize);
-    
-    // File will be automatically closed when std::ifstream goes out of scope.
-    // Consider closing manually and throwing if file close fails.
+    ReadDataInterleaved (in.get(), destination, info, chunkInfo.data, requestedBufferSize);
+
+    // Close the file manually so we can throw an exception if it fails.
+    if (fclose (in.release()) != 0)
+    {
+        throw ReadError ("File did not close successfully.");
+    }
 }
 
 template <FloatOrDouble T>
@@ -135,38 +140,41 @@ void Read (std::string const & filepath,
     {
         throw ReadError ("File does not exist: " + filepath);
     }
-    
-    std::ifstream in {filepath, std::ios::binary};
+    // Open FILE and ensure that attempt is made to close file if an excpetion is thrown.
+    // (fclose failure during stack unwinding is ignored to avoid throwing another exception
+    // and thus a call to std::terminate.)
+    std::unique_ptr<FILE, decltype (&fclose)> in (fopen (filepath.c_str(), "rb"), &fclose);
     if (!in) throw ReadError ("Failed to open: " + filepath);
 
     const long fileLength = std::filesystem::file_size (filepath);
     
-    ChunkInfo chunkInfo {in};
-    
+    ChunkInfo chunkInfo {in.get()};
+
     if (chunkInfo.riff.size + 8 != fileLength)
     {
         throw ReadError ("RIFF chunk size + 8 does not equal file size for " + filepath);
     }
 
     info.ExtractFrom (chunkInfo);
-    ReadData (in, destination, info, chunkInfo.data, requestedBufferSize);
+    ReadData (in.get(), destination, info, chunkInfo.data, requestedBufferSize);
     
-    // File will be automatically closed when std::ifstream goes out of scope.
-    // Consider closing manually and throwing if file close fails.
+    // Close the file manually so we can throw an exception if it fails.
+    if (fclose (in.release()) != 0)
+    {
+        throw ReadError ("File did not close successfully.");
+    }
 }
 
-
-// New overloads that take std::ifstream& instead of filepath
 template <FloatOrDouble T>
-void ReadDataInterleaved (std::ifstream & in,
+void ReadDataInterleaved (FILE * in,
                           std::vector<T> & destination,
                           Info const & info,
                           DataChunk const & data,
                           size_t requestedBufferSizeInBytes)
 {
     // Advance to the beginning of the data portion of the data chunk:
-    in.seekg (data.offset);
-    if (!in) throw ReadError ("Failed to advance to data portion of data chunk.");
+    fseek (in, data.offset, SEEK_SET);
+    if (ferror (in)) throw ReadError ("Failed to advance to data portion of data chunk.");
 
     const size_t numSamples {static_cast<size_t>(info.frames) * info.channels};
     assert (numSamples > 0);
@@ -193,7 +201,7 @@ void ReadDataInterleaved (std::ifstream & in,
     {
         // Read in bytes:
         const auto bytesToRead {std::min (samplesRemaining * sampleSizeInBytes, buffer.size())};
-        if (!in.read (reinterpret_cast<char*> (buffer.data()), bytesToRead))
+        if (fread (buffer.data(), 1, bytesToRead, in) != bytesToRead)
         {
             throw ReadError ("Failed to read buffer from file.");
         }
@@ -210,15 +218,15 @@ void ReadDataInterleaved (std::ifstream & in,
 }
 
 template <FloatOrDouble T>
-void ReadData (std::ifstream & in,
+void ReadData (FILE * in,
                std::vector <std::vector<T>> & destination,
                Info const & info,
                DataChunk const & data,
                size_t requestedBufferSizeInBytes)
 {
     // Advance to the beginning of the data portion of the data chunk:
-    in.seekg (data.offset);
-    if (!in) throw ReadError ("Failed to advance to data portion of data chunk.");
+    fseek (in, data.offset, SEEK_SET);
+    if (ferror (in)) throw ReadError ("Failed to advance to data portion of data chunk.");
 
     destination.resize (info.channels, std::vector<T> (info.frames));
 
@@ -242,7 +250,7 @@ void ReadData (std::ifstream & in,
     {
         // Read in bytes:
         const auto bytesToRead {std::min (framesRemaining * frameSizeInBytes, buffer.size())};
-        if (!in.read (reinterpret_cast<char*> (buffer.data()), bytesToRead))
+        if (fread (buffer.data(), 1, bytesToRead, in) != bytesToRead)
         {
             throw ReadError ("Failed to read buffer from file.");
         }

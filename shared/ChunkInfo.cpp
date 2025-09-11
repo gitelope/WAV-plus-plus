@@ -15,28 +15,37 @@ ChunkInfo::ChunkInfo (std::string const & filepath)
     {
         throw ReadError ("File does not exist: " + filepath);
     }
-    std::ifstream in {filepath, std::ios::binary};
+    // Open FILE and ensure that attempt is made to close file if an excpetion is thrown.
+    // (fclose failure during stack unwinding is ignored to avoid throwing another exception
+    // and thus a call to std::terminate.)
+    std::unique_ptr<FILE, decltype (&fclose)> in (fopen (filepath.c_str(), "rb"), &fclose);
     if (!in) throw ReadError ("Failed to open: " + filepath);
 
-    ReadFile (in);
+    ReadFile (in.get());
+
+    // Close the file manually so we can throw an exception if it fails.
+    if (fclose (in.release()) != 0)
+    {
+        throw ReadError ("File did not close successfully.");
+    }
 }
 
-ChunkInfo::ChunkInfo (std::ifstream & in)
+ChunkInfo::ChunkInfo (FILE * in)
 {
     ReadFile (in);
 }
 
-void ChunkInfo::ReadFile (std::ifstream & in)
+void ChunkInfo::ReadFile (FILE * in)
 {
     const auto chunkID = fourCharacterCode (in);
     if (chunkID != riff.id) throw ReadError ("RIFF chunk ID not found.");
     ReadRiffChunk (in);
     RegisterChunk (chunkID, 0);
 
-    while (in.peek() != EOF)
+    while (peek (in) != EOF)
     {
-        const auto chunkStart {in.tellg()};
-        const auto chunkID = fourCharacterCode (in);
+        const auto chunkStart {ftell (in)};
+        const auto chunkID {fourCharacterCode (in)};
         RegisterChunk (chunkID, chunkStart);
 
         if      (chunkID == format.id) ReadFormatChunk       (in);
@@ -57,8 +66,8 @@ void ChunkInfo::ReadFile (std::ifstream & in)
             // unreported byte of padding at the end to make for an even
             // number. In contrast, all chunk padding should be reflected
             // in the main "RIFF" chunk size.
-            in.ignore (size + (size % 2));
-            if (!in) throw ReadError ("Failed to skip chunk: " + chunkID);
+            fseek (in, size + (size % 2), SEEK_CUR);
+            if (ferror (in)) throw ReadError ("Failed to skip chunk: " + chunkID);
         }
     }
 }
@@ -122,7 +131,7 @@ std::string ChunkInfo::summary() const
     return oss.str();
 }
 
-void ChunkInfo::ReadRiffChunk (std::ifstream & in)
+void ChunkInfo::ReadRiffChunk (FILE * in)
 {
     // Technically, the whole file is a RIFF chunk. This is just the first part of it.
     // no need to read id since it has already been read and has the expected value
@@ -134,7 +143,7 @@ void ChunkInfo::ReadRiffChunk (std::ifstream & in)
     }
 }
 
-void ChunkInfo::ReadFormatChunk (std::ifstream & in)
+void ChunkInfo::ReadFormatChunk (FILE * in)
 {
     // These fields are found in formats WAVEFORMAT, PCMWAVEFORMAT, WAVEFORMATEX, and WAVEFORMATEXTENSIBLE:
     //
@@ -251,12 +260,12 @@ void ChunkInfo::ReadFormatChunk (std::ifstream & in)
     // we must skip the last padding byte.
     if (format.size % 2)
     {
-        in.ignore (1);
-        if (!in) throw ReadError ("Failed to skip format chunk padding.");
+        fseek (in, 1, SEEK_CUR);
+        if (ferror (in)) throw ReadError ("Failed to skip format chunk padding.");
     }
 }
 
-void ChunkInfo::ReadFactChunk (std::ifstream & in)
+void ChunkInfo::ReadFactChunk (FILE * in)
 {
     fact.present = true;
     fact.size = uint32_le (in);
@@ -267,7 +276,7 @@ void ChunkInfo::ReadFactChunk (std::ifstream & in)
     fact.fileSize = uint32_le (in);
 }
 
-void ChunkInfo::ReadPeakChunk (std::ifstream & in)
+void ChunkInfo::ReadPeakChunk (FILE * in)
 {
     peak.present = true;
     peak.size = uint32_le (in);
@@ -281,7 +290,7 @@ void ChunkInfo::ReadPeakChunk (std::ifstream & in)
     }
 }
 
-void ChunkInfo::ReadDataChunkInfoOnly (std::ifstream & in)
+void ChunkInfo::ReadDataChunkInfoOnly (FILE * in)
 {
     // No need to read id since it has already been read and has the expected value.
     data.size = uint32_le (in);
@@ -289,9 +298,9 @@ void ChunkInfo::ReadDataChunkInfoOnly (std::ifstream & in)
     {
         throw ReadError ("Size of data chunk is not divisible by block_align.");
     }
-    data.offset = static_cast<int> (in.tellg());
-    in.ignore (data.size + (data.size % 2)); // skip data (and padding byte if chunk size is odd number)
-    if (!in) throw ReadError ("Failed to skip data portion of data chunk.");
+    data.offset = static_cast<int> (ftell (in));
+    fseek (in, data.size + (data.size % 2), SEEK_CUR); // skip data (and padding byte if chunk size is odd number)
+    if (ferror (in)) throw ReadError ("Failed to skip data portion of data chunk.");
 
     // An odd chunk size will most likely be the result of writing mono, linear PCM 8-bit or 24-bit WAV,
     // with an odd number of samples, but will also occur with a larger odd number of channels:

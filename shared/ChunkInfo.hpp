@@ -8,6 +8,7 @@
 #include <iostream>
 #include <vector>
 #include <cstdint>
+#include <cstdio>
 
 namespace wav
 {
@@ -73,12 +74,15 @@ struct PeakChunk
     bool present {false};
 };
 
-/// All the info from RIFF, fmt, data, fact and PEAK chunks except for the samples.
 class ChunkInfo
+/// All the info from RIFF, fmt, data, fact and PEAK chunks except for the samples.
+/// (Essentially a header parser with the qualification that a WAV file need not be
+/// constructed with the data chunk after all the others with the sample data at the
+/// very end of the file and all the other information before them.)
 {
 public:
     ChunkInfo (std::string const & filepath);
-    ChunkInfo (std::ifstream & in);
+    ChunkInfo (FILE * in);
 
     std::string summary() const;
 
@@ -92,12 +96,12 @@ public:
     std::vector<std::string> chunksSkipped;
 
 private:
-    void ReadFile              (std::ifstream & in);
-    void ReadRiffChunk         (std::ifstream & in);
-    void ReadFormatChunk       (std::ifstream & in);
-    void ReadFactChunk         (std::ifstream & in);
-    void ReadPeakChunk         (std::ifstream & in);
-    void ReadDataChunkInfoOnly (std::ifstream & in);
+    void ReadFile              (FILE * in);
+    void ReadRiffChunk         (FILE * in);
+    void ReadFormatChunk       (FILE * in);
+    void ReadFactChunk         (FILE * in);
+    void ReadPeakChunk         (FILE * in);
+    void ReadDataChunkInfoOnly (FILE * in);
 
     template <typename IntegerType>
     void RegisterChunk (std::string const & id, IntegerType position)

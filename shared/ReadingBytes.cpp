@@ -2,22 +2,24 @@
 #include "ReadingBytes.hpp"
 #include "Exceptions.hpp"
 
-#include <fstream>
+#include <cstdio>
 #include <cassert>
 #include <iostream>
+#include <filesystem>
+#include <iomanip>
 
 namespace wav
 {
 
-std::string fourCharacterCode (std::ifstream & in)
+std::string fourCharacterCode (FILE * in)
 {
     std::string code (4, '\0');
-    in.read (code.data(), 4);
-    if (!in) throw ReadError ("Failed to read 4 characters from stream.");
+    if (fread (code.data(), 1, 4, in) != 4) 
+        throw ReadError ("Failed to read 4 characters from file.");
     return code;
 }
 
-GUID guid (std::ifstream & in)
+GUID guid (FILE * in)
 {
     const auto data1 {uint32_le (in)};
     const auto data2 {uint16_le (in)};
@@ -30,13 +32,13 @@ GUID guid (std::ifstream & in)
     return {data1, data2, data3, data4};
 }
 
-// Helper for functions that read directly from a std::ifstream.
+// Helper for functions that read directly from a FILE *.
 template <typename T, size_t N>
-void read (std::istream & in, std::array<T,N> & buffer)
+void read (FILE * in, std::array<T,N> & buffer)
 {
-    if (!in.read (reinterpret_cast<char*> (buffer.data()), buffer.size()))
+    if (fread (reinterpret_cast<char*> (buffer.data()), 1, buffer.size(), in) != buffer.size())
     {
-        throw ReadError (std::format ("Failed to read {} bytes from stream.", N));
+        throw ReadError (std::format ("Failed to read {} bytes from file.", N));
     }
 }
 
@@ -49,17 +51,17 @@ uint8_t uint8 (std::vector<std::byte> const & bytes, size_t & pos)
     return static_cast<uint8_t> (bytes [pos++]);
 }
 
-uint8_t uint8 (std::ifstream & in)
+uint8_t uint8 (FILE * in)
 {
     uint8_t result {0};
-    if (!in.read (reinterpret_cast<char*> (&result), 1))
+    if (fread (&result, 1, 1, in) != 1)
     {
-        throw ReadError ("Failed to read uint8_t from ifstream.");
+        throw ReadError ("Failed to read uint8_t from file.");
     }
     return result;
 }
 
-uint16_t uint16_le (std::ifstream & in)
+uint16_t uint16_le (FILE * in)
 {
     std::array <uint8_t, 2> buffer {};
     read (in, buffer);
@@ -68,7 +70,7 @@ uint16_t uint16_le (std::ifstream & in)
     static_cast<uint16_t> (buffer [1]) << 8;
 }
 
-uint32_t uint32_le (std::ifstream & in)
+uint32_t uint32_le (FILE * in)
 {
     std::array<uint8_t, 4> buffer{};
     read (in, buffer);
@@ -165,7 +167,7 @@ float float32_le (std::vector<std::byte> const & bytes, size_t & pos)
     return std::bit_cast<float> (integer);
 }
 
-float float32_le (std::ifstream & in)
+float float32_le (FILE * in)
 {
     std::array <uint8_t, 4> buffer{};
     read (in, buffer);
@@ -200,17 +202,40 @@ double float64_le (std::vector<std::byte> const & bytes, size_t & pos)
     return std::bit_cast<double> (integer);
 }
 
+int peek (FILE * in)
+{
+    int c = fgetc (in);
+    if (c != EOF)
+    {
+        ungetc (c, in); // Put the character back
+    }
+    return c;
+}
+
 std::vector<std::byte> ReadBytes (std::string const & filePath)
 {
-    std::ifstream in {filePath, std::ios::binary};
+    if (! std::filesystem::is_regular_file (filePath))
+    {
+        throw ReadError ("File does not exist: " + filePath);
+    }
+    // Open FILE and ensure that attempt is made to close file if an excpetion is thrown.
+    // (fclose failure during stack unwinding is ignored to avoid throwing another exception
+    // and thus a call to std::terminate.)
+    std::unique_ptr<FILE, decltype (&fclose)> in (fopen (filePath.c_str(), "rb"), &fclose);
     if (!in) throw ReadError ("Failed to open file.");
 
     const auto length = std::filesystem::file_size (filePath);
     std::vector<std::byte> bytes (length);
 
-    if (!in.read (reinterpret_cast<char*> (bytes.data()), length))
+    if (fread (bytes.data(), 1, length, in.get()) != length)
     {
         throw ReadError ("Failed to read file.");
+    }
+
+    // Close the file manually so we can throw an exception if it fails.
+    if (fclose (in.release()) != 0)
+    {
+        throw ReadError ("File did not close successfully.");
     }
 
     return bytes;
