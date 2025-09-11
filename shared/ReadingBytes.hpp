@@ -3,9 +3,12 @@
 #define wavplusplus_ReadingBytes_hpp
 
 #include "Formats.hpp"
+#include "Exceptions.hpp"
 #include <vector>
 #include <string>
 #include <cstdio>
+#include <filesystem>
+#include <memory>
 
 namespace wav
 {
@@ -33,6 +36,20 @@ int32_t     int32_le          (std::vector<std::byte> const &, size_t & pos); //
 float       float32_le        (std::vector<std::byte> const &, size_t & pos); // 4 bytes -> 32-bit float
 float       float32_le        (FILE *);
 double      float64_le        (std::vector<std::byte> const &, size_t & pos); // 8 bytes -> 64-bit double
+
+inline auto fileForReading (std::string const & filepath)
+{
+    if (! std::filesystem::is_regular_file (filepath))
+    {
+        throw ReadError ("File does not exist: " + filepath);
+    }
+    // Open FILE and ensure that attempt is made to close file if an exception is thrown.
+    // (fclose failure during stack unwinding is ignored to avoid throwing another exception
+    // and thus a call to std::terminate.)
+    return std::unique_ptr<FILE, decltype (&fclose)> (fopen (filepath.c_str(), "rb"), &fclose);
+}
+
+void Close (std::unique_ptr<FILE, decltype (&fclose)> & filePointer);
 
 int peek (FILE * in); // check if there's data available
 

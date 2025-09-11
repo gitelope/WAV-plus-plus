@@ -11,23 +11,10 @@ namespace wav
 
 ChunkInfo::ChunkInfo (std::string const & filepath)
 {
-    if (! std::filesystem::is_regular_file (filepath))
-    {
-        throw ReadError ("File does not exist: " + filepath);
-    }
-    // Open FILE and ensure that attempt is made to close file if an excpetion is thrown.
-    // (fclose failure during stack unwinding is ignored to avoid throwing another exception
-    // and thus a call to std::terminate.)
-    std::unique_ptr<FILE, decltype (&fclose)> in (fopen (filepath.c_str(), "rb"), &fclose);
+    auto in = fileForReading (filepath);
     if (!in) throw ReadError ("Failed to open: " + filepath);
-
     ReadFile (in.get());
-
-    // Close the file manually so we can throw an exception if it fails.
-    if (fclose (in.release()) != 0)
-    {
-        throw ReadError ("File did not close successfully.");
-    }
+    Close (in);
 }
 
 ChunkInfo::ChunkInfo (FILE * in)

@@ -202,6 +202,15 @@ double float64_le (std::vector<std::byte> const & bytes, size_t & pos)
     return std::bit_cast<double> (integer);
 }
 
+void Close (std::unique_ptr<FILE, decltype (&fclose)> & filePointer)
+{
+    // Close the file manually so we can throw an exception if it fails.
+    if (fclose (filePointer.release()) != 0)
+    {
+        throw ReadError ("File did not close successfully.");
+    }
+}
+
 int peek (FILE * in)
 {
     int c = fgetc (in);
@@ -212,19 +221,12 @@ int peek (FILE * in)
     return c;
 }
 
-std::vector<std::byte> ReadBytes (std::string const & filePath)
+std::vector<std::byte> ReadBytes (std::string const & filepath)
 {
-    if (! std::filesystem::is_regular_file (filePath))
-    {
-        throw ReadError ("File does not exist: " + filePath);
-    }
-    // Open FILE and ensure that attempt is made to close file if an excpetion is thrown.
-    // (fclose failure during stack unwinding is ignored to avoid throwing another exception
-    // and thus a call to std::terminate.)
-    std::unique_ptr<FILE, decltype (&fclose)> in (fopen (filePath.c_str(), "rb"), &fclose);
+    auto in = fileForReading (filepath);
     if (!in) throw ReadError ("Failed to open file.");
 
-    const auto length = std::filesystem::file_size (filePath);
+    const auto length = std::filesystem::file_size (filepath);
     std::vector<std::byte> bytes (length);
 
     if (fread (bytes.data(), 1, length, in.get()) != length)
@@ -232,11 +234,7 @@ std::vector<std::byte> ReadBytes (std::string const & filePath)
         throw ReadError ("Failed to read file.");
     }
 
-    // Close the file manually so we can throw an exception if it fails.
-    if (fclose (in.release()) != 0)
-    {
-        throw ReadError ("File did not close successfully.");
-    }
+    Close (in);
 
     return bytes;
 }
