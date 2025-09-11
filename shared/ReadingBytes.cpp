@@ -33,10 +33,10 @@ GUID guid (FILE * in)
 }
 
 // Helper for functions that read directly from a FILE *.
-template <typename T, size_t N>
-void read (FILE * in, std::array<T,N> & buffer)
+template <size_t N>
+void read (FILE * in, std::array<uint8_t,N> & buffer)
 {
-    if (fread (reinterpret_cast<char*> (buffer.data()), 1, buffer.size(), in) != buffer.size())
+    if (fread (buffer.data(), 1, buffer.size(), in) != buffer.size())
     {
         throw ReadError (std::format ("Failed to read {} bytes from file.", N));
     }
@@ -63,7 +63,7 @@ uint8_t uint8 (FILE * in)
 
 uint16_t uint16_le (FILE * in)
 {
-    std::array <uint8_t, 2> buffer {};
+    std::array<uint8_t, 2> buffer {};
     read (in, buffer);
     return
     static_cast<uint16_t> (buffer [0])     |
@@ -169,7 +169,7 @@ float float32_le (std::vector<std::byte> const & bytes, size_t & pos)
 
 float float32_le (FILE * in)
 {
-    std::array <uint8_t, 4> buffer{};
+    std::array<uint8_t, 4> buffer{};
     read (in, buffer);
 
     const auto integer =
