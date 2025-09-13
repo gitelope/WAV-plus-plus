@@ -17,6 +17,26 @@ template <FloatOrDouble T>
 void ReadDataSeparateChannels (FILE * in,
                                std::vector <std::vector<T>> & destination,
                                Info const & info, DataChunk const & data,
+                               size_t requestedBufferSizeInBytes);
+
+template <FloatOrDouble T>
+void ReadSeparateChannels_FromBuffer_LinearPCM (std::vector<std::byte> const & buffer,
+                                                std::vector<std::vector<T>> & destination,
+                                                Info const & info,
+                                                size_t framesToRead, size_t writePosition);
+
+template <FloatOrDouble T>
+void ReadSeparateChannels_FromBuffer_FloatPCM (std::vector<std::byte> const & buffer,
+                                               std::vector<std::vector<T>> & destination,
+                                               Info const & info,
+                                               size_t framesToRead, size_t writePosition);
+
+//////////////////////////////////////////////////////////////////////////////s
+
+template <FloatOrDouble T>
+void ReadDataSeparateChannels (FILE * in,
+                               std::vector <std::vector<T>> & destination,
+                               Info const & info, DataChunk const & data,
                                size_t requestedBufferSizeInBytes)
 {
     // Advance to the beginning of the data portion of the data chunk:
@@ -52,8 +72,8 @@ void ReadDataSeparateChannels (FILE * in,
 
         // Decode into samples:
         const auto framesToRead {bytesToRead / frameSizeInBytes};
-        if      (info.isLinearPCM) ReadLinearPCMSeparateChannels (buffer, destination, info, framesToRead, writePosition);
-        else if (info.isFloatPCM)  ReadFloatPCMSeparateChannels  (buffer, destination, info, framesToRead, writePosition);
+        if      (info.isLinearPCM) ReadSeparateChannels_FromBuffer_LinearPCM (buffer, destination, info, framesToRead, writePosition);
+        else if (info.isFloatPCM)  ReadSeparateChannels_FromBuffer_FloatPCM  (buffer, destination, info, framesToRead, writePosition);
         else assert (false);
 
         writePosition += framesToRead;
@@ -62,10 +82,10 @@ void ReadDataSeparateChannels (FILE * in,
 }
 
 template <FloatOrDouble T>
-void ReadLinearPCMSeparateChannels (std::vector<std::byte> const & buffer,
-                                    std::vector<std::vector<T>> & destination,
-                                    Info const & info,
-                                    size_t framesToRead, size_t writePosition)
+void ReadSeparateChannels_FromBuffer_LinearPCM (std::vector<std::byte> const & buffer,
+                                                std::vector<std::vector<T>> & destination,
+                                                Info const & info,
+                                                size_t framesToRead, size_t writePosition)
 {
     // Normalize integers to [-1.0, 1.0) by dividing by 2^(bits-1).
     // Example:
@@ -118,10 +138,10 @@ void ReadLinearPCMSeparateChannels (std::vector<std::byte> const & buffer,
 }
 
 template <FloatOrDouble T>
-void ReadFloatPCMSeparateChannels (std::vector<std::byte> const & buffer,
-                                   std::vector<std::vector<T>> & destination,
-                                   Info const & info,
-                                   size_t framesToRead, size_t writePosition)
+void ReadSeparateChannels_FromBuffer_FloatPCM (std::vector<std::byte> const & buffer,
+                                               std::vector<std::vector<T>> & destination,
+                                               Info const & info,
+                                               size_t framesToRead, size_t writePosition)
 {
     assert (info.containerSizeInBits == info.bitDepth);
 
