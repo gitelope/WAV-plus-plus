@@ -13,10 +13,8 @@
 		C499DB8C2E13437000A88D60 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C499DB8A2E13437000A88D60 /* main.cpp */; };
 		C499DB962E13445F00A88D60 /* ReadingBytes.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C499DB902E13445F00A88D60 /* ReadingBytes.cpp */; };
 		C499DB982E13445F00A88D60 /* ChunkInfo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C499DB942E13445F00A88D60 /* ChunkInfo.cpp */; };
-		C499DB992E13445F00A88D60 /* Read.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C499DB8E2E13445F00A88D60 /* Read.cpp */; };
 		C499DB9A2E13445F00A88D60 /* ReadingBytes.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C499DB902E13445F00A88D60 /* ReadingBytes.cpp */; };
 		C499DB9C2E13445F00A88D60 /* ChunkInfo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C499DB942E13445F00A88D60 /* ChunkInfo.cpp */; };
-		C499DB9D2E13445F00A88D60 /* Read.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C499DB8E2E13445F00A88D60 /* Read.cpp */; };
 		C4AA9FB82E75D6C300CD6B51 /* Info.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C4AA9FB72E75D6C300CD6B51 /* Info.cpp */; };
 		C4AA9FB92E75D6C300CD6B51 /* Info.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C4AA9FB72E75D6C300CD6B51 /* Info.cpp */; };
 		C4CBC3C62E302405009AA677 /* WriteHelpers.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C4CBC3C52E302405009AA677 /* WriteHelpers.cpp */; };
@@ -52,7 +50,6 @@
 		C499DB872E13436D00A88D60 /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		C499DB8A2E13437000A88D60 /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		C499DB8D2E13445F00A88D60 /* Read.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Read.hpp; sourceTree = "<group>"; };
-		C499DB8E2E13445F00A88D60 /* Read.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Read.cpp; sourceTree = "<group>"; };
 		C499DB8F2E13445F00A88D60 /* ReadingBytes.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = ReadingBytes.hpp; sourceTree = "<group>"; };
 		C499DB902E13445F00A88D60 /* ReadingBytes.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = ReadingBytes.cpp; sourceTree = "<group>"; };
 		C499DB912E13445F00A88D60 /* Write.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Write.hpp; sourceTree = "<group>"; };
@@ -122,7 +119,6 @@
 			isa = PBXGroup;
 			children = (
 				C499DB8D2E13445F00A88D60 /* Read.hpp */,
-				C499DB8E2E13445F00A88D60 /* Read.cpp */,
 				C4AA9FB62E75D6C300CD6B51 /* Info.hpp */,
 				C4AA9FB72E75D6C300CD6B51 /* Info.cpp */,
 				C499DB912E13445F00A88D60 /* Write.hpp */,
@@ -226,7 +222,6 @@
 				C4AA9FB92E75D6C300CD6B51 /* Info.cpp in Sources */,
 				C499DB9C2E13445F00A88D60 /* ChunkInfo.cpp in Sources */,
 				C4CBC3C62E302405009AA677 /* WriteHelpers.cpp in Sources */,
-				C499DB9D2E13445F00A88D60 /* Read.cpp in Sources */,
 				C479D8552E149E7C00093894 /* Formats.cpp in Sources */,
 				C499DB8C2E13437000A88D60 /* main.cpp in Sources */,
 			);
@@ -240,7 +235,6 @@
 				C4AA9FB82E75D6C300CD6B51 /* Info.cpp in Sources */,
 				C499DB982E13445F00A88D60 /* ChunkInfo.cpp in Sources */,
 				C4CBC3C72E302405009AA677 /* WriteHelpers.cpp in Sources */,
-				C499DB992E13445F00A88D60 /* Read.cpp in Sources */,
 				C479D8562E149E7C00093894 /* Formats.cpp in Sources */,
 				C499DB892E13436D00A88D60 /* main.cpp in Sources */,
 			);
