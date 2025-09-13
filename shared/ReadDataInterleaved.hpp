@@ -16,6 +16,26 @@ namespace wav
 template <FloatOrDouble T>
 void ReadDataInterleaved (FILE * in,
                           std::vector<T> & destination,
+                          Info const & info, DataChunk const & data,
+                          size_t requestedBufferSizeInBytes);
+
+template <FloatOrDouble T>
+void ReadInterleaved_FromBuffer_LinearPCM (std::vector<std::byte> const & buffer,
+                                           std::vector<T> & destination,
+                                           Info const & info,
+                                           size_t samplesToRead, size_t writePosition);
+
+template <FloatOrDouble T>
+void ReadInterleaved_FromBuffer_FloatPCM (std::vector<std::byte> const & buffer,
+                                          std::vector<T> & destination,
+                                          Info const & info,
+                                          size_t samplesToRead, size_t writePosition);
+
+////////////////////////////////////////////////////////////////////////////////////////
+
+template <FloatOrDouble T>
+void ReadDataInterleaved (FILE * in,
+                          std::vector<T> & destination,
                           Info const & info,
                           DataChunk const & data,
                           size_t requestedBufferSizeInBytes)
@@ -56,8 +76,8 @@ void ReadDataInterleaved (FILE * in,
 
         // Decode into samples:
         const auto samplesToRead {bytesToRead / sampleSizeInBytes};
-        if      (info.isLinearPCM) ReadLinearPCMInterleaved (buffer, destination, info, samplesToRead, writePosition);
-        else if (info.isFloatPCM)  ReadFloatPCMInterleaved  (buffer, destination, info, samplesToRead, writePosition);
+        if      (info.isLinearPCM) ReadInterleaved_FromBuffer_LinearPCM (buffer, destination, info, samplesToRead, writePosition);
+        else if (info.isFloatPCM)  ReadInterleaved_FromBuffer_FloatPCM  (buffer, destination, info, samplesToRead, writePosition);
         else assert (false);
 
         writePosition += samplesToRead;
@@ -66,11 +86,10 @@ void ReadDataInterleaved (FILE * in,
 }
 
 template <FloatOrDouble T>
-void ReadLinearPCMInterleaved (std::vector<std::byte> const & buffer,
-                               std::vector<T> & destination,
-                               Info const & info,
-                               size_t samplesToRead,
-                               size_t writePosition)
+void ReadInterleaved_FromBuffer_LinearPCM (std::vector<std::byte> const & buffer,
+                                           std::vector<T> & destination,
+                                           Info const & info,
+                                           size_t samplesToRead, size_t writePosition)
 {
     // Normalize integers to [-1.0, 1.0) by dividing by 2^(bits-1).
     // Example:
@@ -107,11 +126,10 @@ void ReadLinearPCMInterleaved (std::vector<std::byte> const & buffer,
 }
 
 template <FloatOrDouble T>
-void ReadFloatPCMInterleaved (std::vector<std::byte> const & buffer,
-                              std::vector<T> & destination,
-                              Info const & info,
-                              size_t samplesToRead,
-                              size_t writePosition)
+void ReadInterleaved_FromBuffer_FloatPCM (std::vector<std::byte> const & buffer,
+                                          std::vector<T> & destination,
+                                          Info const & info,
+                                          size_t samplesToRead, size_t writePosition)
 {
     assert (info.containerSizeInBits == info.bitDepth);
 
