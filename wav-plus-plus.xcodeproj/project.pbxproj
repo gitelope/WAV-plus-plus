@@ -17,6 +17,8 @@
 		C499DB9A2E13445F00A88D60 /* ReadingBytes.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C499DB902E13445F00A88D60 /* ReadingBytes.cpp */; };
 		C499DB9C2E13445F00A88D60 /* ChunkInfo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C499DB942E13445F00A88D60 /* ChunkInfo.cpp */; };
 		C499DB9D2E13445F00A88D60 /* Read.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C499DB8E2E13445F00A88D60 /* Read.cpp */; };
+		C4AA9FB82E75D6C300CD6B51 /* Info.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C4AA9FB72E75D6C300CD6B51 /* Info.cpp */; };
+		C4AA9FB92E75D6C300CD6B51 /* Info.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C4AA9FB72E75D6C300CD6B51 /* Info.cpp */; };
 		C4CBC3C62E302405009AA677 /* WriteHelpers.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C4CBC3C52E302405009AA677 /* WriteHelpers.cpp */; };
 		C4CBC3C72E302405009AA677 /* WriteHelpers.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C4CBC3C52E302405009AA677 /* WriteHelpers.cpp */; };
 /* End PBXBuildFile section */
@@ -56,6 +58,8 @@
 		C499DB912E13445F00A88D60 /* Write.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Write.hpp; sourceTree = "<group>"; };
 		C499DB932E13445F00A88D60 /* ChunkInfo.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = ChunkInfo.hpp; sourceTree = "<group>"; };
 		C499DB942E13445F00A88D60 /* ChunkInfo.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = ChunkInfo.cpp; sourceTree = "<group>"; };
+		C4AA9FB62E75D6C300CD6B51 /* Info.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Info.hpp; sourceTree = "<group>"; };
+		C4AA9FB72E75D6C300CD6B51 /* Info.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Info.cpp; sourceTree = "<group>"; };
 		C4B1FD8B2E20533200B6D691 /* Exceptions.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Exceptions.hpp; sourceTree = "<group>"; };
 		C4CBC3C42E302405009AA677 /* WriteHelpers.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = WriteHelpers.hpp; sourceTree = "<group>"; };
 		C4CBC3C52E302405009AA677 /* WriteHelpers.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = WriteHelpers.cpp; sourceTree = "<group>"; };
@@ -119,6 +123,8 @@
 			children = (
 				C499DB8D2E13445F00A88D60 /* Read.hpp */,
 				C499DB8E2E13445F00A88D60 /* Read.cpp */,
+				C4AA9FB62E75D6C300CD6B51 /* Info.hpp */,
+				C4AA9FB72E75D6C300CD6B51 /* Info.cpp */,
 				C499DB912E13445F00A88D60 /* Write.hpp */,
 				C4CBC3C42E302405009AA677 /* WriteHelpers.hpp */,
 				C4CBC3C52E302405009AA677 /* WriteHelpers.cpp */,
@@ -217,6 +223,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				C499DB9A2E13445F00A88D60 /* ReadingBytes.cpp in Sources */,
+				C4AA9FB92E75D6C300CD6B51 /* Info.cpp in Sources */,
 				C499DB9C2E13445F00A88D60 /* ChunkInfo.cpp in Sources */,
 				C4CBC3C62E302405009AA677 /* WriteHelpers.cpp in Sources */,
 				C499DB9D2E13445F00A88D60 /* Read.cpp in Sources */,
@@ -230,6 +237,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				C499DB962E13445F00A88D60 /* ReadingBytes.cpp in Sources */,
+				C4AA9FB82E75D6C300CD6B51 /* Info.cpp in Sources */,
 				C499DB982E13445F00A88D60 /* ChunkInfo.cpp in Sources */,
 				C4CBC3C72E302405009AA677 /* WriteHelpers.cpp in Sources */,
 				C499DB992E13445F00A88D60 /* Read.cpp in Sources */,
