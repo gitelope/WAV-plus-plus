@@ -5,6 +5,7 @@
 #include "Formats.hpp"
 #include "Info.hpp"
 #include "ChunkInfo.hpp"
+#include "ReadingBytes.hpp"
 #include <cassert>
 #include <vector>
 #include <cstdio>
