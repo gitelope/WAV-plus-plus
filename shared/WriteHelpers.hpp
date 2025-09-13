@@ -5,6 +5,7 @@
 #include "Formats.hpp"
 #include "Exceptions.hpp"
 #include "int24.hpp"
+#include "BufferSizing.hpp"
 #include <vector>
 #include <string>
 #include <cstdio>
@@ -32,11 +33,6 @@ template <FloatOrDouble T> void WriteLPCMU8 (FILE * out, std::span<const T> samp
 template <FloatOrDouble T> void WriteDataFallback (FILE * out, std::span<const T> samples, uint16_t bitsPerSample, uint16_t formatCode, size_t writeBufferSizeInBytes, size_t ioBufferSizeInBytes);
 
 std::pair<uint16_t,uint16_t> bitDepthAndFormatCode (ExportFormat ef);
-
-size_t writeBufferSizeInBytes (size_t requestedBufferSizeInBytes, size_t numSamples, uint16_t bitsPerSample);
-
-size_t ioBufferSizeInBytes (size_t numSamples, uint16_t bitsPerSample, size_t writeBufferSizeInBytes, size_t ioBufferSizeMultiplier);
-void SetInternalIOBufferSize (FILE * out, size_t ioBufferSizeInBytes);
 
 template <FloatOrDouble T> T quantized (T value, T min, T max)
 {
@@ -69,7 +65,7 @@ void WriteData (FILE * out, std::span<const T> samples,
                 size_t requestedWriteBufferSizeInBytes, size_t ioBufferSizeMultiplier)
 {
     // A write buffer is used in all cases except for writing floating-point samples to the same format on LE systems.
-    const size_t writeBufferSize {writeBufferSizeInBytes (requestedWriteBufferSizeInBytes, samples.size(), bitsPerSample)};
+    const size_t writeBufferSize {bufferSizeInBytes (requestedWriteBufferSizeInBytes, samples.size(), bitsPerSample)};
     const size_t ioBufferSize {ioBufferSizeInBytes (samples.size(), bitsPerSample, writeBufferSize, ioBufferSizeMultiplier)};
 
     // Input and output endianness are the same.
@@ -130,7 +126,7 @@ void WriteFloatToFloatLE (FILE * out, std::span<const T> samples, uint16_t bitsP
     {
         // double -> float
         std::vector<float> buffer (writeBufferSizeInBytes / 4);
-        SetInternalIOBufferSize (out, ioBufferSizeInBytes);
+        SetInternalIOBufferSize<WriteError> (out, ioBufferSizeInBytes);
 
         size_t samplesRemaining {samples.size()};
         size_t readPosition {0};
@@ -153,7 +149,7 @@ void WriteFloatToFloatLE (FILE * out, std::span<const T> samples, uint16_t bitsP
     {
         // float -> double
         std::vector<double> buffer (writeBufferSizeInBytes / 8);
-        SetInternalIOBufferSize (out, ioBufferSizeInBytes);
+        SetInternalIOBufferSize<WriteError> (out, ioBufferSizeInBytes);
 
         size_t samplesRemaining {samples.size()};
         size_t readPosition {0};
@@ -184,7 +180,7 @@ void WriteLPCMU8 (FILE * out, std::span<const T> samples, size_t writeBufferSize
     const auto offset {static_cast<T> (0x80)}; // 2^7 = 128
 
     std::vector<std::byte> buffer (writeBufferSizeInBytes);
-    SetInternalIOBufferSize (out, ioBufferSizeInBytes);
+    SetInternalIOBufferSize<WriteError> (out, ioBufferSizeInBytes);
 
     size_t samplesRemaining {samples.size()};
     size_t readPosition {0};
@@ -228,7 +224,7 @@ void WriteLPCM16LE (FILE * out, std::span<const T> samples, size_t writeBufferSi
     const auto min {-max};
 
     std::vector<int16_t> buffer (writeBufferSizeInBytes / bytesPerSample);
-    SetInternalIOBufferSize (out, ioBufferSizeInBytes);
+    SetInternalIOBufferSize<WriteError> (out, ioBufferSizeInBytes);
 
     size_t samplesRemaining {samples.size()};
     size_t readPosition {0};
@@ -257,7 +253,7 @@ void WriteLPCM24LE (FILE * out, std::span<const T> samples, size_t writeBufferSi
     const auto min {-max};
 
     std::vector<int24> buffer (writeBufferSizeInBytes / bytesPerSample);
-    SetInternalIOBufferSize (out, ioBufferSizeInBytes);
+    SetInternalIOBufferSize<WriteError> (out, ioBufferSizeInBytes);
 
     size_t samplesRemaining {samples.size()};
     size_t readPosition {0};
@@ -297,7 +293,7 @@ void WriteLPCM32LE (FILE * out, std::span<const T> samples, size_t writeBufferSi
     const auto min {-max};
 
     std::vector<int32_t> buffer (writeBufferSizeInBytes / bytesPerSample);
-    SetInternalIOBufferSize (out, ioBufferSizeInBytes);
+    SetInternalIOBufferSize<WriteError> (out, ioBufferSizeInBytes);
 
     size_t samplesRemaining {samples.size()};
     size_t readPosition {0};
@@ -329,7 +325,7 @@ void WriteDataFallback (FILE * out, std::span<const T> samples,
     const auto totalBytesToWrite {numSamples * bytesPerSamples};
 
     std::vector<std::byte> buffer (writeBufferSizeInBytes);
-    SetInternalIOBufferSize (out, ioBufferSizeInBytes);
+    SetInternalIOBufferSize<WriteError> (out, ioBufferSizeInBytes);
 
     size_t samplesRemaining {numSamples};
     size_t readPosition {0};
