@@ -33,7 +33,7 @@ ReadInterleaved (std::string const & filepath,
 template <FloatOrDouble T>
 std::pair <std::vector<std::vector<T>>, Info>
 ReadSeparateChannels (std::string const & filepath,
-      size_t requestedBufferSize = defaultRequestedReadBufferSize);
+                      size_t requestedBufferSize = defaultRequestedReadBufferSize);
 
 
 // In-place read of interleaved audio and Info.
@@ -48,16 +48,15 @@ void ReadInterleaved (std::string const & filepath,
 // May throw wav::ReadError.
 template <FloatOrDouble T>
 void ReadSeparateChannels (std::string const & filepath,
-           std::vector<std::vector<T>> & destination,
-           Info & info,
-           size_t requestedBufferSize = defaultRequestedReadBufferSize);
+                           std::vector<std::vector<T>> & destination,
+                           Info & info,
+                           size_t requestedBufferSize = defaultRequestedReadBufferSize);
 
 //////////////////////////////////////////////////////////////////
 
 template <FloatOrDouble T>
 std::pair <std::vector<T>, Info>
-ReadInterleaved (std::string const & filepath,
-                 size_t requestedBufferSize)
+ReadInterleaved (std::string const & filepath, size_t requestedBufferSize)
 {
     std::vector<T> data;
     Info info;
@@ -68,8 +67,7 @@ ReadInterleaved (std::string const & filepath,
 // De-interleaved version
 template <FloatOrDouble T>
 std::pair <std::vector<std::vector<T>>, Info>
-ReadSeparateChannels (std::string const & filepath,
-      size_t requestedBufferSize)
+ReadSeparateChannels (std::string const & filepath, size_t requestedBufferSize)
 {
     std::vector<std::vector<T>> data;
     Info info;
@@ -103,9 +101,9 @@ void ReadInterleaved (std::string const & filepath,
 
 template <FloatOrDouble T>
 void ReadSeparateChannels (std::string const & filepath,
-           std::vector<std::vector<T>> & destination,
-           Info & info,
-           size_t requestedBufferSize)
+                           std::vector<std::vector<T>> & destination,
+                           Info & info,
+                           size_t requestedBufferSize)
 {
     auto in = fileForReading (filepath);
     if (!in) throw ReadError ("Failed to open: " + filepath);
@@ -120,7 +118,7 @@ void ReadSeparateChannels (std::string const & filepath,
     }
 
     info.ExtractFrom (chunkInfo);
-    ReadData (in.get(), destination, info, chunkInfo.data, requestedBufferSize);
+    ReadDataSeparateChannels (in.get(), destination, info, chunkInfo.data, requestedBufferSize);
     
     Close (in);
 }
@@ -178,11 +176,11 @@ void ReadDataInterleaved (FILE * in,
 }
 
 template <FloatOrDouble T>
-void ReadData (FILE * in,
-               std::vector <std::vector<T>> & destination,
-               Info const & info,
-               DataChunk const & data,
-               size_t requestedBufferSizeInBytes)
+void ReadDataSeparateChannels (FILE * in,
+                               std::vector <std::vector<T>> & destination,
+                               Info const & info,
+                               DataChunk const & data,
+                               size_t requestedBufferSizeInBytes)
 {
     // Advance to the beginning of the data portion of the data chunk:
     fseek (in, data.offset, SEEK_SET);
