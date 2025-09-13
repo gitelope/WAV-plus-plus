@@ -57,6 +57,7 @@
 		C499DB942E13445F00A88D60 /* ChunkInfo.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = ChunkInfo.cpp; sourceTree = "<group>"; };
 		C4AA9FB62E75D6C300CD6B51 /* Info.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Info.hpp; sourceTree = "<group>"; };
 		C4AA9FB72E75D6C300CD6B51 /* Info.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Info.cpp; sourceTree = "<group>"; };
+		C4AA9FBA2E75DD8200CD6B51 /* int24.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = int24.hpp; sourceTree = "<group>"; };
 		C4B1FD8B2E20533200B6D691 /* Exceptions.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Exceptions.hpp; sourceTree = "<group>"; };
 		C4CBC3C42E302405009AA677 /* WriteHelpers.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = WriteHelpers.hpp; sourceTree = "<group>"; };
 		C4CBC3C52E302405009AA677 /* WriteHelpers.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = WriteHelpers.cpp; sourceTree = "<group>"; };
@@ -124,6 +125,7 @@
 				C499DB912E13445F00A88D60 /* Write.hpp */,
 				C4CBC3C42E302405009AA677 /* WriteHelpers.hpp */,
 				C4CBC3C52E302405009AA677 /* WriteHelpers.cpp */,
+				C4AA9FBA2E75DD8200CD6B51 /* int24.hpp */,
 				C499DB932E13445F00A88D60 /* ChunkInfo.hpp */,
 				C499DB942E13445F00A88D60 /* ChunkInfo.cpp */,
 				C499DB8F2E13445F00A88D60 /* ReadingBytes.hpp */,
