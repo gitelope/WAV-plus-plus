@@ -33,7 +33,7 @@ int main (int argc, const char * argv[])
     // Data can be read in as either floats or doubles in an interleaved format
     // or with channel data separated.
     const auto [interleaved,   info1] = wav::ReadInterleaved<float> (filepath);
-    const auto [deinterleaved, info2] = wav::Read<double> (filepath);
+    const auto [deinterleaved, info2] = wav::ReadSeparateChannels<double> (filepath);
 
     std::cout << '\n' << filepath << "\n\n" << info1 << std::endl;
 

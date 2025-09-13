@@ -32,7 +32,7 @@ ReadInterleaved (std::string const & filepath,
 // May throw wav::ReadError.
 template <FloatOrDouble T>
 std::pair <std::vector<std::vector<T>>, Info>
-Read (std::string const & filepath,
+ReadSeparateChannels (std::string const & filepath,
       size_t requestedBufferSize = defaultRequestedReadBufferSize);
 
 
@@ -47,7 +47,7 @@ void ReadInterleaved (std::string const & filepath,
 // In-place read to separate channels and Info.
 // May throw wav::ReadError.
 template <FloatOrDouble T>
-void Read (std::string const & filepath,
+void ReadSeparateChannels (std::string const & filepath,
            std::vector<std::vector<T>> & destination,
            Info & info,
            size_t requestedBufferSize = defaultRequestedReadBufferSize);
@@ -68,12 +68,12 @@ ReadInterleaved (std::string const & filepath,
 // De-interleaved version
 template <FloatOrDouble T>
 std::pair <std::vector<std::vector<T>>, Info>
-Read (std::string const & filepath,
+ReadSeparateChannels (std::string const & filepath,
       size_t requestedBufferSize)
 {
     std::vector<std::vector<T>> data;
     Info info;
-    Read (filepath, data, info, requestedBufferSize);
+    ReadSeparateChannels (filepath, data, info, requestedBufferSize);
     return {std::move (data), info};
 }
 
@@ -102,7 +102,7 @@ void ReadInterleaved (std::string const & filepath,
 }
 
 template <FloatOrDouble T>
-void Read (std::string const & filepath,
+void ReadSeparateChannels (std::string const & filepath,
            std::vector<std::vector<T>> & destination,
            Info & info,
            size_t requestedBufferSize)
