@@ -6,6 +6,7 @@
 #include "Info.hpp"
 #include "ReadingBytes.hpp"
 #include "Exceptions.hpp"
+#include "DequantizationConstants.hpp"
 
 #include <string>
 #include <vector>
@@ -233,10 +234,10 @@ void ReadLinearPCMInterleaved (std::vector<std::byte> const & buffer,
                                size_t samplesToRead,
                                size_t writePosition)
 {
-    // Normalize signed integers to [-1.0, 1.0) by dividing by 2^(bits-1).
+    // Normalize integers to [-1.0, 1.0) by dividing by 2^(bits-1).
     // Example:
     // 16-bit range: [-32768, 32767], divided by 32768: [-1.0, 0.9999694824]
-    const auto two_to_the_n_minus_one  {powerOfTwo<T> (info.bitDepth - 1)};
+    // Note: 8-bit also has an offset that is applied first.
 
     size_t pos {0};
     switch (info.containerSizeInBits)
@@ -244,25 +245,25 @@ void ReadLinearPCMInterleaved (std::vector<std::byte> const & buffer,
         case 8:
             for (size_t n = writePosition; n < samplesToRead + writePosition; ++n)
             {
-                destination [n] = (uint8 (buffer, pos) - 128.) / two_to_the_n_minus_one;
+                destination [n] = (uint8 (buffer, pos) - uint8Offset) / uint8MaxAbs;
             }
             break;
 
         case 16:
             for (size_t n = writePosition; n < samplesToRead + writePosition; ++n)
             {
-                destination [n] = int16_le (buffer, pos) / two_to_the_n_minus_one;
+                destination [n] = int16_le (buffer, pos) / int16MaxAbs;
             }
             break;
 
         case 24:
             for (size_t n = writePosition; n < samplesToRead + writePosition; ++n)
-                destination [n] = int24_le (buffer, pos) / two_to_the_n_minus_one;
+                destination [n] = int24_le (buffer, pos) / int24MaxAbs;
             break;
 
         case 32:
             for (size_t n = writePosition; n < samplesToRead + writePosition; ++n)
-                destination [n] = int32_le (buffer, pos) / two_to_the_n_minus_one;
+                destination [n] = int32_le (buffer, pos) / int32MaxAbs;
             break;
     }
 }
@@ -274,10 +275,10 @@ void ReadLinearPCM (std::vector<std::byte> const & buffer,
                     size_t framesToRead,
                     size_t writePosition)
 {
-    // Normalize signed integers to [-1.0, 1.0) by dividing by 2^(bits-1).
+    // Normalize integers to [-1.0, 1.0) by dividing by 2^(bits-1).
     // Example:
     // 16-bit range: [-32768, 32767], divided by 32768: [-1.0, 0.9999694824]
-    const auto two_to_the_n_minus_one  {powerOfTwo<T> (info.bitDepth - 1)};
+    // Note: 8-bit also has an offset that is applied first.
 
     size_t pos {0};
     switch (info.containerSizeInBits)
@@ -287,7 +288,7 @@ void ReadLinearPCM (std::vector<std::byte> const & buffer,
             {
                 for (size_t channel = 0; channel < info.channels; ++channel)
                 {
-                    destination [channel][frame] = (uint8 (buffer, pos) - 128.) / two_to_the_n_minus_one;
+                    destination [channel][frame] = (uint8 (buffer, pos) - uint8Offset) / uint8MaxAbs;
                 }
             }
             break;
@@ -297,7 +298,7 @@ void ReadLinearPCM (std::vector<std::byte> const & buffer,
             {
                 for (size_t channel = 0; channel < info.channels; ++channel)
                 {
-                    destination [channel][frame] = int16_le (buffer, pos) / two_to_the_n_minus_one;
+                    destination [channel][frame] = int16_le (buffer, pos) / int16MaxAbs;
                 }
             }
             break;
@@ -307,7 +308,7 @@ void ReadLinearPCM (std::vector<std::byte> const & buffer,
             {
                 for (size_t channel = 0; channel < info.channels; ++channel)
                 {
-                    destination [channel][frame] = int24_le (buffer, pos) / two_to_the_n_minus_one;
+                    destination [channel][frame] = int24_le (buffer, pos) / int24MaxAbs;
                 }
             }
             break;
@@ -317,7 +318,7 @@ void ReadLinearPCM (std::vector<std::byte> const & buffer,
             {
                 for (size_t channel = 0; channel < info.channels; ++channel)
                 {
-                    destination [channel][frame] = int32_le (buffer, pos) / two_to_the_n_minus_one;
+                    destination [channel][frame] = int32_le (buffer, pos) / int32MaxAbs;
                 }
             }
             break;
@@ -382,6 +383,7 @@ void ReadFloatPCM (std::vector<std::byte> const & buffer,
     }
 }
 
+/*
 template <typename T>
 T powerOfTwo (int power)
 {
@@ -389,6 +391,7 @@ T powerOfTwo (int power)
     assert (power > 0 && power < 64);
     return static_cast<T> (static_cast<uint64_t>(1) << power);
 }
+*/
 
 } // namespace wav
 
