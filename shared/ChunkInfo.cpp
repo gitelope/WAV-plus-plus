@@ -389,10 +389,10 @@ std::string FormatChunk::channelString() const
 
     std::string result;
 
-    int channel = 0;
-    int speaker_index = 0;
-    int positions_assigned = 0;
-    bool first_element = true;
+    int channel {0};
+    size_t speaker_index {0};
+    int positions_assigned {0};
+    bool first_element {true};
 
     constexpr std::string indent = "    ";
 
