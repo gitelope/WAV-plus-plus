@@ -13,7 +13,7 @@ struct Info
     // playback
     int channels {0};
     int sampleRate {0};
-    int frames {0};
+    uint32_t frames {0};
     // total samples = channels * frames
     // length in seconds = frames / sampleRate
 

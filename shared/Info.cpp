@@ -8,7 +8,7 @@ namespace wav
 void Info::ExtractFrom (ChunkInfo const & chunkInfo)
 {
     channels = chunkInfo.format.channels;
-    sampleRate = chunkInfo.format.sampleRate;
+    sampleRate = static_cast<int> (chunkInfo.format.sampleRate);
     frames = chunkInfo.data.size / chunkInfo.format.blockAlign;
 
     // SAMPLE SIZE AND SAMPLE CONTAINER SIZE
