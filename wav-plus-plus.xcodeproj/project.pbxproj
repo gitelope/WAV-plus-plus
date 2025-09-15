@@ -320,6 +320,10 @@
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = macosx;
 				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = (
+					"-Wnarrowing",
+					"-Wconversion",
+				);
 			};
 			name = Debug;
 		};
@@ -377,6 +381,10 @@
 				MTL_FAST_MATH = YES;
 				SDKROOT = macosx;
 				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = (
+					"-Wnarrowing",
+					"-Wconversion",
+				);
 			};
 			name = Release;
 		};
