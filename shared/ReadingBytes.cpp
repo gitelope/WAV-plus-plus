@@ -66,7 +66,10 @@ uint16_t uint16_le (FILE * in)
     std::array<uint8_t, 2> buffer {};
     read (in, buffer);
     return
-    static_cast<uint16_t> (buffer [0] | static_cast<uint16_t> (buffer [1]) << 8);
+    static_cast<uint16_t> (
+    static_cast<uint16_t> (buffer [0])    |
+    static_cast<uint16_t> (buffer [1]) << 8
+    );
 }
 
 uint32_t uint32_le (FILE * in)
@@ -88,7 +91,7 @@ int16_t int16_le (std::vector<std::byte> const & bytes, size_t & pos)
     }
     const auto result =
     static_cast<int16_t> (
-    static_cast<int16_t> (bytes [pos])       |
+    static_cast<int16_t> (bytes [pos])      |
     static_cast<int16_t> (bytes [pos+1]) << 8
     );
 
