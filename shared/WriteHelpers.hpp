@@ -49,7 +49,7 @@ template <std::integral T>
 void WriteToHeader (FILE * out, T value)
 {
     std::array<std::byte, sizeof(T)> bytes;
-    for (int i=0; i < bytes.size(); ++i)
+    for (size_t i=0; i < bytes.size(); ++i)
     {
         bytes[i] = static_cast<std::byte> (value >> (8*i));
     }
@@ -365,7 +365,7 @@ void FillBufferLinearPCM (std::span<const T> samples, std::vector<std::byte> & b
     const auto max {static_cast<T> ((1 << (bitsPerSample - 1)) - 1)}; // 2^(bits-1) - 1
     const auto min {-max};
 
-    const auto bytesPerSample {bitsPerSample / 8};
+    const auto bytesPerSample {static_cast<size_t> (bitsPerSample) / 8};
 
     // Quantize samples and write their bytes to buffer in little-endian order:
     switch (bitsPerSample)
@@ -375,7 +375,7 @@ void FillBufferLinearPCM (std::span<const T> samples, std::vector<std::byte> & b
             {
                 const auto quantizedSample = static_cast<int16_t> (quantized (samples [n+readPosition], min, max));
 
-                const auto i {n * bytesPerSample};
+                const size_t i {n * bytesPerSample};
                 buffer [i]   = static_cast<std::byte> (quantizedSample);
                 buffer [i+1] = static_cast<std::byte> (quantizedSample >> 8);
             }
@@ -385,7 +385,7 @@ void FillBufferLinearPCM (std::span<const T> samples, std::vector<std::byte> & b
             {
                 const auto quantizedSample = static_cast<int32_t> (quantized (samples [n+readPosition], min, max));
 
-                const auto i {n * bytesPerSample};
+                const size_t i {n * bytesPerSample};
                 buffer [i]   = static_cast<std::byte> (quantizedSample);
                 buffer [i+1] = static_cast<std::byte> (quantizedSample >> 8);
                 buffer [i+2] = static_cast<std::byte> (quantizedSample >> 16);
@@ -410,14 +410,14 @@ template <FloatOrDouble T>
 void FillBufferFloatPCM (std::span<const T> samples, std::vector<std::byte> & buffer,
                          size_t readPosition, size_t samplesToWrite, uint16_t bitsPerSample)
 {
-    const auto bytesPerSample {bitsPerSample / 8};
+    const auto bytesPerSample {static_cast<size_t> (bitsPerSample) / 8};
     switch (bitsPerSample)
     {
         case 32:
             for (size_t n = 0; n < samplesToWrite; ++n)
             {
                 const auto current = static_cast<float> (samples [n+readPosition]);
-                const auto i {n * bytesPerSample};
+                const size_t i {n * bytesPerSample};
                 const auto integer = std::bit_cast<uint32_t> (current);
                 buffer [i]   = static_cast<std::byte> (integer);
                 buffer [i+1] = static_cast<std::byte> (integer >> 8);
@@ -429,7 +429,7 @@ void FillBufferFloatPCM (std::span<const T> samples, std::vector<std::byte> & bu
             for (size_t n = 0; n < samplesToWrite; ++n)
             {
                 const auto current = static_cast<double> (samples [n+readPosition]);
-                const auto i {n * bytesPerSample};
+                const size_t i {n * bytesPerSample};
                 const auto integer = std::bit_cast<uint64_t>(current);
                 buffer [i]   = static_cast<std::byte> (integer);
                 buffer [i+1] = static_cast<std::byte> (integer >> 8);
