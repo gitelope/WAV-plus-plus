@@ -10,7 +10,7 @@ size_t bufferSizeInBytes (size_t requestedBufferSizeInBytes, size_t numSamples, 
 {
     assert (bitsPerSample % 8 == 0);
     const auto sampleSizeInBytes {static_cast<size_t> (bitsPerSample / 8)};
-    const auto totalBytesToWrite {numSamples * sampleSizeInBytes};
+    const auto totalBytes {numSamples * sampleSizeInBytes};
 
     // Determine buffer size from requested size, sample size, and number of samples:
     // 1. Buffer must be able to hold an entire sample's worth of bytes.
@@ -18,7 +18,7 @@ size_t bufferSizeInBytes (size_t requestedBufferSizeInBytes, size_t numSamples, 
     // 2. Buffer size must correspond to a whole number of samples.
     bytesPerBuffer = (bytesPerBuffer / sampleSizeInBytes) * sampleSizeInBytes;
     // 3. Buffer size must not exceed the total number of bytes to write.
-    bytesPerBuffer = std::min (bytesPerBuffer, totalBytesToWrite);
+    bytesPerBuffer = std::min (bytesPerBuffer, totalBytes);
 
     return bytesPerBuffer;
 }
