@@ -43,7 +43,7 @@ void ReadDataSeparateChannels (FILE * in,
     fseek (in, data.offset, SEEK_SET);
     if (ferror (in)) throw ReadError ("Failed to advance to data portion of data chunk.");
 
-    destination.resize (info.channels, std::vector<T> (info.frames));
+    destination.resize (static_cast<size_t> (info.channels), std::vector<T> (info.frames));
 
     const size_t frameSizeInBytes {static_cast<size_t> (info.channels * info.containerSizeInBits / 8)};
     const size_t totalBytesToRead {info.frames * frameSizeInBytes};
