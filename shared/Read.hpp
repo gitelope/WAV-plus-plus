@@ -86,8 +86,8 @@ void ReadInterleaved (std::string const & filepath,
     auto in = fileForReading (filepath);
     if (!in) throw ReadError ("Failed to open: " + filepath);
 
-    const long fileLength = std::filesystem::file_size (filepath);
-    
+    const auto fileLength {std::filesystem::file_size (filepath)};
+
     ChunkInfo chunkInfo {in.get()};
 
     if (chunkInfo.riff.size + 8 != fileLength)
@@ -110,8 +110,8 @@ void ReadSeparateChannels (std::string const & filepath,
     auto in = fileForReading (filepath);
     if (!in) throw ReadError ("Failed to open: " + filepath);
 
-    const long fileLength = std::filesystem::file_size (filepath);
-    
+    const auto fileLength {std::filesystem::file_size (filepath)};
+
     ChunkInfo chunkInfo {in.get()};
 
     if (chunkInfo.riff.size + 8 != fileLength)
