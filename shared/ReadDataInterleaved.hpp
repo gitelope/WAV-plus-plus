@@ -44,7 +44,7 @@ void ReadDataInterleaved (FILE * in,
     fseek (in, data.offset, SEEK_SET);
     if (ferror (in)) throw ReadError ("Failed to advance to data portion of data chunk.");
 
-    const size_t numSamples {static_cast<size_t>(info.frames) * info.channels};
+    const auto numSamples {static_cast<size_t> (info.frames) * static_cast<size_t> (info.channels)};
     assert (numSamples > 0);
 
     destination.resize (numSamples);
@@ -102,25 +102,25 @@ void ReadInterleaved_FromBuffer_LinearPCM (std::vector<std::byte> const & buffer
         case 8:
             for (size_t n = writePosition; n < samplesToRead + writePosition; ++n)
             {
-                destination [n] = (uint8 (buffer, pos) - uint8Offset) / uint8MaxAbs;
+                destination [n] = static_cast<T> ((uint8 (buffer, pos) - uint8Offset) / uint8MaxAbs);
             }
             break;
 
         case 16:
             for (size_t n = writePosition; n < samplesToRead + writePosition; ++n)
             {
-                destination [n] = int16_le (buffer, pos) / int16MaxAbs;
+                destination [n] = static_cast<T> (int16_le (buffer, pos) / int16MaxAbs);
             }
             break;
 
         case 24:
             for (size_t n = writePosition; n < samplesToRead + writePosition; ++n)
-                destination [n] = int24_le (buffer, pos) / int24MaxAbs;
+                destination [n] = static_cast<T> (int24_le (buffer, pos) / int24MaxAbs);
             break;
 
         case 32:
             for (size_t n = writePosition; n < samplesToRead + writePosition; ++n)
-                destination [n] = int32_le (buffer, pos) / int32MaxAbs;
+                destination [n] = static_cast<T> (int32_le (buffer, pos) / int32MaxAbs);
             break;
     }
 }
@@ -143,7 +143,7 @@ void ReadInterleaved_FromBuffer_FloatPCM (std::vector<std::byte> const & buffer,
 
         case 64:
             for (size_t n = writePosition; n < samplesToRead + writePosition; ++n)
-                destination [n] = float64_le (buffer, pos);
+                destination [n] = static_cast<T> (float64_le (buffer, pos));
             break;
     }
 }
