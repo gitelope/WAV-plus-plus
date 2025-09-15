@@ -121,7 +121,7 @@ void Write (std::string const & filepath,
             // internal IO buffer size used by OS is a multiple of actual–not requested–write buffer size
             size_t ioBufferSizeMultiplier)
 {
-    if (samples.size() % channels != 0)
+    if (samples.size() % static_cast<size_t> (channels) != 0)
     {
         throw std::invalid_argument ("Number of samples should be divisible by the number of channels.");
     }
