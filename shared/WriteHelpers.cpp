@@ -4,7 +4,7 @@
 namespace wav
 {
 
-void WriteHeader (FILE * out, uint16_t bitsPerSample, uint16_t formatCode, int sampleRate, int channels, size_t numSamples)
+void WriteHeader (FILE * out, int bitsPerSample, uint16_t formatCode, int sampleRate, int channels, size_t numSamples)
 {
     const auto bytesPerSample {bitsPerSample / 8};
     constexpr auto formatChunkSize {FormatChunkSize::PCMWAVEFORMAT};
@@ -13,7 +13,7 @@ void WriteHeader (FILE * out, uint16_t bitsPerSample, uint16_t formatCode, int s
     // when samples.size() is odd. However, that padding byte will and should be
     // reflected in RIFF chunk size.
 
-    const auto dataChunkSize {static_cast<uint32_t> (numSamples /*samples.size()*/ * bytesPerSample)};
+    const auto dataChunkSize {static_cast<uint32_t> (numSamples * static_cast<size_t> (bytesPerSample))};
     const uint32_t riffChunkSize
 
     // RIFF chunk
@@ -61,7 +61,7 @@ void WriteToHeader (FILE * out, std::string const & str)
     }
 }
 
-std::pair<uint16_t,uint16_t> bitDepthAndFormatCode (ExportFormat ef)
+std::pair<int,uint16_t> bitDepthAndFormatCode (ExportFormat ef)
 {
     switch (ef)
     {

@@ -16,12 +16,14 @@ namespace wav
 {
 
 // header
-void WriteHeader (FILE * out, uint16_t bitsPerSample, uint16_t formatCode, int sampleRate, int channels, size_t numSamples);
+void WriteHeader (FILE * out, int bitsPerSample, uint16_t formatCode, int sampleRate, int channels, size_t numSamples);
 void WriteToHeader (FILE * out, std::string const & str);
 
+template <FloatOrDouble T> void WriteData (FILE * out, std::span<const T> samples, int bitsPerSample, uint16_t formatCode, size_t requestedWriteBufferSizeInBytes, size_t ioBufferSizeMultiplier);
+
 // data on LE systems
-template <FloatOrDouble T> void WriteDataLE (FILE * out, std::span<const T> samples, uint16_t bitsPerSample, uint16_t formatCode, size_t writeBufferSizeInBytes, size_t ioBufferSizeInBytes);
-template <FloatOrDouble T> void WriteFloatToFloatLE (FILE * out, std::span<const T> samples, uint16_t bitsPerSample, size_t writeBufferSizeInBytes, size_t ioBufferSizeInBytes);
+template <FloatOrDouble T> void WriteDataLE (FILE * out, std::span<const T> samples, int bitsPerSample, uint16_t formatCode, size_t writeBufferSizeInBytes, size_t ioBufferSizeInBytes);
+template <FloatOrDouble T> void WriteFloatToFloatLE (FILE * out, std::span<const T> samples, int bitsPerSample, size_t writeBufferSizeInBytes, size_t ioBufferSizeInBytes);
 template <FloatOrDouble T> void WriteLPCM16LE (FILE * out, std::span<const T> samples, size_t writeBufferSizeInBytes, size_t ioBufferSizeInBytes);
 template <FloatOrDouble T> void WriteLPCM24LE (FILE * out, std::span<const T> samples, size_t writeBufferSizeInBytes, size_t ioBufferSizeInBytes);
 template <FloatOrDouble T> void WriteLPCM32LE (FILE * out, std::span<const T> samples, size_t writeBufferSizeInBytes, size_t ioBufferSizeInBytes);
@@ -30,9 +32,11 @@ template <FloatOrDouble T> void WriteLPCM32LE (FILE * out, std::span<const T> sa
 template <FloatOrDouble T> void WriteLPCMU8 (FILE * out, std::span<const T> samples, size_t writeBufferSizeInBytes, size_t ioBufferSizeInBytes);
 
 // data on BE systems (also works for LE but not optimal)
-template <FloatOrDouble T> void WriteDataFallback (FILE * out, std::span<const T> samples, uint16_t bitsPerSample, uint16_t formatCode, size_t writeBufferSizeInBytes, size_t ioBufferSizeInBytes);
+template <FloatOrDouble T> void WriteDataFallback (FILE * out, std::span<const T> samples, int bitsPerSample, uint16_t formatCode, size_t writeBufferSizeInBytes, size_t ioBufferSizeInBytes);
+template <FloatOrDouble T> void FillBufferLinearPCM (std::span<const T> samples, std::vector<std::byte> & buffer, size_t readPosition, size_t samplesToWrite, int bitsPerSample);
+template <FloatOrDouble T> void FillBufferFloatPCM (std::span<const T> samples, std::vector<std::byte> & buffer, size_t readPosition, size_t samplesToWrite, int bitsPerSample);
 
-std::pair<uint16_t,uint16_t> bitDepthAndFormatCode (ExportFormat ef);
+std::pair<int,uint16_t> bitDepthAndFormatCode (ExportFormat ef);
 
 template <FloatOrDouble T> T quantized (T value, T min, T max)
 {
@@ -61,7 +65,7 @@ void WriteToHeader (FILE * out, T value)
 
 template <FloatOrDouble T>
 void WriteData (FILE * out, std::span<const T> samples,
-                uint16_t bitsPerSample, uint16_t formatCode,
+                int bitsPerSample, uint16_t formatCode,
                 size_t requestedWriteBufferSizeInBytes, size_t ioBufferSizeMultiplier)
 {
     // A write buffer is used in all cases except for writing floating-point samples to the same format on LE systems.
@@ -86,7 +90,7 @@ void WriteData (FILE * out, std::span<const T> samples,
 
 template <FloatOrDouble T>
 void WriteDataLE (FILE * out, std::span<const T> samples,
-                  uint16_t bitsPerSample, uint16_t formatCode,
+                  int bitsPerSample, uint16_t formatCode,
                   size_t writeBufferSizeInBytes, size_t ioBufferSizeInBytes)
 {
     if (formatCode == FormatCode::FloatPCM)
@@ -106,7 +110,7 @@ void WriteDataLE (FILE * out, std::span<const T> samples,
 }
 
 template <FloatOrDouble T>
-void WriteFloatToFloatLE (FILE * out, std::span<const T> samples, uint16_t bitsPerSample, size_t writeBufferSizeInBytes, size_t ioBufferSizeInBytes)
+void WriteFloatToFloatLE (FILE * out, std::span<const T> samples, int bitsPerSample, size_t writeBufferSizeInBytes, size_t ioBufferSizeInBytes)
 {
     // In benchmarking on macOS Sequoia, a significant speed-up was observed
     // when saving to 64-bit float with WriteFloatToFloatLE() over using the
@@ -316,7 +320,7 @@ void WriteLPCM32LE (FILE * out, std::span<const T> samples, size_t writeBufferSi
 
 template <FloatOrDouble T>
 void WriteDataFallback (FILE * out, std::span<const T> samples,
-                        uint16_t bitsPerSample, uint16_t formatCode,
+                        int bitsPerSample, uint16_t formatCode,
                         size_t writeBufferSizeInBytes, size_t ioBufferSizeInBytes)
 {
     assert (bitsPerSample % 8 == 0);
@@ -360,12 +364,12 @@ void WriteDataFallback (FILE * out, std::span<const T> samples,
 
 template <FloatOrDouble T>
 void FillBufferLinearPCM (std::span<const T> samples, std::vector<std::byte> & buffer,
-                          size_t readPosition, size_t samplesToWrite, uint16_t bitsPerSample)
+                          size_t readPosition, size_t samplesToWrite, int bitsPerSample)
 {
     const auto max {static_cast<T> ((1 << (bitsPerSample - 1)) - 1)}; // 2^(bits-1) - 1
     const auto min {-max};
 
-    const auto bytesPerSample {static_cast<size_t> (bitsPerSample) / 8};
+    const auto bytesPerSample {static_cast<size_t> (bitsPerSample / 8)};
 
     // Quantize samples and write their bytes to buffer in little-endian order:
     switch (bitsPerSample)
@@ -408,7 +412,7 @@ void FillBufferLinearPCM (std::span<const T> samples, std::vector<std::byte> & b
 
 template <FloatOrDouble T>
 void FillBufferFloatPCM (std::span<const T> samples, std::vector<std::byte> & buffer,
-                         size_t readPosition, size_t samplesToWrite, uint16_t bitsPerSample)
+                         size_t readPosition, size_t samplesToWrite, int bitsPerSample)
 {
     const auto bytesPerSample {static_cast<size_t> (bitsPerSample) / 8};
     switch (bitsPerSample)

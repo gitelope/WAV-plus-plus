@@ -6,7 +6,7 @@
 namespace wav
 {
 
-size_t bufferSizeInBytes (size_t requestedBufferSizeInBytes, size_t numSamples, uint16_t bitsPerSample)
+size_t bufferSizeInBytes (size_t requestedBufferSizeInBytes, size_t numSamples, int bitsPerSample)
 {
     assert (bitsPerSample % 8 == 0);
     const auto sampleSizeInBytes {static_cast<size_t> (bitsPerSample / 8)};
@@ -23,11 +23,11 @@ size_t bufferSizeInBytes (size_t requestedBufferSizeInBytes, size_t numSamples, 
     return bytesPerBuffer;
 }
 
-size_t ioBufferSizeInBytes (size_t numSamples, uint16_t bitsPerSample,
+size_t ioBufferSizeInBytes (size_t numSamples, int bitsPerSample,
                             size_t bufferSizeInBytes, size_t ioBufferSizeMultiplier)
 {
     // Calculate internal I/O buffer as a multiple of the actual (not requested) write buffer size, making sure to clamp at file size.
-    const size_t totalBytesToWrite {numSamples * (bitsPerSample / 8)};
+    const auto totalBytesToWrite {numSamples * static_cast<size_t>(bitsPerSample / 8)};
     return std::min (ioBufferSizeMultiplier * bufferSizeInBytes, totalBytesToWrite);
 }
 

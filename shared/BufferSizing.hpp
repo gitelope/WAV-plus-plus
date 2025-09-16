@@ -8,9 +8,9 @@
 namespace wav
 {
 
-size_t bufferSizeInBytes (size_t requestedBufferSizeInBytes, size_t numSamples, uint16_t bitsPerSample);
+size_t bufferSizeInBytes (size_t requestedBufferSizeInBytes, size_t numSamples, int bitsPerSample);
 
-size_t ioBufferSizeInBytes (size_t numSamples, uint16_t bitsPerSample, size_t bufferSizeInBytes, size_t ioBufferSizeMultiplier);
+size_t ioBufferSizeInBytes (size_t numSamples, int bitsPerSample, size_t bufferSizeInBytes, size_t ioBufferSizeMultiplier);
 
 template <typename ExceptionType>
 void SetInternalIOBufferSize (FILE * out, size_t ioBufferSizeInBytes)
