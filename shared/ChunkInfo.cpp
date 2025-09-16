@@ -24,10 +24,10 @@ ChunkInfo::ChunkInfo (FILE * in)
 
 void ChunkInfo::ReadFile (FILE * in)
 {
-    const auto chunkID = fourCharacterCode (in);
-    if (chunkID != riff.id) throw ReadError ("RIFF chunk ID not found.");
+    const auto firstChunkID {fourCharacterCode (in)};
+    if (firstChunkID != riff.id) throw ReadError ("RIFF chunk ID not found.");
     ReadRiffChunk (in);
-    RegisterChunk (chunkID, 0);
+    RegisterChunk (firstChunkID, 0);
 
     while (peek (in) != EOF)
     {
@@ -121,10 +121,9 @@ std::string ChunkInfo::summary() const
 void ChunkInfo::ReadRiffChunk (FILE * in)
 {
     // Technically, the whole file is a RIFF chunk. This is just the first part of it.
-    // no need to read id since it has already been read and has the expected value
+    // No need to read id since it has already been read and has the expected value.
     riff.size = uint32_le (in);
-    const auto format = fourCharacterCode (in);
-    if (format != riff.format)
+    if (fourCharacterCode (in) != riff.format)
     {
         throw ReadError ("The format in the RIFF chunk should be \"" + riff.format + "\".");
     }

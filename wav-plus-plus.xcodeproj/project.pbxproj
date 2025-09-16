@@ -321,8 +321,15 @@
 				SDKROOT = macosx;
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = (
+					"-Wall",
+					"-Wextra",
+					"-Wpedantic",
 					"-Wnarrowing",
 					"-Wconversion",
+					"-Wcast-align",
+					"-Wcast-qual",
+					"-Wold-style-cast",
+					"-Wshadow",
 				);
 			};
 			name = Debug;
@@ -383,8 +390,15 @@
 				SDKROOT = macosx;
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = (
+					"-Wall",
+					"-Wextra",
+					"-Wpedantic",
 					"-Wnarrowing",
 					"-Wconversion",
+					"-Wcast-align",
+					"-Wcast-qual",
+					"-Wold-style-cast",
+					"-Wshadow",
 				);
 			};
 			name = Release;

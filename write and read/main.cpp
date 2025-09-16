@@ -17,7 +17,7 @@ template <typename T> void Print (std::vector<T> const &);
 template <typename T> void Print (std::vector<std::vector<T>> const &);
 
 
-int main (int argc, const char * argv[])
+int main ()
 {
     // wav::Write() is overloaded to work with std::vector, C-style arrays, and std::array
     // and templated to accept floats or doubles.
