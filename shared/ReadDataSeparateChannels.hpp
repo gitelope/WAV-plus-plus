@@ -100,7 +100,7 @@ void ReadSeparateChannels_FromBuffer_LinearPCM (std::vector<std::byte> const & b
             {
                 for (size_t channel = 0; channel < info.channels; ++channel)
                 {
-                    destination [channel][frame] = (uint8 (buffer, pos) - uint8Offset) / uint8MaxAbs;
+                    destination [channel][frame] = static_cast<T> ((uint8 (buffer, pos) - uint8Offset) / uint8MaxAbs);
                 }
             }
             break;
@@ -110,7 +110,7 @@ void ReadSeparateChannels_FromBuffer_LinearPCM (std::vector<std::byte> const & b
             {
                 for (size_t channel = 0; channel < info.channels; ++channel)
                 {
-                    destination [channel][frame] = int16_le (buffer, pos) / int16MaxAbs;
+                    destination [channel][frame] = static_cast<T> (int16_le (buffer, pos) / int16MaxAbs);
                 }
             }
             break;
@@ -120,7 +120,7 @@ void ReadSeparateChannels_FromBuffer_LinearPCM (std::vector<std::byte> const & b
             {
                 for (size_t channel = 0; channel < info.channels; ++channel)
                 {
-                    destination [channel][frame] = int24_le (buffer, pos) / int24MaxAbs;
+                    destination [channel][frame] = static_cast<T> (int24_le (buffer, pos) / int24MaxAbs);
                 }
             }
             break;
@@ -130,7 +130,7 @@ void ReadSeparateChannels_FromBuffer_LinearPCM (std::vector<std::byte> const & b
             {
                 for (size_t channel = 0; channel < info.channels; ++channel)
                 {
-                    destination [channel][frame] = int32_le (buffer, pos) / int32MaxAbs;
+                    destination [channel][frame] = static_cast<T> (int32_le (buffer, pos) / int32MaxAbs);
                 }
             }
             break;
@@ -153,7 +153,7 @@ void ReadSeparateChannels_FromBuffer_FloatPCM (std::vector<std::byte> const & bu
             {
                 for (size_t channel = 0; channel < info.channels; ++channel)
                 {
-                    destination [channel][frame] = float32_le (buffer, pos);
+                    destination [channel][frame] = static_cast<T> (float32_le (buffer, pos));
                 }
             }
             break;
@@ -163,7 +163,7 @@ void ReadSeparateChannels_FromBuffer_FloatPCM (std::vector<std::byte> const & bu
             {
                 for (size_t channel = 0; channel < info.channels; ++channel)
                 {
-                    destination [channel][frame] = float64_le (buffer, pos);
+                    destination [channel][frame] = static_cast<T> (float64_le (buffer, pos));
                 }
             }
             break;

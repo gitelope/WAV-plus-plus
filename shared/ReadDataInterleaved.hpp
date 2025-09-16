@@ -138,7 +138,7 @@ void ReadInterleaved_FromBuffer_FloatPCM (std::vector<std::byte> const & buffer,
     {
         case 32:
             for (size_t n = writePosition; n < samplesToRead + writePosition; ++n)
-                destination [n] = float32_le (buffer, pos);
+                destination [n] = static_cast<T> (float32_le (buffer, pos));
             break;
 
         case 64:
