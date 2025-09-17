@@ -44,12 +44,12 @@ void ReadDataInterleaved (FILE * in,
     fseek (in, data.offset, SEEK_SET);
     if (ferror (in)) throw ReadError ("Failed to advance to data portion of data chunk.");
 
-    const auto numSamples {static_cast<size_t> (info.frames) * static_cast<size_t> (info.channels)};
+    const size_t numSamples {info.frames * info.channels};
     assert (numSamples > 0);
 
     destination.resize (numSamples);
 
-    const size_t sampleSizeInBytes {static_cast<size_t> (info.containerSizeInBits / 8)};
+    const size_t sampleSizeInBytes {info.containerSizeInBits / 8U};
     const size_t totalBytesToRead {numSamples * sampleSizeInBytes};
 
     // Determine buffer size from requested size, sample size, and number of samples:

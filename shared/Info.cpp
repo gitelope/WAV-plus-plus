@@ -8,7 +8,7 @@ namespace wav
 void Info::ExtractFrom (ChunkInfo const & chunkInfo)
 {
     channels = chunkInfo.format.channels;
-    sampleRate = static_cast<int> (chunkInfo.format.sampleRate);
+    sampleRate = chunkInfo.format.sampleRate;
     frames = chunkInfo.data.size / chunkInfo.format.blockAlign;
 
     // SAMPLE SIZE AND SAMPLE CONTAINER SIZE
@@ -93,7 +93,7 @@ std::ostream & operator<< (std::ostream & os, Info const & info)
         case 2:  os << "stereo"; break;
         default: os << std::format("{} channels", info.channels); break;
     }
-    os << std::format (" / {} seconds / {} frames / ", static_cast<double>(info.frames) / info.sampleRate, info.frames);
+    os << std::format (" / {:.3f} seconds / {} frames / ", static_cast<double>(info.frames) / info.sampleRate, info.frames);
 
     const auto bytes = static_cast<long long>(info.frames) * info.channels * info.bitDepth / 8;
     if (bytes >= 1e9) os << std::format ("{:.1f} GB\n", bytes / static_cast<double> (1e9));
