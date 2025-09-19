@@ -23,6 +23,7 @@ void WriteHeader (FILE * out, int bitsPerSample, uint16_t formatCode, int sample
     + 4  // "fmt "
     + 4  // chunk size
     + formatChunkSize // in bytes
+    + formatChunkSize % 2 // 1 byte of padding when formatChunkSize is an odd number
 
     // data chunk
     + 4 // "data"
