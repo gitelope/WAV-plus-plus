@@ -41,8 +41,10 @@ void ReadDataInterleaved (FILE * in,
                           size_t requestedBufferSizeInBytes)
 {
     // Advance to the beginning of the data portion of the data chunk:
-    fseek (in, data.offset, SEEK_SET);
-    if (ferror (in)) throw ReadError ("Failed to advance to data portion of data chunk.");
+    if (fsetpos (in, &data.offset) != 0)
+    {
+        throw ReadError ("Failed to advance to data portion of data chunk.");
+    }
 
     const size_t numSamples {info.frames * info.channels};
     assert (numSamples > 0);

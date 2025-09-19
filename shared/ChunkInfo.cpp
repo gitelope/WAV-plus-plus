@@ -9,6 +9,29 @@
 namespace wav
 {
 
+/// Carefully handles skipping to the end of chunks
+/// in case long is only 32-bit
+/// (or size is unsigned 32-bit max).
+void SkipChunk (FILE * file, uint32_t size)
+{
+    int64_t skipAmount {size};
+    // Add padding byte if odd.
+    // Avoids adding directly to size parameter
+    // in case it equals the maximum unsigned 32-bit value.
+    skipAmount += (skipAmount % 2);
+    constexpr int64_t maxSeek {std::numeric_limits<long>::max()};
+    
+    while (skipAmount)
+    {
+        const int64_t seekAmount {std::min (skipAmount, maxSeek)};
+        if (fseek (file, static_cast<long> (seekAmount), SEEK_CUR) != 0)
+        {
+            throw ReadError ("Failed to skip chunk.");
+        }
+        skipAmount -= seekAmount;
+    }
+}
+
 ChunkInfo::ChunkInfo (std::string const & filepath)
 {
     auto in = fileForReading (filepath);
@@ -31,20 +54,18 @@ void ChunkInfo::ReadFile (FILE * in)
 
     while (peek (in) != EOF)
     {
-        const auto chunkStart {ftell (in)};
+        fpos_t chunkStart;
+        fgetpos (in, &chunkStart);
         const auto chunkID {fourCharacterCode (in)};
         RegisterChunk (chunkID, chunkStart);
 
         if      (chunkID == format.id) ReadFormatChunk       (in);
         else if (chunkID == fact.id)   ReadFactChunk         (in);
         else if (chunkID == peak.id)   ReadPeakChunk         (in);
-        else if (chunkID == data.id)   ReadDataChunkInfoOnly (in);
+        else if (chunkID == data.id)   ReadDataChunkSizeAndSkipSamples (in);
         else
         {
-            // Skip to next chunk:
-            RegisterSkippedChunk (chunkID, chunkStart);
-            const auto size = uint32_le (in);
-            // Skip chunk and any padding byte if present.
+            // Skip rest of chunk (including any padding byte).
             //
             // RIFF sub-chunks (not to be confused with "RIFF" chunks)
             // are not allowed to have an odd number of bytes.
@@ -53,8 +74,11 @@ void ChunkInfo::ReadFile (FILE * in)
             // unreported byte of padding at the end to make for an even
             // number. In contrast, all chunk padding should be reflected
             // in the main "RIFF" chunk size.
-            fseek (in, size + (size % 2), SEEK_CUR);
-            if (ferror (in)) throw ReadError ("Failed to skip chunk: " + chunkID);
+            RegisterSkippedChunk (chunkID, chunkStart);
+            const auto size {uint32_le (in)};
+            // SkipChunk() detects and carefully skips potential padding byte.
+            // (Best not to add it in ahead of time since that could result in overflow.)
+            SkipChunk (in, size);
         }
     }
 }
@@ -70,7 +94,7 @@ std::string ChunkInfo::summary() const
     }
 
     const auto frames = data.size / format.blockAlign;
-    const auto duration = frames / static_cast<double>(format.sampleRate);
+    const auto duration = frames / static_cast<double> (format.sampleRate);
 
     std::string format_string;
 
@@ -276,7 +300,7 @@ void ChunkInfo::ReadPeakChunk (FILE * in)
     }
 }
 
-void ChunkInfo::ReadDataChunkInfoOnly (FILE * in)
+void ChunkInfo::ReadDataChunkSizeAndSkipSamples (FILE * in)
 {
     // No need to read id since it has already been read and has the expected value.
     data.size = uint32_le (in);
@@ -284,13 +308,20 @@ void ChunkInfo::ReadDataChunkInfoOnly (FILE * in)
     {
         throw ReadError ("Size of data chunk is not divisible by block_align.");
     }
-    data.offset = static_cast<int> (ftell (in));
-    fseek (in, data.size + (data.size % 2), SEEK_CUR); // skip data (and padding byte if chunk size is odd number)
-    if (ferror (in)) throw ReadError ("Failed to skip data portion of data chunk.");
-
-    // An odd chunk size will most likely be the result of writing mono, linear PCM 8-bit or 24-bit WAV,
-    // with an odd number of samples, but will also occur with a larger odd number of channels:
+    
+    if (fgetpos (in, &data.offset) != 0)
+    {
+        throw ReadError ("Failed to get current file position for data chunk.");
+    }
+    
+    // SkipChunk() detects and carefully skips potential padding byte.
+    // (Best not to add it in ahead of time since that could result in overflow.)
+    //
+    // An odd data chunk size will most likely be the result of writing mono,
+    // linear PCM 8-bit or 24-bit WAV, with an odd number of samples,
+    // but will also occur with a larger odd number of channels:
     // odd channels x odd sample (container) size in bytes x odd number of samples = odd number of bytes
+    SkipChunk (in, data.size);
 }
 
 std::ostream & operator<< (std::ostream & os, ChunkInfo const & info)

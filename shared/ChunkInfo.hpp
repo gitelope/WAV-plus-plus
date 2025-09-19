@@ -48,7 +48,7 @@ struct DataChunk
 {
     std::string id {"data"};
     uint32_t size {0};
-    int offset {0}; // first byte of first sample
+    fpos_t offset; // first byte of first sample
 };
 
 struct FactChunk
@@ -101,17 +101,29 @@ private:
     void ReadFormatChunk       (FILE * in);
     void ReadFactChunk         (FILE * in);
     void ReadPeakChunk         (FILE * in);
-    void ReadDataChunkInfoOnly (FILE * in);
+    void ReadDataChunkSizeAndSkipSamples (FILE * in);
 
-    template <typename IntegerType>
-    void RegisterChunk (std::string const & id, IntegerType position)
+    void RegisterChunk (std::string const & id, [[maybe_unused]] fpos_t position)
     {
-        chunksEncountered.emplace_back (id + " " + std::to_string (position));
+        if constexpr (std::is_integral_v<fpos_t> && requires { std::to_string (position); })
+        {
+            chunksEncountered.emplace_back (id + " " + std::to_string (position));
+        }
+        else
+        {
+            chunksEncountered.emplace_back (id);
+        }
     }
-    template <typename IntegerType>
-    void RegisterSkippedChunk (std::string const & id, IntegerType position)
+    void RegisterSkippedChunk (std::string const & id, [[maybe_unused]] fpos_t position)
     {
-        chunksSkipped.emplace_back (id + " " + std::to_string (position));
+        if constexpr (std::is_integral_v<fpos_t> && requires { std::to_string (position); })
+        {
+            chunksSkipped.emplace_back (id + " " + std::to_string (position));
+        }
+        else
+        {
+            chunksSkipped.emplace_back (id);
+        }
     }
 };
 
