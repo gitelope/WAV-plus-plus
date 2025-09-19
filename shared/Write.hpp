@@ -62,7 +62,7 @@ template <FloatOrDouble T>
 void Write (std::string const & filepath,
             std::vector<T> const & samples,
             ExportFormat exportFormat,
-            int sampleRate, int channels,
+            uint32_t sampleRate, int channels,
             // requested write buffer size used by WAV++
             size_t requestedWriteBufferSize = defaultRequestedWriteBufferSize,
             // internal IO buffer size used by OS is a multiple of actual–not requested–write buffer size
@@ -74,7 +74,7 @@ template <FloatOrDouble T, size_t N>
 void Write (std::string const & filepath,
             const T (&samples)[N],
             ExportFormat exportFormat,
-            int sampleRate, int channels,
+            uint32_t sampleRate, int channels,
             // requested write buffer size used by WAV++
             size_t requestedWriteBufferSize = defaultRequestedWriteBufferSize,
             // internal IO buffer size used by OS is a multiple of actual–not requested–write buffer size
@@ -86,7 +86,7 @@ template <FloatOrDouble T, size_t N>
 void Write (std::string const & filepath,
             std::array<T,N> const & samples,
             ExportFormat exportFormat,
-            int sampleRate, int channels,
+            uint32_t sampleRate, int channels,
             // requested write buffer size used by WAV++
             size_t requestedWriteBufferSize = defaultRequestedWriteBufferSize,
             // internal IO buffer size used by OS is a multiple of actual–not requested–write buffer size
@@ -114,7 +114,7 @@ template <FloatOrDouble T>
 void Write (std::string const & filepath,
             std::span<const T> samples,
             ExportFormat exportFormat,
-            int sampleRate,
+            uint32_t sampleRate,
             int channels,
             // requested write buffer size used by WAV++
             size_t requestedWriteBufferSize,
@@ -155,7 +155,7 @@ void Write (std::string const & filepath,
 template <FloatOrDouble T>
 void Write (std::string const & filepath, std::vector<T> const & samples,
             ExportFormat exportFormat,
-            int sampleRate, int channels,
+            uint32_t sampleRate, int channels,
             size_t requestedWriteBufferSize, size_t ioBufferSizeMultiplier)
 {
     Write (filepath, std::span<const T>(samples), exportFormat, sampleRate, channels, requestedWriteBufferSize, ioBufferSizeMultiplier);
@@ -166,7 +166,7 @@ void Write (std::string const & filepath, std::vector<T> const & samples,
 template <FloatOrDouble T, size_t N>
 void Write (std::string const & filepath, const T (&samples)[N],
             ExportFormat exportFormat,
-            int sampleRate, int channels,
+            uint32_t sampleRate, int channels,
             size_t requestedWriteBufferSize, size_t ioBufferSizeMultiplier)
 {
     Write (filepath, std::span<const T>(samples), exportFormat, sampleRate, channels, requestedWriteBufferSize, ioBufferSizeMultiplier);
@@ -177,7 +177,7 @@ void Write (std::string const & filepath, const T (&samples)[N],
 template <FloatOrDouble T, size_t N>
 void Write (std::string const & filepath, std::array<T,N> const & samples,
             ExportFormat exportFormat,
-            int sampleRate, int channels,
+            uint32_t sampleRate, int channels,
             size_t requestedWriteBufferSize, size_t ioBufferSizeMultiplier)
 {
     Write (filepath, std::span<const T>(samples), exportFormat, sampleRate, channels, requestedWriteBufferSize, ioBufferSizeMultiplier);

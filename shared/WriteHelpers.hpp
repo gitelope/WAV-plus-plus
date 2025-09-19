@@ -16,7 +16,7 @@ namespace wav
 {
 
 // header
-void WriteHeader (FILE * out, int bitsPerSample, uint16_t formatCode, int sampleRate, int channels, size_t numSamples);
+void WriteHeader (FILE * out, int bitsPerSample, uint16_t formatCode, uint32_t sampleRate, int channels, size_t numSamples);
 void WriteToHeader (FILE * out, std::string const & str);
 
 template <FloatOrDouble T> void WriteData (FILE * out, std::span<const T> samples, int bitsPerSample, uint16_t formatCode, size_t requestedWriteBufferSizeInBytes, size_t ioBufferSizeMultiplier);

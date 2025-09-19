@@ -94,7 +94,7 @@ std::string ChunkInfo::summary() const
     }
 
     const auto frames = data.size / format.blockAlign;
-    const auto duration = frames / static_cast<double>(format.sampleRate);
+    const auto duration = frames / static_cast<double> (format.sampleRate);
 
     std::string format_string;
 

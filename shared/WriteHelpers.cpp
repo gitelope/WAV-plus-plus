@@ -4,7 +4,7 @@
 namespace wav
 {
 
-void WriteHeader (FILE * out, int bitsPerSample, uint16_t formatCode, int sampleRate, int channels, size_t numSamples)
+void WriteHeader (FILE * out, int bitsPerSample, uint16_t formatCode, uint32_t sampleRate, int channels, size_t numSamples)
 {
     const auto bytesPerSample {bitsPerSample / 8};
     constexpr auto formatChunkSize {FormatChunkSize::PCMWAVEFORMAT};
