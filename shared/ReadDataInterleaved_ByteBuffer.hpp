@@ -26,10 +26,10 @@ void ReadInterleaved_FromBuffer_LinearPCM_ReadingBytesHelpers (std::vector<std::
                                                                size_t samplesToRead, size_t writePosition);
 
 template <FloatOrDouble T>
-void ReadInterleaved_FromBuffer_FloatPCM (std::vector<std::byte> const & buffer,
-                                          std::vector<T> & destination,
-                                          Info const & info,
-                                          size_t samplesToRead, size_t writePosition);
+void ReadInterleaved_FromBuffer_FloatPCM_ReadingBytesHelpers (std::vector<std::byte> const & buffer,
+                                                              std::vector<T> & destination,
+                                                              Info const & info,
+                                                              size_t samplesToRead, size_t writePosition);
 
 template <FloatOrDouble T>
 void ReadInterleaved_FromBuffer_LinearPCM_InlineShitingAndORing (std::vector<std::byte> const & buffer,
@@ -91,7 +91,7 @@ void ReadDataInterleaved (FILE * in,
         // Decode into samples:
         const auto samplesToRead {bytesToRead / sampleSizeInBytes};
         if      (info.isLinearPCM) ReadInterleaved_FromBuffer_LinearPCM_ReadingBytesHelpers (buffer, destination, info, samplesToRead, writePosition);
-        else if (info.isFloatPCM)  ReadInterleaved_FromBuffer_FloatPCM  (buffer, destination, info, samplesToRead, writePosition);
+        else if (info.isFloatPCM)  ReadInterleaved_FromBuffer_FloatPCM_ReadingBytesHelpers  (buffer, destination, info, samplesToRead, writePosition);
         else assert (false);
 
         writePosition += samplesToRead;
@@ -140,10 +140,10 @@ void ReadInterleaved_FromBuffer_LinearPCM_ReadingBytesHelpers (std::vector<std::
 }
 
 template <FloatOrDouble T>
-void ReadInterleaved_FromBuffer_FloatPCM (std::vector<std::byte> const & buffer,
-                                          std::vector<T> & destination,
-                                          Info const & info,
-                                          size_t samplesToRead, size_t writePosition)
+void ReadInterleaved_FromBuffer_FloatPCM_ReadingBytesHelpers (std::vector<std::byte> const & buffer,
+                                                              std::vector<T> & destination,
+                                                              Info const & info,
+                                                              size_t samplesToRead, size_t writePosition)
 {
     assert (info.containerSizeInBits == info.bitDepth);
 
