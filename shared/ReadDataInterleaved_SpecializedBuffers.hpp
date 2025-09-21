@@ -128,7 +128,7 @@ void ReadInterleaved_FloatPCM_WithConversion (FILE * in, std::vector<T> & destin
                 throw ReadError ("Failed to read buffer from file.");
             }
 
-            // Compile-time byteswap if needed (C++20 + C++23)
+            // Byteswap if needed.
             if constexpr (std::endian::native == std::endian::big)
             {
                 for (size_t i = 0; i < samplesToRead; ++i)
@@ -158,7 +158,7 @@ void ReadInterleaved_FloatPCM_WithConversion (FILE * in, std::vector<T> & destin
                 throw ReadError ("Failed to read buffer from file.");
             }
 
-            // Compile-time byteswap if needed (C++20 + C++23)
+            // Byteswap if needed.
             if constexpr (std::endian::native == std::endian::big)
             {
                 for (size_t i = 0; i < samplesToRead; ++i)
@@ -181,9 +181,6 @@ template <FloatOrDouble T>
 void ReadInterleaved_LPCMU8 (FILE * in, std::vector<T> & destination, size_t readBufferSizeInBytes, size_t ioBufferSizeInBytes)
 {
     constexpr size_t bytesPerSample {1};
-    const auto max {static_cast<T> (uint8MaxAbs)};
-    const auto offset {static_cast<T> (uint8Offset)};
-
     std::vector<uint8_t> buffer (readBufferSizeInBytes);
     SetInternalIOBufferSize<ReadError> (in, ioBufferSizeInBytes);
 
@@ -199,7 +196,7 @@ void ReadInterleaved_LPCMU8 (FILE * in, std::vector<T> & destination, size_t rea
         }
         for (size_t i=0; i < samplesToRead; ++i)
         {
-            destination [readPosition + i] = (buffer [i] - offset) / max;
+            destination [readPosition + i] = (buffer [i] - uint8Offset) / uint8MaxAbs;
         }
         readPosition += samplesToRead;
         samplesRemaining -= samplesToRead;
@@ -210,8 +207,6 @@ template <FloatOrDouble T>
 void ReadInterleaved_LPCM16 (FILE * in, std::vector<T> & destination, size_t readBufferSizeInBytes, size_t ioBufferSizeInBytes)
 {
     constexpr size_t bytesPerSample {2};
-    const auto max {static_cast<T> (int16MaxAbs)};
-
     std::vector<int16_t> buffer (readBufferSizeInBytes / bytesPerSample);
     SetInternalIOBufferSize<ReadError> (in, ioBufferSizeInBytes);
 
@@ -237,7 +232,7 @@ void ReadInterleaved_LPCM16 (FILE * in, std::vector<T> & destination, size_t rea
 
         for (size_t i=0; i < samplesToRead; ++i)
         {
-            destination [readPosition + i] = buffer [i] / max;
+            destination [readPosition + i] = buffer [i] / int16MaxAbs;
         }
         readPosition += samplesToRead;
         samplesRemaining -= samplesToRead;
@@ -248,8 +243,6 @@ template <FloatOrDouble T>
 void ReadInterleaved_LPCM24 (FILE * in, std::vector<T> & destination, size_t readBufferSizeInBytes, size_t ioBufferSizeInBytes)
 {
     constexpr size_t bytesPerSample {3};
-    const auto max {static_cast<T> (int24MaxAbs)};
-
     std::vector<int24> buffer (readBufferSizeInBytes / bytesPerSample);
     SetInternalIOBufferSize<ReadError> (in, ioBufferSizeInBytes);
 
@@ -275,7 +268,7 @@ void ReadInterleaved_LPCM24 (FILE * in, std::vector<T> & destination, size_t rea
 
         for (size_t i=0; i < samplesToRead; ++i)
         {
-            destination [readPosition + i] = buffer[i] / max;
+            destination [readPosition + i] = buffer[i] / int24MaxAbs;
         }
         readPosition += samplesToRead;
         samplesRemaining -= samplesToRead;
@@ -286,8 +279,6 @@ template <FloatOrDouble T>
 void ReadInterleaved_LPCM32 (FILE * in, std::vector<T> & destination, size_t readBufferSizeInBytes, size_t ioBufferSizeInBytes)
 {
     constexpr size_t bytesPerSample {4};
-    const auto max {static_cast<T> (int32MaxAbs)};
-
     std::vector<int32_t> buffer (readBufferSizeInBytes / bytesPerSample);
     SetInternalIOBufferSize<ReadError> (in, ioBufferSizeInBytes);
 
@@ -313,7 +304,7 @@ void ReadInterleaved_LPCM32 (FILE * in, std::vector<T> & destination, size_t rea
 
         for (size_t i=0; i < samplesToRead; ++i)
         {
-            destination [readPosition + i] = buffer [i] / max;
+            destination [readPosition + i] = buffer [i] / int32MaxAbs;
         }
         readPosition += samplesToRead;
         samplesRemaining -= samplesToRead;
