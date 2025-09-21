@@ -6,6 +6,7 @@
 #include "Info.hpp"
 #include "ChunkInfo.hpp"
 #include "ReadingBytes.hpp"
+#include "BufferSizing.hpp"
 #include <cassert>
 #include <vector>
 #include <cstdio>
@@ -66,15 +67,9 @@ void ReadDataInterleaved (FILE * in,
     const size_t sampleSizeInBytes {info.containerSizeInBits / 8U};
     const size_t totalBytesToRead {numSamples * sampleSizeInBytes};
 
-    // Determine buffer size from requested size, sample size, and number of samples:
-    // 1. Buffer must be able to hold an entire sample's worth of bytes.
-    size_t bufferSizeInBytes = std::max (requestedBufferSizeInBytes, sampleSizeInBytes);
-    // 2. Buffer size must correspond to a whole number of samples.
-    bufferSizeInBytes = (bufferSizeInBytes / sampleSizeInBytes) * sampleSizeInBytes;
-    // 3. Buffer size must not exceed the total number of bytes to read.
-    bufferSizeInBytes = std::min (bufferSizeInBytes, totalBytesToRead);
+    const auto readBufferSize {bufferSizeInBytes (requestedBufferSizeInBytes, numSamples, info.bitDepth)};
 
-    std::vector<std::byte> buffer (bufferSizeInBytes);
+    std::vector<std::byte> buffer (readBufferSize);
 
     size_t samplesRemaining {numSamples};
     size_t writePosition {0};
