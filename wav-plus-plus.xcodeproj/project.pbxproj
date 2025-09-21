@@ -43,7 +43,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		C46430972E7F9653008455B9 /* ReadDataInterleaved_SpecializedBuffers.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = ReadDataInterleaved_SpecializedBuffers.hpp; sourceTree = "<group>"; };
+		C46430972E7F9653008455B9 /* ReadDataInterleaved_DirectRead.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = ReadDataInterleaved_DirectRead.hpp; sourceTree = "<group>"; };
 		C479D8532E149E7C00093894 /* Formats.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Formats.hpp; sourceTree = "<group>"; };
 		C479D8542E149E7C00093894 /* Formats.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Formats.cpp; sourceTree = "<group>"; };
 		C499DB752E13435300A88D60 /* write and read */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "write and read"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -126,7 +126,7 @@
 			children = (
 				C499DB8D2E13445F00A88D60 /* Read.hpp */,
 				C4AA9FC02E7626E600CD6B51 /* ReadDataInterleaved_ByteBuffer.hpp */,
-				C46430972E7F9653008455B9 /* ReadDataInterleaved_SpecializedBuffers.hpp */,
+				C46430972E7F9653008455B9 /* ReadDataInterleaved_DirectRead.hpp */,
 				C4AA9FC12E762AAC00CD6B51 /* ReadDataSeparateChannels.hpp */,
 				C4AA9FBF2E75EB3200CD6B51 /* DequantizationConstants.hpp */,
 				C4AA9FB62E75D6C300CD6B51 /* Info.hpp */,
