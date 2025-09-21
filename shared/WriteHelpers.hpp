@@ -11,6 +11,9 @@
 #include <cstdio>
 #include <cassert>
 #include <span>
+#include <cmath>
+#include <algorithm>
+#include <bit>
 
 namespace wav
 {

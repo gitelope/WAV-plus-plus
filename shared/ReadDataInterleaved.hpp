@@ -20,16 +20,28 @@ void ReadDataInterleaved (FILE * in,
                           size_t requestedBufferSizeInBytes);
 
 template <FloatOrDouble T>
-void ReadInterleaved_FromBuffer_LinearPCM (std::vector<std::byte> const & buffer,
-                                           std::vector<T> & destination,
-                                           Info const & info,
-                                           size_t samplesToRead, size_t writePosition);
+void ReadInterleaved_FromBuffer_LinearPCM_ReadingBytesHelpers (std::vector<std::byte> const & buffer,
+                                                               std::vector<T> & destination,
+                                                               Info const & info,
+                                                               size_t samplesToRead, size_t writePosition);
 
 template <FloatOrDouble T>
 void ReadInterleaved_FromBuffer_FloatPCM (std::vector<std::byte> const & buffer,
                                           std::vector<T> & destination,
                                           Info const & info,
                                           size_t samplesToRead, size_t writePosition);
+
+template <FloatOrDouble T>
+void ReadInterleaved_FromBuffer_LinearPCM_InlineShitingAndORing (std::vector<std::byte> const & buffer,
+                                                                 std::vector<T> & destination,
+                                                                 Info const & info,
+                                                                 size_t samplesToRead, size_t writePosition);
+
+template <FloatOrDouble T>
+void ReadInterleaved_FromBuffer_LinearPCM_BitcastStdArray (std::vector<std::byte> const & buffer,
+                                                           std::vector<T> & destination,
+                                                           Info const & info,
+                                                           size_t samplesToRead, size_t writePosition);
 
 ////////////////////////////////////////////////////////////////////////////////////////
 
@@ -78,7 +90,7 @@ void ReadDataInterleaved (FILE * in,
 
         // Decode into samples:
         const auto samplesToRead {bytesToRead / sampleSizeInBytes};
-        if      (info.isLinearPCM) ReadInterleaved_FromBuffer_LinearPCM (buffer, destination, info, samplesToRead, writePosition);
+        if      (info.isLinearPCM) ReadInterleaved_FromBuffer_LinearPCM_ReadingBytesHelpers (buffer, destination, info, samplesToRead, writePosition);
         else if (info.isFloatPCM)  ReadInterleaved_FromBuffer_FloatPCM  (buffer, destination, info, samplesToRead, writePosition);
         else assert (false);
 
@@ -88,10 +100,10 @@ void ReadDataInterleaved (FILE * in,
 }
 
 template <FloatOrDouble T>
-void ReadInterleaved_FromBuffer_LinearPCM (std::vector<std::byte> const & buffer,
-                                           std::vector<T> & destination,
-                                           Info const & info,
-                                           size_t samplesToRead, size_t writePosition)
+void ReadInterleaved_FromBuffer_LinearPCM_ReadingBytesHelpers (std::vector<std::byte> const & buffer,
+                                                               std::vector<T> & destination,
+                                                               Info const & info,
+                                                               size_t samplesToRead, size_t writePosition)
 {
     // Normalize integers to [-1.0, 1.0) by dividing by 2^(bits-1).
     // Example:
@@ -147,6 +159,195 @@ void ReadInterleaved_FromBuffer_FloatPCM (std::vector<std::byte> const & buffer,
             for (size_t n = writePosition; n < samplesToRead + writePosition; ++n)
                 destination [n] = static_cast<T> (float64_le (buffer, pos));
             break;
+    }
+}
+
+template <FloatOrDouble T>
+void ReadInterleaved_FromBuffer_LinearPCM_InlineShitingAndORing (std::vector<std::byte> const & buffer,
+                                                                 std::vector<T> & destination,
+                                                                 Info const & info,
+                                                                 size_t samplesToRead, size_t writePosition)
+{
+    // Normalize integers to [-1.0, 1.0) by dividing by 2^(bits-1).
+    // Example:
+    // 16-bit range: [-32768, 32767], divided by 32768: [-1.0, 0.9999694824]
+    // Note: 8-bit also has an offset that is applied first.
+
+    size_t pos {0};
+    switch (info.containerSizeInBits)
+    {
+        case 8:
+        {
+            const size_t endPos {pos + samplesToRead};
+            if (endPos > buffer.size())
+            {
+                throw ReadError ("Not enough bytes to read uint8_t samples.");
+            }
+            for (size_t n = writePosition; n < samplesToRead + writePosition; ++n)
+            {
+                destination [n] = static_cast<T> ((static_cast<uint8_t> (buffer[pos]) - uint8Offset) / uint8MaxAbs);
+                ++pos;
+            }
+            break;
+        }
+
+        case 16:
+        {
+            const size_t endPos {pos + (samplesToRead * 2)};
+            if (endPos > buffer.size())
+            {
+                throw ReadError ("Not enough bytes to read int16_t samples.");
+            }
+            for (size_t n = writePosition; n < samplesToRead + writePosition; ++n)
+            {
+                const auto sample = static_cast<int16_t>
+                (
+                static_cast<int16_t> (buffer [pos])      |
+                static_cast<int16_t> (buffer [pos+1]) << 8
+                );
+                destination [n] = static_cast<T> (sample) / int16MaxAbs;
+                pos += 2;
+            }
+            break;
+        }
+
+        case 24:
+        {
+            const size_t endPos {pos + (samplesToRead * 3)};
+            if (endPos > buffer.size())
+            {
+                throw ReadError ("Not enough bytes to read int24_t samples.");
+            }
+            for (size_t n = writePosition; n < samplesToRead + writePosition; ++n)
+            {
+                auto sample =
+                static_cast<int32_t> (buffer [pos])        |
+                static_cast<int32_t> (buffer [pos+1]) << 8 |
+                static_cast<int32_t> (buffer [pos+2]) << 16;
+
+                // Sign extension for 24-bit
+                if (sample & 0x800000)
+                {
+                    sample |= 0xFF000000;
+                }
+
+                destination [n] = static_cast<T> (sample) / int24MaxAbs;
+                pos += 3;
+            }
+            break;
+        }
+
+        case 32:
+        {
+            const size_t endPos {pos + (samplesToRead * 4)};
+            if (endPos > buffer.size())
+            {
+                throw ReadError ("Not enough bytes to read int32_t samples.");
+            }
+            for (size_t n = writePosition; n < samplesToRead + writePosition; ++n)
+            {
+                const auto sample = static_cast<int32_t>
+                (
+                static_cast<int32_t> (buffer [pos])         |
+                static_cast<int32_t> (buffer [pos+1]) << 8  |
+                static_cast<int32_t> (buffer [pos+2]) << 16 |
+                static_cast<int32_t> (buffer [pos+3]) << 24
+                );
+                destination [n] = static_cast<T> (sample) / int32MaxAbs;
+                pos += 4;
+            }
+            break;
+        }
+    }
+}
+
+template <FloatOrDouble T>
+void ReadInterleaved_FromBuffer_LinearPCM_BitcastStdArray (std::vector<std::byte> const & buffer,
+                                                           std::vector<T> & destination,
+                                                           Info const & info,
+                                                           size_t samplesToRead, size_t writePosition)
+{
+    // Normalize integers to [-1.0, 1.0) by dividing by 2^(bits-1).
+    // Example:
+    // 16-bit range: [-32768, 32767], divided by 32768: [-1.0, 0.9999694824]
+    // Note: 8-bit also has an offset that is applied first.
+
+    size_t pos {0};
+    switch (info.containerSizeInBits)
+    {
+        case 8:
+        {
+            const size_t endPos {pos + samplesToRead};
+            if (endPos > buffer.size())
+            {
+                throw ReadError ("Not enough bytes to read uint8_t samples.");
+            }
+            for (size_t n = writePosition; n < samplesToRead + writePosition; ++n)
+            {
+                destination [n] = static_cast<T> ((static_cast<uint8_t> (buffer[pos]) - uint8Offset) / uint8MaxAbs);
+                ++pos;
+            }
+            break;
+        }
+
+        case 16:
+        {
+            const size_t endPos {pos + (samplesToRead * 2)};
+            if (endPos > buffer.size())
+            {
+                throw ReadError ("Not enough bytes to read int16_t samples.");
+            }
+            for (size_t n = writePosition; n < samplesToRead + writePosition; ++n)
+            {
+                std::array<std::byte, 2> sampleBytes {buffer[pos], buffer[pos+1]};
+                const auto sample = std::bit_cast<int16_t> (sampleBytes);
+                destination [n] = static_cast<T> (sample) / int16MaxAbs;
+                pos += 2;
+            }
+            break;
+        }
+
+        case 24:
+        {
+            const size_t endPos {pos + (samplesToRead * 3)};
+            if (endPos > buffer.size())
+            {
+                throw ReadError ("Not enough bytes to read int24_t samples.");
+            }
+            for (size_t n = writePosition; n < samplesToRead + writePosition; ++n)
+            {
+                // Create 4-byte array with proper sign extension
+                std::array<std::byte, 4> sampleBytes
+                {
+                    buffer[pos],
+                    buffer[pos+1],
+                    buffer[pos+2],
+                    ((buffer[pos+2] & std::byte{0x80}) != std::byte{0}) ? std::byte{0xFF} : std::byte{0x00}
+                };
+
+                const auto sample = std::bit_cast<int32_t> (sampleBytes);
+                destination [n] = static_cast<T> (sample) / int24MaxAbs;
+                pos += 3;
+            }
+            break;
+        }
+
+        case 32:
+        {
+            const size_t endPos {pos + (samplesToRead * 4)};
+            if (endPos > buffer.size())
+            {
+                throw ReadError ("Not enough bytes to read int32_t samples.");
+            }
+            for (size_t n = writePosition; n < samplesToRead + writePosition; ++n)
+            {
+                std::array<std::byte, 4> sampleBytes {buffer[pos], buffer[pos+1], buffer[pos+2], buffer[pos+3]};
+                const auto sample = std::bit_cast<int32_t> (sampleBytes);
+                destination [n] = static_cast<T> (sample) / int32MaxAbs;
+                pos += 4;
+            }
+            break;
+        }
     }
 }
 
