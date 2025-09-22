@@ -34,10 +34,10 @@ void ReadInterleaved_FromBuffer_FloatPCM_ReadingBytesHelpers (std::vector<std::b
                                                               size_t samplesToRead, size_t writePosition);
 
 template <FloatOrDouble T>
-void ReadInterleaved_FromBuffer_FloatPCM_InlineBitShiftingAndORing (std::vector<std::byte> const & buffer,
-                                                                    std::vector<T> & destination,
-                                                                    Info const & info,
-                                                                    size_t samplesToRead, size_t writePosition);
+void ReadInterleaved_FromBuffer_LinearPCM_BitcastStdArray (std::vector<std::byte> const & buffer,
+                                                           std::vector<T> & destination,
+                                                           Info const & info,
+                                                           size_t samplesToRead, size_t writePosition);
 
 template <FloatOrDouble T>
 void ReadInterleaved_FromBuffer_FloatPCM_BitcastStdArray (std::vector<std::byte> const & buffer,
@@ -52,10 +52,10 @@ void ReadInterleaved_FromBuffer_LinearPCM_InlineBitShiftingAndORing (std::vector
                                                                      size_t samplesToRead, size_t writePosition);
 
 template <FloatOrDouble T>
-void ReadInterleaved_FromBuffer_LinearPCM_BitcastStdArray (std::vector<std::byte> const & buffer,
-                                                           std::vector<T> & destination,
-                                                           Info const & info,
-                                                           size_t samplesToRead, size_t writePosition);
+void ReadInterleaved_FromBuffer_FloatPCM_InlineBitShiftingAndORing (std::vector<std::byte> const & buffer,
+                                                                    std::vector<T> & destination,
+                                                                    Info const & info,
+                                                                    size_t samplesToRead, size_t writePosition);
 
 template <FloatOrDouble T>
 void ReadInterleaved_FromBuffer_LinearPCM_Memcpy (std::vector<std::byte> const & buffer,
