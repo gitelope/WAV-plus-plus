@@ -494,31 +494,28 @@ void ReadInterleaved_FromBuffer_LinearPCM_Memcpy (std::vector<std::byte> const &
 
     assert (info.bitDepth == info.containerSizeInBits);
 
-    size_t pos {0};
     switch (info.bitDepth)
     {
         case 8:
         {
-            const size_t endPos {pos + samplesToRead};
-            if (endPos > buffer.size())
+            if (samplesToRead > buffer.size())
             {
                 throw ReadError ("Not enough bytes to read uint8_t samples.");
             }
             for (size_t i = 0; i < samplesToRead; ++i)
             {
-                destination[writePosition + i] = static_cast<T> ((static_cast<uint8_t> (buffer [i]) - uint8Offset) / uint8MaxAbs);
+                destination[writePosition + i] = static_cast<T> ((static_cast<uint8_t> (buffer[i]) - uint8Offset) / uint8MaxAbs);
             }
             break;
         }
         case 16:
         {
-            const size_t endPos {pos + (samplesToRead * 2)};
-            if (endPos > buffer.size())
+            if (samplesToRead * 2 > buffer.size())
             {
                 throw ReadError ("Not enough bytes to read int16_t samples.");
             }
             std::vector<int16_t> temp (samplesToRead);
-            std::memcpy (temp.data(), &buffer[pos], samplesToRead * 2);
+            std::memcpy (temp.data(), buffer.data(), samplesToRead * 2);
 
             for (size_t i = 0; i < samplesToRead; ++i)
             {
@@ -528,13 +525,12 @@ void ReadInterleaved_FromBuffer_LinearPCM_Memcpy (std::vector<std::byte> const &
         }
         case 24:
         {
-            const size_t endPos {pos + (samplesToRead * 3)};
-            if (endPos > buffer.size())
+            if (samplesToRead * 3 > buffer.size())
             {
                 throw ReadError ("Not enough bytes to read int24_t samples.");
             }
             std::vector<int24> temp (samplesToRead);
-            std::memcpy (temp.data(), &buffer[pos], samplesToRead * 3);
+            std::memcpy (temp.data(), buffer.data(), samplesToRead * 3);
 
             for (size_t i = 0; i < samplesToRead; ++i)
             {
@@ -545,13 +541,12 @@ void ReadInterleaved_FromBuffer_LinearPCM_Memcpy (std::vector<std::byte> const &
 
         case 32:
         {
-            const size_t endPos {pos + (samplesToRead * 4)};
-            if (endPos > buffer.size())
+            if (samplesToRead * 4 > buffer.size())
             {
                 throw ReadError ("Not enough bytes to read int32_t samples.");
             }
             std::vector<int32_t> temp (samplesToRead);
-            std::memcpy (temp.data(), &buffer[pos], samplesToRead * 4);
+            std::memcpy (temp.data(), buffer.data(), samplesToRead * 4);
 
             for (size_t i = 0; i < samplesToRead; ++i)
             {
@@ -570,18 +565,16 @@ void ReadInterleaved_FromBuffer_FloatPCM_Memcpy (std::vector<std::byte> const & 
 {
     assert (info.containerSizeInBits == info.bitDepth);
 
-    size_t pos {0};
     switch (info.bitDepth)
     {
         case 32:
         {
-            const size_t endPos {pos + (samplesToRead * 4)};
-            if (endPos > buffer.size())
+            if (samplesToRead * 4 > buffer.size())
             {
                 throw ReadError ("Not enough bytes to read float32_t samples.");
             }
             std::vector<float> temp (samplesToRead);
-            std::memcpy (temp.data(), &buffer[pos], samplesToRead * 4);
+            std::memcpy (temp.data(), buffer.data(), samplesToRead * 4);
 
             for (size_t i = 0; i < samplesToRead; ++i)
             {
@@ -591,13 +584,12 @@ void ReadInterleaved_FromBuffer_FloatPCM_Memcpy (std::vector<std::byte> const & 
         }
         case 64:
         {
-            const size_t endPos {pos + (samplesToRead * 8)};
-            if (endPos > buffer.size())
+            if (samplesToRead * 8 > buffer.size())
             {
                 throw ReadError ("Not enough bytes to read float64_t samples.");
             }
             std::vector<double> temp (samplesToRead);
-            std::memcpy (temp.data(), &buffer[pos], samplesToRead * 8);
+            std::memcpy (temp.data(), buffer.data(), samplesToRead * 8);
 
             for (size_t i = 0; i < samplesToRead; ++i)
             {
