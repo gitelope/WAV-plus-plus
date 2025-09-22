@@ -510,12 +510,13 @@ void ReadInterleaved_FromBuffer_LinearPCM_Memcpy (std::vector<std::byte> const &
         }
         case 16:
         {
-            if (samplesToRead * 2 > buffer.size())
+            const size_t bytesToRead {samplesToRead * 2};
+            if (bytesToRead > buffer.size())
             {
                 throw ReadError ("Not enough bytes to read int16_t samples.");
             }
             std::vector<int16_t> temp (samplesToRead);
-            std::memcpy (temp.data(), buffer.data(), samplesToRead * 2);
+            std::memcpy (temp.data(), buffer.data(), bytesToRead);
 
             for (size_t i = 0; i < samplesToRead; ++i)
             {
@@ -525,12 +526,13 @@ void ReadInterleaved_FromBuffer_LinearPCM_Memcpy (std::vector<std::byte> const &
         }
         case 24:
         {
-            if (samplesToRead * 3 > buffer.size())
+            const size_t bytesToRead {samplesToRead * 3};
+            if (bytesToRead > buffer.size())
             {
                 throw ReadError ("Not enough bytes to read int24_t samples.");
             }
             std::vector<int24> temp (samplesToRead);
-            std::memcpy (temp.data(), buffer.data(), samplesToRead * 3);
+            std::memcpy (temp.data(), buffer.data(), bytesToRead);
 
             for (size_t i = 0; i < samplesToRead; ++i)
             {
@@ -541,12 +543,13 @@ void ReadInterleaved_FromBuffer_LinearPCM_Memcpy (std::vector<std::byte> const &
 
         case 32:
         {
-            if (samplesToRead * 4 > buffer.size())
+            const size_t bytesToRead {samplesToRead * 4};
+            if (bytesToRead > buffer.size())
             {
                 throw ReadError ("Not enough bytes to read int32_t samples.");
             }
             std::vector<int32_t> temp (samplesToRead);
-            std::memcpy (temp.data(), buffer.data(), samplesToRead * 4);
+            std::memcpy (temp.data(), buffer.data(), bytesToRead);
 
             for (size_t i = 0; i < samplesToRead; ++i)
             {
@@ -569,12 +572,13 @@ void ReadInterleaved_FromBuffer_FloatPCM_Memcpy (std::vector<std::byte> const & 
     {
         case 32:
         {
-            if (samplesToRead * 4 > buffer.size())
+            const size_t bytesToRead {samplesToRead * 4};
+            if (bytesToRead > buffer.size())
             {
                 throw ReadError ("Not enough bytes to read float32_t samples.");
             }
             std::vector<float> temp (samplesToRead);
-            std::memcpy (temp.data(), buffer.data(), samplesToRead * 4);
+            std::memcpy (temp.data(), buffer.data(), bytesToRead);
 
             for (size_t i = 0; i < samplesToRead; ++i)
             {
@@ -584,12 +588,13 @@ void ReadInterleaved_FromBuffer_FloatPCM_Memcpy (std::vector<std::byte> const & 
         }
         case 64:
         {
-            if (samplesToRead * 8 > buffer.size())
+            const size_t bytesToRead {samplesToRead * 8};
+            if (bytesToRead > buffer.size())
             {
                 throw ReadError ("Not enough bytes to read float64_t samples.");
             }
             std::vector<double> temp (samplesToRead);
-            std::memcpy (temp.data(), buffer.data(), samplesToRead * 8);
+            std::memcpy (temp.data(), buffer.data(), bytesToRead);
 
             for (size_t i = 0; i < samplesToRead; ++i)
             {
