@@ -6,7 +6,7 @@
 #include "Info.hpp"
 #include "Exceptions.hpp"
 #include "DequantizationConstants.hpp"
-#include "ReadDataInterleaved_ByteBuffer.hpp"
+#include "ReadDataInterleaved_ByteBuffer_Memcpy.hpp"
 #include "ReadDataSeparateChannels.hpp"
 
 #include <string>
