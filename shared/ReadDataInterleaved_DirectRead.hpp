@@ -1,6 +1,6 @@
 
-#ifndef wavplusplus_ReadDataInterleaved_SpecializedBuffers_hpp
-#define wavplusplus_ReadDataInterleaved_SpecializedBuffers_hpp
+#ifndef wavplusplus_ReadDataInterleaved_DirectRead_hpp
+#define wavplusplus_ReadDataInterleaved_DirectRead_hpp
 
 #include "Formats.hpp"
 #include "Info.hpp"

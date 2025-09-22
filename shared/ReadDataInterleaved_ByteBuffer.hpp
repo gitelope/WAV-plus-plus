@@ -1,12 +1,13 @@
 
-#ifndef wavplusplus_ReadDataInterleaved_hpp
-#define wavplusplus_ReadDataInterleaved_hpp
+#ifndef wavplusplus_ReadDataInterleaved_ByteBuffer_hpp
+#define wavplusplus_ReadDataInterleaved_ByteBuffer_hpp
 
 #include "Formats.hpp"
 #include "Info.hpp"
 #include "ChunkInfo.hpp"
 #include "ReadingBytes.hpp"
 #include "BufferSizing.hpp"
+#include "int24.hpp"
 #include <cassert>
 #include <vector>
 #include <cstdio>
@@ -55,6 +56,18 @@ void ReadInterleaved_FromBuffer_LinearPCM_BitcastStdArray (std::vector<std::byte
                                                            std::vector<T> & destination,
                                                            Info const & info,
                                                            size_t samplesToRead, size_t writePosition);
+
+template <FloatOrDouble T>
+void ReadInterleaved_FromBuffer_LinearPCM_Memcpy (std::vector<std::byte> const & buffer,
+                                                  std::vector<T> & destination,
+                                                  Info const & info,
+                                                  size_t samplesToRead, size_t writePosition);
+
+template <FloatOrDouble T>
+void ReadInterleaved_FromBuffer_FloatPCM_Memcpy (std::vector<std::byte> const & buffer,
+                                                 std::vector<T> & destination,
+                                                 Info const & info,
+                                                 size_t samplesToRead, size_t writePosition);
 
 ////////////////////////////////////////////////////////////////////////////////////////
 
@@ -462,6 +475,133 @@ void ReadInterleaved_FromBuffer_LinearPCM_BitcastStdArray (std::vector<std::byte
                 const auto sample = std::bit_cast<int32_t> (sampleBytes);
                 destination [n] = static_cast<T> (sample / int32MaxAbs);
                 pos += 4;
+            }
+            break;
+        }
+    }
+}
+
+template <FloatOrDouble T>
+void ReadInterleaved_FromBuffer_LinearPCM_Memcpy (std::vector<std::byte> const & buffer,
+                                                  std::vector<T> & destination,
+                                                  Info const & info,
+                                                  size_t samplesToRead, size_t writePosition)
+{
+    // Normalize integers to [-1.0, 1.0) by dividing by 2^(bits-1).
+    // Example:
+    // 16-bit range: [-32768, 32767], divided by 32768: [-1.0, 0.9999694824]
+    // Note: 8-bit also has an offset that is applied first.
+
+    assert (info.bitDepth == info.containerSizeInBits);
+
+    size_t pos {0};
+    switch (info.bitDepth)
+    {
+        case 8:
+        {
+            const size_t endPos {pos + samplesToRead};
+            if (endPos > buffer.size())
+            {
+                throw ReadError ("Not enough bytes to read uint8_t samples.");
+            }
+            for (size_t i = 0; i < samplesToRead; ++i)
+            {
+                destination[writePosition + i] = static_cast<T> ((static_cast<uint8_t> (buffer [i]) - uint8Offset) / uint8MaxAbs);
+            }
+            break;
+        }
+        case 16:
+        {
+            const size_t endPos {pos + (samplesToRead * 2)};
+            if (endPos > buffer.size())
+            {
+                throw ReadError ("Not enough bytes to read int16_t samples.");
+            }
+            std::vector<int16_t> temp (samplesToRead);
+            std::memcpy (temp.data(), &buffer[pos], samplesToRead * 2);
+
+            for (size_t i = 0; i < samplesToRead; ++i)
+            {
+                destination[writePosition + i] = static_cast<T> (temp[i] / int16MaxAbs);
+            }
+            break;
+        }
+        case 24:
+        {
+            const size_t endPos {pos + (samplesToRead * 3)};
+            if (endPos > buffer.size())
+            {
+                throw ReadError ("Not enough bytes to read int24_t samples.");
+            }
+            std::vector<int24> temp (samplesToRead);
+            std::memcpy (temp.data(), &buffer[pos], samplesToRead * 3);
+
+            for (size_t i = 0; i < samplesToRead; ++i)
+            {
+                destination[writePosition + i] = static_cast<T> (static_cast<int32_t> (temp[i]) / int24MaxAbs);
+            }
+            break;
+        }
+
+        case 32:
+        {
+            const size_t endPos {pos + (samplesToRead * 4)};
+            if (endPos > buffer.size())
+            {
+                throw ReadError ("Not enough bytes to read int32_t samples.");
+            }
+            std::vector<int32_t> temp (samplesToRead);
+            std::memcpy (temp.data(), &buffer[pos], samplesToRead * 4);
+
+            for (size_t i = 0; i < samplesToRead; ++i)
+            {
+                destination[writePosition + i] = static_cast<T>(temp[i] / int32MaxAbs);
+            }
+            break;
+        }
+    }
+}
+
+template <FloatOrDouble T>
+void ReadInterleaved_FromBuffer_FloatPCM_Memcpy (std::vector<std::byte> const & buffer,
+                                                 std::vector<T> & destination,
+                                                 Info const & info,
+                                                 size_t samplesToRead, size_t writePosition)
+{
+    assert (info.containerSizeInBits == info.bitDepth);
+
+    size_t pos {0};
+    switch (info.bitDepth)
+    {
+        case 32:
+        {
+            const size_t endPos {pos + (samplesToRead * 4)};
+            if (endPos > buffer.size())
+            {
+                throw ReadError ("Not enough bytes to read float32_t samples.");
+            }
+            std::vector<float> temp (samplesToRead);
+            std::memcpy (temp.data(), &buffer[pos], samplesToRead * 4);
+
+            for (size_t i = 0; i < samplesToRead; ++i)
+            {
+                destination[writePosition + i] = static_cast<T> (temp[i]);
+            }
+            break;
+        }
+        case 64:
+        {
+            const size_t endPos {pos + (samplesToRead * 8)};
+            if (endPos > buffer.size())
+            {
+                throw ReadError ("Not enough bytes to read float64_t samples.");
+            }
+            std::vector<double> temp (samplesToRead);
+            std::memcpy (temp.data(), &buffer[pos], samplesToRead * 8);
+
+            for (size_t i = 0; i < samplesToRead; ++i)
+            {
+                destination[writePosition + i] = static_cast<T> (temp[i]);
             }
             break;
         }
