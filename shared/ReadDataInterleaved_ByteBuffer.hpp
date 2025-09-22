@@ -196,8 +196,7 @@ void ReadInterleaved_FromBuffer_LinearPCM_InlineBitShiftingAndORing (std::vector
     {
         case 8:
         {
-            const size_t endPos {pos + samplesToRead};
-            if (endPos > buffer.size())
+            if (samplesToRead > buffer.size())
             {
                 throw ReadError ("Not enough bytes to read uint8_t samples.");
             }
@@ -211,8 +210,7 @@ void ReadInterleaved_FromBuffer_LinearPCM_InlineBitShiftingAndORing (std::vector
 
         case 16:
         {
-            const size_t endPos {pos + (samplesToRead * 2)};
-            if (endPos > buffer.size())
+            if (samplesToRead * 2 > buffer.size())
             {
                 throw ReadError ("Not enough bytes to read int16_t samples.");
             }
@@ -231,8 +229,7 @@ void ReadInterleaved_FromBuffer_LinearPCM_InlineBitShiftingAndORing (std::vector
 
         case 24:
         {
-            const size_t endPos {pos + (samplesToRead * 3)};
-            if (endPos > buffer.size())
+            if (samplesToRead * 3 > buffer.size())
             {
                 throw ReadError ("Not enough bytes to read int24_t samples.");
             }
@@ -257,8 +254,7 @@ void ReadInterleaved_FromBuffer_LinearPCM_InlineBitShiftingAndORing (std::vector
 
         case 32:
         {
-            const size_t endPos {pos + (samplesToRead * 4)};
-            if (endPos > buffer.size())
+            if (samplesToRead * 4 > buffer.size())
             {
                 throw ReadError ("Not enough bytes to read int32_t samples.");
             }
@@ -292,8 +288,7 @@ void ReadInterleaved_FromBuffer_FloatPCM_InlineBitShiftingAndORing (std::vector<
     {
         case 32:
         {
-            const size_t endPos {pos + (samplesToRead * 4)};
-            if (endPos > buffer.size())
+            if (samplesToRead * 4 > buffer.size())
             {
                 throw ReadError ("Not enough bytes to read float32_t samples.");
             }
@@ -314,8 +309,7 @@ void ReadInterleaved_FromBuffer_FloatPCM_InlineBitShiftingAndORing (std::vector<
 
         case 64:
         {
-            const size_t endPos {pos + (samplesToRead * 8)};
-            if (endPos > buffer.size())
+            if (samplesToRead * 8 > buffer.size())
             {
                 throw ReadError ("Not enough bytes to read float64_t samples.");
             }
