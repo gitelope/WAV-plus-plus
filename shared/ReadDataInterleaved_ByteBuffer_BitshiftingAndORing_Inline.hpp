@@ -196,7 +196,7 @@ void ReadFloatPCM (std::vector<std::byte> const & buffer,
             }
             for (size_t n = writePosition; n < samplesToRead + writePosition; ++n)
             {
-                const auto sample = static_cast<float>
+                const auto sample = std::bit_cast<float>
                 (
                  static_cast<uint32_t> (buffer [pos])         |
                  static_cast<uint32_t> (buffer [pos+1]) << 8  |
@@ -217,7 +217,7 @@ void ReadFloatPCM (std::vector<std::byte> const & buffer,
             }
             for (size_t n = writePosition; n < samplesToRead + writePosition; ++n)
             {
-                const auto sample = static_cast<double>
+                const auto sample = std::bit_cast<double>
                 (
                  static_cast<uint64_t> (buffer [pos])         |
                  static_cast<uint64_t> (buffer [pos+1]) << 8  |
