@@ -43,9 +43,7 @@ struct int24
         static_cast<int32_t> (bytes[1]) <<  8|
         static_cast<int32_t> (bytes[2]) << 16;
 
-        // sign extension for 24-bit to 32-bit
-        if (result & 0x800000) result |= 0xFF000000;
-        return result;
+        return (result << 8) >> 8; // sign extension for 24-bit to 32-bit
     }
 };
 
