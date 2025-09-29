@@ -58,8 +58,14 @@ public:
     }
 
     // Read interleaved samples into user-provided buffer.
+    // Returns the number of samples read.
     template <FloatOrDouble T>
-    size_t readInterleaved (T * destination, size_t samplesToRead);
+    size_t readInterleaved (T * destination, size_t samplesRequested);
+
+    // A convenience function that calls readInterleaved.
+    // Returns the number of whole frames read.
+    template <FloatOrDouble T>
+    size_t readInterleavedFrames (T * destination, size_t framesRequested);
 
     // Get file information.
     Info const & getInfo() const { return info; }
@@ -141,6 +147,12 @@ size_t Reader::readInterleaved (T * destination, size_t samplesRequested)
     dataPosition += samplesToRead * (info.bitDepth / 8);
 
     return samplesToRead;
+}
+
+template <FloatOrDouble T>
+size_t Reader::readInterleavedFrames (T * destination, size_t framesRequested)
+{
+    return readInterleaved (destination, framesRequested * info.channels) / info.channels;
 }
 
 template <FloatOrDouble T>
