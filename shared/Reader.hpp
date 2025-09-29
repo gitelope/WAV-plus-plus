@@ -32,7 +32,7 @@ public:
 
     explicit Reader (std::string const & filepath, size_t bufferSizeKB = 32)
     :file (fopen (filepath.c_str(), "rb"), fclose)
-    ,readBufferSize (bufferSizeKB * 1024)
+    ,readBufferSizeInBytes (bufferSizeKB * 1024)
     {
         // Check if file opened successfully
         if (!file)
@@ -74,10 +74,12 @@ private:
 
     std::unique_ptr<FILE, decltype(&fclose)> file;
     Info info;
+
     DataChunk dataChunk;
-    size_t readBufferSize;        // in bytes
     uint32_t dataPosition {0};    // current byte position in data chunk
     uint32_t dataChunkLength {0}; // in bytes
+
+    size_t readBufferSizeInBytes;
 
     // Internal buffers for different encodings
     std::vector<uint8_t> bufferLPCMU8;
@@ -408,10 +410,10 @@ inline void Reader::InitializeBuffer()
     {
         switch (info.containerSizeInBits)
         {
-            case 8:  bufferLPCMU8.resize (readBufferSize);     break;
-            case 16: bufferLPCM16.resize (readBufferSize / 2); break;
-            case 24: bufferLPCM24.resize (readBufferSize / 3); break;
-            case 32: bufferLPCM32.resize (readBufferSize / 4); break;
+            case 8:  bufferLPCMU8.resize (readBufferSizeInBytes);     break;
+            case 16: bufferLPCM16.resize (readBufferSizeInBytes / 2); break;
+            case 24: bufferLPCM24.resize (readBufferSizeInBytes / 3); break;
+            case 32: bufferLPCM32.resize (readBufferSizeInBytes / 4); break;
         }
     }
     else if (info.isFloatPCM)
@@ -423,12 +425,12 @@ inline void Reader::InitializeBuffer()
         if (info.bitDepth == 32)
         {
             // Only used for float->double conversion:
-            bufferFloatPCM32.resize (readBufferSize / 4);
+            bufferFloatPCM32.resize (readBufferSizeInBytes / 4);
         }
         else if (info.bitDepth == 64)
         {
             // Only used for double->float conversion:
-            bufferFloatPCM64.resize (readBufferSize / 8);
+            bufferFloatPCM64.resize (readBufferSizeInBytes / 8);
         }
     }
 }
