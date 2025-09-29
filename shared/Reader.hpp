@@ -47,7 +47,6 @@ public:
 
         // Set up data chunk information
         dataChunkLength = dataChunk.size;
-        hasPadding = (dataChunkLength & 1) != 0;
 
         // Position file at start of data
         if (fsetpos (file.get(), &dataChunk.offset) != 0)
@@ -73,7 +72,6 @@ private:
     size_t readBufferSize;        // in bytes
     uint32_t dataPosition {0};    // current byte position in data chunk
     uint32_t dataChunkLength {0}; // in bytes
-    bool hasPadding {false};      // true if chunk length is odd
 
     // Internal buffers for different encodings
     std::vector<uint8_t> bufferLPCMU8;
