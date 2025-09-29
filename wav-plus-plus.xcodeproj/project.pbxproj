@@ -69,6 +69,7 @@
 		C4B1FD8B2E20533200B6D691 /* Exceptions.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Exceptions.hpp; sourceTree = "<group>"; };
 		C4CBC3C42E302405009AA677 /* WriteHelpers.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = WriteHelpers.hpp; sourceTree = "<group>"; };
 		C4CBC3C52E302405009AA677 /* WriteHelpers.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = WriteHelpers.cpp; sourceTree = "<group>"; };
+		C4E0F9112E8496940046311C /* Reader.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Reader.hpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -128,6 +129,7 @@
 			isa = PBXGroup;
 			children = (
 				C499DB8D2E13445F00A88D60 /* Read.hpp */,
+				C4E0F9112E8496940046311C /* Reader.hpp */,
 				C46430A02E821414008455B9 /* ReadDataInterleaved_ByteBuffer_BitcastStdArray.hpp */,
 				C46430A12E821414008455B9 /* ReadDataInterleaved_ByteBuffer_BitshiftingAndORing_Inline.hpp */,
 				C46430A22E821414008455B9 /* ReadDataInterleaved_ByteBuffer_BitshiftingAndORing_WithHelpers.hpp */,

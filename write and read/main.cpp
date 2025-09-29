@@ -1,6 +1,7 @@
 
 #include "../shared/Read.hpp"
 #include "../shared/Write.hpp"
+#include "../shared/Reader.hpp"
 
 #include <vector>
 #include <iostream>
@@ -24,15 +25,15 @@ int main ()
     //
     // const std::array<float, 5> out {-1, -0.5, 0, 0.5, 1}; // std::array
     // const double out[] {-1, -0.5, 0, 0.5, 1};             // C-style array
-    const std::vector<double> out {-1, -0.5, 0, 0.5, 1};     // std::vector
+    const std::vector<double> out {-1, -0.5, 0, 0.5, 1, 0};     // std::vector
 
     const auto filepath = "out.wav";
 
-    wav::Write (filepath, out, wav::ExportFormat::LinearPCM_24, 48000, 1);
+    wav::Write (filepath, out, wav::ExportFormat::FloatPCM_64, 48000, 2);
 
     // Data can be read in as either floats or doubles in an interleaved format
     // or with channel data separated.
-    const auto [interleaved,   info1] = wav::ReadInterleaved<float> (filepath);
+    const auto [interleaved,   info1] = wav::ReadInterleaved<double> (filepath);
     const auto [deinterleaved, info2] = wav::ReadSeparateChannels<double> (filepath);
 
     std::cout << '\n' << filepath << "\n\n" << info1 << std::endl;
@@ -41,6 +42,13 @@ int main ()
 
     Print (interleaved);
     Print (deinterleaved);
+
+    wav::Reader reader {filepath};
+    const auto & info {reader.getInfo()};
+    const size_t numSamples {info.frames * info.channels};
+    std::vector<double> in (numSamples);
+    reader.readInterleaved (in.data(), numSamples);
+    Print (in);
 
     return 0;
 }
