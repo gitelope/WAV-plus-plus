@@ -360,7 +360,7 @@ void Reader::ReadLPCM32 (T * destination, size_t totalSamplesToRead)
     constexpr size_t bytesPerSample {4};
 
     size_t samplesRemaining {totalSamplesToRead};
-    size_t readPosition {0};
+    size_t writePosition {0};
 
     while (samplesRemaining)
     {
@@ -383,10 +383,10 @@ void Reader::ReadLPCM32 (T * destination, size_t totalSamplesToRead)
         // Convert to destination type
         for (size_t i = 0; i < samplesToRead; ++i)
         {
-            destination [readPosition + i] = buffer [i] / int32MaxAbs;
+            destination [writePosition + i] = buffer [i] / int32MaxAbs;
         }
 
-        readPosition += samplesToRead;
+        writePosition += samplesToRead;
         samplesRemaining -= samplesToRead;
     }
 }
