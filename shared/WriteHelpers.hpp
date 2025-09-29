@@ -4,18 +4,25 @@
 
 #include "Formats.hpp"
 #include "Exceptions.hpp"
+#include "int24.hpp"
+#include "BufferSizing.hpp"
 #include <vector>
 #include <string>
 #include <cstdio>
 #include <cassert>
 #include <span>
+#include <cmath>
+#include <algorithm>
+#include <bit>
 
 namespace wav
 {
 
 // header
-void WriteHeader (FILE * out, uint16_t bitsPerSample, uint16_t formatCode, int sampleRate, int channels, size_t numSamples);
+void WriteHeader (FILE * out, uint16_t bitsPerSample, uint16_t formatCode, uint32_t sampleRate, uint16_t channels, size_t numSamples);
 void WriteToHeader (FILE * out, std::string const & str);
+
+template <FloatOrDouble T> void WriteData (FILE * out, std::span<const T> samples, uint16_t bitsPerSample, uint16_t formatCode, size_t requestedWriteBufferSizeInBytes, size_t ioBufferSizeMultiplier);
 
 // data on LE systems
 template <FloatOrDouble T> void WriteDataLE (FILE * out, std::span<const T> samples, uint16_t bitsPerSample, uint16_t formatCode, size_t writeBufferSizeInBytes, size_t ioBufferSizeInBytes);
@@ -29,13 +36,10 @@ template <FloatOrDouble T> void WriteLPCMU8 (FILE * out, std::span<const T> samp
 
 // data on BE systems (also works for LE but not optimal)
 template <FloatOrDouble T> void WriteDataFallback (FILE * out, std::span<const T> samples, uint16_t bitsPerSample, uint16_t formatCode, size_t writeBufferSizeInBytes, size_t ioBufferSizeInBytes);
+template <FloatOrDouble T> void FillBufferLinearPCM (std::span<const T> samples, std::vector<std::byte> & buffer, size_t readPosition, size_t samplesToWrite, uint16_t bitsPerSample);
+template <FloatOrDouble T> void FillBufferFloatPCM (std::span<const T> samples, std::vector<std::byte> & buffer, size_t readPosition, size_t samplesToWrite, uint16_t bitsPerSample);
 
-std::pair<uint16_t,uint16_t> bitDepthAndFormatCode (ExportFormat ef);
-
-size_t writeBufferSizeInBytes (size_t requestedBufferSizeInBytes, size_t numSamples, uint16_t bitsPerSample);
-
-size_t ioBufferSizeInBytes (size_t numSamples, uint16_t bitsPerSample, size_t writeBufferSizeInBytes, size_t ioBufferSizeMultiplier);
-void SetInternalIOBufferSize (FILE * out, size_t ioBufferSizeInBytes);
+std::pair <uint16_t, uint16_t> bitDepthAndFormatCode (ExportFormat ef);
 
 template <FloatOrDouble T> T quantized (T value, T min, T max)
 {
@@ -52,7 +56,7 @@ template <std::integral T>
 void WriteToHeader (FILE * out, T value)
 {
     std::array<std::byte, sizeof(T)> bytes;
-    for (int i=0; i < bytes.size(); ++i)
+    for (size_t i=0; i < bytes.size(); ++i)
     {
         bytes[i] = static_cast<std::byte> (value >> (8*i));
     }
@@ -68,7 +72,7 @@ void WriteData (FILE * out, std::span<const T> samples,
                 size_t requestedWriteBufferSizeInBytes, size_t ioBufferSizeMultiplier)
 {
     // A write buffer is used in all cases except for writing floating-point samples to the same format on LE systems.
-    const size_t writeBufferSize {writeBufferSizeInBytes (requestedWriteBufferSizeInBytes, samples.size(), bitsPerSample)};
+    const size_t writeBufferSize {bufferSizeInBytes (requestedWriteBufferSizeInBytes, samples.size(), bitsPerSample)};
     const size_t ioBufferSize {ioBufferSizeInBytes (samples.size(), bitsPerSample, writeBufferSize, ioBufferSizeMultiplier)};
 
     // Input and output endianness are the same.
@@ -129,7 +133,7 @@ void WriteFloatToFloatLE (FILE * out, std::span<const T> samples, uint16_t bitsP
     {
         // double -> float
         std::vector<float> buffer (writeBufferSizeInBytes / 4);
-        SetInternalIOBufferSize (out, ioBufferSizeInBytes);
+        SetInternalIOBufferSize<WriteError> (out, ioBufferSizeInBytes);
 
         size_t samplesRemaining {samples.size()};
         size_t readPosition {0};
@@ -152,7 +156,7 @@ void WriteFloatToFloatLE (FILE * out, std::span<const T> samples, uint16_t bitsP
     {
         // float -> double
         std::vector<double> buffer (writeBufferSizeInBytes / 8);
-        SetInternalIOBufferSize (out, ioBufferSizeInBytes);
+        SetInternalIOBufferSize<WriteError> (out, ioBufferSizeInBytes);
 
         size_t samplesRemaining {samples.size()};
         size_t readPosition {0};
@@ -183,7 +187,7 @@ void WriteLPCMU8 (FILE * out, std::span<const T> samples, size_t writeBufferSize
     const auto offset {static_cast<T> (0x80)}; // 2^7 = 128
 
     std::vector<std::byte> buffer (writeBufferSizeInBytes);
-    SetInternalIOBufferSize (out, ioBufferSizeInBytes);
+    SetInternalIOBufferSize<WriteError> (out, ioBufferSizeInBytes);
 
     size_t samplesRemaining {samples.size()};
     size_t readPosition {0};
@@ -227,7 +231,7 @@ void WriteLPCM16LE (FILE * out, std::span<const T> samples, size_t writeBufferSi
     const auto min {-max};
 
     std::vector<int16_t> buffer (writeBufferSizeInBytes / bytesPerSample);
-    SetInternalIOBufferSize (out, ioBufferSizeInBytes);
+    SetInternalIOBufferSize<WriteError> (out, ioBufferSizeInBytes);
 
     size_t samplesRemaining {samples.size()};
     size_t readPosition {0};
@@ -248,24 +252,6 @@ void WriteLPCM16LE (FILE * out, std::span<const T> samples, size_t writeBufferSi
     }
 }
 
-struct int24
-{
-    std::array<std::byte, 3> bytes;
-
-    constexpr int24() noexcept
-    :bytes {std::byte{0}, std::byte{0}, std::byte{0}}
-    {}
-
-    template <FloatOrDouble T>
-    constexpr int24 (T quantizedValue) noexcept
-    {
-        const auto integer {static_cast<std::int32_t> (quantizedValue)};
-        bytes[0] = static_cast<std::byte> (integer);
-        bytes[1] = static_cast<std::byte> (integer >> 8);
-        bytes[2] = static_cast<std::byte> (integer >> 16);
-    }
-};
-
 template <FloatOrDouble T>
 void WriteLPCM24LE (FILE * out, std::span<const T> samples, size_t writeBufferSizeInBytes, size_t ioBufferSizeInBytes)
 {
@@ -274,7 +260,7 @@ void WriteLPCM24LE (FILE * out, std::span<const T> samples, size_t writeBufferSi
     const auto min {-max};
 
     std::vector<int24> buffer (writeBufferSizeInBytes / bytesPerSample);
-    SetInternalIOBufferSize (out, ioBufferSizeInBytes);
+    SetInternalIOBufferSize<WriteError> (out, ioBufferSizeInBytes);
 
     size_t samplesRemaining {samples.size()};
     size_t readPosition {0};
@@ -314,7 +300,7 @@ void WriteLPCM32LE (FILE * out, std::span<const T> samples, size_t writeBufferSi
     const auto min {-max};
 
     std::vector<int32_t> buffer (writeBufferSizeInBytes / bytesPerSample);
-    SetInternalIOBufferSize (out, ioBufferSizeInBytes);
+    SetInternalIOBufferSize<WriteError> (out, ioBufferSizeInBytes);
 
     size_t samplesRemaining {samples.size()};
     size_t readPosition {0};
@@ -342,11 +328,11 @@ void WriteDataFallback (FILE * out, std::span<const T> samples,
 {
     assert (bitsPerSample % 8 == 0);
     const auto numSamples {samples.size()};
-    const auto bytesPerSamples {static_cast<size_t> (bitsPerSample / 8)};
+    const size_t bytesPerSamples {bitsPerSample / 8U};
     const auto totalBytesToWrite {numSamples * bytesPerSamples};
 
     std::vector<std::byte> buffer (writeBufferSizeInBytes);
-    SetInternalIOBufferSize (out, ioBufferSizeInBytes);
+    SetInternalIOBufferSize<WriteError> (out, ioBufferSizeInBytes);
 
     size_t samplesRemaining {numSamples};
     size_t readPosition {0};
@@ -386,7 +372,7 @@ void FillBufferLinearPCM (std::span<const T> samples, std::vector<std::byte> & b
     const auto max {static_cast<T> ((1 << (bitsPerSample - 1)) - 1)}; // 2^(bits-1) - 1
     const auto min {-max};
 
-    const auto bytesPerSample {bitsPerSample / 8};
+    const size_t bytesPerSample {bitsPerSample / 8U};
 
     // Quantize samples and write their bytes to buffer in little-endian order:
     switch (bitsPerSample)
@@ -396,7 +382,7 @@ void FillBufferLinearPCM (std::span<const T> samples, std::vector<std::byte> & b
             {
                 const auto quantizedSample = static_cast<int16_t> (quantized (samples [n+readPosition], min, max));
 
-                const auto i {n * bytesPerSample};
+                const size_t i {n * bytesPerSample};
                 buffer [i]   = static_cast<std::byte> (quantizedSample);
                 buffer [i+1] = static_cast<std::byte> (quantizedSample >> 8);
             }
@@ -406,7 +392,7 @@ void FillBufferLinearPCM (std::span<const T> samples, std::vector<std::byte> & b
             {
                 const auto quantizedSample = static_cast<int32_t> (quantized (samples [n+readPosition], min, max));
 
-                const auto i {n * bytesPerSample};
+                const size_t i {n * bytesPerSample};
                 buffer [i]   = static_cast<std::byte> (quantizedSample);
                 buffer [i+1] = static_cast<std::byte> (quantizedSample >> 8);
                 buffer [i+2] = static_cast<std::byte> (quantizedSample >> 16);
@@ -431,14 +417,14 @@ template <FloatOrDouble T>
 void FillBufferFloatPCM (std::span<const T> samples, std::vector<std::byte> & buffer,
                          size_t readPosition, size_t samplesToWrite, uint16_t bitsPerSample)
 {
-    const auto bytesPerSample {bitsPerSample / 8};
+    const size_t bytesPerSample {bitsPerSample / 8U};
     switch (bitsPerSample)
     {
         case 32:
             for (size_t n = 0; n < samplesToWrite; ++n)
             {
                 const auto current = static_cast<float> (samples [n+readPosition]);
-                const auto i {n * bytesPerSample};
+                const size_t i {n * bytesPerSample};
                 const auto integer = std::bit_cast<uint32_t> (current);
                 buffer [i]   = static_cast<std::byte> (integer);
                 buffer [i+1] = static_cast<std::byte> (integer >> 8);
@@ -450,7 +436,7 @@ void FillBufferFloatPCM (std::span<const T> samples, std::vector<std::byte> & bu
             for (size_t n = 0; n < samplesToWrite; ++n)
             {
                 const auto current = static_cast<double> (samples [n+readPosition]);
-                const auto i {n * bytesPerSample};
+                const size_t i {n * bytesPerSample};
                 const auto integer = std::bit_cast<uint64_t>(current);
                 buffer [i]   = static_cast<std::byte> (integer);
                 buffer [i+1] = static_cast<std::byte> (integer >> 8);

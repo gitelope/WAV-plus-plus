@@ -8,6 +8,7 @@
 #include <iostream>
 #include <vector>
 #include <cstdint>
+#include <cstdio>
 
 namespace wav
 {
@@ -47,7 +48,7 @@ struct DataChunk
 {
     std::string id {"data"};
     uint32_t size {0};
-    int offset {0}; // first byte of first sample
+    fpos_t offset; // first byte of first sample
 };
 
 struct FactChunk
@@ -73,11 +74,15 @@ struct PeakChunk
     bool present {false};
 };
 
-/// All the info from RIFF, fmt, data, fact and PEAK chunks except for the samples.
 class ChunkInfo
+/// All the info from RIFF, fmt, data, fact and PEAK chunks except for the samples.
+/// (Essentially a header parser with the qualification that a WAV file need not be
+/// constructed with the data chunk after all the others with the sample data at the
+/// very end of the file and all the other information before them.)
 {
 public:
     ChunkInfo (std::string const & filepath);
+    ChunkInfo (FILE * in);
 
     std::string summary() const;
 
@@ -91,21 +96,34 @@ public:
     std::vector<std::string> chunksSkipped;
 
 private:
-    void ReadRiffChunk         (std::ifstream & in);
-    void ReadFormatChunk       (std::ifstream & in);
-    void ReadFactChunk         (std::ifstream & in);
-    void ReadPeakChunk         (std::ifstream & in);
-    void ReadDataChunkInfoOnly (std::ifstream & in);
+    void ReadFile              (FILE * in);
+    void ReadRiffChunk         (FILE * in);
+    void ReadFormatChunk       (FILE * in);
+    void ReadFactChunk         (FILE * in);
+    void ReadPeakChunk         (FILE * in);
+    void ReadDataChunkSizeAndSkipSamples (FILE * in);
 
-    template <typename IntegerType>
-    void RegisterChunk (std::string const & id, IntegerType position)
+    void RegisterChunk (std::string const & id, [[maybe_unused]] fpos_t position)
     {
-        chunksEncountered.emplace_back (id + " " + std::to_string (position));
+        if constexpr (std::is_integral_v<fpos_t> && requires { std::to_string (position); })
+        {
+            chunksEncountered.emplace_back (id + " " + std::to_string (position));
+        }
+        else
+        {
+            chunksEncountered.emplace_back (id);
+        }
     }
-    template <typename IntegerType>
-    void RegisterSkippedChunk (std::string const & id, IntegerType position)
+    void RegisterSkippedChunk (std::string const & id, [[maybe_unused]] fpos_t position)
     {
-        chunksSkipped.emplace_back (id + " " + std::to_string (position));
+        if constexpr (std::is_integral_v<fpos_t> && requires { std::to_string (position); })
+        {
+            chunksSkipped.emplace_back (id + " " + std::to_string (position));
+        }
+        else
+        {
+            chunksSkipped.emplace_back (id);
+        }
     }
 };
 

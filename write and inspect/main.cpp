@@ -4,7 +4,7 @@
 
 // 1. Write WAV file. (wav::Write)
 // 2. Display detailed file info. (wav::ChunkInfo)
-int main (int argc, const char * argv[])
+int main ()
 {
     const auto filename {"out.WAV"};
     const std::vector<double> samples {-1, 0, 1};
