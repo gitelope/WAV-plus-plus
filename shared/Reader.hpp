@@ -76,12 +76,12 @@ private:
     bool hasPadding {false};      // true if chunk length is odd
 
     // Internal buffers for different encodings
-    std::vector<uint8_t> buffer8;
-    std::vector<int16_t> buffer16;
-    std::vector<int24>   buffer24;
-    std::vector<int32_t> buffer32;
-    std::vector<float>   bufferFloat;
-    std::vector<double>  bufferDouble;
+    std::vector<uint8_t> bufferLPCMU8;
+    std::vector<int16_t> bufferLPCM16;
+    std::vector<int24>   bufferLPCM24;
+    std::vector<int32_t> bufferLPCM32;
+    std::vector<float>   bufferFloatPCM32;
+    std::vector<double>  bufferFloatPCM64;
 
     void InitializeBuffer();
 
@@ -175,7 +175,7 @@ void Reader::ReadFloatPCMNoConversion (T * destination, size_t samplesToRead)
 void Reader::ReadFloatToDouble (double * destination, size_t totalSamplesToRead)
 {
     // float -> double
-    auto & buffer {bufferFloat};
+    auto & buffer {bufferFloatPCM32};
     constexpr size_t bytesPerSample {4};
 
     size_t samplesRemaining {totalSamplesToRead};
@@ -213,7 +213,7 @@ void Reader::ReadFloatToDouble (double * destination, size_t totalSamplesToRead)
 void Reader::ReadDoubleToFloat (float * destination, size_t totalSamplesToRead)
 {
     // double -> float
-    auto & buffer {bufferDouble};
+    auto & buffer {bufferFloatPCM64};
     constexpr size_t bytesPerSample {8};
 
     size_t samplesRemaining {totalSamplesToRead};
@@ -251,7 +251,7 @@ void Reader::ReadDoubleToFloat (float * destination, size_t totalSamplesToRead)
 template <FloatOrDouble T>
 void Reader::ReadLPCMU8 (T * destination, size_t totalSamplesToRead)
 {
-    auto & buffer {buffer8};
+    auto & buffer {bufferLPCMU8};
     constexpr size_t bytesPerSample {1};
 
     size_t samplesRemaining {totalSamplesToRead};
@@ -280,7 +280,7 @@ void Reader::ReadLPCMU8 (T * destination, size_t totalSamplesToRead)
 template <FloatOrDouble T>
 void Reader::ReadLPCM16 (T * destination, size_t totalSamplesToRead)
 {
-    auto & buffer {buffer16};
+    auto & buffer {bufferLPCM16};
     constexpr size_t bytesPerSample {2};
 
     size_t samplesRemaining {totalSamplesToRead};
@@ -318,7 +318,7 @@ void Reader::ReadLPCM16 (T * destination, size_t totalSamplesToRead)
 template <FloatOrDouble T>
 void Reader::ReadLPCM24 (T * destination, size_t totalSamplesToRead)
 {
-    auto & buffer {buffer24};
+    auto & buffer {bufferLPCM24};
     constexpr size_t bytesPerSample {3};
 
     size_t samplesRemaining {totalSamplesToRead};
@@ -356,7 +356,7 @@ void Reader::ReadLPCM24 (T * destination, size_t totalSamplesToRead)
 template <FloatOrDouble T>
 void Reader::ReadLPCM32 (T * destination, size_t totalSamplesToRead)
 {
-    auto & buffer {buffer32};
+    auto & buffer {bufferLPCM32};
     constexpr size_t bytesPerSample {4};
 
     size_t samplesRemaining {totalSamplesToRead};
@@ -398,10 +398,10 @@ inline void Reader::InitializeBuffer()
     {
         switch (info.containerSizeInBits)
         {
-            case 8:  buffer8.resize  (readBufferSize);     break;
-            case 16: buffer16.resize (readBufferSize / 2); break;
-            case 24: buffer24.resize (readBufferSize / 3); break;
-            case 32: buffer32.resize (readBufferSize / 4); break;
+            case 8:  bufferLPCMU8.resize (readBufferSize);     break;
+            case 16: bufferLPCM16.resize (readBufferSize / 2); break;
+            case 24: bufferLPCM24.resize (readBufferSize / 3); break;
+            case 32: bufferLPCM32.resize (readBufferSize / 4); break;
         }
     }
     else if (info.isFloatPCM)
@@ -413,12 +413,12 @@ inline void Reader::InitializeBuffer()
         if (info.bitDepth == 32)
         {
             // Only used for float->double conversion:
-            bufferFloat.resize (readBufferSize / 4);
+            bufferFloatPCM32.resize (readBufferSize / 4);
         }
         else if (info.bitDepth == 64)
         {
             // Only used for double->float conversion:
-            bufferDouble.resize (readBufferSize / 8);
+            bufferFloatPCM64.resize (readBufferSize / 8);
         }
     }
 }
