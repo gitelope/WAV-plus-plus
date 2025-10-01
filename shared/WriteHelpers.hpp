@@ -39,8 +39,6 @@ template <FloatOrDouble T> void WriteDataFallback (FILE * out, std::span<const T
 template <FloatOrDouble T> void FillBufferLinearPCM (std::span<const T> samples, std::vector<std::byte> & buffer, size_t readPosition, size_t samplesToWrite, uint16_t bitsPerSample);
 template <FloatOrDouble T> void FillBufferFloatPCM (std::span<const T> samples, std::vector<std::byte> & buffer, size_t readPosition, size_t samplesToWrite, uint16_t bitsPerSample);
 
-std::pair <uint16_t, uint16_t> bitDepthAndFormatCode (ExportFormat ef);
-
 template <FloatOrDouble T> T quantized (T value, T min, T max)
 {
     // Quantize floating-point value to signed integer (still in the form of a float or double).
