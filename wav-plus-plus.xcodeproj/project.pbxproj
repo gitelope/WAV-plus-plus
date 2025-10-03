@@ -43,6 +43,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		C4461B8A2E8D8AAC0036A10A /* Writer.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Writer.hpp; sourceTree = "<group>"; };
+		C4461B8B2E8F43EA0036A10A /* QuantizationConstants.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = QuantizationConstants.hpp; sourceTree = "<group>"; };
 		C46430972E7F9653008455B9 /* ReadDataInterleaved_DirectRead.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = ReadDataInterleaved_DirectRead.hpp; sourceTree = "<group>"; };
 		C46430A02E821414008455B9 /* ReadDataInterleaved_ByteBuffer_BitcastStdArray.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = ReadDataInterleaved_ByteBuffer_BitcastStdArray.hpp; sourceTree = "<group>"; };
 		C46430A12E821414008455B9 /* ReadDataInterleaved_ByteBuffer_BitshiftingAndORing_Inline.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = ReadDataInterleaved_ByteBuffer_BitshiftingAndORing_Inline.hpp; sourceTree = "<group>"; };
@@ -139,6 +141,8 @@
 				C4AA9FBF2E75EB3200CD6B51 /* DequantizationConstants.hpp */,
 				C4AA9FB62E75D6C300CD6B51 /* Info.hpp */,
 				C4AA9FB72E75D6C300CD6B51 /* Info.cpp */,
+				C4461B8A2E8D8AAC0036A10A /* Writer.hpp */,
+				C4461B8B2E8F43EA0036A10A /* QuantizationConstants.hpp */,
 				C499DB912E13445F00A88D60 /* Write.hpp */,
 				C4CBC3C42E302405009AA677 /* WriteHelpers.hpp */,
 				C4CBC3C52E302405009AA677 /* WriteHelpers.cpp */,

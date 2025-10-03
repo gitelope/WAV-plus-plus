@@ -102,7 +102,7 @@ void ReadSeparateChannels_FromBuffer_LinearPCM (std::vector<std::byte> const & b
             {
                 for (size_t channel = 0; channel < info.channels; ++channel)
                 {
-                    destination [channel][frame] = static_cast<T> ((uint8 (buffer, pos) - uint8Offset) / uint8MaxAbs);
+                    destination [channel][frame] = static_cast<T> ((uint8 (buffer, pos) - uint8DequantizationOffset) / uint8MaxAbs);
                 }
             }
             break;

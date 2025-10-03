@@ -1,0 +1,653 @@
+#ifndef wavplusplus_Writer_hpp
+#define wavplusplus_Writer_hpp
+
+#include "Formats.hpp"
+#include "QuantizationConstants.hpp"
+#include "BufferSizing.hpp"
+#include "int24.hpp"
+#include "Exceptions.hpp"
+
+#include <cassert>
+#include <vector>
+#include <cstdio>
+#include <bit>
+#include <string>
+#include <algorithm>
+#include <memory>
+
+static_assert (sizeof (float) == 4);
+static_assert (sizeof (double) == 8);
+static_assert (CHAR_BIT == 8);
+
+namespace wav
+{
+
+class Writer
+{
+
+public:
+
+    explicit Writer (std::string const & filepath,
+                     ExportFormat exportFormat,
+                     uint32_t sampleRate,
+                     uint16_t channels,
+                     size_t bufferSizeKB = 32)
+    :file (fopen (filepath.c_str(), "wb"), fclose)
+    ,exportFormat (exportFormat)
+    ,sampleRate (sampleRate)
+    ,channels (channels)
+    ,writeBufferSizeInBytes (bufferSizeKB * 1024)
+    {
+        if (!file)
+        {
+            throw WriteError ("Failed to open file for writing: " + filepath);
+        }
+
+        std::tie (this->bitsPerSample, this->formatCode) = bitDepthAndFormatCode (exportFormat);
+
+        // Write header with placeholders for RIFF chunk size and data chunk size.
+        WriteHeader();
+
+        InitializeBuffer();
+    }
+
+    // Write interleaved samples from user-provided buffer.
+    // Returns the number of samples written.
+    template <FloatOrDouble T>
+    size_t writeInterleaved (T const * source, size_t samplesToWrite);
+
+    // A convenience function that calls writeInterleaved.
+    // Returns the number of frames written.
+    template <FloatOrDouble T>
+    size_t writeInterleavedFrames (T const * source, size_t framesToWrite);
+
+    // Manual finalization allows client to handle exceptions.
+    // Destructor will call if client doesn't, swallowing any exceptions.
+    void Close();
+
+    ExportFormat getExportFormat() const { return exportFormat; }
+    uint32_t getSampleRate() const { return sampleRate; }
+    uint16_t getChannels() const { return channels; }
+
+    bool isOpen() const { return file != nullptr; }
+
+    ~Writer(); // Closes file if client does not.
+
+private:
+
+    std::unique_ptr<FILE, decltype(&fclose)> file;
+    ExportFormat exportFormat;
+    uint32_t sampleRate;
+    uint16_t channels;
+    uint16_t bitsPerSample;
+    uint16_t formatCode;
+
+    size_t writeBufferSizeInBytes;
+    size_t totalSamplesWritten {0};
+    uint32_t maxDataChunkSize {0};
+
+    // Header field positions set by WriteHeader()
+    // to be used later to replace placeholders.
+    long riffChunkSizePosition {-1};
+    long dataChunkSizePosition {-1};
+
+    // Internal buffers for different output encodings.
+    std::vector<uint8_t> bufferLPCMU8;
+    std::vector<int16_t> bufferLPCM16;
+    std::vector<int24>   bufferLPCM24;
+    std::vector<int32_t> bufferLPCM32;
+    std::vector<float>   bufferFloatPCM32;
+    std::vector<double>  bufferFloatPCM64;
+
+    void InitializeBuffer();
+
+    void WriteHeader();
+    
+    // float PCM
+    template <FloatOrDouble T> void WriteFloatPCM_NoConversion (T const * source, size_t samplesToWrite);
+    void WriteFloatToDouble (float const * source, size_t samplesToWrite);
+    void WriteDoubleToFloat (double const * source, size_t samplesToWrite);
+
+    // linear PCM
+    template <FloatOrDouble T> void WriteLPCMU8 (T const * source, size_t samplesToWrite);
+    template <FloatOrDouble T> void WriteLPCM16 (T const * source, size_t samplesToWrite);
+    template <FloatOrDouble T> void WriteLPCM24 (T const * source, size_t samplesToWrite);
+    template <FloatOrDouble T> void WriteLPCM32 (T const * source, size_t samplesToWrite);
+    
+    // Updates both data and RIFF chunk sizes.
+    // Assumes any necessary padding of data chunk's data has been added.
+    void UpdateHeader (uint32_t dataChunkSize);
+
+};
+
+template <FloatOrDouble T>
+size_t Writer::writeInterleaved (T const * source, size_t samplesToWrite)
+{
+    if (!file || samplesToWrite == 0) return 0;
+
+    // Check if writing would exceed WAV format limits.
+    const uint64_t newTotalSamples {static_cast<uint64_t> (totalSamplesWritten) + samplesToWrite};
+    const uint64_t newDataSize {newTotalSamples * (bitsPerSample / 8U)};
+
+    if (newDataSize > maxDataChunkSize)
+    {
+        throw WriteError ("Writing would exceed WAV format data chunk size limit.");
+    }
+
+    if (formatCode == FormatCode::FloatPCM)
+    {
+        if constexpr (std::is_same_v<T, float>)
+        {
+            switch (bitsPerSample)
+            {
+                case 32: WriteFloatPCM_NoConversion (source, samplesToWrite);  break;
+                case 64: WriteFloatToDouble         (source, samplesToWrite);  break;
+                default: throw WriteError ("Unsupported float PCM bit depth: " + std::to_string (bitsPerSample));
+            }
+        }
+        else if constexpr (std::is_same_v<T, double>)
+        {
+            switch (bitsPerSample)
+            {
+                case 32: WriteDoubleToFloat         (source, samplesToWrite);  break;
+                case 64: WriteFloatPCM_NoConversion (source, samplesToWrite);  break;
+                default: throw WriteError ("Unsupported float PCM bit depth: " + std::to_string (bitsPerSample));
+            }
+        }
+    }
+    else if (formatCode == FormatCode::LinearPCM)
+    {
+        switch (bitsPerSample)
+        {
+            case 8:  WriteLPCMU8 (source, samplesToWrite); break;
+            case 16: WriteLPCM16 (source, samplesToWrite); break;
+            case 24: WriteLPCM24 (source, samplesToWrite); break;
+            case 32: WriteLPCM32 (source, samplesToWrite); break;
+            default: throw WriteError ("Unsupported linear PCM bit depth: " + std::to_string (bitsPerSample));
+        }
+    }
+
+    totalSamplesWritten += samplesToWrite;
+
+    return samplesToWrite;
+}
+
+template <FloatOrDouble T>
+size_t Writer::writeInterleavedFrames (T const * source, size_t framesToWrite)
+{
+    return writeInterleaved (source, framesToWrite * channels) / channels;
+}
+
+template <FloatOrDouble T>
+void Writer::WriteFloatPCM_NoConversion (T const * source, size_t samplesToWrite)
+{
+    if constexpr (std::endian::native == std::endian::little)
+    {
+        if (fwrite (source, sizeof (T), samplesToWrite, file.get()) != samplesToWrite)
+        {
+            throw WriteError ("Failed to write buffer to file.");
+        }
+    }
+    else
+    {
+        if constexpr (std::is_same_v<T, float>)
+        {
+            // Byteswap and copy to buffer.
+            for (size_t i = 0; i < samplesToWrite; ++i)
+            {
+                bufferFloatPCM32 [i] = std::bit_cast<float> (std::byteswap (std::bit_cast<uint32_t> (source[i])));
+            }
+            if (fwrite (bufferFloatPCM32.data(), 4, samplesToWrite, file.get()) != samplesToWrite)
+            {
+                throw WriteError ("Failed to write buffer to file.");
+            }
+        }
+        else // double
+        {
+            // Byteswap and copy to buffer.
+            for (size_t i = 0; i < samplesToWrite; ++i)
+            {
+                bufferFloatPCM64 [i] = std::bit_cast<double> (std::byteswap (std::bit_cast<uint64_t> (source[i])));
+            }
+            if (fwrite (bufferFloatPCM64.data(), 8, samplesToWrite, file.get()) != samplesToWrite)
+            {
+                throw WriteError ("Failed to write buffer to file.");
+            }
+        }
+    }
+}
+
+void Writer::WriteFloatToDouble (float const * source, size_t totalSamplesToWrite)
+{
+    // float -> double
+    auto & buffer {bufferFloatPCM64};
+    constexpr size_t bytesPerSample {8};
+
+    size_t samplesRemaining {totalSamplesToWrite};
+    size_t readPosition {0};
+
+    while (samplesRemaining)
+    {
+        const size_t samplesToWrite {std::min (samplesRemaining, buffer.size())};
+
+        // Convert to double.
+        for (size_t i = 0; i < samplesToWrite; ++i)
+        {
+            buffer [i] = static_cast<double> (source [readPosition + i]);
+        }
+
+        // Byteswap if needed.
+        if constexpr (std::endian::native == std::endian::big)
+        {
+            for (size_t i = 0; i < samplesToWrite; ++i)
+            {
+                buffer [i] = std::bit_cast<double> (std::byteswap (std::bit_cast<uint64_t> (buffer [i])));
+            }
+        }
+
+        if (fwrite (buffer.data(), bytesPerSample, samplesToWrite, file.get()) != samplesToWrite)
+        {
+            throw WriteError ("Failed to write buffer to file.");
+        }
+
+        readPosition += samplesToWrite;
+        samplesRemaining -= samplesToWrite;
+    }
+}
+
+void Writer::WriteDoubleToFloat (double const * source, size_t totalSamplesToWrite)
+{
+    auto & buffer {bufferFloatPCM32};
+    constexpr size_t bytesPerSample {4};
+
+    size_t samplesRemaining {totalSamplesToWrite};
+    size_t readPosition {0};
+
+    while (samplesRemaining)
+    {
+        const size_t samplesToWrite {std::min (samplesRemaining, buffer.size())};
+
+        // Convert to float.
+        for (size_t i = 0; i < samplesToWrite; ++i)
+        {
+            buffer [i] = static_cast<float> (source [readPosition + i]);
+        }
+
+        // Byteswap if needed.
+        if constexpr (std::endian::native == std::endian::big)
+        {
+            for (size_t i = 0; i < samplesToWrite; ++i)
+            {
+                buffer [i] = std::bit_cast<float> (std::byteswap (std::bit_cast<uint32_t> (buffer [i])));
+            }
+        }
+
+        if (fwrite (buffer.data(), bytesPerSample, samplesToWrite, file.get()) != samplesToWrite)
+        {
+            throw WriteError ("Failed to write buffer to file.");
+        }
+
+        readPosition += samplesToWrite;
+        samplesRemaining -= samplesToWrite;
+    }
+}
+
+template <FloatOrDouble T>
+void Writer::WriteLPCMU8 (T const * source, size_t totalSamplesToWrite)
+{
+    auto & buffer {bufferLPCMU8};
+    constexpr size_t bytesPerSample {1};
+
+    size_t samplesRemaining {totalSamplesToWrite};
+    size_t readPosition {0};
+
+    while (samplesRemaining)
+    {
+        const size_t samplesToWrite {std::min (samplesRemaining, buffer.size())};
+
+        // Quantize.
+        for (size_t i = 0; i < samplesToWrite; ++i)
+        {
+            const auto scaled {uint8Scale * source [readPosition + i]};
+            /* dither */
+            const auto rounded {std::round (scaled)};
+            const auto offset {rounded + uint8QuantizationOffset};
+            const auto clamped {std::clamp (offset, uint8Min, uint8Max)};
+            buffer [i] = static_cast<uint8_t> (clamped);
+        }
+
+        if (fwrite (buffer.data(), bytesPerSample, samplesToWrite, file.get()) != samplesToWrite)
+        {
+            throw WriteError ("Failed to write buffer to file.");
+        }
+
+        readPosition += samplesToWrite;
+        samplesRemaining -= samplesToWrite;
+    }
+}
+
+
+// quantize floating-point to signed integer (still in the form of a float or double).
+//template <FloatOrDouble T> T quantized (T value, T scale, T min, T max)
+//{
+//    const T scaled {scale * value};
+//    /* dither */
+//    const T rounded {std::round (scaled)};
+//    return std::clamp (rounded, min, max);
+//}
+
+// quantize floating-point to signed integer (still in the form of a double).
+double quantized (double value, double scale, double min, double max)
+{
+    const double scaled {scale * value};
+    /* dither */
+    const double rounded {std::round (scaled)};
+    return std::clamp (rounded, min, max);
+}
+
+template <FloatOrDouble T>
+void Writer::WriteLPCM16 (T const * source, size_t totalSamplesToWrite)
+{
+    auto & buffer {bufferLPCM16};
+    constexpr size_t bytesPerSample {2};
+
+    size_t samplesRemaining {totalSamplesToWrite};
+    size_t readPosition {0};
+
+    while (samplesRemaining)
+    {
+        const size_t samplesToWrite {std::min (samplesRemaining, buffer.size())};
+
+        // Quantize.
+        for (size_t i = 0; i < samplesToWrite; ++i)
+        {
+            buffer [i] = static_cast<int16_t> (quantized (source [readPosition + i], int16Scale, int16Min, int16Max));
+        }
+
+        // Byteswap if needed.
+        if constexpr (std::endian::native == std::endian::big)
+        {
+            for (size_t i = 0; i < samplesToWrite; ++i)
+            {
+                buffer [i] = std::byteswap (buffer [i]);
+            }
+        }
+
+        if (fwrite (buffer.data(), bytesPerSample, samplesToWrite, file.get()) != samplesToWrite)
+        {
+            throw WriteError ("Failed to write buffer to file.");
+        }
+
+        readPosition += samplesToWrite;
+        samplesRemaining -= samplesToWrite;
+    }
+}
+
+template <FloatOrDouble T>
+void Writer::WriteLPCM24 (T const * source, size_t totalSamplesToWrite)
+{
+    auto & buffer {bufferLPCM24};
+    constexpr size_t bytesPerSample {3};
+
+    size_t samplesRemaining {totalSamplesToWrite};
+    size_t readPosition {0};
+
+    while (samplesRemaining)
+    {
+        const size_t samplesToWrite {std::min (samplesRemaining, buffer.size())};
+
+        // Quantize.
+        for (size_t i = 0; i < samplesToWrite; ++i)
+        {
+            buffer [i] = static_cast<int24> (quantized (source [readPosition + i], int24Scale, int24Min, int24Max));
+        }
+
+        // Byteswap if needed.
+        if constexpr (std::endian::native == std::endian::big)
+        {
+            for (size_t i = 0; i < samplesToWrite; ++i)
+            {
+                std::swap (buffer[i].bytes[0], buffer[i].bytes[2]);
+            }
+        }
+
+        if (fwrite (buffer.data(), bytesPerSample, samplesToWrite, file.get()) != samplesToWrite)
+        {
+            throw WriteError ("Failed to write buffer to file.");
+        }
+
+        readPosition += samplesToWrite;
+        samplesRemaining -= samplesToWrite;
+    }
+}
+
+template <FloatOrDouble T>
+void Writer::WriteLPCM32 (T const * source, size_t totalSamplesToWrite)
+{
+    auto & buffer {bufferLPCM32};
+    constexpr size_t bytesPerSample {4};
+
+    size_t samplesRemaining {totalSamplesToWrite};
+    size_t readPosition {0};
+
+    while (samplesRemaining)
+    {
+        const size_t samplesToWrite {std::min (samplesRemaining, buffer.size())};
+
+        // Quantize.
+        for (size_t i = 0; i < samplesToWrite; ++i)
+        {
+            buffer [i] = static_cast<int32_t> (quantized (source [readPosition + i], int32Scale, int32Min, int32Max));
+        }
+
+        // Byteswap if needed.
+        if constexpr (std::endian::native == std::endian::big)
+        {
+            for (size_t i = 0; i < samplesToWrite; ++i)
+            {
+                buffer [i] = std::byteswap (buffer [i]);
+            }
+        }
+
+        if (fwrite (buffer.data(), bytesPerSample, samplesToWrite, file.get()) != samplesToWrite)
+        {
+            throw WriteError ("Failed to write buffer to file.");
+        }
+
+        readPosition += samplesToWrite;
+        samplesRemaining -= samplesToWrite;
+    }
+}
+
+inline void Writer::InitializeBuffer()
+{
+    // Initialize the buffer needed for the current file format.
+    if (formatCode == FormatCode::LinearPCM)
+    {
+        switch (bitsPerSample)
+        {
+            case 8:  bufferLPCMU8.resize (writeBufferSizeInBytes);     break;
+            case 16: bufferLPCM16.resize (writeBufferSizeInBytes / 2); break;
+            case 24: bufferLPCM24.resize (writeBufferSizeInBytes / 3); break;
+            case 32: bufferLPCM32.resize (writeBufferSizeInBytes / 4); break;
+        }
+    }
+    else if (formatCode == FormatCode::FloatPCM)
+    {
+        // We won't need a buffer on LE systems if the encoding format
+        // matches the decoding format, i.e. double -> double or
+        // float -> float, but we don't yet know what the decoding format
+        // will be, so we always initialize a buffer just in case.
+        if (bitsPerSample == 32)
+        {
+            // double -> float
+            bufferFloatPCM32.resize (writeBufferSizeInBytes / 4);
+        }
+        else if (bitsPerSample == 64)
+        {
+            // float -> double
+            bufferFloatPCM64.resize (writeBufferSizeInBytes / 8);
+        }
+    }
+}
+
+inline void Writer::WriteHeader()
+{
+    if (!file) return;
+
+    const auto bytesPerSample {bitsPerSample / 8U};
+    constexpr auto formatChunkSize {FormatChunkSize::PCMWAVEFORMAT};
+
+    // blocks/sec * samples/block * bytes/sample = bytes/sec
+    const auto bytesPerSecond {sampleRate * channels * bytesPerSample};
+
+    // block size in bytes = samples/block * bytes/sample
+    const auto blockAlign {channels * bytesPerSample};
+
+    // RIFF header
+    WriteToHeader (file.get(), "RIFF");
+    // Record position of RIFF chunk size so it can be updated later:
+    riffChunkSizePosition = ftell (file.get());
+    if (riffChunkSizePosition == -1) throw WriteError ("Failed to get RIFF chunk size position.");
+    // Write RIFF chunk size placeholder:
+    WriteToHeader (file.get(), static_cast<uint32_t> (0));
+    WriteToHeader (file.get(), "WAVE");
+
+    // fmt chunk
+    WriteToHeader (file.get(), "fmt ");
+    WriteToHeader (file.get(), static_cast<uint32_t> (formatChunkSize));
+    WriteToHeader (file.get(), static_cast<uint16_t> (formatCode));
+    WriteToHeader (file.get(), static_cast<uint16_t> (channels));
+    WriteToHeader (file.get(), static_cast<uint32_t> (sampleRate));
+    WriteToHeader (file.get(), static_cast<uint32_t> (bytesPerSecond));
+    WriteToHeader (file.get(), static_cast<uint16_t> (blockAlign));
+    WriteToHeader (file.get(), static_cast<uint16_t> (bitsPerSample));
+
+    // data chunk header
+    WriteToHeader (file.get(), "data");
+    // Record position of data chunk size so it can be updated later:
+    dataChunkSizePosition = ftell (file.get());
+    if (dataChunkSizePosition == -1) throw WriteError ("Failed to get data chunk size position.");
+    // Write data chunk size placeholder:
+    WriteToHeader (file.get(), static_cast<uint32_t> (0)); // Will be updated in UpdateHeader()
+
+    // Calculate maximum data chunk size
+    // with the requirement that only full frames, a.k.a.
+    // blocks will be stored. No partial frames allowed.
+    //
+    // RIFF chunk size is stored in an unsigned 32-bit integer.
+    // The maximum value can therefore be no more than 2^32 - 1
+    // = 4,294,967,295.
+    //
+    // RIFF chunk size includes:
+    //
+    // "WAVE" - 4 bytes
+    // ---
+    // "fmt " - 4 bytes
+    // format chunk size - 4 bytes
+    // format code - 2 bytes
+    // channels - 2 bytes
+    // sample rate - 4 bytes
+    // bytes per second - 4 bytes
+    // block align - 2 bytes
+    // bits per sample - 2 bytes
+    // ---
+    // "data" - 4 bytes
+    // data chunk size - 4 bytes
+    // data - bytes = data chunk size
+    // 1 padding byte if data is odd number of bytes
+    //
+    // Lettting
+    // R = RIFF chunk size
+    // D = data chunk size
+    // we can express RIFF chunk size as a function of
+    // data chunk size:
+    //
+    // R = 36 + D + (D % 2)
+    //
+    // Since the padding byte for odd sizes ensures that D + (D % 2)
+    // is always even, we know that R must be even.
+    // Therefore it can't be 2^32 - 1, but it could be 2^32 - 2,
+    // which gives us the maximum value for D:
+    // D + (D % 2) = 2^32 - 2 - 36 = 2^32 - 38 = 4,294,967,258
+    // D = 4,294,967,258 - (D % 2)
+    // The largest D will be an even value:
+    // Dmax = 4,294,967,258
+    //
+    // When we constrain the data chunk size so that the data chunk contains
+    // whole number of blocks, a.k.a. frames, we get
+    // Dmax_blockAligned = floor (Dmax / blockSize) * blockSize
+    // = floor (4,294,967,258 / blockSize) * blockSize
+    // (Integer division gives us the floor for free.)
+    maxDataChunkSize = (4'294'967'258 / blockAlign) * blockAlign;
+}
+
+inline void Writer::Close()
+{
+    if (!file) return;
+
+    // Flush any buffered data.
+    if (fflush (file.get()) != 0)
+    {
+        throw WriteError ("Failed to flush file buffers.");
+    }
+
+    const auto dataChunkSize {static_cast<uint32_t>(totalSamplesWritten * (bitsPerSample / 8U))};
+
+    // Add padding byte if there are an odd number of bytes in the data chunk.
+    if (dataChunkSize % 2) WriteToHeader (file.get(), static_cast<uint8_t> (0));
+    // Update header with data chunk size and RIFF chunk size.
+    UpdateHeader (dataChunkSize);
+
+    if (fclose (file.release()) != 0)
+    {
+        throw WriteError ("Failed to close file");
+    }
+}
+
+inline Writer::~Writer()
+{
+    // Try to close the file if the user has not already.
+    if (file)
+    {
+        try
+        {
+            Close();
+        }
+        catch (...)
+        {
+            // Emit no exceptions.
+            // Perhaps error logging could be added.
+        }
+    }
+}
+
+/// Updates data chunk size and RIFF chunk size, which is derived from it.
+/// Note: The data chunk size should not include a data padding byte
+/// (if it exists) while the RIFF chunk size should include all padding
+/// bytes for all chunks in the file.
+inline void Writer::UpdateHeader (uint32_t dataChunkSize)
+{
+    if (!file) return;
+
+    // Update data chunk size. (Padding does not go into the count.)
+    if (fseek (file.get(), dataChunkSizePosition, SEEK_SET) != 0)
+    {
+        throw WriteError ("Failed to reposition to data chunk size.");
+    }
+    WriteToHeader (file.get(), dataChunkSize);
+
+    // Update RIFF chunk size, including padding if present.
+    // See WriteHeader() comments for derivation of:
+    // R = 36 + D + (D % 2)
+    const uint32_t riffChunkSize {36 + dataChunkSize + (dataChunkSize % 2)};
+    if (fseek (file.get(), riffChunkSizePosition, SEEK_SET) != 0)
+    {
+        throw WriteError ("Failed to reposition to RIFF chunk size");
+    }
+    WriteToHeader (file.get(), riffChunkSize);
+}
+
+} // namespace wav
+
+#endif

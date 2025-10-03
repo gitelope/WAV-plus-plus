@@ -107,7 +107,7 @@ void ReadInterleaved_FloatPCM_WithConversion (FILE * in, std::vector<T> & destin
     // Input is different bit depth than output: float->double or double->float.
     // Read into a buffer of the input type, then convert to output type.
 
-    SetInternalIOBufferSize<ReadError> (in, ioBufferSizeInBytes);
+    //SetInternalIOBufferSize<ReadError> (in, ioBufferSizeInBytes);
 
     const size_t inputSize {(bitsPerSample == 32) ? sizeof (float) : sizeof (double)};
     const size_t bufferSize {readBufferSizeInBytes / inputSize};
@@ -182,7 +182,7 @@ void ReadInterleaved_LPCMU8 (FILE * in, std::vector<T> & destination, size_t rea
 {
     constexpr size_t bytesPerSample {1};
     std::vector<uint8_t> buffer (readBufferSizeInBytes);
-    SetInternalIOBufferSize<ReadError> (in, ioBufferSizeInBytes);
+    //SetInternalIOBufferSize<ReadError> (in, ioBufferSizeInBytes);
 
     size_t samplesRemaining {destination.size()};
     size_t readPosition {0};
@@ -196,7 +196,7 @@ void ReadInterleaved_LPCMU8 (FILE * in, std::vector<T> & destination, size_t rea
         }
         for (size_t i=0; i < samplesToRead; ++i)
         {
-            destination [readPosition + i] = (buffer [i] - uint8Offset) / uint8MaxAbs;
+            destination [readPosition + i] = (buffer [i] - uint8DequantizationOffset) / uint8MaxAbs;
         }
         readPosition += samplesToRead;
         samplesRemaining -= samplesToRead;
@@ -208,7 +208,7 @@ void ReadInterleaved_LPCM16 (FILE * in, std::vector<T> & destination, size_t rea
 {
     constexpr size_t bytesPerSample {2};
     std::vector<int16_t> buffer (readBufferSizeInBytes / bytesPerSample);
-    SetInternalIOBufferSize<ReadError> (in, ioBufferSizeInBytes);
+    //SetInternalIOBufferSize<ReadError> (in, ioBufferSizeInBytes);
 
     size_t samplesRemaining {destination.size()};
     size_t readPosition {0};
@@ -244,7 +244,7 @@ void ReadInterleaved_LPCM24 (FILE * in, std::vector<T> & destination, size_t rea
 {
     constexpr size_t bytesPerSample {3};
     std::vector<int24> buffer (readBufferSizeInBytes / bytesPerSample);
-    SetInternalIOBufferSize<ReadError> (in, ioBufferSizeInBytes);
+    //SetInternalIOBufferSize<ReadError> (in, ioBufferSizeInBytes);
 
     size_t samplesRemaining {destination.size()};
     size_t readPosition {0};
@@ -280,7 +280,7 @@ void ReadInterleaved_LPCM32 (FILE * in, std::vector<T> & destination, size_t rea
 {
     constexpr size_t bytesPerSample {4};
     std::vector<int32_t> buffer (readBufferSizeInBytes / bytesPerSample);
-    SetInternalIOBufferSize<ReadError> (in, ioBufferSizeInBytes);
+    //SetInternalIOBufferSize<ReadError> (in, ioBufferSizeInBytes);
 
     size_t samplesRemaining {destination.size()};
     size_t readPosition {0};

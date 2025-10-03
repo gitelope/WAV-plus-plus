@@ -281,7 +281,7 @@ void Reader::ReadLPCMU8 (T * destination, size_t totalSamplesToRead)
         // Convert to destination type
         for (size_t i = 0; i < samplesToRead; ++i)
         {
-            destination [writePosition + i] = (buffer [i] - uint8Offset) / uint8MaxAbs;
+            destination [writePosition + i] = (buffer [i] - uint8DequantizationOffset) / uint8MaxAbs;
         }
 
         writePosition += samplesToRead;
