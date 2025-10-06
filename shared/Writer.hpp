@@ -31,12 +31,11 @@ public:
                      ExportFormat exportFormat,
                      uint32_t sampleRate,
                      uint16_t channels,
-                     size_t bufferSizeKB = 32)
+                     size_t bufferSizeInKB = 32)
     :file (fopen (filepath.c_str(), "wb"), fclose)
     ,exportFormat (exportFormat)
     ,sampleRate (sampleRate)
     ,channels (channels)
-    ,writeBufferSizeInBytes (bufferSizeKB * 1024)
     {
         if (!file)
         {
@@ -48,7 +47,7 @@ public:
         // Write header with placeholders for RIFF chunk size and data chunk size.
         WriteHeader();
 
-        InitializeBuffer();
+        InitializeBuffer (bufferSizeInKB * 1024);
     }
 
     // Write interleaved samples from user-provided buffer.
@@ -82,7 +81,6 @@ private:
     uint16_t bitsPerSample;
     uint16_t formatCode;
 
-    size_t writeBufferSizeInBytes;
     size_t totalSamplesWritten {0};
     uint32_t maxDataChunkSize {0};
 
@@ -99,10 +97,10 @@ private:
     std::vector<float>   bufferFloatPCM32;
     std::vector<double>  bufferFloatPCM64;
 
-    void InitializeBuffer();
-
     void WriteHeader();
-    
+
+    void InitializeBuffer (size_t sizeInBytes);
+
     // float PCM
     template <FloatOrDouble T> void WriteFloatPCM_NoConversion (T const * source, size_t samplesToWrite);
     void WriteFloatToDouble (float const * source, size_t samplesToWrite);
@@ -459,17 +457,18 @@ void Writer::WriteLPCM32 (T const * source, size_t totalSamplesToWrite)
     }
 }
 
-inline void Writer::InitializeBuffer()
+inline void Writer::InitializeBuffer (size_t sizeInBytes)
 {
+
     // Initialize the buffer needed for the current file format.
     if (formatCode == FormatCode::LinearPCM)
     {
         switch (bitsPerSample)
         {
-            case 8:  bufferLPCMU8.resize (writeBufferSizeInBytes);     break;
-            case 16: bufferLPCM16.resize (writeBufferSizeInBytes / 2); break;
-            case 24: bufferLPCM24.resize (writeBufferSizeInBytes / 3); break;
-            case 32: bufferLPCM32.resize (writeBufferSizeInBytes / 4); break;
+            case 8:  bufferLPCMU8.resize (sizeInBytes);     break;
+            case 16: bufferLPCM16.resize (sizeInBytes / 2); break;
+            case 24: bufferLPCM24.resize (sizeInBytes / 3); break;
+            case 32: bufferLPCM32.resize (sizeInBytes / 4); break;
         }
     }
     else if (formatCode == FormatCode::FloatPCM)
@@ -481,12 +480,12 @@ inline void Writer::InitializeBuffer()
         if (bitsPerSample == 32)
         {
             // double -> float
-            bufferFloatPCM32.resize (writeBufferSizeInBytes / 4);
+            bufferFloatPCM32.resize (sizeInBytes / 4);
         }
         else if (bitsPerSample == 64)
         {
             // float -> double
-            bufferFloatPCM64.resize (writeBufferSizeInBytes / 8);
+            bufferFloatPCM64.resize (sizeInBytes / 8);
         }
     }
 }
