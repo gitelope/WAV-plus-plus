@@ -190,24 +190,28 @@ void Writer::WriteFloatPCM_NoConversion (T const * source, size_t samplesToWrite
     {
         if constexpr (std::is_same_v<T, float>)
         {
+            auto * const buffer {bufferFloatPCM32.data()};
+
             // Byteswap and copy to buffer.
             for (size_t i = 0; i < samplesToWrite; ++i)
             {
-                bufferFloatPCM32 [i] = std::bit_cast<float> (std::byteswap (std::bit_cast<uint32_t> (source[i])));
+                buffer [i] = std::bit_cast<float> (std::byteswap (std::bit_cast<uint32_t> (source[i])));
             }
-            if (fwrite (bufferFloatPCM32.data(), 4, samplesToWrite, file.get()) != samplesToWrite)
+            if (fwrite (buffer, 4, samplesToWrite, file.get()) != samplesToWrite)
             {
                 throw WriteError ("Failed to write buffer to file.");
             }
         }
         else // double
         {
+            auto * const buffer {bufferFloatPCM64.data()};
+
             // Byteswap and copy to buffer.
             for (size_t i = 0; i < samplesToWrite; ++i)
             {
-                bufferFloatPCM64 [i] = std::bit_cast<double> (std::byteswap (std::bit_cast<uint64_t> (source[i])));
+                buffer [i] = std::bit_cast<double> (std::byteswap (std::bit_cast<uint64_t> (source[i])));
             }
-            if (fwrite (bufferFloatPCM64.data(), 8, samplesToWrite, file.get()) != samplesToWrite)
+            if (fwrite (buffer, 8, samplesToWrite, file.get()) != samplesToWrite)
             {
                 throw WriteError ("Failed to write buffer to file.");
             }
@@ -217,8 +221,9 @@ void Writer::WriteFloatPCM_NoConversion (T const * source, size_t samplesToWrite
 
 void Writer::WriteFloatToDouble (float const * source, size_t totalSamplesToWrite)
 {
-    // float -> double
-    auto & buffer {bufferFloatPCM64};
+    auto * const buffer {bufferFloatPCM64.data()};
+    const auto bufferSize {bufferFloatPCM64.size()};
+
     constexpr size_t bytesPerSample {8};
 
     size_t samplesRemaining {totalSamplesToWrite};
@@ -226,7 +231,7 @@ void Writer::WriteFloatToDouble (float const * source, size_t totalSamplesToWrit
 
     while (samplesRemaining)
     {
-        const size_t samplesToWrite {std::min (samplesRemaining, buffer.size())};
+        const size_t samplesToWrite {std::min (samplesRemaining, bufferSize)};
 
         // Convert to double.
         for (size_t i = 0; i < samplesToWrite; ++i)
@@ -243,7 +248,7 @@ void Writer::WriteFloatToDouble (float const * source, size_t totalSamplesToWrit
             }
         }
 
-        if (fwrite (buffer.data(), bytesPerSample, samplesToWrite, file.get()) != samplesToWrite)
+        if (fwrite (buffer, bytesPerSample, samplesToWrite, file.get()) != samplesToWrite)
         {
             throw WriteError ("Failed to write buffer to file.");
         }
@@ -255,7 +260,9 @@ void Writer::WriteFloatToDouble (float const * source, size_t totalSamplesToWrit
 
 void Writer::WriteDoubleToFloat (double const * source, size_t totalSamplesToWrite)
 {
-    auto & buffer {bufferFloatPCM32};
+    auto * const buffer {bufferFloatPCM32.data()};
+    const auto bufferSize {bufferFloatPCM32.size()};
+
     constexpr size_t bytesPerSample {4};
 
     size_t samplesRemaining {totalSamplesToWrite};
@@ -263,7 +270,7 @@ void Writer::WriteDoubleToFloat (double const * source, size_t totalSamplesToWri
 
     while (samplesRemaining)
     {
-        const size_t samplesToWrite {std::min (samplesRemaining, buffer.size())};
+        const size_t samplesToWrite {std::min (samplesRemaining, bufferSize)};
 
         // Convert to float.
         for (size_t i = 0; i < samplesToWrite; ++i)
@@ -280,7 +287,7 @@ void Writer::WriteDoubleToFloat (double const * source, size_t totalSamplesToWri
             }
         }
 
-        if (fwrite (buffer.data(), bytesPerSample, samplesToWrite, file.get()) != samplesToWrite)
+        if (fwrite (buffer, bytesPerSample, samplesToWrite, file.get()) != samplesToWrite)
         {
             throw WriteError ("Failed to write buffer to file.");
         }
@@ -349,7 +356,9 @@ double quantized (double value, double scale, double min, double max)
 template <FloatOrDouble T>
 void Writer::WriteLPCM16 (T const * source, size_t totalSamplesToWrite)
 {
-    auto & buffer {bufferLPCM16};
+    auto * const buffer {bufferLPCM16.data()};
+    const auto bufferSize {bufferLPCM16.size()};
+
     constexpr size_t bytesPerSample {2};
 
     size_t samplesRemaining {totalSamplesToWrite};
@@ -357,7 +366,7 @@ void Writer::WriteLPCM16 (T const * source, size_t totalSamplesToWrite)
 
     while (samplesRemaining)
     {
-        const size_t samplesToWrite {std::min (samplesRemaining, buffer.size())};
+        const size_t samplesToWrite {std::min (samplesRemaining, bufferSize)};
 
         // Quantize.
         for (size_t i = 0; i < samplesToWrite; ++i)
@@ -374,7 +383,7 @@ void Writer::WriteLPCM16 (T const * source, size_t totalSamplesToWrite)
             }
         }
 
-        if (fwrite (buffer.data(), bytesPerSample, samplesToWrite, file.get()) != samplesToWrite)
+        if (fwrite (buffer, bytesPerSample, samplesToWrite, file.get()) != samplesToWrite)
         {
             throw WriteError ("Failed to write buffer to file.");
         }
@@ -428,7 +437,9 @@ void Writer::WriteLPCM24 (T const * source, size_t totalSamplesToWrite)
 template <FloatOrDouble T>
 void Writer::WriteLPCM32 (T const * source, size_t totalSamplesToWrite)
 {
-    auto & buffer {bufferLPCM32};
+    auto * const buffer {bufferLPCM32.data()};
+    const auto bufferSize {bufferLPCM32.size()};
+
     constexpr size_t bytesPerSample {4};
 
     size_t samplesRemaining {totalSamplesToWrite};
@@ -436,7 +447,7 @@ void Writer::WriteLPCM32 (T const * source, size_t totalSamplesToWrite)
 
     while (samplesRemaining)
     {
-        const size_t samplesToWrite {std::min (samplesRemaining, buffer.size())};
+        const size_t samplesToWrite {std::min (samplesRemaining, bufferSize)};
 
         // Quantize.
         for (size_t i = 0; i < samplesToWrite; ++i)
@@ -453,7 +464,7 @@ void Writer::WriteLPCM32 (T const * source, size_t totalSamplesToWrite)
             }
         }
 
-        if (fwrite (buffer.data(), bytesPerSample, samplesToWrite, file.get()) != samplesToWrite)
+        if (fwrite (buffer, bytesPerSample, samplesToWrite, file.get()) != samplesToWrite)
         {
             throw WriteError ("Failed to write buffer to file.");
         }
