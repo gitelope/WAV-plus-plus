@@ -387,7 +387,10 @@ void Writer::WriteLPCM16 (T const * source, size_t totalSamplesToWrite)
 template <FloatOrDouble T>
 void Writer::WriteLPCM24 (T const * source, size_t totalSamplesToWrite)
 {
-    auto & buffer {bufferLPCM24};
+    // local data pointer helps the optimizer
+    auto * const buffer {bufferLPCM24.data()};
+    const auto bufferSize {bufferLPCM24.size()};
+
     constexpr size_t bytesPerSample {3};
 
     size_t samplesRemaining {totalSamplesToWrite};
@@ -395,7 +398,7 @@ void Writer::WriteLPCM24 (T const * source, size_t totalSamplesToWrite)
 
     while (samplesRemaining)
     {
-        const size_t samplesToWrite {std::min (samplesRemaining, buffer.size())};
+        const size_t samplesToWrite {std::min (samplesRemaining, bufferSize)};
 
         // Quantize.
         for (size_t i = 0; i < samplesToWrite; ++i)
@@ -412,7 +415,7 @@ void Writer::WriteLPCM24 (T const * source, size_t totalSamplesToWrite)
             }
         }
 
-        if (fwrite (buffer.data(), bytesPerSample, samplesToWrite, file.get()) != samplesToWrite)
+        if (fwrite (buffer, bytesPerSample, samplesToWrite, file.get()) != samplesToWrite)
         {
             throw WriteError ("Failed to write buffer to file.");
         }
