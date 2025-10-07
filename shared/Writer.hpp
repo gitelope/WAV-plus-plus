@@ -293,7 +293,10 @@ void Writer::WriteDoubleToFloat (double const * source, size_t totalSamplesToWri
 template <FloatOrDouble T>
 void Writer::WriteLPCMU8 (T const * source, size_t totalSamplesToWrite)
 {
-    auto & buffer {bufferLPCMU8};
+    // local data pointer helps the optimizer
+    auto * const buffer {bufferLPCMU8.data()};
+    const auto bufferSize {bufferLPCMU8.size()};
+
     constexpr size_t bytesPerSample {1};
 
     size_t samplesRemaining {totalSamplesToWrite};
@@ -301,7 +304,7 @@ void Writer::WriteLPCMU8 (T const * source, size_t totalSamplesToWrite)
 
     while (samplesRemaining)
     {
-        const size_t samplesToWrite {std::min (samplesRemaining, buffer.size())};
+        const size_t samplesToWrite {std::min (samplesRemaining, bufferSize)};
 
         // Quantize.
         for (size_t i = 0; i < samplesToWrite; ++i)
@@ -314,7 +317,7 @@ void Writer::WriteLPCMU8 (T const * source, size_t totalSamplesToWrite)
             buffer [i] = static_cast<uint8_t> (clamped);
         }
 
-        if (fwrite (buffer.data(), bytesPerSample, samplesToWrite, file.get()) != samplesToWrite)
+        if (fwrite (buffer, bytesPerSample, samplesToWrite, file.get()) != samplesToWrite)
         {
             throw WriteError ("Failed to write buffer to file.");
         }
