@@ -60,15 +60,16 @@ public:
     template <FloatOrDouble T>
     size_t writeInterleavedFrames (T const * source, size_t framesToWrite);
 
+    bool isOpen() const { return file != nullptr; }
+
     // Manual finalization allows client to handle exceptions.
     // Destructor will call if client doesn't, swallowing any exceptions.
     void Close();
 
-    bool isOpen() const { return file != nullptr; }
-
 private:
 
     std::unique_ptr<FILE, decltype(&fclose)> file;
+
     uint16_t channels;
     uint16_t bitsPerSample;
     uint16_t formatCode;
@@ -93,10 +94,9 @@ private:
     std::vector<double>  bufferFloatPCM64;
 
     void WriteHeader (uint32_t sampleRate);
+    void SetMaximumDataChunkSize (uint16_t blockAlign);
 
     void InitializeBuffer (size_t sizeInBytes);
-
-    void SetMaximumDataChunkSize (uint16_t blockAlign);
 
     // float PCM
     template <FloatOrDouble T> void WriteFloatPCM_NoConversion (T const * source, size_t samplesToWrite);
