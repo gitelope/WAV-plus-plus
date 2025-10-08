@@ -33,8 +33,6 @@ public:
                      uint16_t channels,
                      size_t bufferSizeInKB = 32)
     :file (fopen (filepath.c_str(), "wb"), fclose)
-    ,exportFormat (exportFormat)
-    ,sampleRate (sampleRate)
     ,channels (channels)
     {
         if (!file)
@@ -45,10 +43,12 @@ public:
         std::tie (this->bitsPerSample, this->formatCode) = bitDepthAndFormatCode (exportFormat);
 
         // Write header with placeholders for RIFF chunk size and data chunk size.
-        WriteHeader();
+        WriteHeader (sampleRate);
 
         InitializeBuffer (bufferSizeInKB * 1024);
     }
+
+    ~Writer(); // Closes file if client does not.
 
     // Write interleaved samples from user-provided buffer.
     // Returns the number of samples written.
@@ -64,24 +64,19 @@ public:
     // Destructor will call if client doesn't, swallowing any exceptions.
     void Close();
 
-    ExportFormat getExportFormat() const { return exportFormat; }
-    uint32_t getSampleRate() const { return sampleRate; }
-    uint16_t getChannels() const { return channels; }
-
     bool isOpen() const { return file != nullptr; }
-
-    ~Writer(); // Closes file if client does not.
 
 private:
 
     std::unique_ptr<FILE, decltype(&fclose)> file;
-    ExportFormat exportFormat;
-    uint32_t sampleRate;
     uint16_t channels;
     uint16_t bitsPerSample;
     uint16_t formatCode;
 
     size_t totalSamplesWritten {0};
+    // Largest allowable data chunk given header size, encoding, channels,
+    // limit of 32-bit unsigned data chunk size, that ensures a whole
+    // number of frames are written.
     uint32_t maxDataChunkSize {0};
 
     // Header field positions set by WriteHeader()
@@ -97,9 +92,11 @@ private:
     std::vector<float>   bufferFloatPCM32;
     std::vector<double>  bufferFloatPCM64;
 
-    void WriteHeader();
+    void WriteHeader (uint32_t sampleRate);
 
     void InitializeBuffer (size_t sizeInBytes);
+
+    void SetMaximumDataChunkSize (uint16_t blockAlign);
 
     // float PCM
     template <FloatOrDouble T> void WriteFloatPCM_NoConversion (T const * source, size_t samplesToWrite);
@@ -507,7 +504,7 @@ inline void Writer::InitializeBuffer (size_t sizeInBytes)
     }
 }
 
-inline void Writer::WriteHeader()
+inline void Writer::WriteHeader (uint32_t sampleRate)
 {
     if (!file) return;
 
@@ -518,7 +515,7 @@ inline void Writer::WriteHeader()
     const auto bytesPerSecond {sampleRate * channels * bytesPerSample};
 
     // block size in bytes = samples/block * bytes/sample
-    const auto blockAlign {channels * bytesPerSample};
+    const auto blockAlign {static_cast<uint16_t> (channels * bytesPerSample)};
 
     // RIFF header
     WriteToHeader (file.get(), "RIFF");
@@ -547,6 +544,11 @@ inline void Writer::WriteHeader()
     // Write data chunk size placeholder:
     WriteToHeader (file.get(), static_cast<uint32_t> (0)); // Will be updated in UpdateHeader()
 
+    SetMaximumDataChunkSize (blockAlign);
+}
+
+inline void Writer::SetMaximumDataChunkSize (uint16_t blockAlign)
+{
     // Calculate maximum data chunk size
     // with the requirement that only full frames, a.k.a.
     // blocks will be stored. No partial frames allowed.
