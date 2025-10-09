@@ -27,19 +27,19 @@ template <FloatOrDouble T>
 void ReadInterleaved_FloatPCM_NoConversion (FILE * in, std::vector<T> & destination);
 
 template <FloatOrDouble T>
-void ReadInterleaved_FloatPCM_WithConversion (FILE * in, std::vector<T> & destination, uint16_t bitsPerSample, size_t readBufferSizeInBytes, size_t ioBufferSizeInBytes);
+void ReadInterleaved_FloatPCM_WithConversion (FILE * in, std::vector<T> & destination, uint16_t bitsPerSample, size_t readBufferSizeInBytes/*, size_t ioBufferSizeInBytes*/);
 
 template <FloatOrDouble T>
-void ReadInterleaved_LPCMU8 (FILE * in, std::vector<T> & destination, size_t readBufferSizeInBytes, size_t ioBufferSizeInBytes);
+void ReadInterleaved_LPCMU8 (FILE * in, std::vector<T> & destination, size_t readBufferSizeInBytes/*, size_t ioBufferSizeInBytes*/);
 
 template <FloatOrDouble T>
-void ReadInterleaved_LPCM16 (FILE * in, std::vector<T> & destination, size_t readBufferSizeInBytes, size_t ioBufferSizeInBytes);
+void ReadInterleaved_LPCM16 (FILE * in, std::vector<T> & destination, size_t readBufferSizeInBytes/*, size_t ioBufferSizeInBytes*/);
 
 template <FloatOrDouble T>
-void ReadInterleaved_LPCM24 (FILE * in, std::vector<T> & destination, size_t readBufferSizeInBytes, size_t ioBufferSizeInBytes);
+void ReadInterleaved_LPCM24 (FILE * in, std::vector<T> & destination, size_t readBufferSizeInBytes/*, size_t ioBufferSizeInBytes*/);
 
 template <FloatOrDouble T>
-void ReadInterleaved_LPCM32 (FILE * in, std::vector<T> & destination, size_t readBufferSizeInBytes, size_t ioBufferSizeInBytes);
+void ReadInterleaved_LPCM32 (FILE * in, std::vector<T> & destination, size_t readBufferSizeInBytes/*, size_t ioBufferSizeInBytes*/);
 
 ////////////////////////////////////////////////////////////////////////////////////////
 
@@ -50,7 +50,7 @@ void ReadDataInterleaved (FILE * in,
                           DataChunk const & data,
                           size_t requestedBufferSizeInBytes)
 {
-    constexpr size_t ioBufferSizeMultiplier {4};
+    //constexpr size_t ioBufferSizeMultiplier {4};
 
     // Advance to the beginning of the data portion of the data chunk:
     if (fsetpos (in, &data.offset) != 0)
@@ -64,16 +64,16 @@ void ReadDataInterleaved (FILE * in,
     destination.resize (numSamples);
 
     const auto readBufferSize {bufferSizeInBytes (requestedBufferSizeInBytes, numSamples, info.bitDepth)};
-    const auto ioBufferSize {ioBufferSizeInBytes (numSamples, info.bitDepth, readBufferSize, ioBufferSizeMultiplier)};
+    //const auto ioBufferSize {ioBufferSizeInBytes (numSamples, info.bitDepth, readBufferSize, ioBufferSizeMultiplier)};
 
     if (info.isLinearPCM)
     {
         switch (info.containerSizeInBits)
         {
-            case 8:  ReadInterleaved_LPCMU8 (in, destination, readBufferSize, ioBufferSize); break;
-            case 16: ReadInterleaved_LPCM16 (in, destination, readBufferSize, ioBufferSize); break;
-            case 24: ReadInterleaved_LPCM24 (in, destination, readBufferSize, ioBufferSize); break;
-            case 32: ReadInterleaved_LPCM32 (in, destination, readBufferSize, ioBufferSize); break;
+            case 8:  ReadInterleaved_LPCMU8 (in, destination, readBufferSize/*, ioBufferSize*/); break;
+            case 16: ReadInterleaved_LPCM16 (in, destination, readBufferSize/*, ioBufferSize*/); break;
+            case 24: ReadInterleaved_LPCM24 (in, destination, readBufferSize/*, ioBufferSize*/); break;
+            case 32: ReadInterleaved_LPCM32 (in, destination, readBufferSize/*, ioBufferSize*/); break;
         }
     }
     else if (info.isFloatPCM)
@@ -84,7 +84,7 @@ void ReadDataInterleaved (FILE * in,
         }
         else
         {
-            ReadInterleaved_FloatPCM_WithConversion (in, destination, info.bitDepth, readBufferSize, ioBufferSize);
+            ReadInterleaved_FloatPCM_WithConversion (in, destination, info.bitDepth, readBufferSize/*, ioBufferSize*/);
         }
     }
 }
@@ -102,7 +102,7 @@ void ReadInterleaved_FloatPCM_NoConversion (FILE * in, std::vector<T> & destinat
 }
 
 template <FloatOrDouble T>
-void ReadInterleaved_FloatPCM_WithConversion (FILE * in, std::vector<T> & destination, uint16_t bitsPerSample, size_t readBufferSizeInBytes, size_t ioBufferSizeInBytes)
+void ReadInterleaved_FloatPCM_WithConversion (FILE * in, std::vector<T> & destination, uint16_t bitsPerSample, size_t readBufferSizeInBytes/*, size_t ioBufferSizeInBytes*/)
 {
     // Input is different bit depth than output: float->double or double->float.
     // Read into a buffer of the input type, then convert to output type.
@@ -178,7 +178,7 @@ void ReadInterleaved_FloatPCM_WithConversion (FILE * in, std::vector<T> & destin
 }
 
 template <FloatOrDouble T>
-void ReadInterleaved_LPCMU8 (FILE * in, std::vector<T> & destination, size_t readBufferSizeInBytes, size_t ioBufferSizeInBytes)
+void ReadInterleaved_LPCMU8 (FILE * in, std::vector<T> & destination, size_t readBufferSizeInBytes/*, size_t ioBufferSizeInBytes*/)
 {
     constexpr size_t bytesPerSample {1};
     std::vector<uint8_t> buffer (readBufferSizeInBytes);
@@ -204,7 +204,7 @@ void ReadInterleaved_LPCMU8 (FILE * in, std::vector<T> & destination, size_t rea
 }
 
 template <FloatOrDouble T>
-void ReadInterleaved_LPCM16 (FILE * in, std::vector<T> & destination, size_t readBufferSizeInBytes, size_t ioBufferSizeInBytes)
+void ReadInterleaved_LPCM16 (FILE * in, std::vector<T> & destination, size_t readBufferSizeInBytes/*, size_t ioBufferSizeInBytes*/)
 {
     constexpr size_t bytesPerSample {2};
     std::vector<int16_t> buffer (readBufferSizeInBytes / bytesPerSample);
@@ -240,7 +240,7 @@ void ReadInterleaved_LPCM16 (FILE * in, std::vector<T> & destination, size_t rea
 }
 
 template <FloatOrDouble T>
-void ReadInterleaved_LPCM24 (FILE * in, std::vector<T> & destination, size_t readBufferSizeInBytes, size_t ioBufferSizeInBytes)
+void ReadInterleaved_LPCM24 (FILE * in, std::vector<T> & destination, size_t readBufferSizeInBytes/*, size_t ioBufferSizeInBytes*/)
 {
     constexpr size_t bytesPerSample {3};
     std::vector<int24> buffer (readBufferSizeInBytes / bytesPerSample);
@@ -276,7 +276,7 @@ void ReadInterleaved_LPCM24 (FILE * in, std::vector<T> & destination, size_t rea
 }
 
 template <FloatOrDouble T>
-void ReadInterleaved_LPCM32 (FILE * in, std::vector<T> & destination, size_t readBufferSizeInBytes, size_t ioBufferSizeInBytes)
+void ReadInterleaved_LPCM32 (FILE * in, std::vector<T> & destination, size_t readBufferSizeInBytes/*, size_t ioBufferSizeInBytes*/)
 {
     constexpr size_t bytesPerSample {4};
     std::vector<int32_t> buffer (readBufferSizeInBytes / bytesPerSample);
