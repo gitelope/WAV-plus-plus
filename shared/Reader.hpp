@@ -266,6 +266,9 @@ void Reader::ReadLPCMU8 (T * destination, size_t totalSamplesToRead)
     auto & buffer {bufferLPCMU8};
     constexpr size_t bytesPerSample {1};
 
+    constexpr auto offset {static_cast<T> (uint8DequantizationOffset)};
+    constexpr auto max    {static_cast<T> (uint8MaxAbs)};
+
     size_t samplesRemaining {totalSamplesToRead};
     size_t writePosition {0};
 
@@ -281,7 +284,7 @@ void Reader::ReadLPCMU8 (T * destination, size_t totalSamplesToRead)
         // Convert to destination type
         for (size_t i = 0; i < samplesToRead; ++i)
         {
-            destination [writePosition + i] = (buffer [i] - uint8DequantizationOffset) / uint8MaxAbs;
+            destination [writePosition + i] = (buffer [i] - offset) / max;
         }
 
         writePosition += samplesToRead;
@@ -294,6 +297,8 @@ void Reader::ReadLPCM16 (T * destination, size_t totalSamplesToRead)
 {
     auto & buffer {bufferLPCM16};
     constexpr size_t bytesPerSample {2};
+
+    constexpr auto max {static_cast<T> (int16MaxAbs)};
 
     size_t samplesRemaining {totalSamplesToRead};
     size_t writePosition {0};
@@ -319,7 +324,7 @@ void Reader::ReadLPCM16 (T * destination, size_t totalSamplesToRead)
         // Convert to destination type
         for (size_t i = 0; i < samplesToRead; ++i)
         {
-            destination [writePosition + i] = buffer [i] / int16MaxAbs;
+            destination [writePosition + i] = buffer [i] / max;
         }
 
         writePosition += samplesToRead;
@@ -332,6 +337,8 @@ void Reader::ReadLPCM24 (T * destination, size_t totalSamplesToRead)
 {
     auto & buffer {bufferLPCM24};
     constexpr size_t bytesPerSample {3};
+
+    constexpr auto max {static_cast<T> (int24MaxAbs)};
 
     size_t samplesRemaining {totalSamplesToRead};
     size_t writePosition {0};
@@ -357,7 +364,7 @@ void Reader::ReadLPCM24 (T * destination, size_t totalSamplesToRead)
         // Convert to destination type
         for (size_t i = 0; i < samplesToRead; ++i)
         {
-            destination [writePosition + i] = buffer [i] / int24MaxAbs;
+            destination [writePosition + i] = buffer [i] / max;
         }
 
         writePosition += samplesToRead;
@@ -370,6 +377,8 @@ void Reader::ReadLPCM32 (T * destination, size_t totalSamplesToRead)
 {
     auto & buffer {bufferLPCM32};
     constexpr size_t bytesPerSample {4};
+
+    constexpr auto max {static_cast<T> (int32MaxAbs)};
 
     size_t samplesRemaining {totalSamplesToRead};
     size_t writePosition {0};
@@ -395,7 +404,7 @@ void Reader::ReadLPCM32 (T * destination, size_t totalSamplesToRead)
         // Convert to destination type
         for (size_t i = 0; i < samplesToRead; ++i)
         {
-            destination [writePosition + i] = buffer [i] / int32MaxAbs;
+            destination [writePosition + i] = buffer [i] / max;
         }
 
         writePosition += samplesToRead;
