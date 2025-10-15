@@ -7,8 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		C479D8552E149E7C00093894 /* Formats.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C479D8542E149E7C00093894 /* Formats.cpp */; };
-		C479D8562E149E7C00093894 /* Formats.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C479D8542E149E7C00093894 /* Formats.cpp */; };
 		C499DB892E13436D00A88D60 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C499DB872E13436D00A88D60 /* main.cpp */; };
 		C499DB8C2E13437000A88D60 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C499DB8A2E13437000A88D60 /* main.cpp */; };
 		C4AA9FBD2E75DFDB00CD6B51 /* BufferSizing.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C4AA9FBC2E75DFDB00CD6B51 /* BufferSizing.cpp */; };
@@ -50,7 +48,6 @@
 		C4461B962EA0393E0036A10A /* WriteHelpers.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = WriteHelpers.hpp; sourceTree = "<group>"; };
 		C4461B972EA0393E0036A10A /* WriteHelpers.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = WriteHelpers.cpp; sourceTree = "<group>"; };
 		C479D8532E149E7C00093894 /* Formats.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Formats.hpp; sourceTree = "<group>"; };
-		C479D8542E149E7C00093894 /* Formats.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Formats.cpp; sourceTree = "<group>"; };
 		C499DB752E13435300A88D60 /* write and read */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "write and read"; sourceTree = BUILT_PRODUCTS_DIR; };
 		C499DB802E13436900A88D60 /* write and inspect */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "write and inspect"; sourceTree = BUILT_PRODUCTS_DIR; };
 		C499DB872E13436D00A88D60 /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
@@ -151,7 +148,6 @@
 				C499DB932E13445F00A88D60 /* ChunkInfo.hpp */,
 				C499DB8F2E13445F00A88D60 /* ReadingBytes.hpp */,
 				C479D8532E149E7C00093894 /* Formats.hpp */,
-				C479D8542E149E7C00093894 /* Formats.cpp */,
 				C4B1FD8B2E20533200B6D691 /* Exceptions.hpp */,
 			);
 			path = shared;
@@ -240,7 +236,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				C479D8552E149E7C00093894 /* Formats.cpp in Sources */,
 				C499DB8C2E13437000A88D60 /* main.cpp in Sources */,
 				C4AA9FBD2E75DFDB00CD6B51 /* BufferSizing.cpp in Sources */,
 			);
@@ -250,7 +245,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				C479D8562E149E7C00093894 /* Formats.cpp in Sources */,
 				C499DB892E13436D00A88D60 /* main.cpp in Sources */,
 				C4AA9FBE2E75DFDB00CD6B51 /* BufferSizing.cpp in Sources */,
 			);

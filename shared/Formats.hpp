@@ -2,9 +2,14 @@
 #ifndef wavplusplus_Formats_hpp
 #define wavplusplus_Formats_hpp
 
-#include <cstdint>
-#include <string>
 #include <array>
+#include <concepts>
+#include <cstdint>
+#include <format>
+#include <ostream>
+#include <sstream>
+#include <string>
+#include <utility>
 
 namespace wav
 {
@@ -83,7 +88,23 @@ inline constexpr GUID FloatPCM
 {0x00000003, 0x0000, 0x0010, {0x80, 0x00, 0x00, 0xaa, 0x00, 0x38, 0x9b, 0x71}};
 }
 
-std::ostream & operator<< (std::ostream & os, GUID const & guid);
+inline std::ostream & operator<< (std::ostream & os, GUID const & guid)
+{
+    os << std::format ("{:08X}-{:04X}-{:04X}-{:02X}{:02X}-{:02X}{:02X}{:02X}{:02X}{:02X}{:02X}",
+                       guid.data1,
+                       guid.data2,
+                       guid.data3,
+                       guid.data4[0], guid.data4[1],
+                       guid.data4[2], guid.data4[3], guid.data4[4], guid.data4[5], guid.data4[6], guid.data4[7]);
+    return os;
+}
+
+inline std::string GUID::str() const
+{
+    std::ostringstream oss;
+    oss << *this;
+    return oss.str();
+}
 
 template <typename T>
 concept FloatOrDouble = std::same_as <T,float> || std::same_as <T,double>;
