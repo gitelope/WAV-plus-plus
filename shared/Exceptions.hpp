@@ -2,6 +2,9 @@
 #ifndef wavplusplus_Exceptions_hpp
 #define wavplusplus_Exceptions_hpp
 
+#include <stdexcept>
+#include <string>
+
 namespace wav
 {
 
