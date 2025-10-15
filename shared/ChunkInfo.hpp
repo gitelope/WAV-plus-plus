@@ -9,7 +9,7 @@
 #include <array>
 #include <bitset>
 #include <format>
-#include <iostream>
+#include <ostream>
 #include <limits>
 #include <sstream>
 #include <string>
