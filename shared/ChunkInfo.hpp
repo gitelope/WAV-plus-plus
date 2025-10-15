@@ -85,113 +85,6 @@ struct PeakChunk
     bool present {false};
 };
 
-/// Provides channel information based on number of channels in file and channel mask.
-inline std::string FormatChunk::channelString() const
-{
-    /*
-     number of bits set in channel mask vs. number of channels
-     ---------------------------------------------------------
-
-     1. channel mask bits set == num channels:
-
-     Display all speaker positions with their channel number.
-
-     Example:
-     channel mask: 00000000000000000000000000000011
-     [0] front left, [1] front right
-
-
-     2. channel mask bits set < num channels:
-
-     Display all speaker positions with their channel number and
-     then display "unassigned" for each subsequent channel.
-
-     Example:
-     channel mask: 00000000000000000000000000110000
-     [0] back left, [1] back right, [2] unassigned, [3] unassigned
-
-
-     3. channel mask bits set > num channels:
-
-     Display all speaker positions with valid audio channel numbers
-     and then list speaker positions specified in mask which have no corresponding audio channel.
-
-     Example:
-     channel mask: 00000000000000001001001000010000
-     [0] back left, [1] side left
-     No audio found for position(s) set in channel mask: top front left, top back left
-
-
-     Note: Channel number is channel's position in the data interleaving sequence, not channel mask index.
-     */
-
-    constexpr std::array<std::string_view,18> speakerPositions
-    {
-        "front left",             //     0x1   0
-        "front right",            //     0x2   1
-        "front center",           //     0x4   2
-        "low frequency",          //     0x8   3
-        "back left",              //    0x10   4
-        "back right",             //    0x20   5
-        "front left of center",   //    0x40   6
-        "front right of center",  //    0x80   7
-        "back center",            //   0x100   8
-        "side left",              //   0x200   9
-        "side right",             //   0x400  10
-        "top center",             //   0x800  11
-        "top front left",         //  0x1000  12
-        "top front center",       //  0x2000  13
-        "top front right",        //  0x4000  14
-        "top back left",          //  0x8000  15
-        "top back center",        // 0x10000  16
-        "top back right"          // 0x20000  17
-    };
-
-    std::string result;
-
-    int channel {0};
-    size_t speaker_index {0};
-    size_t positions_assigned {0};
-    bool first_element {true};
-
-    constexpr std::string indent = "    ";
-
-    // Assign speaker position strings to channels until we either
-    // run out of channels or run out of speaker positions set in the channel mask.
-    for (; channel < channels && positions_assigned < channelMask.count(); ++speaker_index)
-    {
-        if (channelMask.test (speaker_index))
-        {
-            ++positions_assigned;
-            result += std::exchange(first_element, false) ? indent : ", ";
-            result += "[" + std::to_string (channel++) + "] " + std::string(speakerPositions [speaker_index]);
-        }
-    }
-
-    // Declare any channels without assigned speaker positions as "unassigned".
-    for (; channel < channels; ++channel)
-    {
-        result += std::exchange(first_element, false) ? indent : ", ";
-        result += "[" + std::to_string (channel) + "] unassigned";
-    }
-
-    // Add warning for unused speaker positions when more bits are set
-    // in the channel mask than there are actual channels of audio.
-    first_element = true;
-
-    for (; positions_assigned < channelMask.count(); ++speaker_index)
-    {
-        if (channelMask.test (speaker_index))
-        {
-            ++positions_assigned;
-            result += std::exchange(first_element, false) ? "\n" + indent + "No audio found for position(s) set in channel mask: " : ", ";
-            result += speakerPositions [speaker_index];
-        }
-    }
-
-    return result;
-}
-
 class ChunkInfo
 /// All the info from RIFF, fmt, data, fact and PEAK chunks except for the samples.
 /// (Essentially a header parser with the qualification that a WAV file need not be
@@ -697,6 +590,113 @@ inline std::ostream & operator<< (std::ostream & os, PeakChunk const & peak)
     }
 
     return os;
+}
+
+/// Provides channel information based on number of channels in file and channel mask.
+inline std::string FormatChunk::channelString() const
+{
+    /*
+     number of bits set in channel mask vs. number of channels
+     ---------------------------------------------------------
+
+     1. channel mask bits set == num channels:
+
+     Display all speaker positions with their channel number.
+
+     Example:
+     channel mask: 00000000000000000000000000000011
+     [0] front left, [1] front right
+
+
+     2. channel mask bits set < num channels:
+
+     Display all speaker positions with their channel number and
+     then display "unassigned" for each subsequent channel.
+
+     Example:
+     channel mask: 00000000000000000000000000110000
+     [0] back left, [1] back right, [2] unassigned, [3] unassigned
+
+
+     3. channel mask bits set > num channels:
+
+     Display all speaker positions with valid audio channel numbers
+     and then list speaker positions specified in mask which have no corresponding audio channel.
+
+     Example:
+     channel mask: 00000000000000001001001000010000
+     [0] back left, [1] side left
+     No audio found for position(s) set in channel mask: top front left, top back left
+
+
+     Note: Channel number is channel's position in the data interleaving sequence, not channel mask index.
+     */
+
+    constexpr std::array<std::string_view,18> speakerPositions
+    {
+        "front left",             //     0x1   0
+        "front right",            //     0x2   1
+        "front center",           //     0x4   2
+        "low frequency",          //     0x8   3
+        "back left",              //    0x10   4
+        "back right",             //    0x20   5
+        "front left of center",   //    0x40   6
+        "front right of center",  //    0x80   7
+        "back center",            //   0x100   8
+        "side left",              //   0x200   9
+        "side right",             //   0x400  10
+        "top center",             //   0x800  11
+        "top front left",         //  0x1000  12
+        "top front center",       //  0x2000  13
+        "top front right",        //  0x4000  14
+        "top back left",          //  0x8000  15
+        "top back center",        // 0x10000  16
+        "top back right"          // 0x20000  17
+    };
+
+    std::string result;
+
+    int channel {0};
+    size_t speaker_index {0};
+    size_t positions_assigned {0};
+    bool first_element {true};
+
+    constexpr std::string indent = "    ";
+
+    // Assign speaker position strings to channels until we either
+    // run out of channels or run out of speaker positions set in the channel mask.
+    for (; channel < channels && positions_assigned < channelMask.count(); ++speaker_index)
+    {
+        if (channelMask.test (speaker_index))
+        {
+            ++positions_assigned;
+            result += std::exchange(first_element, false) ? indent : ", ";
+            result += "[" + std::to_string (channel++) + "] " + std::string(speakerPositions [speaker_index]);
+        }
+    }
+
+    // Declare any channels without assigned speaker positions as "unassigned".
+    for (; channel < channels; ++channel)
+    {
+        result += std::exchange(first_element, false) ? indent : ", ";
+        result += "[" + std::to_string (channel) + "] unassigned";
+    }
+
+    // Add warning for unused speaker positions when more bits are set
+    // in the channel mask than there are actual channels of audio.
+    first_element = true;
+
+    for (; positions_assigned < channelMask.count(); ++speaker_index)
+    {
+        if (channelMask.test (speaker_index))
+        {
+            ++positions_assigned;
+            result += std::exchange(first_element, false) ? "\n" + indent + "No audio found for position(s) set in channel mask: " : ", ";
+            result += speakerPositions [speaker_index];
+        }
+    }
+
+    return result;
 }
 
 } // namespace wav
