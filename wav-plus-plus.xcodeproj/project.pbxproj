@@ -17,8 +17,6 @@
 		C4AA9FB92E75D6C300CD6B51 /* Info.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C4AA9FB72E75D6C300CD6B51 /* Info.cpp */; };
 		C4AA9FBD2E75DFDB00CD6B51 /* BufferSizing.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C4AA9FBC2E75DFDB00CD6B51 /* BufferSizing.cpp */; };
 		C4AA9FBE2E75DFDB00CD6B51 /* BufferSizing.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C4AA9FBC2E75DFDB00CD6B51 /* BufferSizing.cpp */; };
-		C4CBC3C62E302405009AA677 /* WriteHelpers.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C4CBC3C52E302405009AA677 /* WriteHelpers.cpp */; };
-		C4CBC3C72E302405009AA677 /* WriteHelpers.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C4CBC3C52E302405009AA677 /* WriteHelpers.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -45,21 +43,23 @@
 /* Begin PBXFileReference section */
 		C4461B8A2E8D8AAC0036A10A /* Writer.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Writer.hpp; sourceTree = "<group>"; };
 		C4461B8B2E8F43EA0036A10A /* QuantizationConstants.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = QuantizationConstants.hpp; sourceTree = "<group>"; };
-		C4461B8D2E9702170036A10A /* Writer.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Writer.hpp; sourceTree = "<group>"; };
-		C46430972E7F9653008455B9 /* ReadDataInterleaved_DirectRead.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = ReadDataInterleaved_DirectRead.hpp; sourceTree = "<group>"; };
-		C46430A02E821414008455B9 /* ReadDataInterleaved_ByteBuffer_BitcastStdArray.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = ReadDataInterleaved_ByteBuffer_BitcastStdArray.hpp; sourceTree = "<group>"; };
-		C46430A12E821414008455B9 /* ReadDataInterleaved_ByteBuffer_BitshiftingAndORing_Inline.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = ReadDataInterleaved_ByteBuffer_BitshiftingAndORing_Inline.hpp; sourceTree = "<group>"; };
-		C46430A22E821414008455B9 /* ReadDataInterleaved_ByteBuffer_BitshiftingAndORing_WithHelpers.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = ReadDataInterleaved_ByteBuffer_BitshiftingAndORing_WithHelpers.hpp; sourceTree = "<group>"; };
-		C46430A32E821414008455B9 /* ReadDataInterleaved_ByteBuffer_Memcpy.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = ReadDataInterleaved_ByteBuffer_Memcpy.hpp; sourceTree = "<group>"; };
+		C4461B8E2EA0393E0036A10A /* Read.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Read.hpp; sourceTree = "<group>"; };
+		C4461B8F2EA0393E0036A10A /* ReadDataInterleaved_ByteBuffer_BitcastStdArray.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = ReadDataInterleaved_ByteBuffer_BitcastStdArray.hpp; sourceTree = "<group>"; };
+		C4461B902EA0393E0036A10A /* ReadDataInterleaved_ByteBuffer_BitshiftingAndORing_Inline.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = ReadDataInterleaved_ByteBuffer_BitshiftingAndORing_Inline.hpp; sourceTree = "<group>"; };
+		C4461B912EA0393E0036A10A /* ReadDataInterleaved_ByteBuffer_BitshiftingAndORing_WithHelpers.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = ReadDataInterleaved_ByteBuffer_BitshiftingAndORing_WithHelpers.hpp; sourceTree = "<group>"; };
+		C4461B922EA0393E0036A10A /* ReadDataInterleaved_ByteBuffer_Memcpy.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = ReadDataInterleaved_ByteBuffer_Memcpy.hpp; sourceTree = "<group>"; };
+		C4461B932EA0393E0036A10A /* ReadDataInterleaved_DirectRead.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = ReadDataInterleaved_DirectRead.hpp; sourceTree = "<group>"; };
+		C4461B942EA0393E0036A10A /* ReadDataSeparateChannels.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = ReadDataSeparateChannels.hpp; sourceTree = "<group>"; };
+		C4461B952EA0393E0036A10A /* Write.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Write.hpp; sourceTree = "<group>"; };
+		C4461B962EA0393E0036A10A /* WriteHelpers.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = WriteHelpers.hpp; sourceTree = "<group>"; };
+		C4461B972EA0393E0036A10A /* WriteHelpers.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = WriteHelpers.cpp; sourceTree = "<group>"; };
 		C479D8532E149E7C00093894 /* Formats.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Formats.hpp; sourceTree = "<group>"; };
 		C479D8542E149E7C00093894 /* Formats.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Formats.cpp; sourceTree = "<group>"; };
 		C499DB752E13435300A88D60 /* write and read */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "write and read"; sourceTree = BUILT_PRODUCTS_DIR; };
 		C499DB802E13436900A88D60 /* write and inspect */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "write and inspect"; sourceTree = BUILT_PRODUCTS_DIR; };
 		C499DB872E13436D00A88D60 /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		C499DB8A2E13437000A88D60 /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
-		C499DB8D2E13445F00A88D60 /* Read.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Read.hpp; sourceTree = "<group>"; };
 		C499DB8F2E13445F00A88D60 /* ReadingBytes.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = ReadingBytes.hpp; sourceTree = "<group>"; };
-		C499DB912E13445F00A88D60 /* Write.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Write.hpp; sourceTree = "<group>"; };
 		C499DB932E13445F00A88D60 /* ChunkInfo.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = ChunkInfo.hpp; sourceTree = "<group>"; };
 		C499DB942E13445F00A88D60 /* ChunkInfo.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = ChunkInfo.cpp; sourceTree = "<group>"; };
 		C4AA9FB62E75D6C300CD6B51 /* Info.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Info.hpp; sourceTree = "<group>"; };
@@ -68,10 +68,7 @@
 		C4AA9FBB2E75DFDB00CD6B51 /* BufferSizing.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = BufferSizing.hpp; sourceTree = "<group>"; };
 		C4AA9FBC2E75DFDB00CD6B51 /* BufferSizing.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = BufferSizing.cpp; sourceTree = "<group>"; };
 		C4AA9FBF2E75EB3200CD6B51 /* DequantizationConstants.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = DequantizationConstants.hpp; sourceTree = "<group>"; };
-		C4AA9FC12E762AAC00CD6B51 /* ReadDataSeparateChannels.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = ReadDataSeparateChannels.hpp; sourceTree = "<group>"; };
 		C4B1FD8B2E20533200B6D691 /* Exceptions.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Exceptions.hpp; sourceTree = "<group>"; };
-		C4CBC3C42E302405009AA677 /* WriteHelpers.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = WriteHelpers.hpp; sourceTree = "<group>"; };
-		C4CBC3C52E302405009AA677 /* WriteHelpers.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = WriteHelpers.cpp; sourceTree = "<group>"; };
 		C4E0F9112E8496940046311C /* Reader.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Reader.hpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -93,12 +90,30 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		C4461B982EA0393E0036A10A /* obsolete */ = {
+			isa = PBXGroup;
+			children = (
+				C4461B8E2EA0393E0036A10A /* Read.hpp */,
+				C4461B8F2EA0393E0036A10A /* ReadDataInterleaved_ByteBuffer_BitcastStdArray.hpp */,
+				C4461B902EA0393E0036A10A /* ReadDataInterleaved_ByteBuffer_BitshiftingAndORing_Inline.hpp */,
+				C4461B912EA0393E0036A10A /* ReadDataInterleaved_ByteBuffer_BitshiftingAndORing_WithHelpers.hpp */,
+				C4461B922EA0393E0036A10A /* ReadDataInterleaved_ByteBuffer_Memcpy.hpp */,
+				C4461B932EA0393E0036A10A /* ReadDataInterleaved_DirectRead.hpp */,
+				C4461B942EA0393E0036A10A /* ReadDataSeparateChannels.hpp */,
+				C4461B952EA0393E0036A10A /* Write.hpp */,
+				C4461B962EA0393E0036A10A /* WriteHelpers.hpp */,
+				C4461B972EA0393E0036A10A /* WriteHelpers.cpp */,
+			);
+			path = obsolete;
+			sourceTree = "<group>";
+		};
 		C499DB422E1341E700A88D60 = {
 			isa = PBXGroup;
 			children = (
 				C499DB8B2E13437000A88D60 /* write and read */,
 				C499DB882E13436D00A88D60 /* write and inspect */,
 				C499DB952E13445F00A88D60 /* shared */,
+				C4461B982EA0393E0036A10A /* obsolete */,
 				C499DB4C2E1341E700A88D60 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -131,23 +146,12 @@
 		C499DB952E13445F00A88D60 /* shared */ = {
 			isa = PBXGroup;
 			children = (
-				C499DB8D2E13445F00A88D60 /* Read.hpp */,
 				C4E0F9112E8496940046311C /* Reader.hpp */,
-				C46430A02E821414008455B9 /* ReadDataInterleaved_ByteBuffer_BitcastStdArray.hpp */,
-				C46430A12E821414008455B9 /* ReadDataInterleaved_ByteBuffer_BitshiftingAndORing_Inline.hpp */,
-				C46430A22E821414008455B9 /* ReadDataInterleaved_ByteBuffer_BitshiftingAndORing_WithHelpers.hpp */,
-				C46430A32E821414008455B9 /* ReadDataInterleaved_ByteBuffer_Memcpy.hpp */,
-				C46430972E7F9653008455B9 /* ReadDataInterleaved_DirectRead.hpp */,
-				C4AA9FC12E762AAC00CD6B51 /* ReadDataSeparateChannels.hpp */,
 				C4AA9FBF2E75EB3200CD6B51 /* DequantizationConstants.hpp */,
 				C4AA9FB62E75D6C300CD6B51 /* Info.hpp */,
 				C4AA9FB72E75D6C300CD6B51 /* Info.cpp */,
 				C4461B8A2E8D8AAC0036A10A /* Writer.hpp */,
 				C4461B8B2E8F43EA0036A10A /* QuantizationConstants.hpp */,
-				C499DB912E13445F00A88D60 /* Write.hpp */,
-				C4CBC3C42E302405009AA677 /* WriteHelpers.hpp */,
-				C4CBC3C52E302405009AA677 /* WriteHelpers.cpp */,
-				C4461B8D2E9702170036A10A /* Writer.hpp */,
 				C4AA9FBA2E75DD8200CD6B51 /* int24.hpp */,
 				C4AA9FBB2E75DFDB00CD6B51 /* BufferSizing.hpp */,
 				C4AA9FBC2E75DFDB00CD6B51 /* BufferSizing.cpp */,
@@ -246,7 +250,6 @@
 			files = (
 				C4AA9FB92E75D6C300CD6B51 /* Info.cpp in Sources */,
 				C499DB9C2E13445F00A88D60 /* ChunkInfo.cpp in Sources */,
-				C4CBC3C62E302405009AA677 /* WriteHelpers.cpp in Sources */,
 				C479D8552E149E7C00093894 /* Formats.cpp in Sources */,
 				C499DB8C2E13437000A88D60 /* main.cpp in Sources */,
 				C4AA9FBD2E75DFDB00CD6B51 /* BufferSizing.cpp in Sources */,
@@ -259,7 +262,6 @@
 			files = (
 				C4AA9FB82E75D6C300CD6B51 /* Info.cpp in Sources */,
 				C499DB982E13445F00A88D60 /* ChunkInfo.cpp in Sources */,
-				C4CBC3C72E302405009AA677 /* WriteHelpers.cpp in Sources */,
 				C479D8562E149E7C00093894 /* Formats.cpp in Sources */,
 				C499DB892E13436D00A88D60 /* main.cpp in Sources */,
 				C4AA9FBE2E75DFDB00CD6B51 /* BufferSizing.cpp in Sources */,

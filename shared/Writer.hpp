@@ -508,6 +508,29 @@ inline void Writer::InitializeBuffer (size_t sizeInBytes)
     }
 }
 
+inline void WriteToHeader (FILE * out, std::string const & str)
+{
+    if (fwrite (str.data(), 1, str.size(), out) != str.size())
+    {
+        throw WriteError ("Failed to write string to file.");
+    }
+}
+
+// Write integer as header field. (Would be a bit slow for writing data chunk.)
+template <std::integral T>
+void WriteToHeader (FILE * out, T value)
+{
+    std::array<std::byte, sizeof(T)> bytes;
+    for (size_t i=0; i < bytes.size(); ++i)
+    {
+        bytes[i] = static_cast<std::byte> (value >> (8*i));
+    }
+    if (fwrite (bytes.data(), 1, bytes.size(), out) != bytes.size())
+    {
+        throw WriteError ("Failed to write to file.");
+    }
+}
+
 inline void Writer::WriteHeader (uint32_t sampleRate)
 {
     if (!file) return;
