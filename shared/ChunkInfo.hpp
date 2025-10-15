@@ -208,6 +208,7 @@ inline std::string ChunkInfo::summary() const
     return oss.str();
 }
 
+int peek (FILE * in); // check if there's data available
 void SkipChunk (FILE *, uint32_t);
 
 inline void ChunkInfo::ReadFile (FILE * in)
@@ -246,6 +247,39 @@ inline void ChunkInfo::ReadFile (FILE * in)
             SkipChunk (in, size);
         }
     }
+}
+
+/// Carefully handles skipping to the end of chunks
+/// in case long is only 32-bit
+/// (or size is unsigned 32-bit max).
+inline void SkipChunk (FILE * file, uint32_t size)
+{
+    int64_t skipAmount {size};
+    // Add padding byte if odd.
+    // Avoids adding directly to size parameter
+    // in case it equals the maximum unsigned 32-bit value.
+    skipAmount += (skipAmount % 2);
+    constexpr int64_t maxSeek {std::numeric_limits<long>::max()};
+
+    while (skipAmount)
+    {
+        const int64_t seekAmount {std::min (skipAmount, maxSeek)};
+        if (fseek (file, static_cast<long> (seekAmount), SEEK_CUR) != 0)
+        {
+            throw ReadError ("Failed to skip chunk.");
+        }
+        skipAmount -= seekAmount;
+    }
+}
+
+inline int peek (FILE * in)
+{
+    int c = fgetc (in);
+    if (c != EOF)
+    {
+        ungetc (c, in); // Put the character back
+    }
+    return c;
 }
 
 inline void ChunkInfo::ReadRiffChunk (FILE * in)
@@ -428,29 +462,6 @@ inline void ChunkInfo::ReadDataChunkSizeAndSkipSamples (FILE * in)
     // but will also occur with a larger odd number of channels:
     // odd channels x odd sample (container) size in bytes x odd number of samples = odd number of bytes
     SkipChunk (in, data.size);
-}
-
-/// Carefully handles skipping to the end of chunks
-/// in case long is only 32-bit
-/// (or size is unsigned 32-bit max).
-inline void SkipChunk (FILE * file, uint32_t size)
-{
-    int64_t skipAmount {size};
-    // Add padding byte if odd.
-    // Avoids adding directly to size parameter
-    // in case it equals the maximum unsigned 32-bit value.
-    skipAmount += (skipAmount % 2);
-    constexpr int64_t maxSeek {std::numeric_limits<long>::max()};
-
-    while (skipAmount)
-    {
-        const int64_t seekAmount {std::min (skipAmount, maxSeek)};
-        if (fseek (file, static_cast<long> (seekAmount), SEEK_CUR) != 0)
-        {
-            throw ReadError ("Failed to skip chunk.");
-        }
-        skipAmount -= seekAmount;
-    }
 }
 
 std::ostream & operator<< (std::ostream &, RiffChunk const &);

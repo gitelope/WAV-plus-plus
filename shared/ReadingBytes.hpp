@@ -53,8 +53,6 @@ inline auto fileForReading (std::string const & filepath)
 
 void Close (std::unique_ptr<FILE, decltype (&fclose)> & filePointer);
 
-int peek (FILE * in); // check if there's data available
-
 std::vector<std::byte> ReadBytes (std::string const & filePath);
 void PrintBytesAsHex (std::vector<std::byte> const & bytes);
 
@@ -264,16 +262,6 @@ inline void Close (std::unique_ptr<FILE, decltype (&fclose)> & filePointer)
     {
         throw ReadError ("File did not close successfully.");
     }
-}
-
-inline int peek (FILE * in)
-{
-    int c = fgetc (in);
-    if (c != EOF)
-    {
-        ungetc (c, in); // Put the character back
-    }
-    return c;
 }
 
 inline std::vector<std::byte> ReadBytes (std::string const & filepath)
