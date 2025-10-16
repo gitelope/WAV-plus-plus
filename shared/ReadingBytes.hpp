@@ -4,13 +4,18 @@
 
 #include "Formats.hpp"
 #include "Exceptions.hpp"
-#include <vector>
-#include <string>
+
+#include <array>
+#include <bit>
+#include <cstdint>
 #include <cstdio>
 #include <filesystem>
-#include <memory>
 #include <format>
+#include <iomanip>
 #include <iostream>
+#include <memory>
+#include <string>
+#include <vector>
 
 namespace wav
 {

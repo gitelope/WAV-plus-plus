@@ -3,9 +3,10 @@
 #define wavplusplus_int24_hpp
 
 #include "Formats.hpp"
+
 #include <array>
-#include <cstdint>
 #include <cstddef>
+#include <cstdint>
 
 namespace wav
 {
