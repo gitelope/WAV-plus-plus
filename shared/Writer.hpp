@@ -53,12 +53,16 @@ public:
     // Write interleaved samples from user-provided buffer.
     // Returns the number of samples written.
     template <FloatOrDouble T>
-    size_t writeInterleaved (T const * source, size_t samplesToWrite);
+    size_t write (T const * source, size_t samplesToWrite);
+
+    // convenience overload for vector
+    template <FloatOrDouble T>
+    size_t write (std::vector<T> const & source);
 
     // A convenience function that calls writeInterleaved.
     // Returns the number of frames written.
     template <FloatOrDouble T>
-    size_t writeInterleavedFrames (T const * source, size_t framesToWrite);
+    size_t writeFrames (T const * source, size_t framesToWrite);
 
     bool isOpen() const { return file != nullptr; }
 
@@ -116,7 +120,7 @@ private:
 };
 
 template <FloatOrDouble T>
-size_t Writer::writeInterleaved (T const * source, size_t samplesToWrite)
+size_t Writer::write (T const * source, size_t samplesToWrite)
 {
     if (!file || samplesToWrite == 0) return 0;
 
@@ -168,7 +172,13 @@ size_t Writer::writeInterleaved (T const * source, size_t samplesToWrite)
 }
 
 template <FloatOrDouble T>
-size_t Writer::writeInterleavedFrames (T const * source, size_t framesToWrite)
+size_t Writer::write (std::vector<T> const & source)
+{
+    return write (source.data(), source.size());
+}
+
+template <FloatOrDouble T>
+size_t Writer::writeFrames (T const * source, size_t framesToWrite)
 {
     return writeInterleaved (source, framesToWrite * channels) / channels;
 }

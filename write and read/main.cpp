@@ -15,10 +15,10 @@ template <typename T> void Print (std::vector<std::vector<T>> const &);
 int main ()
 {
     const auto filepath = "out.wav";
-    const std::vector<double> out {-1, -0.5, -1/3., 0, 1/3., 0.5, 1, 0};
+    const std::vector<double> out {-1, -0.5, -1./3., 0, 1./3., 0.5, 1, 0};
 
     wav::Writer writer {filepath, wav::ExportFormat::FloatPCM_64, 48000, 2};
-    const auto samplesWritten = writer.writeInterleaved (out.data(), out.size());
+    const auto samplesWritten = writer.write (out);
     writer.Close(); // Close() would be called automatically if Writer were to go out-of-scope.
 
     assert (samplesWritten == out.size());
