@@ -10,13 +10,17 @@
 #include "BufferSizing.hpp"
 #include "int24.hpp"
 #include "Exceptions.hpp"
-#include <cassert>
-#include <vector>
-#include <cstdio>
-#include <bit>
-#include <string>
+
 #include <algorithm>
+#include <bit>
+#include <cassert>
+#include <climits>
+#include <cstdio>
+#include <cstdint> 
 #include <memory>
+#include <string>
+#include <type_traits>
+#include <vector>
 
 static_assert (sizeof (float) == 4);
 static_assert (sizeof (double) == 8);
