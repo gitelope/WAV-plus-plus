@@ -24,8 +24,8 @@ int main ()
     assert (samplesWritten == out.size());
 
     wav::Reader reader {filepath};
-    std::vector<float> in (reader.samples());
-    reader.read (in.data(), in.size());
+    std::vector<double> in (reader.samples());
+    reader.read (in);
 
     Print (in);
 

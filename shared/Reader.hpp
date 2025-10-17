@@ -66,6 +66,10 @@ public:
     template <FloatOrDouble T>
     size_t read (T * destination, size_t samplesRequested);
 
+    // convenience overload for vectors
+    template <FloatOrDouble T>
+    size_t read (std::vector<T> & destination);
+
     // A convenience function that calls readInterleaved.
     // Returns the number of whole frames read.
     template <FloatOrDouble T>
@@ -156,6 +160,12 @@ size_t Reader::read (T * destination, size_t samplesRequested)
     dataPosition += samplesToRead * (info.bitDepth / 8);
 
     return samplesToRead;
+}
+
+template <FloatOrDouble T>
+size_t Reader::read (std::vector<T> & destination)
+{
+    return read (destination.data(), destination.size());
 }
 
 template <FloatOrDouble T>
