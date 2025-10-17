@@ -64,15 +64,18 @@ public:
     // Read interleaved samples into user-provided buffer.
     // Returns the number of samples read.
     template <FloatOrDouble T>
-    size_t readInterleaved (T * destination, size_t samplesRequested);
+    size_t read (T * destination, size_t samplesRequested);
 
     // A convenience function that calls readInterleaved.
     // Returns the number of whole frames read.
     template <FloatOrDouble T>
-    size_t readInterleavedFrames (T * destination, size_t framesRequested);
+    size_t readFrames (T * destination, size_t framesRequested);
 
     // Get file information.
     Info const & getInfo() const { return info; }
+    uint16_t channels() const {return info.channels;}
+    uint32_t frames() const {return info.frames;}
+    uint32_t samples() const { return info.channels * info.frames; }
 
 private:
 
@@ -108,7 +111,7 @@ private:
 };
 
 template <FloatOrDouble T>
-size_t Reader::readInterleaved (T * destination, size_t samplesRequested)
+size_t Reader::read (T * destination, size_t samplesRequested)
 {
     if (!file || samplesRequested == 0) return 0;
 
@@ -156,9 +159,9 @@ size_t Reader::readInterleaved (T * destination, size_t samplesRequested)
 }
 
 template <FloatOrDouble T>
-size_t Reader::readInterleavedFrames (T * destination, size_t framesRequested)
+size_t Reader::readFrames (T * destination, size_t framesRequested)
 {
-    return readInterleaved (destination, framesRequested * info.channels) / info.channels;
+    return read (destination, framesRequested * info.channels) / info.channels;
 }
 
 template <FloatOrDouble T>

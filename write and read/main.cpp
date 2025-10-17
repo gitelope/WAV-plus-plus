@@ -24,9 +24,8 @@ int main ()
     assert (samplesWritten == out.size());
 
     wav::Reader reader {filepath};
-    const auto & info {reader.getInfo()};
-    std::vector<float> in (info.frames * info.channels);
-    reader.readInterleaved (in.data(), in.size());
+    std::vector<float> in (reader.samples());
+    reader.read (in.data(), in.size());
 
     Print (in);
 
