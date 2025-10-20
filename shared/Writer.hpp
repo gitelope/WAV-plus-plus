@@ -102,7 +102,7 @@ public:
 
     // convenience overload for std::vector and samples requested
     template <FloatOrDouble T>
-    size_t write (std::vector<T> const & source, size_t samplesRequested);
+    size_t write (std::vector<T> const & source, size_t samplesToWrite);
 
     // convenience overload for std::array
     template <FloatOrDouble T, size_t N>
@@ -110,7 +110,7 @@ public:
 
     // convenience overload for std::array and samples requested
     template <FloatOrDouble T, size_t N>
-    size_t write (std::array<T,N> const & source, size_t samplesRequested);
+    size_t write (std::array<T,N> const & source, size_t samplesToWrite);
 
     // A convenience function that calls writeInterleaved.
     // Returns the number of frames written.
@@ -180,7 +180,6 @@ size_t Writer::write (T const * source, size_t samplesToWrite)
     // Check if writing would exceed WAV format limits.
     const uint64_t newTotalSamples {static_cast<uint64_t> (totalSamplesWritten) + samplesToWrite};
     const uint64_t newDataSize {newTotalSamples * (bitsPerSample / 8U)};
-
     if (newDataSize > maxDataChunkSize)
     {
         throw WriteError ("Writing would exceed WAV format data chunk size limit.");
@@ -240,9 +239,9 @@ size_t Writer::write (std::vector<T> const & source)
 
 // std::vector and samples requested
 template <FloatOrDouble T>
-size_t Writer::write (std::vector<T> const & source, size_t samplesRequested)
+size_t Writer::write (std::vector<T> const & source, size_t samplesToWrite)
 {
-    return write (source.data(), samplesRequested);
+    return write (source.data(), samplesToWrite);
 }
 
 // std::array
@@ -254,9 +253,9 @@ size_t Writer::write (std::array<T,N> const & source)
 
 // std::array and samples requested
 template <FloatOrDouble T, size_t N>
-size_t Writer::write (std::array<T,N> const & source, size_t samplesRequested)
+size_t Writer::write (std::array<T,N> const & source, size_t samplesToWrite)
 {
-    return write (source.data(), samplesRequested);
+    return write (source.data(), samplesToWrite);
 }
 
 template <FloatOrDouble T>
