@@ -1,3 +1,4 @@
+
 #ifndef wavplusplus_Writer_hpp
 #define wavplusplus_Writer_hpp
 
@@ -21,6 +22,39 @@ static_assert (CHAR_BIT == 8);
 
 namespace wav
 {
+
+/*
+
+ sample encoding options:
+ linear PCM: 8-bit, 16-bit, 24-bit, and 32-bit
+ float PCM: 32-bit and 64-bit
+
+ channel options:
+ mono, stereo, and multichannel
+
+ format:
+ PCMWAVEFORMAT (very common, but technically non-standard for some of the above options)
+
+ ---
+
+ quantization (linear PCM only):
+
+ double or float -> signed int (16, 24 and 32 bits):
+ 1. Multiply by 2^(bits-1) - 1
+ (e.g. 32,767 for 16-bit linear PCM)
+ 2. Round to nearest integer.*
+ 3. Clamp to [1 - 2^(bits-1), 2^(bits-1) - 1]
+ (e.g. [-32,767, 32,767] for 16-bit linear PCM)
+
+ double or float -> unsigned 8-bit int:
+ 1. Multiply by 127
+ 2. Add 128.
+ 3. Round to nearest integer.*
+ 4. Clamp to [1, 255].
+
+ * Optional TPDF dither (not implemented) would come before rounding.
+
+ */
 
 class Writer
 {
@@ -55,9 +89,28 @@ public:
     template <FloatOrDouble T>
     size_t write (T const * source, size_t samplesToWrite);
 
-    // convenience overload for vector
+    // convenience overload for fixed-size C-style array
+    // (size is known at compile time)
+    template <FloatOrDouble T, size_t N>
+    size_t write (const T (&source)[N]);
+
+    // main overload of write() handles any C-style array and samples requested
+
+    // convenience overload for std::vector
     template <FloatOrDouble T>
     size_t write (std::vector<T> const & source);
+
+    // convenience overload for std::vector and samples requested
+    template <FloatOrDouble T>
+    size_t write (std::vector<T> const & source, size_t samplesRequested);
+
+    // convenience overload for std::array
+    template <FloatOrDouble T, size_t N>
+    size_t write (std::array<T,N> const & source);
+
+    // convenience overload for std::array and samples requested
+    template <FloatOrDouble T, size_t N>
+    size_t write (std::array<T,N> const & source, size_t samplesRequested);
 
     // A convenience function that calls writeInterleaved.
     // Returns the number of frames written.
@@ -171,10 +224,39 @@ size_t Writer::write (T const * source, size_t samplesToWrite)
     return samplesToWrite;
 }
 
+// fixed-size C-style array
+template <FloatOrDouble T, size_t N>
+size_t Writer::write (const T (&source)[N])
+{
+    return write (source, N);
+}
+
+// std::vector
 template <FloatOrDouble T>
 size_t Writer::write (std::vector<T> const & source)
 {
     return write (source.data(), source.size());
+}
+
+// std::vector and samples requested
+template <FloatOrDouble T>
+size_t Writer::write (std::vector<T> const & source, size_t samplesRequested)
+{
+    return write (source.data(), samplesRequested);
+}
+
+// std::array
+template <FloatOrDouble T, size_t N>
+size_t Writer::write (std::array<T,N> const & source)
+{
+    return write (source.data(), N);
+}
+
+// std::array and samples requested
+template <FloatOrDouble T, size_t N>
+size_t Writer::write (std::array<T,N> const & source, size_t samplesRequested)
+{
+    return write (source.data(), samplesRequested);
 }
 
 template <FloatOrDouble T>
