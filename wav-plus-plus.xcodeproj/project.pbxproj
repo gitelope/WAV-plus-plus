@@ -58,6 +58,7 @@
 		C4AA9FBF2E75EB3200CD6B51 /* DequantizationConstants.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = DequantizationConstants.hpp; sourceTree = "<group>"; };
 		C4B1FD8B2E20533200B6D691 /* Exceptions.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Exceptions.hpp; sourceTree = "<group>"; };
 		C4E0F9112E8496940046311C /* Reader.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Reader.hpp; sourceTree = "<group>"; };
+		C4F704F62EA6CB4500243874 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -98,6 +99,7 @@
 		C499DB422E1341E700A88D60 = {
 			isa = PBXGroup;
 			children = (
+				C4F704F62EA6CB4500243874 /* README.md */,
 				C499DB8B2E13437000A88D60 /* write and read */,
 				C499DB882E13436D00A88D60 /* write and inspect */,
 				C499DB952E13445F00A88D60 /* shared */,
