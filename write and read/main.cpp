@@ -39,6 +39,7 @@ int main ()
     {
         size_t samplesWritten {0};
         size_t samplesRead {0};
+
         {
             wav::Writer writer {filename, wav::ExportFormat::FloatPCM_32, 48000, 1};
             std::vector<float> buffer;
@@ -55,9 +56,9 @@ int main ()
             samplesRead += reader.read (in); Print (in);
             samplesRead += reader.read (in); Print (in);
             samplesRead += reader.read (in); Print (in);
-
-            std::cout << std::format ("samples written: {}\nsamples read:    {}", samplesWritten, samplesRead) << std::endl;
         }
+
+        std::cout << std::format ("samples written: {}\nsamples read:    {}", samplesWritten, samplesRead) << std::endl;
     }
 
     return 0;
