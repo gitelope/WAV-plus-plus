@@ -89,29 +89,32 @@ public:
     template <FloatOrDouble T>
     size_t write (T const * source, size_t samplesToWrite);
 
-    // convenience overload for fixed-size C-style array
-    // (size is known at compile time)
+    // write() convenience overloads
+    //
+    // fixed-size C-style array (write all samples)
     template <FloatOrDouble T, size_t N>
     size_t write (const T (&source)[N]);
-
-    // main overload of write() handles any C-style array and samples to write
-
+    //
+    // Main overload of write() is called for all C-style arrays,
+    // so both fixed-sized and dynamically-sized,
+    // when samples to write is provided.
+    //
     // convenience overload for std::vector
     template <FloatOrDouble T>
     size_t write (std::vector<T> const & source);
-
+    //
     // convenience overload for std::vector and samples to write
     template <FloatOrDouble T>
     size_t write (std::vector<T> const & source, size_t samplesToWrite);
-
+    //
     // convenience overload for std::array
     template <FloatOrDouble T, size_t N>
     size_t write (std::array<T,N> const & source);
-
+    //
     // convenience overload for std::array and samples to write
     template <FloatOrDouble T, size_t N>
     size_t write (std::array<T,N> const & source, size_t samplesToWrite);
-
+    //
     // A convenience method for specifying number of frames to write
     // instead of number of samples. Returns the number of frames written.
     template <FloatOrDouble T>
