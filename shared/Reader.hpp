@@ -76,10 +76,15 @@ public:
     size_t readFrames (T * destination, size_t framesRequested);
 
     // Get file information.
-    Info const & getInfo() const { return info; }
+    Info const & getInfo() const {return info;}
     uint16_t channels() const {return info.channels;}
     uint32_t frames() const {return info.frames;}
-    uint32_t samples() const { return info.channels * info.frames; }
+    uint32_t samples() const {return info.channels * info.frames;}
+    uint32_t sampleRate() const {return info.sampleRate;}
+    uint16_t bitDepth() const {return info.bitDepth;}
+    uint16_t containerSizeInBits() const {return info.containerSizeInBits;}
+    bool isLinearPCM() const {return info.isLinearPCM;}
+    bool isFloatPCM() const {return info.isFloatPCM;}
 
 private:
 
