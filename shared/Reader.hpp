@@ -61,17 +61,46 @@ public:
         InitializeBuffer();
     }
 
-    // Read interleaved samples into user-provided buffer.
+    // Fill user-provided buffer with interleaved samples.
     // Returns the number of samples read.
+    // May throw wav::ReadError.
     template <FloatOrDouble T>
     size_t read (T * destination, size_t samplesRequested);
 
-    // convenience overload for vectors
+    // read() convenience overloads
+    //
+    // fixed-size C-style array (fill with samples)
+    // May throw wav::ReadError.
+    template <FloatOrDouble T, size_t N>
+    size_t read (T (&destination)[N]);
+    //
+    // Main overload of read() is called for all C-style arrays,
+    // so both fixed-sized and dynamically-sized,
+    // when samples requested is provided.
+    //
+    // std::vector (fill with samples)
+    // May throw wav::ReadError.
     template <FloatOrDouble T>
     size_t read (std::vector<T> & destination);
+    //
+    // std::vector (fill with number of samples requested)
+    // May throw wav::ReadError.
+    template <FloatOrDouble T>
+    size_t read (std::vector<T> & destination, size_t samplesRequested);
+    //
+    // std::array (fill with samples)
+    // May throw wav::ReadError.
+    template <FloatOrDouble T, size_t N>
+    size_t read (std::array<T,N> & destination);
+    //
+    // std::array (fill with number of samples requested)
+    // May throw wav::ReadError.
+    template <FloatOrDouble T, size_t N>
+    size_t read (std::array<T,N> & destination, size_t samplesRequested);
 
-    // A convenience function that calls readInterleaved.
+    // A convenience function that calls read.
     // Returns the number of whole frames read.
+    // May throw wav::ReadError.
     template <FloatOrDouble T>
     size_t readFrames (T * destination, size_t framesRequested);
 
@@ -167,10 +196,39 @@ size_t Reader::read (T * destination, size_t samplesRequested)
     return samplesToRead;
 }
 
+// fixed-size array
+template <FloatOrDouble T, size_t N>
+size_t Reader::read (T (&destination)[N])
+{
+    return read (destination, N);
+}
+
+// std::vector
 template <FloatOrDouble T>
 size_t Reader::read (std::vector<T> & destination)
 {
     return read (destination.data(), destination.size());
+}
+
+// std::vector
+template <FloatOrDouble T>
+size_t Reader::read (std::vector<T> & destination, size_t samplesRequested)
+{
+    return read (destination.data(), std::min (samplesRequested, destination.size()));
+}
+
+// std::array
+template <FloatOrDouble T, size_t N>
+size_t Reader::read (std::array<T,N> & destination)
+{
+    return read (destination.data(), N);
+}
+
+// std::array
+template <FloatOrDouble T, size_t N>
+size_t Reader::read (std::array<T,N> & destination, size_t samplesRequested)
+{
+    return read (destination.data(), std::min (samplesRequested, N));
 }
 
 template <FloatOrDouble T>
