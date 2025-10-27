@@ -86,12 +86,14 @@ public:
 
     // Write interleaved samples from user-provided buffer.
     // Returns the number of samples written.
+    // May throw wav::WriteError.
     template <FloatOrDouble T>
     size_t write (T const * source, size_t samplesToWrite);
 
     // write() convenience overloads
     //
     // fixed-size C-style array (write all samples)
+    // May throw wav::WriteError.
     template <FloatOrDouble T, size_t N>
     size_t write (const T (&source)[N]);
     //
@@ -99,24 +101,29 @@ public:
     // so both fixed-sized and dynamically-sized,
     // when samples to write is provided.
     //
-    // convenience overload for std::vector
+    // std::vector (write all samples)
+    // May throw wav::WriteError.
     template <FloatOrDouble T>
     size_t write (std::vector<T> const & source);
     //
-    // convenience overload for std::vector and samples to write
+    // std::vector (write number of samples specified)
+    // May throw wav::WriteError.
     template <FloatOrDouble T>
     size_t write (std::vector<T> const & source, size_t samplesToWrite);
     //
-    // convenience overload for std::array
+    // std::array (write all samples)
+    // May throw wav::WriteError.
     template <FloatOrDouble T, size_t N>
     size_t write (std::array<T,N> const & source);
     //
-    // convenience overload for std::array and samples to write
+    // std::array (write number of samples specified)
+    // May throw wav::WriteError.
     template <FloatOrDouble T, size_t N>
     size_t write (std::array<T,N> const & source, size_t samplesToWrite);
-    //
+
     // A convenience method for specifying number of frames to write
     // instead of number of samples. Returns the number of frames written.
+    // May throw wav::WriteError.
     template <FloatOrDouble T>
     size_t writeFrames (T const * source, size_t framesToWrite);
 
@@ -226,47 +233,37 @@ size_t Writer::write (T const * source, size_t samplesToWrite)
     return samplesToWrite;
 }
 
-// fixed-size C-style array (write all samples)
+// fixed-size array
 template <FloatOrDouble T, size_t N>
 size_t Writer::write (const T (&source)[N])
 {
     return write (source, N);
 }
 
-// std::vector (write all samples)
+// std::vector
 template <FloatOrDouble T>
 size_t Writer::write (std::vector<T> const & source)
 {
     return write (source.data(), source.size());
 }
 
-// std::vector and number of samples to write
+// std::vector
 template <FloatOrDouble T>
 size_t Writer::write (std::vector<T> const & source, size_t samplesToWrite)
 {
-    if (samplesToWrite > source.size())
-    {
-        throw WriteError ("Samples to write is greater than vector size.");
-    }
-    return write (source.data(), samplesToWrite);
+    return write (source.data(), std::min (samplesToWrite, source.size()));
 }
 
-// std::array (write all samples)
 template <FloatOrDouble T, size_t N>
 size_t Writer::write (std::array<T,N> const & source)
 {
     return write (source.data(), N);
 }
 
-// std::array and number of samples to write
 template <FloatOrDouble T, size_t N>
 size_t Writer::write (std::array<T,N> const & source, size_t samplesToWrite)
 {
-    if (samplesToWrite > source.size())
-    {
-        throw WriteError ("Samples to write is greater than array size.");
-    }
-    return write (source.data(), samplesToWrite);
+    return write (source.data(), std::min (samplesToWrite, N));
 }
 
 template <FloatOrDouble T>
