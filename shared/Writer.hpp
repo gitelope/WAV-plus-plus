@@ -9,6 +9,7 @@
 #include "Exceptions.hpp"
 
 #include <cassert>
+#include <cmath>
 #include <vector>
 #include <cstdio>
 #include <bit>
