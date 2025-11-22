@@ -11,25 +11,65 @@
 namespace wav
 {
 
+inline uint64_t bufferSize (uint64_t requestedSizeKB,
+                            uint64_t dataChunkSizeInBytes,
+                            uint16_t containerBits,
+                            uint16_t channels)
+{
+    const auto bytesPerSample {containerBits / 8U};
+    const auto bytesPerFrame  {bytesPerSample * channels};
+    const auto requestedBytes {requestedSizeKB * 1024U};
+
+    // Buffer constraints:
+    //
+    // 1. At least one frame's worth of bytes:
+    uint64_t bytesPerBuffer {std::max (requestedBytes, static_cast<uint64_t>(bytesPerFrame))};
+    // 2. Length is a whole number of frames:
+    bytesPerBuffer = (bytesPerBuffer / bytesPerFrame) * bytesPerFrame;
+    // 3. Buffer is not longer than the number of bytes in the data chunk:
+    bytesPerBuffer = std::min (bytesPerBuffer, dataChunkSizeInBytes);
+
+    // Return container sample count
+    return bytesPerBuffer / bytesPerSample;
+}
+
+/*
 inline size_t bufferSizeInBytes (size_t requestedBufferSizeInBytes, size_t numSamples, uint16_t bitsPerSample)
 {
     assert (bitsPerSample % 8 == 0);
-    const size_t sampleSizeInBytes {bitsPerSample / 8U};
-    const auto totalBytes {numSamples * sampleSizeInBytes};
+    const size_t bytesPerSample {bitsPerSample / 8U};
+    const auto totalBytes {numSamples * bytesPerSample};
 
     // Determine buffer size from requested size, sample size, and number of samples:
     // 1. Buffer must be able to hold an entire sample's worth of bytes.
-    size_t bytesPerBuffer = std::max (requestedBufferSizeInBytes, sampleSizeInBytes);
+    size_t bytesPerBuffer = std::max (requestedBufferSizeInBytes, bytesPerSample);
     // 2. Buffer size must correspond to a whole number of samples.
-    bytesPerBuffer = (bytesPerBuffer / sampleSizeInBytes) * sampleSizeInBytes;
+    bytesPerBuffer = (bytesPerBuffer / bytesPerSample) * bytesPerSample;
     // 3. Buffer size must not exceed the total number of bytes to write.
     bytesPerBuffer = std::min (bytesPerBuffer, totalBytes);
 
     return bytesPerBuffer;
 }
 
-size_t ioBufferSizeInBytes (size_t numSamples, uint16_t bitsPerSample,
-                            size_t bufferSizeInBytes, size_t ioBufferSizeMultiplier)
+inline size_t bufferSizeInBytes (size_t requestedBufferSizeInBytes, size_t numSamples, uint16_t bitsPerSample, uint32_t numChannels)
+{
+    assert (bitsPerSample % 8 == 0);
+    const size_t bytesPerSample {bitsPerSample / 8U};
+    const size_t bytesPerFrame {numChannels * bytesPerSample};
+    const auto totalBytes {numSamples * bytesPerSample};
+
+    // Determine buffer size from requested size, sample size, number of samples, and number of channels:
+    // 1. Buffer must be able to hold an entire frame's worth of bytes.
+    size_t bytesPerBuffer = std::max (requestedBufferSizeInBytes, bytesPerFrame);
+    // 2. Buffer size must correspond to a whole number of frames.
+    bytesPerBuffer = (bytesPerBuffer / bytesPerFrame) * bytesPerFrame;
+    // 3. Buffer size must not exceed the total number of bytes to write.
+    bytesPerBuffer = std::min (bytesPerBuffer, totalBytes);
+    return bytesPerBuffer;
+}
+
+inline size_t ioBufferSizeInBytes (size_t numSamples, uint16_t bitsPerSample,
+                                   size_t bufferSizeInBytes, size_t ioBufferSizeMultiplier)
 {
     // Calculate internal I/O buffer as a multiple of the actual (not requested) write buffer size, making sure to clamp at file size.
     const size_t totalBytesToWrite {numSamples * (bitsPerSample / 8U)};
@@ -44,6 +84,7 @@ void SetInternalIOBufferSize (FILE * out, size_t ioBufferSizeInBytes)
         throw ExceptionType ("Failed to set file buffer.");
     }
 }
+*/
 
 } // namespace wav
 

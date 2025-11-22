@@ -34,9 +34,8 @@ class Reader
 
 public:
 
-    explicit Reader (std::string const & filepath, size_t bufferSizeKB = 32)
+    explicit Reader (std::string const & filepath, uint64_t suggestedBufferSizeKB = 32)
     :file (fopen (filepath.c_str(), "rb"), fclose)
-    ,readBufferSizeInBytes (bufferSizeKB * 1024)
     {
         // Check if file opened successfully
         if (!file)
@@ -49,17 +48,16 @@ public:
         info.ExtractFrom (chunkInfo);
         dataChunk = chunkInfo.data;
 
-        // Set up data chunk information
-        dataChunkLength = dataChunk.size;
-
         // Position file at start of data
         if (fsetpos (file.get(), &dataChunk.offset) != 0)
         {
             throw ReadError ("Failed to advance to data portion of data chunk.");
         }
 
-        InitializeBuffer();
+        InitializeBuffer (suggestedBufferSizeKB);
     }
+
+    // INTERLEAVED READING //////////////////////////////
 
     // Fill user-provided buffer with interleaved samples.
     // Returns the number of samples read.
@@ -104,7 +102,14 @@ public:
     template <FloatOrDouble T>
     size_t readFrames (T * destination, size_t framesRequested);
 
-    // Get file information.
+    // CHANNEL-SEPARATED READING ////////////////////////
+
+    // channel-separated reading with raw pointers
+    template <FloatOrDouble T>
+    size_t read (T ** const destinations, size_t numChannels, size_t framesRequested);
+
+    // FILE INFO ////////////////////////////////////////
+
     Info const & getInfo() const {return info;}
     uint16_t channels() const {return info.channels;}
     uint32_t frames() const {return info.frames;}
@@ -124,8 +129,6 @@ private:
     uint32_t dataPosition {0};    // current byte position in data chunk
     uint32_t dataChunkLength {0}; // in bytes
 
-    size_t readBufferSizeInBytes;
-
     // Internal buffers for different encodings
     std::vector<uint8_t> bufferLPCMU8;
     std::vector<int16_t> bufferLPCM16;
@@ -134,19 +137,34 @@ private:
     std::vector<float>   bufferFloatPCM32;
     std::vector<double>  bufferFloatPCM64;
 
-    void InitializeBuffer();
+    void InitializeBuffer (uint64_t suggestedBufferSizeKB);
 
-    // floating-point PCM
-    template <FloatOrDouble T> void ReadFloatPCMNoConversion (T * destination, size_t samplesToRead);
-    void ReadFloatToDouble (double * destination, size_t samplesToRead);
-    void ReadDoubleToFloat (float * destination, size_t samplesToRead);
-
+    // INTERLEAVED READING //////////////////////////////
+    //
     // linear PCM
     template <FloatOrDouble T> void ReadLPCMU8 (T * destination, size_t samplesToRead);
     template <FloatOrDouble T> void ReadLPCM16 (T * destination, size_t samplesToRead);
     template <FloatOrDouble T> void ReadLPCM24 (T * destination, size_t samplesToRead);
     template <FloatOrDouble T> void ReadLPCM32 (T * destination, size_t samplesToRead);
+    //
+    // floating-point PCM
+    template <FloatOrDouble T> void ReadFloatPCMNoConversion (T * destination, size_t samplesToRead);
+    void ReadFloatToDouble (double * destination, size_t samplesToRead);
+    void ReadDoubleToFloat (float * destination, size_t samplesToRead);
+
+    // CHANNEL-SEPARATED READING ////////////////////////
+    //
+    // linear PCM
+    template <FloatOrDouble T> void ReadLPCMU8 (T ** const destinations, size_t numChannels, size_t framesToRead);
+    template <FloatOrDouble T> void ReadLPCM16 (T ** const destinations, size_t numChannels, size_t framesToRead);
+    template <FloatOrDouble T> void ReadLPCM24 (T ** const destinations, size_t numChannels, size_t framesToRead);
+    template <FloatOrDouble T> void ReadLPCM32 (T ** const destinations, size_t numChannels, size_t framesToRead);
+    // floating-point PCM
+    template <FloatOrDouble T> void ReadFloatPCM32 (T ** const destinations, size_t numChannels, size_t framesToRead);
+    template <FloatOrDouble T> void ReadFloatPCM64 (T ** const destinations, size_t numChannels, size_t framesToRead);
 };
+
+// IMPLEMENTATION ///////////////////////////////////////
 
 template <FloatOrDouble T>
 size_t Reader::read (T * destination, size_t samplesRequested)
@@ -154,7 +172,8 @@ size_t Reader::read (T * destination, size_t samplesRequested)
     if (!file || samplesRequested == 0) return 0;
 
     // Calculate how many samples to read.
-    const size_t samplesRemaining {(dataChunkLength - dataPosition) / (info.bitDepth / 8)};
+    const size_t bytesPerSample {info.containerSizeInBits / 8U};
+    const size_t samplesRemaining {(dataChunk.size - dataPosition) / bytesPerSample};
     const size_t samplesToRead {std::min (samplesRequested, samplesRemaining)};
     if (samplesToRead == 0) return 0;
 
@@ -171,6 +190,8 @@ size_t Reader::read (T * destination, size_t samplesRequested)
     }
     else if (info.isFloatPCM)
     {
+        assert (info.bitDepth == info.containerSizeInBits);
+
         if constexpr (std::is_same_v<T, float>)
         {
             switch (info.bitDepth)
@@ -191,7 +212,7 @@ size_t Reader::read (T * destination, size_t samplesRequested)
         }
     }
 
-    dataPosition += samplesToRead * (info.bitDepth / 8);
+    dataPosition += samplesToRead * bytesPerSample;
 
     return samplesToRead;
 }
@@ -492,36 +513,218 @@ void Reader::ReadLPCM32 (T * destination, size_t totalSamplesToRead)
     }
 }
 
-inline void Reader::InitializeBuffer()
+template <FloatOrDouble T>
+size_t Reader::read (T ** const destinations,
+                     size_t numChannels,
+                     size_t framesRequested)
 {
-    // Only initialize the buffer(s) needed for the current file format
+    if (!file || framesRequested == 0 || numChannels == 0) return 0;
+    if (numChannels > info.channels)
+    {
+        throw ReadError ("Requested more output channels than available.");
+    }
+
+    const size_t bytesPerSample {info.containerSizeInBits / 8U};
+    const size_t samplesRemaining {(dataChunk.size - dataPosition) / bytesPerSample};
+    const size_t framesRemaining {samplesRemaining / info.channels};
+    const size_t framesToRead {std::min (framesRequested, framesRemaining)};
+    if (framesToRead == 0) return 0;
+
     if (info.isLinearPCM)
     {
         switch (info.containerSizeInBits)
         {
-            case 8:  bufferLPCMU8.resize (readBufferSizeInBytes);     break;
-            case 16: bufferLPCM16.resize (readBufferSizeInBytes / 2); break;
-            case 24: bufferLPCM24.resize (readBufferSizeInBytes / 3); break;
-            case 32: bufferLPCM32.resize (readBufferSizeInBytes / 4); break;
+            case 8:  ReadLPCMU8 (destinations, numChannels, framesToRead); break;
+            case 16: ReadLPCM16 (destinations, numChannels, framesToRead); break;
+            case 24: ReadLPCM24 (destinations, numChannels, framesToRead); break;
+            case 32: ReadLPCM32 (destinations, numChannels, framesToRead); break;
+            default: throw ReadError ("Unsupported LPCM container size: " + std::to_string (info.containerSizeInBits));
         }
     }
     else if (info.isFloatPCM)
     {
-        // We won't need a buffer if the encoding format matches the
-        // decoding format, i.e. double -> double or float -> float,
-        // but we don't yet know what the decoding format will be, so we
-        // initialize a buffer just in case.
-        if (info.bitDepth == 32)
+        assert (info.bitDepth == info.containerSizeInBits);
+
+        switch (info.bitDepth)
         {
-            // Only used for float->double conversion:
-            bufferFloatPCM32.resize (readBufferSizeInBytes / 4);
-        }
-        else if (info.bitDepth == 64)
-        {
-            // Only used for double->float conversion:
-            bufferFloatPCM64.resize (readBufferSizeInBytes / 8);
+            case 32: ReadFloatPCM32 (destinations, numChannels, framesToRead); break;
+            case 64: ReadFloatPCM64 (destinations, numChannels, framesToRead); break;
+            default: throw ReadError ("Unsupported float PCM bit depth: " + std::to_string (info.bitDepth));
         }
     }
+
+    dataPosition += framesToRead * info.channels * bytesPerSample;
+    return framesToRead;
+}
+
+template <FloatOrDouble T>
+void Reader::ReadLPCMU8 (T ** const destinations, size_t channelsToRead, size_t totalFramesToRead)
+{
+    throw ReadError ("ReadLPCMU8 not yet implemented.");
+}
+
+template <FloatOrDouble T>
+void Reader::ReadLPCM16 (T ** const destinations, size_t channelsToRead, size_t totalFramesToRead)
+{
+    throw ReadError ("ReadLPCM16 not yet implemented.");
+}
+
+template <FloatOrDouble T>
+void Reader::ReadLPCM24 (T ** const destinations, size_t channelsToRead, size_t totalFramesToRead)
+{
+    throw ReadError ("ReadLPCM24 not yet implemented.");
+}
+
+template <FloatOrDouble T>
+void Reader::ReadLPCM32 (T ** const destinations, size_t channelsToRead, size_t totalFramesToRead)
+{
+    throw ReadError ("ReadLPCM32 not yet implemented.");
+}
+
+template <FloatOrDouble T>
+void Reader::ReadFloatPCM32 (T ** const destinations, size_t channelsToRead, size_t totalFramesToRead)
+{
+    auto & buffer {bufferFloatPCM32};
+    constexpr size_t bytesPerSample {4};
+    static_assert (sizeof(float) == 4 && CHAR_BIT == 8);
+
+    const auto sourceChannels {channels()};
+    const size_t framesPerBuffer {buffer.size() / sourceChannels};
+
+    size_t framesRemaining {totalFramesToRead};
+    size_t baseDestinationFrame {0};
+
+    while (framesRemaining)
+    {
+        const size_t framesToReadThisChunk {std::min (framesRemaining, framesPerBuffer)};
+        const size_t samplesToReadThisChunk {framesToReadThisChunk * sourceChannels};
+
+        if (fread (buffer.data(), bytesPerSample, samplesToReadThisChunk, file.get()) != samplesToReadThisChunk)
+        {
+            throw ReadError ("Failed to read buffer from file.");
+        }
+
+        // Byteswap if needed. (Consider doing after deinterleaving instead of before.)
+        if constexpr (std::endian::native == std::endian::big)
+        {
+            for (size_t i = 0; i < samplesToReadThisChunk; ++i)
+            {
+                buffer[i] = std::bit_cast<float> (std::byteswap (std::bit_cast<uint32_t> (buffer[i])));
+            }
+        }
+
+        // Iterate over buffer's frames.
+        for (size_t frame = 0; frame < framesToReadThisChunk; ++frame)
+        {
+            const size_t baseLinearIndex {frame * sourceChannels};
+            // Iterate over output channels.
+            // This may be less than the total number of channels in the file.
+            for (size_t channel = 0; channel < channelsToRead; ++channel)
+            {
+                destinations[channel][baseDestinationFrame + frame] = static_cast<T> (buffer[baseLinearIndex + channel]);
+            }
+        }
+
+        baseDestinationFrame += framesToReadThisChunk;
+        framesRemaining -= framesToReadThisChunk;
+    }
+}
+
+template <FloatOrDouble T>
+void Reader::ReadFloatPCM64 (T ** const destinations, size_t channelsToRead, size_t totalFramesToRead)
+{
+    auto & buffer {bufferFloatPCM64};
+    constexpr size_t bytesPerSample {8};
+    static_assert (sizeof(double) == 8 && CHAR_BIT == 8);
+
+    const auto sourceChannels {channels()};
+    const size_t framesPerBuffer {buffer.size() / sourceChannels};
+
+    size_t framesRemaining {totalFramesToRead};
+    size_t baseDestinationFrame {0};
+
+    while (framesRemaining)
+    {
+        const size_t framesToReadThisChunk {std::min (framesRemaining, framesPerBuffer)};
+        const size_t samplesToReadThisChunk {framesToReadThisChunk * sourceChannels};
+
+        if (fread (buffer.data(), bytesPerSample, samplesToReadThisChunk, file.get()) != samplesToReadThisChunk)
+        {
+            throw ReadError ("Failed to read buffer from file.");
+        }
+
+        // Byteswap if needed. (Consider doing after deinterleaving instead of before.)
+        if constexpr (std::endian::native == std::endian::big)
+        {
+            for (size_t i = 0; i < samplesToReadThisChunk; ++i)
+            {
+                buffer[i] = std::bit_cast<double> (std::byteswap (std::bit_cast<uint64_t> (buffer[i])));
+            }
+        }
+
+        // Iterate over buffer's frames.
+        for (size_t frame = 0; frame < framesToReadThisChunk; ++frame)
+        {
+            const size_t baseLinearIndex {frame * sourceChannels};
+            // Iterate over output channels.
+            // This may be less than the total number of channels in the file.
+            for (size_t channel = 0; channel < channelsToRead; ++channel)
+            {
+                destinations[channel][baseDestinationFrame + frame] = static_cast<T> (buffer[baseLinearIndex + channel]);
+            }
+        }
+
+        baseDestinationFrame += framesToReadThisChunk;
+        framesRemaining -= framesToReadThisChunk;
+    }
+}
+
+/// Initialize the buffer needed for the current file format.
+inline void Reader::InitializeBuffer (uint64_t suggestedBufferSizeKB)
+{
+    // Size buffer so that it holds a whole number of frames, at least one frame,
+    // and is no bigger than what would be required to read in the entire data chunk:
+    const size_t size
+    {
+        bufferSize (suggestedBufferSizeKB, dataChunk.size, containerSizeInBits(), channels())
+    };
+
+    if (info.isLinearPCM)
+    {
+        switch (info.containerSizeInBits)
+        {
+            case 8:  bufferLPCMU8.resize (size); break;
+            case 16: bufferLPCM16.resize (size); break;
+            case 24: bufferLPCM24.resize (size); break;
+            case 32: bufferLPCM32.resize (size); break;
+        }
+    }
+    else if (info.isFloatPCM)
+    {
+        // We don't need to use a buffer when performing *interleaved* reading
+        // and source encoding matches destination encoding,
+        // i.e. double -> double or float -> float,
+        // but at this point, we don't know if that will be the case
+        // so we allocate just in case.
+        // An alternative approach would be to check if the buffer has been
+        // sized each time we read and allocating if not.
+
+        assert (info.bitDepth == info.containerSizeInBits);
+
+        if      (info.containerSizeInBits == 32) bufferFloatPCM32.resize (size);
+        else if (info.containerSizeInBits == 64) bufferFloatPCM64.resize (size);
+    }
+}
+
+// Calculates the absolute value of the minimum value for a signed integer
+// of the given bit depth for use in normalization when decoding to a
+// floating-point type, e.g. for 16-bit (signed) linear PCM, the absolute
+// value of the minimum value is 32768 and can be used to convert the integer
+// value into a normalized float or double through division.
+inline double scale (uint16_t bitDepth)
+{
+    assert (bitDepth >= 1 && bitDepth <= 64);
+    return static_cast<double> (uint64_t{1} << (bitDepth - 1));
 }
 
 } // namespace wav
