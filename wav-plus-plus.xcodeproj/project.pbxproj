@@ -55,7 +55,6 @@
 		C4AA9FB62E75D6C300CD6B51 /* Info.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Info.hpp; sourceTree = "<group>"; };
 		C4AA9FBA2E75DD8200CD6B51 /* int24.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = int24.hpp; sourceTree = "<group>"; };
 		C4AA9FBB2E75DFDB00CD6B51 /* BufferSizing.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = BufferSizing.hpp; sourceTree = "<group>"; };
-		C4AA9FBF2E75EB3200CD6B51 /* DequantizationConstants.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = DequantizationConstants.hpp; sourceTree = "<group>"; };
 		C4B1FD8B2E20533200B6D691 /* Exceptions.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Exceptions.hpp; sourceTree = "<group>"; };
 		C4E0F9112E8496940046311C /* Reader.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Reader.hpp; sourceTree = "<group>"; };
 		C4F704F62EA6CB4500243874 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = SOURCE_ROOT; };
@@ -137,7 +136,6 @@
 			isa = PBXGroup;
 			children = (
 				C4E0F9112E8496940046311C /* Reader.hpp */,
-				C4AA9FBF2E75EB3200CD6B51 /* DequantizationConstants.hpp */,
 				C4AA9FB62E75D6C300CD6B51 /* Info.hpp */,
 				C4461B8A2E8D8AAC0036A10A /* Writer.hpp */,
 				C4461B8B2E8F43EA0036A10A /* QuantizationConstants.hpp */,

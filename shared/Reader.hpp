@@ -6,7 +6,6 @@
 #include "Info.hpp"
 #include "ChunkInfo.hpp"
 #include "ReadingBytes.hpp"
-#include "DequantizationConstants.hpp"
 #include "BufferSizing.hpp"
 #include "int24.hpp"
 #include "Exceptions.hpp"
@@ -113,7 +112,7 @@ public:
     Info const & getInfo() const {return info;}
     uint16_t channels() const {return info.channels;}
     uint32_t frames() const {return info.frames;}
-    uint32_t samples() const {return info.channels * info.frames;}
+    uint32_t samples() const {return channels() * frames();}
     uint32_t sampleRate() const {return info.sampleRate;}
     uint16_t bitDepth() const {return info.bitDepth;}
     uint16_t containerSizeInBits() const {return info.containerSizeInBits;}
@@ -127,7 +126,6 @@ private:
 
     DataChunk dataChunk;
     uint32_t dataPosition {0};    // current byte position in data chunk
-    uint32_t dataChunkLength {0}; // in bytes
 
     // Internal buffers for different encodings
     std::vector<uint8_t> bufferLPCMU8;
@@ -139,6 +137,8 @@ private:
 
     void InitializeBuffer (uint64_t suggestedBufferSizeKB);
     double normalization (uint16_t bitDepth); // divide LPCM (integer) values by return value to convert to normalized double
+
+    static constexpr double uint8DequantizationOffset {128.};
 
     // INTERLEAVED READING //////////////////////////////
     //
@@ -173,42 +173,42 @@ size_t Reader::read (T * destination, size_t samplesRequested)
     if (!file || samplesRequested == 0) return 0;
 
     // Calculate how many samples to read.
-    const size_t bytesPerSample {info.containerSizeInBits / 8U};
+    const size_t bytesPerSample {containerSizeInBits() / 8U};
     const size_t samplesRemaining {(dataChunk.size - dataPosition) / bytesPerSample};
     const size_t samplesToRead {std::min (samplesRequested, samplesRemaining)};
     if (samplesToRead == 0) return 0;
 
-    if (info.isLinearPCM)
+    if (isLinearPCM())
     {
-        switch (info.containerSizeInBits)
+        switch (containerSizeInBits())
         {
             case 8:  ReadLPCMU8 (destination, samplesToRead); break;
             case 16: ReadLPCM16 (destination, samplesToRead); break;
             case 24: ReadLPCM24 (destination, samplesToRead); break;
             case 32: ReadLPCM32 (destination, samplesToRead); break;
-            default: throw ReadError ("Unsupported LPCM container size: " + std::to_string (info.containerSizeInBits));
+            default: throw ReadError ("Unsupported LPCM container size: " + std::to_string (containerSizeInBits()));
         }
     }
-    else if (info.isFloatPCM)
+    else if (isFloatPCM())
     {
-        assert (info.bitDepth == info.containerSizeInBits);
+        assert (bitDepth() == containerSizeInBits());
 
         if constexpr (std::is_same_v<T, float>)
         {
-            switch (info.bitDepth)
+            switch (bitDepth())
             {
                 case 32: ReadFloatPCMNoConversion (destination, samplesToRead); break;
                 case 64: ReadDoubleToFloat (destination, samplesToRead);        break;
-                default: throw ReadError ("Unsupported float PCM bit depth: " + std::to_string (info.bitDepth));
+                default: throw ReadError ("Unsupported float PCM bit depth: " + std::to_string (bitDepth()));
             }
         }
         else if constexpr (std::is_same_v<T, double>)
         {
-            switch (info.bitDepth)
+            switch (bitDepth())
             {
                 case 32: ReadFloatToDouble (destination, samplesToRead);        break;
                 case 64: ReadFloatPCMNoConversion (destination, samplesToRead); break;
-                default: throw ReadError ("Unsupported float PCM bit depth: " + std::to_string (info.bitDepth));
+                default: throw ReadError ("Unsupported float PCM bit depth: " + std::to_string (bitDepth()));
             }
         }
     }
@@ -256,7 +256,7 @@ size_t Reader::read (std::array<T,N> & destination, size_t samplesRequested)
 template <FloatOrDouble T>
 size_t Reader::readFrames (T * destination, size_t framesRequested)
 {
-    return read (destination, framesRequested * info.channels) / info.channels;
+    return read (destination, framesRequested * channels()) / channels();
 }
 
 template <FloatOrDouble T>
@@ -265,8 +265,8 @@ void Reader::ReadLPCMU8 (T * destination, size_t totalSamplesToRead)
     auto & buffer {bufferLPCMU8};
     constexpr size_t bytesPerSample {1};
 
-    constexpr auto offset {static_cast<T> (uint8DequantizationOffset)};
-    constexpr auto max    {static_cast<T> (uint8MaxAbs)};
+    constexpr double offset {uint8DequantizationOffset};
+    const double scale      {normalization (bitDepth())};
 
     size_t samplesRemaining {totalSamplesToRead};
     size_t writePosition {0};
@@ -283,7 +283,7 @@ void Reader::ReadLPCMU8 (T * destination, size_t totalSamplesToRead)
         // Convert to destination type
         for (size_t i = 0; i < samplesToRead; ++i)
         {
-            destination [writePosition + i] = (buffer [i] - offset) / max;
+            destination [writePosition + i] = static_cast<T> ((buffer [i] - offset) / scale);
         }
 
         writePosition += samplesToRead;
@@ -297,7 +297,7 @@ void Reader::ReadLPCM16 (T * destination, size_t totalSamplesToRead)
     auto & buffer {bufferLPCM16};
     constexpr size_t bytesPerSample {2};
 
-    constexpr auto max {static_cast<T> (int16MaxAbs)};
+    const double scale {normalization (bitDepth())};
 
     size_t samplesRemaining {totalSamplesToRead};
     size_t writePosition {0};
@@ -323,7 +323,7 @@ void Reader::ReadLPCM16 (T * destination, size_t totalSamplesToRead)
         // Convert to destination type
         for (size_t i = 0; i < samplesToRead; ++i)
         {
-            destination [writePosition + i] = buffer [i] / max;
+            destination [writePosition + i] = static_cast<T> (buffer [i] / scale);
         }
 
         writePosition += samplesToRead;
@@ -337,7 +337,7 @@ void Reader::ReadLPCM24 (T * destination, size_t totalSamplesToRead)
     auto & buffer {bufferLPCM24};
     constexpr size_t bytesPerSample {3};
 
-    constexpr auto max {static_cast<T> (int24MaxAbs)};
+    const double scale {normalization (bitDepth())};
 
     size_t samplesRemaining {totalSamplesToRead};
     size_t writePosition {0};
@@ -363,7 +363,7 @@ void Reader::ReadLPCM24 (T * destination, size_t totalSamplesToRead)
         // Convert to destination type
         for (size_t i = 0; i < samplesToRead; ++i)
         {
-            destination [writePosition + i] = buffer [i] / max;
+            destination [writePosition + i] = static_cast<T> (buffer [i] / scale);
         }
 
         writePosition += samplesToRead;
@@ -377,7 +377,7 @@ void Reader::ReadLPCM32 (T * destination, size_t totalSamplesToRead)
     auto & buffer {bufferLPCM32};
     constexpr size_t bytesPerSample {4};
 
-    constexpr auto max {static_cast<T> (int32MaxAbs)};
+    const double scale {normalization (bitDepth())};
 
     size_t samplesRemaining {totalSamplesToRead};
     size_t writePosition {0};
@@ -403,7 +403,7 @@ void Reader::ReadLPCM32 (T * destination, size_t totalSamplesToRead)
         // Convert to destination type
         for (size_t i = 0; i < samplesToRead; ++i)
         {
-            destination [writePosition + i] = buffer [i] / max;
+            destination [writePosition + i] = static_cast<T> (buffer [i] / scale);
         }
 
         writePosition += samplesToRead;
@@ -440,7 +440,6 @@ void Reader::ReadFloatPCMNoConversion (T * destination, size_t samplesToRead)
 
 void Reader::ReadFloatToDouble (double * destination, size_t totalSamplesToRead)
 {
-    // float -> double
     auto & buffer {bufferFloatPCM32};
     constexpr size_t bytesPerSample {4};
 
@@ -478,7 +477,6 @@ void Reader::ReadFloatToDouble (double * destination, size_t totalSamplesToRead)
 
 void Reader::ReadDoubleToFloat (float * destination, size_t totalSamplesToRead)
 {
-    // double -> float
     auto & buffer {bufferFloatPCM64};
     constexpr size_t bytesPerSample {8};
 
@@ -515,46 +513,44 @@ void Reader::ReadDoubleToFloat (float * destination, size_t totalSamplesToRead)
 }
 
 template <FloatOrDouble T>
-size_t Reader::read (T ** const destinations,
-                     size_t numChannels,
-                     size_t framesRequested)
+size_t Reader::read (T ** const destinations, size_t numChannels, size_t framesRequested)
 {
     if (!file || framesRequested == 0 || numChannels == 0) return 0;
-    if (numChannels > info.channels)
+    if (numChannels > channels())
     {
         throw ReadError ("Requested more output channels than available.");
     }
 
-    const size_t bytesPerSample {info.containerSizeInBits / 8U};
+    const size_t bytesPerSample {containerSizeInBits() / 8U};
     const size_t samplesRemaining {(dataChunk.size - dataPosition) / bytesPerSample};
-    const size_t framesRemaining {samplesRemaining / info.channels};
+    const size_t framesRemaining {samplesRemaining / channels()};
     const size_t framesToRead {std::min (framesRequested, framesRemaining)};
     if (framesToRead == 0) return 0;
 
-    if (info.isLinearPCM)
+    if (isLinearPCM())
     {
-        switch (info.containerSizeInBits)
+        switch (containerSizeInBits())
         {
             case 8:  ReadLPCMU8 (destinations, numChannels, framesToRead); break;
             case 16: ReadLPCM16 (destinations, numChannels, framesToRead); break;
             case 24: ReadLPCM24 (destinations, numChannels, framesToRead); break;
             case 32: ReadLPCM32 (destinations, numChannels, framesToRead); break;
-            default: throw ReadError ("Unsupported LPCM container size: " + std::to_string (info.containerSizeInBits));
+            default: throw ReadError ("Unsupported LPCM container size: " + std::to_string (containerSizeInBits()));
         }
     }
-    else if (info.isFloatPCM)
+    else if (isFloatPCM())
     {
-        assert (info.bitDepth == info.containerSizeInBits);
+        assert (bitDepth() == containerSizeInBits());
 
-        switch (info.bitDepth)
+        switch (bitDepth())
         {
             case 32: ReadFloatPCM32 (destinations, numChannels, framesToRead); break;
             case 64: ReadFloatPCM64 (destinations, numChannels, framesToRead); break;
-            default: throw ReadError ("Unsupported float PCM bit depth: " + std::to_string (info.bitDepth));
+            default: throw ReadError ("Unsupported float PCM bit depth: " + std::to_string (bitDepth()));
         }
     }
 
-    dataPosition += framesToRead * info.channels * bytesPerSample;
+    dataPosition += framesToRead * channels() * bytesPerSample;
     return framesToRead;
 }
 
@@ -570,8 +566,8 @@ void Reader::ReadLPCMU8 (T ** const destinations, size_t channelsToRead, size_t 
     const size_t framesPerBuffer {buffer.size() / sourceChannels};
     assert (framesPerBuffer > 0);
 
-    const double offset {128.};
-    const double scale {normalization (info.bitDepth)}; // 2^(bitDepth - 1)
+    const double offset {uint8DequantizationOffset};
+    const double scale  {normalization (bitDepth())};
 
     size_t framesRemaining {totalFramesToRead};
     size_t baseFrame {0};
@@ -613,7 +609,7 @@ void Reader::ReadLPCM16 (T ** const destinations, size_t channelsToRead, size_t 
     const size_t framesPerBuffer {buffer.size() / sourceChannels};
     assert (framesPerBuffer > 0);
 
-    const double scale {normalization (info.bitDepth)}; // 2^(bitDepth - 1)
+    const double scale {normalization (bitDepth())};
 
     size_t framesRemaining {totalFramesToRead};
     size_t baseFrame {0};
@@ -663,7 +659,7 @@ void Reader::ReadLPCM24 (T ** const destinations, size_t channelsToRead, size_t 
     const size_t framesPerBuffer {buffer.size() / sourceChannels};
     assert (framesPerBuffer > 0);
 
-    const double scale {normalization (info.bitDepth)}; // 2^(bitDepth - 1)
+    const double scale {normalization (bitDepth())};
 
     size_t framesRemaining {totalFramesToRead};
     size_t baseFrame {0};
@@ -713,7 +709,7 @@ void Reader::ReadLPCM32 (T ** const destinations, size_t channelsToRead, size_t 
     const size_t framesPerBuffer {buffer.size() / sourceChannels};
     assert (framesPerBuffer > 0);
 
-    const double scale {normalization (info.bitDepth)}; // 2^(bitDepth - 1)
+    const double scale {normalization (bitDepth())};
 
     size_t framesRemaining {totalFramesToRead};
     size_t baseFrame {0};
@@ -865,9 +861,9 @@ inline void Reader::InitializeBuffer (uint64_t suggestedBufferSizeKB)
         bufferSize (suggestedBufferSizeKB, dataChunk.size, containerSizeInBits(), channels())
     };
 
-    if (info.isLinearPCM)
+    if (isLinearPCM())
     {
-        switch (info.containerSizeInBits)
+        switch (containerSizeInBits())
         {
             case 8:  bufferLPCMU8.resize (size); break;
             case 16: bufferLPCM16.resize (size); break;
@@ -875,7 +871,7 @@ inline void Reader::InitializeBuffer (uint64_t suggestedBufferSizeKB)
             case 32: bufferLPCM32.resize (size); break;
         }
     }
-    else if (info.isFloatPCM)
+    else if (isFloatPCM())
     {
         // We don't need to use a buffer when performing *interleaved* reading
         // and source encoding matches destination encoding,
@@ -885,10 +881,10 @@ inline void Reader::InitializeBuffer (uint64_t suggestedBufferSizeKB)
         // An alternative approach would be to check if the buffer has been
         // sized each time we read and allocating if not.
 
-        assert (info.bitDepth == info.containerSizeInBits);
+        assert (bitDepth() == containerSizeInBits());
 
-        if      (info.containerSizeInBits == 32) bufferFloatPCM32.resize (size);
-        else if (info.containerSizeInBits == 64) bufferFloatPCM64.resize (size);
+        if      (containerSizeInBits() == 32) bufferFloatPCM32.resize (size);
+        else if (containerSizeInBits() == 64) bufferFloatPCM64.resize (size);
     }
 }
 
@@ -897,7 +893,7 @@ inline void Reader::InitializeBuffer (uint64_t suggestedBufferSizeKB)
 // floating-point type, e.g. for 16-bit (signed) linear PCM, the absolute
 // value of the minimum value is 32768 and can be used to convert the integer
 // value into a normalized float or double through division.
-inline double normalization (uint16_t bitDepth)
+inline double Reader::normalization (uint16_t bitDepth)
 {
     assert (bitDepth >= 1 && bitDepth <= 64);
     return static_cast<double> (uint64_t{1} << (bitDepth - 1));
