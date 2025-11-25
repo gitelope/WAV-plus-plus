@@ -138,6 +138,7 @@ private:
     std::vector<double>  bufferFloatPCM64;
 
     void InitializeBuffer (uint64_t suggestedBufferSizeKB);
+    double normalization (uint16_t bitDepth); // divide LPCM (integer) values by return value to convert to normalized double
 
     // INTERLEAVED READING //////////////////////////////
     //
@@ -560,25 +561,194 @@ size_t Reader::read (T ** const destinations,
 template <FloatOrDouble T>
 void Reader::ReadLPCMU8 (T ** const destinations, size_t channelsToRead, size_t totalFramesToRead)
 {
-    throw ReadError ("ReadLPCMU8 not yet implemented.");
+    auto & buffer {bufferLPCMU8};
+    constexpr size_t bytesPerSample {1};
+
+    const auto sourceChannels {channels()};
+    assert (channelsToRead <= sourceChannels);
+
+    const size_t framesPerBuffer {buffer.size() / sourceChannels};
+    assert (framesPerBuffer > 0);
+
+    const double offset {128.};
+    const double scale {normalization (info.bitDepth)}; // 2^(bitDepth - 1)
+
+    size_t framesRemaining {totalFramesToRead};
+    size_t baseFrame {0};
+
+    while (framesRemaining)
+    {
+        const size_t framesThisChunk {std::min (framesRemaining, framesPerBuffer)};
+        const size_t samplesThisChunk {framesThisChunk * sourceChannels};
+
+        if (fread (buffer.data(), bytesPerSample, samplesThisChunk, file.get()) != samplesThisChunk)
+        {
+            throw ReadError ("Failed to read buffer from file.");
+        }
+
+        for (size_t frame = 0; frame < framesThisChunk; ++frame)
+        {
+            const size_t baseIndex {frame * sourceChannels};
+            for (size_t channel = 0; channel < channelsToRead; ++channel)
+            {
+                const double normalized {(buffer [baseIndex + channel] - offset) / scale};
+                destinations [channel] [baseFrame + frame] = static_cast<T> (normalized);
+            }
+        }
+
+        baseFrame       += framesThisChunk;
+        framesRemaining -= framesThisChunk;
+    }
 }
 
 template <FloatOrDouble T>
 void Reader::ReadLPCM16 (T ** const destinations, size_t channelsToRead, size_t totalFramesToRead)
 {
-    throw ReadError ("ReadLPCM16 not yet implemented.");
+    auto & buffer {bufferLPCM16};
+    constexpr size_t bytesPerSample {2};
+
+    const auto sourceChannels {channels()};
+    assert (channelsToRead <= sourceChannels);
+
+    const size_t framesPerBuffer {buffer.size() / sourceChannels};
+    assert (framesPerBuffer > 0);
+
+    const double scale {normalization (info.bitDepth)}; // 2^(bitDepth - 1)
+
+    size_t framesRemaining {totalFramesToRead};
+    size_t baseFrame {0};
+
+    while (framesRemaining)
+    {
+        const size_t framesThisChunk {std::min (framesRemaining, framesPerBuffer)};
+        const size_t samplesThisChunk {framesThisChunk * sourceChannels};
+
+        if (fread (buffer.data(), bytesPerSample, samplesThisChunk, file.get()) != samplesThisChunk)
+        {
+            throw ReadError ("Failed to read buffer from file.");
+        }
+
+        if constexpr (std::endian::native == std::endian::big)
+        {
+            for (size_t i = 0; i < samplesThisChunk; ++i)
+            {
+                buffer[i] = std::byteswap (buffer[i]);
+            }
+        }
+
+        for (size_t frame = 0; frame < framesThisChunk; ++frame)
+        {
+            const size_t baseIndex {frame * sourceChannels};
+            for (size_t channel = 0; channel < channelsToRead; ++channel)
+            {
+                const double normalized {buffer [baseIndex + channel] / scale};
+                destinations [channel] [baseFrame + frame] = static_cast<T> (normalized);
+            }
+        }
+
+        baseFrame       += framesThisChunk;
+        framesRemaining -= framesThisChunk;
+    }
 }
 
 template <FloatOrDouble T>
 void Reader::ReadLPCM24 (T ** const destinations, size_t channelsToRead, size_t totalFramesToRead)
 {
-    throw ReadError ("ReadLPCM24 not yet implemented.");
+    auto & buffer {bufferLPCM24};
+    constexpr size_t bytesPerSample {3};
+
+    const auto sourceChannels {channels()};
+    assert (channelsToRead <= sourceChannels);
+
+    const size_t framesPerBuffer {buffer.size() / sourceChannels};
+    assert (framesPerBuffer > 0);
+
+    const double scale {normalization (info.bitDepth)}; // 2^(bitDepth - 1)
+
+    size_t framesRemaining {totalFramesToRead};
+    size_t baseFrame {0};
+
+    while (framesRemaining)
+    {
+        const size_t framesThisChunk {std::min (framesRemaining, framesPerBuffer)};
+        const size_t samplesThisChunk {framesThisChunk * sourceChannels};
+
+        if (fread (buffer.data(), bytesPerSample, samplesThisChunk, file.get()) != samplesThisChunk)
+        {
+            throw ReadError ("Failed to read buffer from file.");
+        }
+
+        if constexpr (std::endian::native == std::endian::big)
+        {
+            for (size_t i = 0; i < samplesThisChunk; ++i)
+            {
+                std::swap (buffer[i].bytes[0], buffer[i].bytes[2]);
+            }
+        }
+
+        for (size_t frame = 0; frame < framesThisChunk; ++frame)
+        {
+            const size_t baseIndex {frame * sourceChannels};
+            for (size_t channel = 0; channel < channelsToRead; ++channel)
+            {
+                const double normalized {static_cast<int32_t> (buffer [baseIndex + channel]) / scale};
+                destinations [channel] [baseFrame + frame] = static_cast<T> (normalized);
+            }
+        }
+
+        baseFrame       += framesThisChunk;
+        framesRemaining -= framesThisChunk;
+    }
 }
 
 template <FloatOrDouble T>
 void Reader::ReadLPCM32 (T ** const destinations, size_t channelsToRead, size_t totalFramesToRead)
 {
-    throw ReadError ("ReadLPCM32 not yet implemented.");
+    auto & buffer {bufferLPCM32};
+    constexpr size_t bytesPerSample {4};
+
+    const auto sourceChannels {channels()};
+    assert (channelsToRead <= sourceChannels);
+
+    const size_t framesPerBuffer {buffer.size() / sourceChannels};
+    assert (framesPerBuffer > 0);
+
+    const double scale {normalization (info.bitDepth)}; // 2^(bitDepth - 1)
+
+    size_t framesRemaining {totalFramesToRead};
+    size_t baseFrame {0};
+
+    while (framesRemaining)
+    {
+        const size_t framesThisChunk {std::min (framesRemaining, framesPerBuffer)};
+        const size_t samplesThisChunk {framesThisChunk * sourceChannels};
+
+        if (fread (buffer.data(), bytesPerSample, samplesThisChunk, file.get()) != samplesThisChunk)
+        {
+            throw ReadError ("Failed to read buffer from file.");
+        }
+
+        if constexpr (std::endian::native == std::endian::big)
+        {
+            for (size_t i = 0; i < samplesThisChunk; ++i)
+            {
+                buffer[i] = std::byteswap (buffer[i]);
+            }
+        }
+
+        for (size_t frame = 0; frame < framesThisChunk; ++frame)
+        {
+            const size_t baseIndex {frame * sourceChannels};
+            for (size_t channel = 0; channel < channelsToRead; ++channel)
+            {
+                const double normalized {buffer [baseIndex + channel] / scale};
+                destinations [channel] [baseFrame + frame] = static_cast<T> (normalized);
+            }
+        }
+
+        baseFrame       += framesThisChunk;
+        framesRemaining -= framesThisChunk;
+    }
 }
 
 template <FloatOrDouble T>
@@ -586,13 +756,16 @@ void Reader::ReadFloatPCM32 (T ** const destinations, size_t channelsToRead, siz
 {
     auto & buffer {bufferFloatPCM32};
     constexpr size_t bytesPerSample {4};
-    static_assert (sizeof(float) == 4 && CHAR_BIT == 8);
+    static_assert (sizeof (float) == 4 && CHAR_BIT == 8);
 
     const auto sourceChannels {channels()};
+    assert (channelsToRead <= sourceChannels);
+
     const size_t framesPerBuffer {buffer.size() / sourceChannels};
+    assert (framesPerBuffer > 0);
 
     size_t framesRemaining {totalFramesToRead};
-    size_t baseDestinationFrame {0};
+    size_t baseFrame {0};
 
     while (framesRemaining)
     {
@@ -616,16 +789,16 @@ void Reader::ReadFloatPCM32 (T ** const destinations, size_t channelsToRead, siz
         // Iterate over buffer's frames.
         for (size_t frame = 0; frame < framesToReadThisChunk; ++frame)
         {
-            const size_t baseLinearIndex {frame * sourceChannels};
+            const size_t baseIndex {frame * sourceChannels};
             // Iterate over output channels.
             // This may be less than the total number of channels in the file.
             for (size_t channel = 0; channel < channelsToRead; ++channel)
             {
-                destinations[channel][baseDestinationFrame + frame] = static_cast<T> (buffer[baseLinearIndex + channel]);
+                destinations [channel] [baseFrame + frame] = static_cast<T> (buffer [baseIndex + channel]);
             }
         }
 
-        baseDestinationFrame += framesToReadThisChunk;
+        baseFrame       += framesToReadThisChunk;
         framesRemaining -= framesToReadThisChunk;
     }
 }
@@ -635,13 +808,16 @@ void Reader::ReadFloatPCM64 (T ** const destinations, size_t channelsToRead, siz
 {
     auto & buffer {bufferFloatPCM64};
     constexpr size_t bytesPerSample {8};
-    static_assert (sizeof(double) == 8 && CHAR_BIT == 8);
+    static_assert (sizeof (double) == 8 && CHAR_BIT == 8);
 
     const auto sourceChannels {channels()};
+    assert (channelsToRead <= sourceChannels);
+
     const size_t framesPerBuffer {buffer.size() / sourceChannels};
+    assert (framesPerBuffer > 0);
 
     size_t framesRemaining {totalFramesToRead};
-    size_t baseDestinationFrame {0};
+    size_t baseFrame {0};
 
     while (framesRemaining)
     {
@@ -665,16 +841,16 @@ void Reader::ReadFloatPCM64 (T ** const destinations, size_t channelsToRead, siz
         // Iterate over buffer's frames.
         for (size_t frame = 0; frame < framesToReadThisChunk; ++frame)
         {
-            const size_t baseLinearIndex {frame * sourceChannels};
+            const size_t baseIndex {frame * sourceChannels};
             // Iterate over output channels.
             // This may be less than the total number of channels in the file.
             for (size_t channel = 0; channel < channelsToRead; ++channel)
             {
-                destinations[channel][baseDestinationFrame + frame] = static_cast<T> (buffer[baseLinearIndex + channel]);
+                destinations [channel] [baseFrame + frame] = static_cast<T> (buffer [baseIndex + channel]);
             }
         }
 
-        baseDestinationFrame += framesToReadThisChunk;
+        baseFrame       += framesToReadThisChunk;
         framesRemaining -= framesToReadThisChunk;
     }
 }
@@ -721,7 +897,7 @@ inline void Reader::InitializeBuffer (uint64_t suggestedBufferSizeKB)
 // floating-point type, e.g. for 16-bit (signed) linear PCM, the absolute
 // value of the minimum value is 32768 and can be used to convert the integer
 // value into a normalized float or double through division.
-inline double scale (uint16_t bitDepth)
+inline double normalization (uint16_t bitDepth)
 {
     assert (bitDepth >= 1 && bitDepth <= 64);
     return static_cast<double> (uint64_t{1} << (bitDepth - 1));
