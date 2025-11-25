@@ -260,109 +260,6 @@ size_t Reader::readFrames (T * destination, size_t framesRequested)
 }
 
 template <FloatOrDouble T>
-void Reader::ReadFloatPCMNoConversion (T * destination, size_t samplesToRead)
-{
-    // Input bit depth same as output: float->float or double->double.
-    // Read directly from file to destination.
-    if (fread (destination, sizeof (T), samplesToRead, file.get()) != samplesToRead)
-    {
-        throw ReadError ("Failed to read buffer from file.");
-    }
-
-    // Byteswap if needed
-    if constexpr (std::endian::native == std::endian::big)
-    {
-        for (size_t i = 0; i < samplesToRead; ++i)
-        {
-            if constexpr (std::is_same_v<T, float>)
-            {
-                destination [i] = std::bit_cast<float> (std::byteswap (std::bit_cast<uint32_t> (destination [i])));
-            }
-            else // double
-            {
-                destination [i] = std::bit_cast<double> (std::byteswap (std::bit_cast<uint64_t> (destination [i])));
-            }
-        }
-    }
-}
-
-void Reader::ReadFloatToDouble (double * destination, size_t totalSamplesToRead)
-{
-    // float -> double
-    auto & buffer {bufferFloatPCM32};
-    constexpr size_t bytesPerSample {4};
-
-    size_t samplesRemaining {totalSamplesToRead};
-    size_t writePosition {0};
-
-    while (samplesRemaining)
-    {
-        const size_t samplesToRead {std::min (samplesRemaining, buffer.size())};
-
-        if (fread (buffer.data(), bytesPerSample, samplesToRead, file.get()) != samplesToRead)
-        {
-            throw ReadError ("Failed to read buffer from file.");
-        }
-
-        // Byteswap if needed
-        if constexpr (std::endian::native == std::endian::big)
-        {
-            for (size_t i = 0; i < samplesToRead; ++i)
-            {
-                buffer [i] = std::bit_cast<float> (std::byteswap (std::bit_cast<uint32_t> (buffer [i])));
-            }
-        }
-
-        // Convert to destination type
-        for (size_t i = 0; i < samplesToRead; ++i)
-        {
-            destination [writePosition + i] = static_cast<double> (buffer [i]);
-        }
-
-        writePosition += samplesToRead;
-        samplesRemaining -= samplesToRead;
-    }
-}
-
-void Reader::ReadDoubleToFloat (float * destination, size_t totalSamplesToRead)
-{
-    // double -> float
-    auto & buffer {bufferFloatPCM64};
-    constexpr size_t bytesPerSample {8};
-
-    size_t samplesRemaining {totalSamplesToRead};
-    size_t writePosition {0};
-
-    while (samplesRemaining)
-    {
-        const size_t samplesToRead {std::min (samplesRemaining, buffer.size())};
-
-        if (fread (buffer.data(), bytesPerSample, samplesToRead, file.get()) != samplesToRead)
-        {
-            throw ReadError ("Failed to read buffer from file.");
-        }
-
-        // Byteswap if needed
-        if constexpr (std::endian::native == std::endian::big)
-        {
-            for (size_t i = 0; i < samplesToRead; ++i)
-            {
-                buffer [i] = std::bit_cast<double> (std::byteswap (std::bit_cast<uint64_t> (buffer [i])));
-            }
-        }
-
-        // Convert to destination type
-        for (size_t i = 0; i < samplesToRead; ++i)
-        {
-            destination [writePosition + i] = static_cast<float> (buffer [i]);
-        }
-
-        writePosition += samplesToRead;
-        samplesRemaining -= samplesToRead;
-    }
-}
-
-template <FloatOrDouble T>
 void Reader::ReadLPCMU8 (T * destination, size_t totalSamplesToRead)
 {
     auto & buffer {bufferLPCMU8};
@@ -507,6 +404,109 @@ void Reader::ReadLPCM32 (T * destination, size_t totalSamplesToRead)
         for (size_t i = 0; i < samplesToRead; ++i)
         {
             destination [writePosition + i] = buffer [i] / max;
+        }
+
+        writePosition += samplesToRead;
+        samplesRemaining -= samplesToRead;
+    }
+}
+
+template <FloatOrDouble T>
+void Reader::ReadFloatPCMNoConversion (T * destination, size_t samplesToRead)
+{
+    // Input bit depth same as output: float->float or double->double.
+    // Read directly from file to destination.
+    if (fread (destination, sizeof (T), samplesToRead, file.get()) != samplesToRead)
+    {
+        throw ReadError ("Failed to read buffer from file.");
+    }
+
+    // Byteswap if needed
+    if constexpr (std::endian::native == std::endian::big)
+    {
+        for (size_t i = 0; i < samplesToRead; ++i)
+        {
+            if constexpr (std::is_same_v<T, float>)
+            {
+                destination [i] = std::bit_cast<float> (std::byteswap (std::bit_cast<uint32_t> (destination [i])));
+            }
+            else // double
+            {
+                destination [i] = std::bit_cast<double> (std::byteswap (std::bit_cast<uint64_t> (destination [i])));
+            }
+        }
+    }
+}
+
+void Reader::ReadFloatToDouble (double * destination, size_t totalSamplesToRead)
+{
+    // float -> double
+    auto & buffer {bufferFloatPCM32};
+    constexpr size_t bytesPerSample {4};
+
+    size_t samplesRemaining {totalSamplesToRead};
+    size_t writePosition {0};
+
+    while (samplesRemaining)
+    {
+        const size_t samplesToRead {std::min (samplesRemaining, buffer.size())};
+
+        if (fread (buffer.data(), bytesPerSample, samplesToRead, file.get()) != samplesToRead)
+        {
+            throw ReadError ("Failed to read buffer from file.");
+        }
+
+        // Byteswap if needed
+        if constexpr (std::endian::native == std::endian::big)
+        {
+            for (size_t i = 0; i < samplesToRead; ++i)
+            {
+                buffer [i] = std::bit_cast<float> (std::byteswap (std::bit_cast<uint32_t> (buffer [i])));
+            }
+        }
+
+        // Convert to destination type
+        for (size_t i = 0; i < samplesToRead; ++i)
+        {
+            destination [writePosition + i] = static_cast<double> (buffer [i]);
+        }
+
+        writePosition += samplesToRead;
+        samplesRemaining -= samplesToRead;
+    }
+}
+
+void Reader::ReadDoubleToFloat (float * destination, size_t totalSamplesToRead)
+{
+    // double -> float
+    auto & buffer {bufferFloatPCM64};
+    constexpr size_t bytesPerSample {8};
+
+    size_t samplesRemaining {totalSamplesToRead};
+    size_t writePosition {0};
+
+    while (samplesRemaining)
+    {
+        const size_t samplesToRead {std::min (samplesRemaining, buffer.size())};
+
+        if (fread (buffer.data(), bytesPerSample, samplesToRead, file.get()) != samplesToRead)
+        {
+            throw ReadError ("Failed to read buffer from file.");
+        }
+
+        // Byteswap if needed
+        if constexpr (std::endian::native == std::endian::big)
+        {
+            for (size_t i = 0; i < samplesToRead; ++i)
+            {
+                buffer [i] = std::bit_cast<double> (std::byteswap (std::bit_cast<uint64_t> (buffer [i])));
+            }
+        }
+
+        // Convert to destination type
+        for (size_t i = 0; i < samplesToRead; ++i)
+        {
+            destination [writePosition + i] = static_cast<float> (buffer [i]);
         }
 
         writePosition += samplesToRead;
