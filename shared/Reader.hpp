@@ -765,10 +765,10 @@ void Reader::ReadFloatPCM32 (T ** const destinations, size_t channelsToRead, siz
 
     while (framesRemaining)
     {
-        const size_t framesToReadThisChunk {std::min (framesRemaining, framesPerBuffer)};
-        const size_t samplesToReadThisChunk {framesToReadThisChunk * sourceChannels};
+        const size_t framesThisChunk {std::min (framesRemaining, framesPerBuffer)};
+        const size_t samplesThisChunk {framesThisChunk * sourceChannels};
 
-        if (fread (buffer.data(), bytesPerSample, samplesToReadThisChunk, file.get()) != samplesToReadThisChunk)
+        if (fread (buffer.data(), bytesPerSample, samplesThisChunk, file.get()) != samplesThisChunk)
         {
             throw ReadError ("Failed to read buffer from file.");
         }
@@ -776,14 +776,14 @@ void Reader::ReadFloatPCM32 (T ** const destinations, size_t channelsToRead, siz
         // Byteswap if needed. (Consider doing after deinterleaving instead of before.)
         if constexpr (std::endian::native == std::endian::big)
         {
-            for (size_t i = 0; i < samplesToReadThisChunk; ++i)
+            for (size_t i = 0; i < samplesThisChunk; ++i)
             {
                 buffer[i] = std::bit_cast<float> (std::byteswap (std::bit_cast<uint32_t> (buffer[i])));
             }
         }
 
         // Iterate over buffer's frames.
-        for (size_t frame = 0; frame < framesToReadThisChunk; ++frame)
+        for (size_t frame = 0; frame < framesThisChunk; ++frame)
         {
             const size_t baseIndex {frame * sourceChannels};
             // Iterate over output channels.
@@ -794,8 +794,8 @@ void Reader::ReadFloatPCM32 (T ** const destinations, size_t channelsToRead, siz
             }
         }
 
-        baseFrame       += framesToReadThisChunk;
-        framesRemaining -= framesToReadThisChunk;
+        baseFrame       += framesThisChunk;
+        framesRemaining -= framesThisChunk;
     }
 }
 
@@ -817,10 +817,10 @@ void Reader::ReadFloatPCM64 (T ** const destinations, size_t channelsToRead, siz
 
     while (framesRemaining)
     {
-        const size_t framesToReadThisChunk {std::min (framesRemaining, framesPerBuffer)};
-        const size_t samplesToReadThisChunk {framesToReadThisChunk * sourceChannels};
+        const size_t framesThisChunk {std::min (framesRemaining, framesPerBuffer)};
+        const size_t samplesThisChunk {framesThisChunk * sourceChannels};
 
-        if (fread (buffer.data(), bytesPerSample, samplesToReadThisChunk, file.get()) != samplesToReadThisChunk)
+        if (fread (buffer.data(), bytesPerSample, samplesThisChunk, file.get()) != samplesThisChunk)
         {
             throw ReadError ("Failed to read buffer from file.");
         }
@@ -828,14 +828,14 @@ void Reader::ReadFloatPCM64 (T ** const destinations, size_t channelsToRead, siz
         // Byteswap if needed. (Consider doing after deinterleaving instead of before.)
         if constexpr (std::endian::native == std::endian::big)
         {
-            for (size_t i = 0; i < samplesToReadThisChunk; ++i)
+            for (size_t i = 0; i < samplesThisChunk; ++i)
             {
                 buffer[i] = std::bit_cast<double> (std::byteswap (std::bit_cast<uint64_t> (buffer[i])));
             }
         }
 
         // Iterate over buffer's frames.
-        for (size_t frame = 0; frame < framesToReadThisChunk; ++frame)
+        for (size_t frame = 0; frame < framesThisChunk; ++frame)
         {
             const size_t baseIndex {frame * sourceChannels};
             // Iterate over output channels.
@@ -846,8 +846,8 @@ void Reader::ReadFloatPCM64 (T ** const destinations, size_t channelsToRead, siz
             }
         }
 
-        baseFrame       += framesToReadThisChunk;
-        framesRemaining -= framesToReadThisChunk;
+        baseFrame       += framesThisChunk;
+        framesRemaining -= framesThisChunk;
     }
 }
 
