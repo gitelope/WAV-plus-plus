@@ -16,8 +16,7 @@ int main ()
 {
     const auto filename {"test.wav"};
 
-    // Write entire sequence of samples all at once.
-    // Read entire sequence of samples all at once.
+    // Single-pass writing and reading. Displaying file metadata.
     {
         {
             const std::vector<double> out {-1, -0.5, -1./3., 0, 1./3., 0.5, 1, 0};
@@ -38,8 +37,7 @@ int main ()
         }
     }
 
-    // Incremental reading and writing.
-    // Tracking number of samples written and number of samples read.
+    // Incremental writing and reading (with tallying of samples).
     {
         size_t samplesWritten {0};
         size_t samplesRead {0};
