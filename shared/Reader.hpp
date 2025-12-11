@@ -438,7 +438,7 @@ void Reader::ReadFloatPCMNoConversion (T * destination, size_t samplesToRead)
     }
 }
 
-void Reader::ReadFloatToDouble (double * destination, size_t totalSamplesToRead)
+inline void Reader::ReadFloatToDouble (double * destination, size_t totalSamplesToRead)
 {
     auto & buffer {bufferFloatPCM32};
     constexpr size_t bytesPerSample {4};
@@ -475,7 +475,7 @@ void Reader::ReadFloatToDouble (double * destination, size_t totalSamplesToRead)
     }
 }
 
-void Reader::ReadDoubleToFloat (float * destination, size_t totalSamplesToRead)
+inline void Reader::ReadDoubleToFloat (float * destination, size_t totalSamplesToRead)
 {
     auto & buffer {bufferFloatPCM64};
     constexpr size_t bytesPerSample {8};
