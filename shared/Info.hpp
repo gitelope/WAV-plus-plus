@@ -119,11 +119,15 @@ inline std::ostream & operator<< (std::ostream & os, Info const & info)
     }
     os << std::format (" / {:.3f} seconds / {} frames / ", static_cast<double>(info.frames) / info.sampleRate, info.frames);
 
-    const auto bytes = static_cast<long long>(info.frames) * info.channels * info.bitDepth / 8;
-    if (bytes >= 1e9) os << std::format ("{:.1f} GB\n", bytes / static_cast<double> (1e9));
-    else if (bytes >= 1e6) os << std::format ("{:.1f} MB\n", bytes / static_cast<double> (1e6));
-    else if (bytes >= 1e3) os << std::format ("{:.1f} kB\n", bytes / static_cast<double> (1e3));
-    else os << bytes << " bytes\n";
+    const auto bytes = static_cast<uint64_t> (info.frames) * info.channels * info.containerSizeInBits / 8U;
+    constexpr uint64_t kB = 1'000;
+    constexpr uint64_t MB = 1'000'000;
+    constexpr uint64_t GB = 1'000'000'000;
+
+    if      (bytes >= GB) os << std::format ("{:.1f} GB of audio\n", static_cast<double>(bytes) / GB);
+    else if (bytes >= MB) os << std::format ("{:.1f} MB of audio\n", static_cast<double>(bytes) / MB);
+    else if (bytes >= kB) os << std::format ("{:.1f} kB of audio\n", static_cast<double>(bytes) / kB);
+    else                  os << bytes << " bytes of audio\n";
 
     return os;
 }
