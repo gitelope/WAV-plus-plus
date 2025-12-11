@@ -30,7 +30,11 @@ int main ()
             std::vector<double> in (reader.samples());
             reader.read (in);
 
-            Print (in); std::cout << std::endl;
+            std::cout << "\n";
+            std::cout << reader.getInfo() << std::endl;
+
+            std::cout << "entire file read in a single read:\n";
+            Print (in);
         }
     }
 
@@ -53,12 +57,13 @@ int main ()
             std::vector<float> in (2);
 
             // 3 reads
+            std::cout << "\nfile read incrementally:\n";
             samplesRead += reader.read (in); Print (in);
             samplesRead += reader.read (in); Print (in);
             samplesRead += reader.read (in); Print (in);
         }
 
-        std::cout << std::format ("samples written: {}\nsamples read:    {}", samplesWritten, samplesRead) << std::endl;
+        std::cout << std::format ("samples written: {}\nsamples read:    {}\n", samplesWritten, samplesRead) << std::endl;
     }
 
     return 0;
