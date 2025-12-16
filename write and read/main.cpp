@@ -1,6 +1,6 @@
 
-#include "../shared/Reader.hpp"
-#include "../shared/Writer.hpp"
+#include <wav-plus-plus/Reader.hpp>
+#include <wav-plus-plus/Writer.hpp>
 
 #include <vector>
 #include <iostream>

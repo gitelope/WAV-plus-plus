@@ -1,6 +1,6 @@
 
-#include "../shared/Writer.hpp"
-#include "../shared/ChunkInfo.hpp"
+#include <wav-plus-plus/Writer.hpp>
+#include <wav-plus-plus/ChunkInfo.hpp>
 
 // 1. Write WAV file. (wav::Write)
 // 2. Display detailed file info. (wav::ChunkInfo)
