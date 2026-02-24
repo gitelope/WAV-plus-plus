@@ -31,7 +31,7 @@ inline constexpr uint16_t FloatPCM  = 0x0003;
 inline constexpr uint16_t Extensible = 0xFFFE;
 }
 
-constexpr bool isValidFormatCode (uint32_t formatCode)
+constexpr bool isValidFormatCode (uint16_t formatCode)
 {
     return
     formatCode == FormatCode::LinearPCM||
