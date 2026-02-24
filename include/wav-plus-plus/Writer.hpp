@@ -3,10 +3,10 @@
 #define wavplusplus_Writer_hpp
 
 #include "Formats.hpp"
-#include "QuantizationConstants.hpp"
-#include "BufferSizing.hpp"
-#include "int24.hpp"
 #include "Exceptions.hpp"
+#include "private/QuantizationConstants.hpp"
+#include "private/BufferSizing.hpp"
+#include "private/int24.hpp"
 
 #include <cassert>
 #include <cmath>

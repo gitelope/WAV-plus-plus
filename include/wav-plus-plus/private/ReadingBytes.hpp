@@ -2,8 +2,8 @@
 #ifndef wavplusplus_ReadingBytes_hpp
 #define wavplusplus_ReadingBytes_hpp
 
-#include "Formats.hpp"
-#include "Exceptions.hpp"
+#include "../Formats.hpp"
+#include "../Exceptions.hpp"
 
 #include <array>
 #include <bit>

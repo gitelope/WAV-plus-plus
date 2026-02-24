@@ -33,20 +33,20 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		C41045212EF1CD5E0013E245 /* BufferSizing.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = BufferSizing.hpp; sourceTree = "<group>"; };
 		C41045222EF1CD5E0013E245 /* ChunkInfo.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = ChunkInfo.hpp; sourceTree = "<group>"; };
 		C41045232EF1CD5E0013E245 /* Exceptions.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Exceptions.hpp; sourceTree = "<group>"; };
 		C41045242EF1CD5E0013E245 /* Formats.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Formats.hpp; sourceTree = "<group>"; };
 		C41045252EF1CD5E0013E245 /* Info.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Info.hpp; sourceTree = "<group>"; };
-		C41045262EF1CD5E0013E245 /* int24.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = int24.hpp; sourceTree = "<group>"; };
-		C41045272EF1CD5E0013E245 /* QuantizationConstants.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = QuantizationConstants.hpp; sourceTree = "<group>"; };
 		C41045282EF1CD5E0013E245 /* Reader.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Reader.hpp; sourceTree = "<group>"; };
-		C41045292EF1CD5E0013E245 /* ReadingBytes.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = ReadingBytes.hpp; sourceTree = "<group>"; };
 		C410452A2EF1CD5E0013E245 /* Writer.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Writer.hpp; sourceTree = "<group>"; };
 		C499DB752E13435300A88D60 /* write and read */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "write and read"; sourceTree = BUILT_PRODUCTS_DIR; };
 		C499DB802E13436900A88D60 /* write and inspect */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "write and inspect"; sourceTree = BUILT_PRODUCTS_DIR; };
 		C499DB872E13436D00A88D60 /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		C499DB8A2E13437000A88D60 /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
+		C4C641CC2F469567005545BE /* BufferSizing.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = BufferSizing.hpp; sourceTree = "<group>"; };
+		C4C641CD2F469567005545BE /* int24.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = int24.hpp; sourceTree = "<group>"; };
+		C4C641CE2F469567005545BE /* QuantizationConstants.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = QuantizationConstants.hpp; sourceTree = "<group>"; };
+		C4C641CF2F469567005545BE /* ReadingBytes.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = ReadingBytes.hpp; sourceTree = "<group>"; };
 		C4F704F62EA6CB4500243874 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
@@ -71,16 +71,13 @@
 		C410452B2EF1CD5E0013E245 /* wav-plus-plus */ = {
 			isa = PBXGroup;
 			children = (
-				C41045212EF1CD5E0013E245 /* BufferSizing.hpp */,
+				C41045282EF1CD5E0013E245 /* Reader.hpp */,
+				C410452A2EF1CD5E0013E245 /* Writer.hpp */,
 				C41045222EF1CD5E0013E245 /* ChunkInfo.hpp */,
 				C41045232EF1CD5E0013E245 /* Exceptions.hpp */,
 				C41045242EF1CD5E0013E245 /* Formats.hpp */,
 				C41045252EF1CD5E0013E245 /* Info.hpp */,
-				C41045262EF1CD5E0013E245 /* int24.hpp */,
-				C41045272EF1CD5E0013E245 /* QuantizationConstants.hpp */,
-				C41045282EF1CD5E0013E245 /* Reader.hpp */,
-				C41045292EF1CD5E0013E245 /* ReadingBytes.hpp */,
-				C410452A2EF1CD5E0013E245 /* Writer.hpp */,
+				C4C641D02F469567005545BE /* private */,
 			);
 			path = "wav-plus-plus";
 			sourceTree = "<group>";
@@ -127,6 +124,17 @@
 				C499DB8A2E13437000A88D60 /* main.cpp */,
 			);
 			path = "write and read";
+			sourceTree = "<group>";
+		};
+		C4C641D02F469567005545BE /* private */ = {
+			isa = PBXGroup;
+			children = (
+				C4C641CC2F469567005545BE /* BufferSizing.hpp */,
+				C4C641CD2F469567005545BE /* int24.hpp */,
+				C4C641CE2F469567005545BE /* QuantizationConstants.hpp */,
+				C4C641CF2F469567005545BE /* ReadingBytes.hpp */,
+			);
+			path = private;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */

@@ -2,7 +2,7 @@
 #ifndef wavplusplus_ChunkInfo_hpp
 #define wavplusplus_ChunkInfo_hpp
 
-#include "ReadingBytes.hpp"
+#include "private/ReadingBytes.hpp"
 #include "Exceptions.hpp"
 
 #include <algorithm>
