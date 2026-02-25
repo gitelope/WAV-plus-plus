@@ -2,6 +2,7 @@
 #ifndef wavplusplus_Reader_hpp
 #define wavplusplus_Reader_hpp
 
+#include "Exceptions.hpp"
 #include "Formats.hpp"
 #include "FileInfo.hpp"
 #include "ChunkInfo.hpp"

@@ -2,6 +2,15 @@
 #ifndef wavplusplus_WriterImplementation_hpp
 #define wavplusplus_WriterImplementation_hpp
 
+#include "QuantizationConstants.hpp"
+
+#include <algorithm>
+#include <bit>
+#include <cassert>
+#include <cmath>
+#include <tuple>
+#include <type_traits>
+
 namespace wav
 {
 

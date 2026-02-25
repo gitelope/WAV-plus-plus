@@ -3,9 +3,8 @@
 #define wavplusplus_FileInfo_hpp
 
 #include "ChunkInfo.hpp"
-#include <cassert>
+
 #include <cstdint>
-#include <format>
 #include <ostream>
 
 namespace wav

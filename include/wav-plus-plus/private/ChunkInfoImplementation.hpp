@@ -2,6 +2,18 @@
 #ifndef wavplusplus_ChunkInfoImplementation_hpp
 #define wavplusplus_ChunkInfoImplementation_hpp
 
+#include "ReadingBytes.hpp"
+
+#include <algorithm>
+#include <array>
+#include <cassert>
+#include <format>
+#include <limits>
+#include <sstream>
+#include <string_view>
+#include <type_traits>
+#include <utility>
+
 namespace wav
 {
 

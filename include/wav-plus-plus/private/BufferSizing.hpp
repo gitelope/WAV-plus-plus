@@ -3,10 +3,12 @@
 #define wavplusplus_BufferSizing_hpp
 
 #include <algorithm>
+#include <cstdint>
+/*
 #include <cassert>
 #include <cstddef>
-#include <cstdint>
 #include <cstdio>
+*/
 
 namespace wav
 {

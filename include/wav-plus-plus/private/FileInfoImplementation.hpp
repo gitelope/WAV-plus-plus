@@ -2,6 +2,9 @@
 #ifndef wavplusplus_FileInfoImplementation_hpp
 #define wavplusplus_FileInfoImplementation_hpp
 
+#include <cassert>
+#include <format>
+
 namespace wav
 {
 

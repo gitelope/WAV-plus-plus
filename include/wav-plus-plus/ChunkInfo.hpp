@@ -2,23 +2,15 @@
 #ifndef wavplusplus_ChunkInfo_hpp
 #define wavplusplus_ChunkInfo_hpp
 
-#include "private/ReadingBytes.hpp"
 #include "Exceptions.hpp"
+#include "Formats.hpp"
 
-#include <algorithm>
-#include <array>
 #include <bitset>
-#include <format>
-#include <ostream>
-#include <limits>
-#include <sstream>
-#include <string>
-#include <string_view>
-#include <utility>
-#include <vector>
 #include <cstdint>
 #include <cstdio>
-#include <cassert>
+#include <ostream>
+#include <string>
+#include <vector>
 
 namespace wav
 {

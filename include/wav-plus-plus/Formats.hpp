@@ -9,7 +9,6 @@
 #include <limits>
 #include <ostream>
 #include <string>
-#include <type_traits>
 #include <utility>
 
 static_assert (CHAR_BIT == 8);

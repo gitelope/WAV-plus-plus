@@ -2,20 +2,14 @@
 #ifndef wavplusplus_Writer_hpp
 #define wavplusplus_Writer_hpp
 
-#include "Formats.hpp"
 #include "Exceptions.hpp"
-#include "private/QuantizationConstants.hpp"
-#include "private/BufferSizing.hpp"
+#include "Formats.hpp"
 #include "private/int24.hpp"
 
-#include <cassert>
-#include <cmath>
-#include <vector>
 #include <cstdio>
-#include <bit>
-#include <string>
-#include <algorithm>
 #include <memory>
+#include <string>
+#include <vector>
 
 namespace wav
 {
