@@ -1,35 +1,14 @@
 
-#ifndef wavplusplus_Info_hpp
-#define wavplusplus_Info_hpp
+#ifndef wavplusplus_FileInfoImplementation_hpp
+#define wavplusplus_FileInfoImplementation_hpp
 
-#include "ChunkInfo.hpp"
 #include <cassert>
-#include <cstdint>
 #include <format>
-#include <ostream>
 
 namespace wav
 {
 
-struct Info
-{
-    // playback
-    uint16_t channels {0};
-    uint32_t sampleRate {0};
-    uint32_t frames {0};
-    // total samples = channels * frames
-    // length in seconds = frames / sampleRate
-
-    // sample encoding (in the source WAV file)
-    uint16_t bitDepth {0}; // bits per sample
-    uint16_t containerSizeInBits {0}; // sample containerSize >= sample bitDepth
-    bool isLinearPCM {false};
-    bool isFloatPCM {false};
-
-    void ExtractFrom (ChunkInfo const &);
-};
-
-inline void Info::ExtractFrom (ChunkInfo const & chunkInfo)
+inline void FileInfo::ExtractFrom (ChunkInfo const & chunkInfo)
 {
     channels = chunkInfo.format.channels;
     sampleRate = chunkInfo.format.sampleRate;
@@ -104,7 +83,7 @@ inline void Info::ExtractFrom (ChunkInfo const & chunkInfo)
     }
 }
 
-inline std::ostream & operator<< (std::ostream & os, Info const & info)
+inline std::ostream & operator<< (std::ostream & os, FileInfo const & info)
 {
     os << "WAVE ";
     if      (info.isLinearPCM) os << std::format ("{}-bit linear PCM", info.bitDepth);
@@ -135,4 +114,3 @@ inline std::ostream & operator<< (std::ostream & os, Info const & info)
 } // namespace wav
 
 #endif
-

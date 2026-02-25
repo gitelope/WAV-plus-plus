@@ -2,7 +2,7 @@
 #ifndef wavplusplus_int24_hpp
 #define wavplusplus_int24_hpp
 
-#include "Formats.hpp"
+#include "../Formats.hpp"
 
 #include <array>
 #include <cstddef>

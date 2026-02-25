@@ -3,13 +3,22 @@
 #define wavplusplus_Formats_hpp
 
 #include <array>
+#include <climits>
 #include <concepts>
 #include <cstdint>
-#include <format>
+#include <limits>
 #include <ostream>
-#include <sstream>
 #include <string>
 #include <utility>
+
+static_assert (CHAR_BIT == 8);
+// The following two global checks ensure correct float-PCM encoding/decoding,
+// avoiding a larger, more distributed set of path-specific checks.
+// The trade-off is reduced portability: builds are rejected on platforms
+// with non-standard float/double widths, even where linear PCM encoding/decoding
+// would behave acceptably.
+static_assert (sizeof (float) == 4 && std::numeric_limits<float>::is_iec559);
+static_assert (sizeof (double) == 8 && std::numeric_limits<double>::is_iec559);
 
 namespace wav
 {
@@ -26,31 +35,14 @@ enum class ExportFormat
 
 namespace FormatCode // format code in "fmt " chunk
 {
-inline constexpr uint16_t LinearPCM = 0x0001;
-inline constexpr uint16_t FloatPCM  = 0x0003;
+inline constexpr uint16_t LinearPCM  = 0x0001;
+inline constexpr uint16_t FloatPCM   = 0x0003;
 inline constexpr uint16_t Extensible = 0xFFFE;
 }
 
-constexpr bool isValidFormatCode (uint32_t formatCode)
-{
-    return
-    formatCode == FormatCode::LinearPCM||
-    formatCode == FormatCode::FloatPCM ||
-    formatCode == FormatCode::Extensible;
-}
+constexpr bool isValidFormatCode (uint16_t formatCode);
 
-constexpr std::pair <uint16_t, uint16_t> bitDepthAndFormatCode (ExportFormat ef) noexcept
-{
-    switch (ef)
-    {
-        case ExportFormat::LinearPCM_8:  return {8,  FormatCode::LinearPCM};
-        case ExportFormat::LinearPCM_16: return {16, FormatCode::LinearPCM};
-        case ExportFormat::LinearPCM_24: return {24, FormatCode::LinearPCM};
-        case ExportFormat::LinearPCM_32: return {32, FormatCode::LinearPCM};
-        case ExportFormat::FloatPCM_32:  return {32, FormatCode::FloatPCM};
-        case ExportFormat::FloatPCM_64:  return {64, FormatCode::FloatPCM};
-    }
-}
+constexpr std::pair <uint16_t, uint16_t> bitDepthAndFormatCode (ExportFormat ef) noexcept;
 
 namespace FormatChunkSize
 {
@@ -60,14 +52,7 @@ inline constexpr uint32_t WAVEFORMATEX         = 18; // 14+2+2    (adds cbSize, 
 inline constexpr uint32_t WAVEFORMATEXTENSIBLE = 40; // 14+2+2+22 (adds validBitsPerSample, channel bit mask, and sub-format GUID)
 }
 
-constexpr bool isValidFormatChunkSize (uint32_t chunkSize)
-{
-    return
-    chunkSize == FormatChunkSize::WAVEFORMAT         ||
-    chunkSize == FormatChunkSize::PCMWAVEFORMAT      ||
-    chunkSize == FormatChunkSize::WAVEFORMATEX       ||
-    chunkSize == FormatChunkSize::WAVEFORMATEXTENSIBLE;
-}
+constexpr bool isValidFormatChunkSize (uint32_t chunkSize);
 
 struct GUID // for WAVEFORMATEXTENSIBLE
 {
@@ -88,27 +73,13 @@ inline constexpr GUID FloatPCM
 {0x00000003, 0x0000, 0x0010, {0x80, 0x00, 0x00, 0xaa, 0x00, 0x38, 0x9b, 0x71}};
 }
 
-inline std::ostream & operator<< (std::ostream & os, GUID const & guid)
-{
-    os << std::format ("{:08X}-{:04X}-{:04X}-{:02X}{:02X}-{:02X}{:02X}{:02X}{:02X}{:02X}{:02X}",
-                       guid.data1,
-                       guid.data2,
-                       guid.data3,
-                       guid.data4[0], guid.data4[1],
-                       guid.data4[2], guid.data4[3], guid.data4[4], guid.data4[5], guid.data4[6], guid.data4[7]);
-    return os;
-}
-
-inline std::string GUID::str() const
-{
-    std::ostringstream oss;
-    oss << *this;
-    return oss.str();
-}
+inline std::ostream & operator<< (std::ostream & os, GUID const & guid);
 
 template <typename T>
 concept FloatOrDouble = std::same_as <T,float> || std::same_as <T,double>;
 
 } // namespace wav
+
+#include "private/FormatsImplementation.hpp"
 
 #endif
