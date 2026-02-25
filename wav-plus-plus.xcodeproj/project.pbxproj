@@ -50,6 +50,7 @@
 		C4D146EC2F4E4667002DCA78 /* ReaderImplementation.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = ReaderImplementation.hpp; sourceTree = "<group>"; };
 		C4D146ED2F4E51B7002DCA78 /* WriterImplementation.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = WriterImplementation.hpp; sourceTree = "<group>"; };
 		C4D146EE2F4E584E002DCA78 /* ChunkInfoImplementation.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = ChunkInfoImplementation.hpp; sourceTree = "<group>"; };
+		C4D146EF2F4E6E4C002DCA78 /* FormatsImplementation.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = FormatsImplementation.hpp; sourceTree = "<group>"; };
 		C4F704F62EA6CB4500243874 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
@@ -139,6 +140,7 @@
 				C4D146EC2F4E4667002DCA78 /* ReaderImplementation.hpp */,
 				C4D146ED2F4E51B7002DCA78 /* WriterImplementation.hpp */,
 				C4D146EE2F4E584E002DCA78 /* ChunkInfoImplementation.hpp */,
+				C4D146EF2F4E6E4C002DCA78 /* FormatsImplementation.hpp */,
 			);
 			path = private;
 			sourceTree = "<group>";
