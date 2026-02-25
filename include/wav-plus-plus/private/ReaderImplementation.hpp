@@ -621,7 +621,6 @@ void Reader::ReadFloatPCM32 (T ** const destinations, size_t channelsToRead, siz
 {
     auto & buffer {bufferFloatPCM32};
     constexpr size_t bytesPerSample {4};
-    static_assert (sizeof (float) == 4 && CHAR_BIT == 8);
 
     const auto sourceChannels {channels()};
     assert (channelsToRead <= sourceChannels);
@@ -673,7 +672,6 @@ void Reader::ReadFloatPCM64 (T ** const destinations, size_t channelsToRead, siz
 {
     auto & buffer {bufferFloatPCM64};
     constexpr size_t bytesPerSample {8};
-    static_assert (sizeof (double) == 8 && CHAR_BIT == 8);
 
     const auto sourceChannels {channels()};
     assert (channelsToRead <= sourceChannels);

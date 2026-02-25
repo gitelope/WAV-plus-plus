@@ -17,10 +17,6 @@
 #include <algorithm>
 #include <memory>
 
-static_assert (sizeof (float) == 4);
-static_assert (sizeof (double) == 8);
-static_assert (CHAR_BIT == 8);
-
 namespace wav
 {
 

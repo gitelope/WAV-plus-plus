@@ -3,11 +3,23 @@
 #define wavplusplus_Formats_hpp
 
 #include <array>
+#include <climits>
 #include <concepts>
 #include <cstdint>
+#include <limits>
 #include <ostream>
 #include <string>
+#include <type_traits>
 #include <utility>
+
+static_assert (CHAR_BIT == 8);
+// The following two global checks ensure correct float-PCM encoding/decoding,
+// avoiding a larger, more distributed set of path-specific checks.
+// The trade-off is reduced portability: builds are rejected on platforms
+// with non-standard float/double widths, even where linear PCM encoding/decoding
+// would behave acceptably.
+static_assert (sizeof (float) == 4 && std::numeric_limits<float>::is_iec559);
+static_assert (sizeof (double) == 8 && std::numeric_limits<double>::is_iec559);
 
 namespace wav
 {
