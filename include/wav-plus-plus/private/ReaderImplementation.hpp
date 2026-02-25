@@ -2,6 +2,14 @@
 #ifndef wavplusplus_ReaderImplementation_hpp
 #define wavplusplus_ReaderImplementation_hpp
 
+#include "../Exceptions.hpp"
+#include "BufferSizing.hpp"
+
+#include <algorithm>
+#include <bit>
+#include <cassert>
+#include <type_traits>
+
 namespace wav
 {
 

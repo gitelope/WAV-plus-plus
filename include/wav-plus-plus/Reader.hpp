@@ -5,20 +5,13 @@
 #include "Formats.hpp"
 #include "FileInfo.hpp"
 #include "ChunkInfo.hpp"
-#include "Exceptions.hpp"
-#include "private/ReadingBytes.hpp"
-#include "private/BufferSizing.hpp"
 #include "private/int24.hpp"
 
-#include <algorithm>
-#include <bit>
-#include <cassert>
 #include <climits>
 #include <cstdio>
 #include <cstdint> 
 #include <memory>
 #include <string>
-#include <type_traits>
 #include <vector>
 
 static_assert (sizeof (float) == 4);
