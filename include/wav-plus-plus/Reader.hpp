@@ -3,7 +3,7 @@
 #define wavplusplus_Reader_hpp
 
 #include "Formats.hpp"
-#include "Info.hpp"
+#include "FileInfo.hpp"
 #include "ChunkInfo.hpp"
 #include "Exceptions.hpp"
 #include "private/ReadingBytes.hpp"
@@ -88,7 +88,7 @@ public:
 
     // FILE INFO ////////////////////////////////////////
 
-    Info const & getInfo() const {return info;}
+    FileInfo const & getInfo() const {return info;}
     uint16_t channels() const {return info.channels;}
     uint32_t frames() const {return info.frames;}
     uint32_t samples() const {return channels() * frames();}
@@ -101,7 +101,7 @@ public:
 private:
 
     std::unique_ptr<FILE, decltype(&fclose)> file;
-    Info info;
+    FileInfo info;
 
     DataChunk dataChunk;
     uint32_t dataPosition {0};    // current byte position in data chunk

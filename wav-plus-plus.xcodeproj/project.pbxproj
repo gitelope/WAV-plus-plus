@@ -36,7 +36,7 @@
 		C41045222EF1CD5E0013E245 /* ChunkInfo.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = ChunkInfo.hpp; sourceTree = "<group>"; };
 		C41045232EF1CD5E0013E245 /* Exceptions.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Exceptions.hpp; sourceTree = "<group>"; };
 		C41045242EF1CD5E0013E245 /* Formats.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Formats.hpp; sourceTree = "<group>"; };
-		C41045252EF1CD5E0013E245 /* Info.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Info.hpp; sourceTree = "<group>"; };
+		C41045252EF1CD5E0013E245 /* FileInfo.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = FileInfo.hpp; sourceTree = "<group>"; };
 		C41045282EF1CD5E0013E245 /* Reader.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Reader.hpp; sourceTree = "<group>"; };
 		C410452A2EF1CD5E0013E245 /* Writer.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Writer.hpp; sourceTree = "<group>"; };
 		C499DB752E13435300A88D60 /* write and read */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "write and read"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -77,10 +77,10 @@
 			children = (
 				C41045282EF1CD5E0013E245 /* Reader.hpp */,
 				C410452A2EF1CD5E0013E245 /* Writer.hpp */,
+				C41045252EF1CD5E0013E245 /* FileInfo.hpp */,
 				C41045222EF1CD5E0013E245 /* ChunkInfo.hpp */,
-				C41045232EF1CD5E0013E245 /* Exceptions.hpp */,
 				C41045242EF1CD5E0013E245 /* Formats.hpp */,
-				C41045252EF1CD5E0013E245 /* Info.hpp */,
+				C41045232EF1CD5E0013E245 /* Exceptions.hpp */,
 				C4C641D02F469567005545BE /* private */,
 			);
 			path = "wav-plus-plus";

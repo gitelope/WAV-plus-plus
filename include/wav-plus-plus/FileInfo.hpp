@@ -1,6 +1,6 @@
 
-#ifndef wavplusplus_Info_hpp
-#define wavplusplus_Info_hpp
+#ifndef wavplusplus_FileInfo_hpp
+#define wavplusplus_FileInfo_hpp
 
 #include "ChunkInfo.hpp"
 #include <cassert>
@@ -11,7 +11,7 @@
 namespace wav
 {
 
-struct Info
+struct FileInfo
 {
     // playback
     uint16_t channels {0};
@@ -29,7 +29,7 @@ struct Info
     void ExtractFrom (ChunkInfo const &);
 };
 
-inline void Info::ExtractFrom (ChunkInfo const & chunkInfo)
+inline void FileInfo::ExtractFrom (ChunkInfo const & chunkInfo)
 {
     channels = chunkInfo.format.channels;
     sampleRate = chunkInfo.format.sampleRate;
@@ -104,7 +104,7 @@ inline void Info::ExtractFrom (ChunkInfo const & chunkInfo)
     }
 }
 
-inline std::ostream & operator<< (std::ostream & os, Info const & info)
+inline std::ostream & operator<< (std::ostream & os, FileInfo const & info)
 {
     os << "WAVE ";
     if      (info.isLinearPCM) os << std::format ("{}-bit linear PCM", info.bitDepth);
