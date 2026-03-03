@@ -106,7 +106,7 @@ inline std::ostream & operator<< (std::ostream & os, FileInfo const & info)
     if      (bytes >= GB) os << std::format ("{:.1f} GB of audio\n", static_cast<double>(bytes) / GB);
     else if (bytes >= MB) os << std::format ("{:.1f} MB of audio\n", static_cast<double>(bytes) / MB);
     else if (bytes >= kB) os << std::format ("{:.1f} kB of audio\n", static_cast<double>(bytes) / kB);
-    else                  os << bytes << " bytes of audio\n";
+    else                  os << bytes << " bytes of audio";
 
     return os;
 }
