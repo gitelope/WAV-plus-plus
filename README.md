@@ -1,56 +1,45 @@
+# WAV++
+A header-only C++ library for reading and writing WAV files.
 
-// Works with std::vector, C-style arrays, and std::array.
-// If the number of samples desired is given, an attempt will be made to read or write
-// that number of samples, else the size of the container will be used as the number
-// of samples to read or write.
-// For C-style arrays whose size is known at compile time, (even arrays created with new?),
-// both options exist. For dynamic (?) C-style arrays, the number of sample to read/write must be supplied.
-//
-// writer.write (vec);
-// writer.write (vec, samplesRequested);
-//
-// writer.write (stdArray);
-// writer.write (stdArray, samplesResquested);
-//
-// writer.write (C_array_fixed);
-// writer.write (C_array_fixed, samplesRequested);
-//
-// writer.write (C_array_dynamic, samplesRequested);
-//
-// The above options also apply to reading with Reader::read().
+## Encoding options
+Amplitudes can be encoded in linear PCM using 8, 16, 24, or 32 bits and float PCM using 32 or 64 bits. Mono, stereo, and multichannel layouts are supported.
 
-/*
+## Usage
 
- sample encoding options:
- linear PCM: 8-bit, 16-bit, 24-bit, and 32-bit
- float PCM: 32-bit and 64-bit
+### Reading an entire file into memory
+```
+#include <wav-plus-plus/Reader.hpp>
 
- channel options:
- mono, stereo, and multichannel
+wav::Reader reader {filepath};
+std::vector<float> in (reader.samples());
+reader.read (in);
+```
+Works with std::vector and C arrays.
 
- format:
- PCMWAVEFORMAT (very common, but technically non-standard for some of the above options)
+### Reading incrementally
+```
+wav::Reader reader {filepath};
+std::vector<float> buffer (1024);
+size_t samplesLeft {reader.samples()};
 
- ---
+while (samplesLeft)
+{
+    samplesLeft -= reader.read (buffer);
+    // process buffer
+}
+```
+Works with std::vector, std::array, and C arrays.
 
- quantization (linear PCM only):
+### Channel-separated reading
+```
+wav::Reader reader {filepath};
+const size_t frames {reader.frames()};
 
- double or float -> signed int (16, 24 and 32 bits):
- 1. Multiply by 2^(bits-1) - 1
- (e.g. 32,767 for 16-bit linear PCM)
- 2. Round to nearest integer.*
- 3. Clamp to [1 - 2^(bits-1), 2^(bits-1) - 1]
- (e.g. [-32,767, 32,767] for 16-bit linear PCM)
+std::vector<float> left (frames);
+std::vector<float> right (frames);
 
- double or float -> unsigned 8-bit int:
- 1. Multiply by 127
- 2. Add 128.
- 3. Round to nearest integer.*
- 4. Clamp to [1, 255].
-
- * Optional TPDF dither (not implemented) would come before rounding.
-
- */
-
-# License
+float * channels[] = {left.data(), right.data()};
+reader.read (channels, 2, frames);
+```
+## License
 WAV++ is licensed under the MIT License. See LICENSE.txt for details.
