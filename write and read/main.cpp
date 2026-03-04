@@ -8,208 +8,263 @@
 #include <cassert>
 #include <array>
 
-template <typename T> void Print (std::vector<T> const &);
-template <typename T> void Print (std::vector<std::vector<T>> const &);
-
+//template <typename T> void Print (std::vector<T> const &);
+template <typename T> void Print (std::vector<T> const &, size_t);
 template <typename T> void Print (T const * const, size_t);
-template <typename T> void Print (T const * const * const array, size_t, size_t);
+
+template <typename T>
+std::ostream & operator<< (std::ostream & os, std::vector<T> const & testSequence);
+
+//template <typename T> void Print (std::vector<std::vector<T>> const &);
+//template <typename T> void Print (T const * const * const array, size_t, size_t);
 
 void Section (std::string const & title);
 void Example (std::string const & title);
 
 int main ()
 {
-    const auto filename {"test.wav"};
+    const std::string filename {"test.wav"};
+
+    Section ("interleaved");
+
+    // write test file (and display file info)
     {
-        // write a WAV file
-        {
-            const std::vector<float> out {0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0};
-            wav::Writer writer {filename, wav::ExportFormat::LinearPCM_24, 48000, 2};
-            writer.write (out);
-        }
+        std::vector<float> out = {0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0};
+        std::cout << "\nwriting: [" << out << "]" << std::endl;
 
-        Section ("formatted file info");
-        {
-            wav::Reader reader {filename};
-            std::cout << "\n" << reader.getInfo() << std::endl;
-        }
-
-        Section ("interleaved");
-
-        Example ("read into std::vector");
-        {
-            wav::Reader reader {filename};
-            std::vector<float> in (reader.samples());
-            reader.read (in);
-            Print (in);
-        }
-
-        Example ("read into C array");
-        {
-            wav::Reader reader {filename};
-            const size_t size {reader.samples()};
-            float * const in = new float [size];
-            reader.read (in, size);
-            Print (in, size);
-
-            delete[] in;
-        }
+        wav::Writer writer {filename, wav::ExportFormat::LinearPCM_24, 48000, 2};
+        writer.write (out);
     }
     {
-        Section ("de-interleaved");
+        wav::Reader reader {filename};
+        std::cout << reader.getInfo() << std::endl;
+    }
+
+    Example ("read into std::vector");
+    {
+        wav::Reader reader {filename};
+        std::vector<float> in (reader.samples());
+        const auto samplesRead = reader.read (in);
+        Print (in, samplesRead);
+    }
+
+    Example ("read into C array");
+    {
+        wav::Reader reader {filename};
+        const size_t size {reader.samples()};
+        float * const in = new float [size];
+        const auto samplesRead = reader.read (in, size);
+        Print (in, samplesRead);
+
+        delete[] in;
+    }
+
+    Section ("de-interleaved");
+
+    // write test file (and display file info)
+    {
+        const std::vector<float> out {0.1, 1.1, 0.2, 1.2, 0.3, 1.3, 0.4, 1.4};
+        std::cout << "\nwriting: [" << out << "]" << std::endl;
+
+        wav::Writer writer {filename, wav::ExportFormat::FloatPCM_32, 48000, 2};
+        writer.write (out);
+    }
+    {
+        wav::Reader reader {filename};
+        std::cout << reader.getInfo() << std::endl;
+    }
+
+    Example ("stereo read into separate std::vectors");
+    {
+        wav::Reader reader {filename};
+        const size_t frames {reader.frames()};
+
+        std::vector<float> left (frames);
+        std::vector<float> right (frames);
+        float * channelPointers[] = {left.data(), right.data()};
+
+        const auto framesRead = reader.read (channelPointers, 2, frames);
+        Print (left, framesRead);
+        Print (right, framesRead);
+    }
+
+    Example ("stereo read into separate C arrays");
+    {
+        wav::Reader reader {filename};
+        const size_t frames {reader.frames()};
+
+        float * left = new float [frames];
+        float * right = new float [frames];
+        float * channelPointers[] = {left, right};
+
+        const auto framesRead = reader.read (channelPointers, 2, frames);
+        Print (left, framesRead);
+        Print (right, framesRead);
+
+        delete[] left;
+        delete[] right;
+    }
+
+    Example ("stereo read into one std::vector");
+    {
+        wav::Reader reader {filename};
+        const size_t frames {reader.frames()};
+        constexpr size_t channels {2};
+
+        std::vector<float> deinterleaved (channels * frames);
+        float * channelPointers[] = {deinterleaved.data(), deinterleaved.data() + frames};
+
+        const auto framesRead = reader.read (channelPointers, channels, frames);
+        Print (deinterleaved, channels * framesRead);
+    }
+
+    Example ("stereo read into one C array");
+    {
+        wav::Reader reader {filename};
+        const size_t frames {reader.frames()};
+        constexpr size_t channels {2};
+
+        float * deinterleaved = new float [channels * frames];
+
+        float * left = deinterleaved;
+        float * right = deinterleaved + frames;
+        float * channelPointers[] = {left, right};
+
+        const auto framesRead = reader.read (channelPointers, channels, frames);
+        Print (deinterleaved, channels * framesRead);
+
+        delete[] deinterleaved;
+    }
+
+    // write test file (and display file info)
+    {
+        const std::vector<float> out {0.1, 1.1, 2.1, 0.2, 1.2, 2.2, 0.3, 1.3, 2.3, 0.4, 1.4, 2.4};
+        std::cout << "\nwriting: [" << out << "]" << std::endl;
+
+        wav::Writer writer {filename, wav::ExportFormat::FloatPCM_32, 48000, 3};
+        writer.write (out);
+    }
+    {
+        wav::Reader reader {filename};
+        std::cout << reader.getInfo() << std::endl;
+    }
+
+    Example ("read an arbitrary number of channels into one std::vector");
+    {
+        wav::Reader reader {filename};
+        const size_t frames {reader.frames()};
+        const size_t channels {reader.channels()};
+
+        std::vector<float> deinterleaved (channels * frames);
+
+        std::vector<float *> channelPointers (channels);
+        for (size_t i = 0; i < channels; ++i)
         {
-            {
-                const std::vector<float> out {0.1, 1.1, 0.2, 1.2, 0.3, 1.3, 0.4, 1.4};
-
-                wav::Writer writer {filename, wav::ExportFormat::FloatPCM_32, 48000, 2};
-                writer.write (out);
-            }
-
-            Example ("stereo read into separate std::vectors");
-            {
-                wav::Reader reader {filename};
-                const size_t frames {reader.frames()};
-
-                std::vector<float> left (frames);
-                std::vector<float> right (frames);
-                float * channelPointers[] = {left.data(), right.data()};
-
-                reader.read (channelPointers, 2, frames);
-                Print (left);
-                Print (right);
-            }
-
-            Example ("stereo read into separate C arrays");
-            {
-                wav::Reader reader {filename};
-                const size_t frames {reader.frames()};
-
-                float * left = new float [frames];
-                float * right = new float [frames];
-                float * channelPointers[] = {left, right};
-
-                reader.read (channelPointers, 2, frames);
-                Print (left, frames);
-                Print (right, frames);
-
-                delete[] left;
-                delete[] right;
-            }
-
-            Example ("stereo read into one std::vector");
-            {
-                wav::Reader reader {filename};
-                const size_t frames {reader.frames()};
-
-                std::vector<float> deinterleaved (2 * frames);
-                float * channelPointers[] = {deinterleaved.data(), deinterleaved.data() + frames};
-
-                reader.read (channelPointers, 2, frames);
-                Print (deinterleaved);
-            }
-
-            Example ("stereo read into one C array");
-            {
-                wav::Reader reader {filename};
-                const size_t frames {reader.frames()};
-
-                float * deinterleaved = new float [2 * frames];
-
-                float * left = deinterleaved;
-                float * right = deinterleaved + frames;
-                float * channelPointers[] = {left, right};
-
-                reader.read (channelPointers, 2, frames);
-                Print (deinterleaved, 2 * frames);
-
-                delete[] deinterleaved;
-            }
+            channelPointers[i] = deinterleaved.data() + frames * i;
         }
 
-        // arbitrary number of channels into contiguous storage:
+        const auto framesRead = reader.read (channelPointers.data(), channels, frames);
+
+        Print (deinterleaved, channels * framesRead);
+    }
+
+    Example ("read an arbitrary number of channels into one C array");
+    {
+        wav::Reader reader {filename};
+        const size_t frames {reader.frames()};
+        const size_t channels {reader.channels()};
+
+        float * deinterleaved = new float [channels * frames];
+
+        float * * channelPointers = new float * [channels];
+        for (size_t i = 0; i < channels; ++i)
         {
-            {
-                const std::vector<float> out {0.1, 1.1, 2.1, 0.2, 1.2, 2.2, 0.3, 1.3, 2.3, 0.4, 1.4, 2.4};
-
-                wav::Writer writer {filename, wav::ExportFormat::FloatPCM_32, 48000, 3};
-                writer.write (out);
-            }
-
-            Example ("read an arbitrary number of channels into one std::vector");
-            {
-                wav::Reader reader {filename};
-                const size_t frames {reader.frames()};
-                const size_t channels {reader.channels()};
-
-                std::vector<float> deinterleaved (channels * frames);
-
-                std::vector<float *> channelPointers (channels);
-                for (size_t i = 0; i < channels; ++i)
-                {
-                    channelPointers[i] = deinterleaved.data() + frames * i;
-                }
-
-                reader.read (channelPointers.data(), channels, frames);
-
-                Print (deinterleaved);
-            }
-
-            Example ("read of an arbitrary number of channels into one C array");
-            {
-                wav::Reader reader {filename};
-                const size_t frames {reader.frames()};
-                const size_t channels {reader.channels()};
-
-                float * deinterleaved = new float [channels * frames];
-
-                float * * channelPointers = new float * [channels];
-                for (size_t i = 0; i < channels; ++i)
-                {
-                    channelPointers[i] = deinterleaved + frames * i;
-                }
-
-                reader.read (channelPointers, channels, frames);
-
-                Print (deinterleaved, channels * frames);
-
-                delete[] channelPointers;
-                delete[] deinterleaved;
-            }
+            channelPointers[i] = deinterleaved + frames * i;
         }
+
+        const auto framesRead = reader.read (channelPointers, channels, frames);
+
+        Print (deinterleaved, channels * framesRead);
+
+        delete[] channelPointers;
+        delete[] deinterleaved;
     }
 
     Section ("incremental");
-    // Incremental writing and reading (with tallying of samples).
+
+    std::cout << "\nincremental writing: " << std::endl;
     {
         size_t samplesWritten {0};
+
+        wav::Writer writer {filename, wav::ExportFormat::FloatPCM_32, 48000, 1};
+        std::vector<float> buffer;
+
+        // 2 writes
+        buffer = {1.f, 2.f, 3.f, 4.f};
+        Print (buffer, buffer.size());
+        samplesWritten += writer.write (buffer);
+
+        buffer = {5.f, 6.f, 7.f, 8.f};
+        Print (buffer, buffer.size());
+        samplesWritten += writer.write (buffer);
+
+        std::cout << "\n" << samplesWritten << " samples written." << std::endl;
+    }
+    {
+        wav::Reader reader {filename};
+        std::cout << "\n" << reader.getInfo() << std::endl;
+    }
+
+    constexpr size_t readBufferSize {3};
+
+    Example ("incremental read with std::vector (samples requested = container size)");
+    {
+        wav::Reader reader {filename};
+        std::vector<float> in (readBufferSize);
+
+        // 2 buffer-filling reads and 1 partially-buffer read
         size_t samplesRead {0};
-
+        while (samplesRead < reader.samples())
         {
-            wav::Writer writer {filename, wav::ExportFormat::FloatPCM_32, 48000, 1};
-            std::vector<float> buffer;
-
-            // 2 writes
-            buffer = {1.f, 2.f, 3.f}; samplesWritten += writer.write (buffer);
-            buffer = {4.f, 5.f, 6.f}; samplesWritten += writer.write (buffer);
+            const size_t n = reader.read (in);
+            samplesRead += n;
+            Print (in, n);
         }
+    }
+    Example ("incremental read with std::array (samples requested = container size)");
+    {
+        wav::Reader reader {filename};
+        std::array<float,readBufferSize> in;
+
+        // 2 buffer-filling reads and 1 partially-buffer read
+        size_t samplesRead {0};
+        while (samplesRead < reader.samples())
         {
-            wav::Reader reader {filename};
-            std::vector<float> in (2);
-
-            // 3 reads
-            std::cout << "\nfile read incrementally:\n";
-            samplesRead += reader.read (in); Print (in);
-            samplesRead += reader.read (in); Print (in);
-            samplesRead += reader.read (in); Print (in);
+            const size_t n = reader.read (in);
+            samplesRead += n;
+            Print (in.data(), n);
         }
+    }
+    Example ("incremental read with stack-allocated C array (samples requested = container size)");
+    {
+        wav::Reader reader {filename};
+        float in [readBufferSize];
 
-        std::cout << std::format ("samples written: {}\nsamples read:    {}\n", samplesWritten, samplesRead) << std::endl;
+        // 2 buffer-filling reads and 1 partially-buffer read
+        size_t samplesRead {0};
+        while (samplesRead < reader.samples())
+        {
+            const size_t n = reader.read (in);
+            samplesRead += n;
+            Print (in, n);
+        }
     }
 
     return 0;
 }
 
 
+/*
 template <typename T>
 void Print (std::vector<T> const & interleaved)
 {
@@ -217,6 +272,18 @@ void Print (std::vector<T> const & interleaved)
     {
         std::cout << std::format ("{}", interleaved[i]);
         if (i < interleaved.size() - 1) std::cout << ", ";
+    }
+    std::cout << std::endl;
+}
+*/
+
+template <typename T>
+void Print (std::vector<T> const & interleaved, size_t elementsToPrint)
+{
+    for (size_t i=0; i < elementsToPrint; ++i)
+    {
+        std::cout << std::format ("{}", interleaved[i]);
+        if (i < elementsToPrint - 1) std::cout << ", ";
     }
     std::cout << std::endl;
 }
@@ -254,12 +321,12 @@ void Print (T const * const * const array, size_t channels, size_t frames)
  */
 
 template <typename T>
-void Print (T const * const array, size_t size)
+void Print (T const * const array, size_t elementsToPrint)
 {
-    for (size_t i = 0; i < size; ++i)
+    for (size_t i = 0; i < elementsToPrint; ++i)
     {
         std::cout << std::format ("{}", array[i]);
-        if (i < size - 1) std::cout << ", ";
+        if (i < elementsToPrint - 1) std::cout << ", ";
     }
     std::cout << std::endl;
 }
@@ -273,4 +340,15 @@ void Section (std::string const & title)
 void Example (std::string const & title)
 {
     std::cout << '\n' << title << std::endl;
+}
+
+template <typename T>
+std::ostream & operator<< (std::ostream & os, std::vector<T> const & testSequence)
+{
+    for (size_t i = 0; i < testSequence.size(); ++i)
+    {
+        os << std::format ("{}", testSequence[i]);
+        if (i < testSequence.size() - 1) os << ", ";
+    }
+    return os;
 }
