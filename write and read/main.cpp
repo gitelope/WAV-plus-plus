@@ -84,9 +84,9 @@ int main ()
 
         std::vector<float> left (frames);
         std::vector<float> right (frames);
-        float * channelPointers[] = {left.data(), right.data()};
+        float * destinations[] = {left.data(), right.data()};
 
-        const auto framesRead = reader.read (channelPointers, 2, frames);
+        const auto framesRead = reader.read (destinations, 2, frames);
 
         Print (left, framesRead);
         Print (right, framesRead);
@@ -99,9 +99,9 @@ int main ()
 
         float * left = new float [frames];
         float * right = new float [frames];
-        float * channelPointers[] = {left, right};
+        float * destinations[] = {left, right};
 
-        const auto framesRead = reader.read (channelPointers, 2, frames);
+        const auto framesRead = reader.read (destinations, 2, frames);
 
         Print (left, framesRead);
         Print (right, framesRead);
@@ -117,9 +117,9 @@ int main ()
         constexpr size_t channels {2};
 
         std::vector<float> deinterleaved (channels * frames);
-        float * channelPointers[] = {deinterleaved.data(), deinterleaved.data() + frames};
+        float * destinations[] = {deinterleaved.data(), deinterleaved.data() + frames};
 
-        const auto framesRead = reader.read (channelPointers, channels, frames);
+        const auto framesRead = reader.read (destinations, channels, frames);
 
         Print (deinterleaved, channels * framesRead);
     }
@@ -134,9 +134,9 @@ int main ()
 
         float * left = deinterleaved;
         float * right = deinterleaved + frames;
-        float * channelPointers[] = {left, right};
+        float * destinations[] = {left, right};
 
-        const auto framesRead = reader.read (channelPointers, channels, frames);
+        const auto framesRead = reader.read (destinations, channels, frames);
 
         Print (deinterleaved, channels * framesRead);
 
@@ -164,13 +164,13 @@ int main ()
 
         std::vector<float> deinterleaved (channels * frames);
 
-        std::vector<float *> channelPointers (channels);
+        std::vector<float *> destinations (channels);
         for (size_t i = 0; i < channels; ++i)
         {
-            channelPointers[i] = deinterleaved.data() + frames * i;
+            destinations[i] = deinterleaved.data() + frames * i;
         }
 
-        const auto framesRead = reader.read (channelPointers.data(), channels, frames);
+        const auto framesRead = reader.read (destinations.data(), channels, frames);
 
         Print (deinterleaved, channels * framesRead);
     }
@@ -183,17 +183,17 @@ int main ()
 
         float * deinterleaved = new float [channels * frames];
 
-        float * * channelPointers = new float * [channels];
+        float * * destinations = new float * [channels];
         for (size_t i = 0; i < channels; ++i)
         {
-            channelPointers[i] = deinterleaved + frames * i;
+            destinations[i] = deinterleaved + frames * i;
         }
 
-        const auto framesRead = reader.read (channelPointers, channels, frames);
+        const auto framesRead = reader.read (destinations, channels, frames);
 
         Print (deinterleaved, channels * framesRead);
 
-        delete[] channelPointers;
+        delete[] destinations;
         delete[] deinterleaved;
     }
 
@@ -313,12 +313,12 @@ int main ()
             std::cout << "Requesting " << channels << " channels of audio." << std::endl;
 
             std::vector<float> deinterleaved (frames * channels);
-            std::vector<float *> channelPointers (channels);
+            std::vector<float *> destinations (channels);
             for (size_t i=0; i < channels; ++i)
             {
-                channelPointers[i] = deinterleaved.data() + i * frames;
+                destinations[i] = deinterleaved.data() + i * frames;
             }
-            reader.read (channelPointers.data(), channels, frames);
+            reader.read (destinations.data(), channels, frames);
         }
         catch (wav::ReadError const & e)
         {
