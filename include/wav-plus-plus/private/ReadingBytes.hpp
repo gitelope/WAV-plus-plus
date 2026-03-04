@@ -69,7 +69,7 @@ inline std::string fourCharacterCode (FILE * in)
 {
     std::string code (4, '\0');
     if (fread (code.data(), 1, 4, in) != 4)
-        throw ReadError ("Failed to read 4 characters from file.");
+        throw ReadError ("Failed to read 4-character code from file.");
     return code;
 }
 
