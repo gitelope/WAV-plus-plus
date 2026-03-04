@@ -2,11 +2,12 @@
 #include <wav-plus-plus/Reader.hpp>
 #include <wav-plus-plus/Writer.hpp>
 
-#include <vector>
-#include <iostream>
-#include <format>
-#include <cassert>
 #include <array>
+#include <cassert>
+#include <format>
+#include <iostream>
+#include <fstream>
+#include <vector>
 
 //template <typename T> void Print (std::vector<T> const &);
 template <typename T> void Print (std::vector<T> const &, size_t);
@@ -45,6 +46,7 @@ int main ()
         wav::Reader reader {filename};
         std::vector<float> in (reader.samples());
         const auto samplesRead = reader.read (in);
+
         Print (in, samplesRead);
     }
 
@@ -54,6 +56,7 @@ int main ()
         const size_t size {reader.samples()};
         float * const in = new float [size];
         const auto samplesRead = reader.read (in, size);
+
         Print (in, samplesRead);
 
         delete[] in;
@@ -84,6 +87,7 @@ int main ()
         float * channelPointers[] = {left.data(), right.data()};
 
         const auto framesRead = reader.read (channelPointers, 2, frames);
+
         Print (left, framesRead);
         Print (right, framesRead);
     }
@@ -98,6 +102,7 @@ int main ()
         float * channelPointers[] = {left, right};
 
         const auto framesRead = reader.read (channelPointers, 2, frames);
+
         Print (left, framesRead);
         Print (right, framesRead);
 
@@ -115,6 +120,7 @@ int main ()
         float * channelPointers[] = {deinterleaved.data(), deinterleaved.data() + frames};
 
         const auto framesRead = reader.read (channelPointers, channels, frames);
+
         Print (deinterleaved, channels * framesRead);
     }
 
@@ -131,6 +137,7 @@ int main ()
         float * channelPointers[] = {left, right};
 
         const auto framesRead = reader.read (channelPointers, channels, frames);
+
         Print (deinterleaved, channels * framesRead);
 
         delete[] deinterleaved;
@@ -196,17 +203,15 @@ int main ()
     {
         size_t samplesWritten {0};
 
+        std::vector<float> buffer1 {1.f, 2.f, 3.f, 4.f};
+        std::vector<float> buffer2 {5.f, 6.f, 7.f, 8.f};
+        Print (buffer1, buffer1.size());
+        Print (buffer2, buffer2.size());
+
         wav::Writer writer {filename, wav::ExportFormat::FloatPCM_32, 48000, 1};
-        std::vector<float> buffer;
 
-        // 2 writes
-        buffer = {1.f, 2.f, 3.f, 4.f};
-        Print (buffer, buffer.size());
-        samplesWritten += writer.write (buffer);
-
-        buffer = {5.f, 6.f, 7.f, 8.f};
-        Print (buffer, buffer.size());
-        samplesWritten += writer.write (buffer);
+        samplesWritten += writer.write (buffer1);
+        samplesWritten += writer.write (buffer2);
 
         std::cout << "\n" << samplesWritten << " samples written." << std::endl;
     }
@@ -245,6 +250,7 @@ int main ()
             Print (in.data(), n);
         }
     }
+
     Example ("incremental read with stack-allocated C array (samples requested = container size)");
     {
         wav::Reader reader {filename};
@@ -260,22 +266,68 @@ int main ()
         }
     }
 
+    Section ("error handling");
+
+    Example ("requested file doesn't exist");
+    {
+        try
+        {
+            wav::Reader reader {"nonexistent.wav"};
+        }
+        catch (wav::ReadError const & e)
+        {
+            std::cerr << "wav::ReadError: " << '\"' << e.what() << '\"' << std::endl;
+        }
+    }
+
+    Example ("invalid WAV file\n(File is empty so RIFF chunk ID cannot be found.)");
+    {
+        const std::string filename {"cest_nest_pas_un_wav.wav"};
+        {
+            std::ofstream out {filename, std::ios::binary};
+        }
+        try
+        {
+            wav::Reader reader {filename};
+        }
+        catch (wav::ReadError const & e)
+        {
+            std::cerr << "wav::ReadError: " << '\"' << e.what() << '\"' << std::endl;
+        }
+    }
+
+    Example ("channel count mismatch during read\n(It's ok to request less than the total but not ok to request more than are present.)");
+    {
+        {
+            std::cout << "Writing 2 channels of audio." << std::endl;
+            const std::vector<float> out {0.1f, 0.2f, 0.3f, 0.4f};
+            wav::Writer writer {filename, wav::ExportFormat::FloatPCM_32, 48000, 2};
+            writer.write (out);
+        }
+        try
+        {
+            wav::Reader reader {filename};
+            const size_t frames {reader.frames()};
+
+            const size_t channels {3}; // Oops!
+            std::cout << "Requesting " << channels << " channels of audio." << std::endl;
+
+            std::vector<float> deinterleaved (frames * channels);
+            std::vector<float *> channelPointers (channels);
+            for (size_t i=0; i < channels; ++i)
+            {
+                channelPointers[i] = deinterleaved.data() + i * frames;
+            }
+            reader.read (channelPointers.data(), channels, frames);
+        }
+        catch (wav::ReadError const & e)
+        {
+            std::cout << "wav::ReadError: " << e.what() << std::endl;
+        }
+    }
+
     return 0;
 }
-
-
-/*
-template <typename T>
-void Print (std::vector<T> const & interleaved)
-{
-    for (size_t i=0; i < interleaved.size(); ++i)
-    {
-        std::cout << std::format ("{}", interleaved[i]);
-        if (i < interleaved.size() - 1) std::cout << ", ";
-    }
-    std::cout << std::endl;
-}
-*/
 
 template <typename T>
 void Print (std::vector<T> const & interleaved, size_t elementsToPrint)
@@ -286,6 +338,39 @@ void Print (std::vector<T> const & interleaved, size_t elementsToPrint)
         if (i < elementsToPrint - 1) std::cout << ", ";
     }
     std::cout << std::endl;
+}
+
+template <typename T>
+void Print (T const * const array, size_t elementsToPrint)
+{
+    for (size_t i = 0; i < elementsToPrint; ++i)
+    {
+        std::cout << std::format ("{}", array[i]);
+        if (i < elementsToPrint - 1) std::cout << ", ";
+    }
+    std::cout << std::endl;
+}
+
+void Section (std::string const & title)
+{
+    const std::string line (title.size() + 2, '-');
+    std::cout << '\n' << line << '\n' << '|' << title << '|' << '\n' << line << std::endl;
+}
+
+void Example (std::string const & title)
+{
+    std::cout << '\n' << title << std::endl;
+}
+
+template <typename T>
+std::ostream & operator<< (std::ostream & os, std::vector<T> const & testSequence)
+{
+    for (size_t i = 0; i < testSequence.size(); ++i)
+    {
+        os << std::format ("{}", testSequence[i]);
+        if (i < testSequence.size() - 1) os << ", ";
+    }
+    return os;
 }
 
 /*
@@ -320,35 +405,15 @@ void Print (T const * const * const array, size_t channels, size_t frames)
 }
  */
 
+ /*
 template <typename T>
-void Print (T const * const array, size_t elementsToPrint)
+void Print (std::vector<T> const & interleaved)
 {
-    for (size_t i = 0; i < elementsToPrint; ++i)
+    for (size_t i=0; i < interleaved.size(); ++i)
     {
-        std::cout << std::format ("{}", array[i]);
-        if (i < elementsToPrint - 1) std::cout << ", ";
+        std::cout << std::format ("{}", interleaved[i]);
+        if (i < interleaved.size() - 1) std::cout << ", ";
     }
     std::cout << std::endl;
 }
-
-void Section (std::string const & title)
-{
-    const std::string line (title.size() + 2, '-');
-    std::cout << '\n' << line << '\n' << '|' << title << '|' << '\n' << line << std::endl;
-}
-
-void Example (std::string const & title)
-{
-    std::cout << '\n' << title << std::endl;
-}
-
-template <typename T>
-std::ostream & operator<< (std::ostream & os, std::vector<T> const & testSequence)
-{
-    for (size_t i = 0; i < testSequence.size(); ++i)
-    {
-        os << std::format ("{}", testSequence[i]);
-        if (i < testSequence.size() - 1) os << ", ";
-    }
-    return os;
-}
+*/
