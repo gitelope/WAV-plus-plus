@@ -3,10 +3,10 @@
 A header-only C++ library for reading and writing WAV files.
 
 ## Installation
-```shell
+```sh
 git clone https://github.com/gitelope/WAV-plus-plus.git
 ```
-Add the `include/` subdirectory to you header search paths.
+Add the `include/` subdirectory to your header search paths.
 
 ## Encoding Options
 Amplitudes can be encoded in linear PCM using 8, 16, 24, or 32 bits and float PCM using 32 or 64 bits. Mono, stereo, and multichannel layouts are supported.
