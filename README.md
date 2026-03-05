@@ -2,10 +2,14 @@
 # WAV++
 A header-only C++ library for reading and writing WAV files.
 
+## Installation
+```shell
+git clone https://github.com/gitelope/WAV-plus-plus.git
+```
+Add the `include/` subdirectory to you header search paths.
+
 ## Encoding Options
 Amplitudes can be encoded in linear PCM using 8, 16, 24, or 32 bits and float PCM using 32 or 64 bits. Mono, stereo, and multichannel layouts are supported.
-
----
 
 ## Reading a WAV
 
@@ -13,7 +17,6 @@ Amplitudes can be encoded in linear PCM using 8, 16, 24, or 32 bits and float PC
 
 ```cpp
 #include <wav-plus-plus/Reader.hpp>
-#include <wav-plus-plus/Exceptions.hpp>
 
 wav::Reader reader {filepath};
 const auto channels {reader.channels()};
@@ -134,9 +137,6 @@ To perform an incremental de-interleaving read, pass in a value to the `frames` 
 ### Error handling
 
 Both `Reader`'s constructor and `Reader::read` throw a `wav::ReadError` when a problem is encountered so it's a good idea to use a `try-catch` when constructing a `Reader` or calling `read`.
-
----
-
 
 ## License
 WAV++ is licensed under the MIT License. See LICENSE.txt for details.
