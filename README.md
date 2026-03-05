@@ -3,7 +3,7 @@
 A header-only C++ library for reading and writing WAV files.
 
 ## Installation
-```sh
+```Shell
 git clone https://github.com/gitelope/WAV-plus-plus.git
 ```
 Add the `include/` subdirectory to your header search paths.
@@ -15,7 +15,7 @@ Amplitudes can be encoded in linear PCM using 8, 16, 24, or 32 bits and float PC
 
 ### Opening a file
 
-```cpp
+```C++
 #include <wav-plus-plus/Reader.hpp>
 
 wav::Reader reader {filepath};
@@ -28,20 +28,20 @@ const auto samples {reader.samples()};
 
 #### entire file into std::vector
 
-```cpp
+```C++
 std::vector<float> buffer (samples);
 const auto samplesRead = reader.read (buffer);
 ```
 #### entire file into array
 
-```cpp
+```C++
 float * const buffer = new float [samples];
 const auto samplesRead = reader.read (buffer, samples);
 delete[] buffer;
 ```
 #### incremental read into std::vector, array, or std::array
 
-```cpp
+```C++
 constexpr size_t bufferSize {1024}; // in samples
 
 // Choose one:
@@ -62,7 +62,7 @@ To separate the interleaved audio into channels, pass an array of pointers to de
 
 #### a fixed number of channels into named vectors
 
-```cpp
+```C++
 std::vector<float> left (frames);
 std::vector<float> right (frames);
 std::vector<float *> destinations {left.data(), right.data()};
@@ -72,7 +72,7 @@ reader.read (destinations.data(), destinations.size(), frames);
 
 #### a fixed number of channels into named arrays
 
-```cpp
+```C++
 constexpr size_t channelsToRead {3};
 float * left = new float [frames];
 float * right = new float [frames];
@@ -88,7 +88,7 @@ delete[] center;
 
 #### all channels into a vector of vectors
 
-```cpp
+```C++
 std::vector<std::vector<float>> buffers (channels, std::vector<float> (frames));
 
 std::vector<float *> destinations (channels);
@@ -102,7 +102,7 @@ const size_t framesRead = reader.read (destinations.data(), channels, frames);
 
 #### all channels into a single vector
 
-```cpp
+```C++
 std::vector<float> buffer (samples);
 
 std::vector<float *> destinations (channels);
@@ -115,7 +115,7 @@ const auto framesRead = reader.read (destinations.data(), channels, frames);
 ```
 #### all channels into a single array
 
-```cpp
+```C++
 float * buffer = new float [samples];
 
 float * * destinations = new float * [channels];
