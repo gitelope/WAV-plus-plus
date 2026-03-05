@@ -386,7 +386,7 @@ size_t Reader::read (T ** const destinations, size_t numChannels, size_t framesR
     if (!file || framesRequested == 0 || numChannels == 0) return 0;
     if (numChannels > channels())
     {
-        throw ReadError ("Requested more output channels than available.");
+        throw ReadError ("Requested more channels than available.");
     }
 
     const size_t bytesPerSample {containerSizeInBits() / 8U};

@@ -12,6 +12,7 @@
 //template <typename T> void Print (std::vector<T> const &);
 template <typename T> void Print (std::vector<T> const &, size_t);
 template <typename T> void Print (T const * const, size_t);
+template <typename T> void Print (std::vector<std::vector<T>> const &, size_t);
 
 template <typename T>
 std::ostream & operator<< (std::ostream & os, std::vector<T> const & testSequence);
@@ -162,7 +163,7 @@ int main ()
         const size_t frames {reader.frames()};
         const size_t channels {reader.channels()};
 
-        std::vector<float> deinterleaved (channels * frames);
+        std::vector<float> deinterleaved (reader.samples());
 
         std::vector<float *> destinations (channels);
         for (size_t i = 0; i < channels; ++i)
@@ -195,6 +196,25 @@ int main ()
 
         delete[] destinations;
         delete[] deinterleaved;
+    }
+
+    Example ("read an arbitrary number of channels into a std::vector<std::vector<T>>");
+    {
+        wav::Reader reader {filename};
+        const size_t frames {reader.frames()};
+        const size_t channels {reader.channels()};
+
+        std::vector<std::vector<float>> buffers (channels, std::vector<float>(frames));
+
+        std::vector<float *> destinations (channels);
+        for (size_t i = 0; i < channels; ++i)
+        {
+            destinations[i] = buffers[i].data();
+        }
+
+        const size_t framesRead = reader.read (destinations.data(), channels, frames);
+
+        Print (buffers, framesRead);
     }
 
     Section ("incremental");
@@ -322,7 +342,7 @@ int main ()
         }
         catch (wav::ReadError const & e)
         {
-            std::cout << "wav::ReadError: " << e.what() << std::endl;
+            std::cout << "wav::ReadError: " << '\"' << e.what() << '\"' << std::endl;
         }
     }
 
@@ -351,6 +371,21 @@ void Print (T const * const array, size_t elementsToPrint)
     std::cout << std::endl;
 }
 
+template <typename T>
+void Print (std::vector<std::vector<T>> const & deinterleaved, size_t elementsToPrint)
+{
+    for (auto const & channel : deinterleaved)
+    {
+        for (size_t i=0; i < elementsToPrint; ++i)
+        {
+            std::cout << std::format ("{}", channel[i]);
+            if (i < channel.size() - 1) std::cout << ", ";
+        }
+        std::cout << '\n';
+    }
+    std::cout << std::endl;
+}
+
 void Section (std::string const & title)
 {
     const std::string line (title.size() + 2, '-');
@@ -372,22 +407,6 @@ std::ostream & operator<< (std::ostream & os, std::vector<T> const & testSequenc
     }
     return os;
 }
-
-/*
-template <typename T>
-void Print (std::vector<std::vector<T>> const & deinterleaved)
-{
-    for (auto const & channel : deinterleaved)
-    {
-        for (auto const & sample : channel)
-        {
-            std::cout << std::format ("{}, ", sample);
-        }
-        std::cout << '\n';
-    }
-    std::cout << std::endl;
-}
- */
 
 /*
 template <typename T>
