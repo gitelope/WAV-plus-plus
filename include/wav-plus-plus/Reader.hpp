@@ -23,6 +23,7 @@ class Reader
 
 public:
 
+    // May throw wav::ReadError.
     explicit Reader (std::string const & filepath, uint64_t suggestedBufferSizeKB = 32);
 
     // INTERLEAVED READING //////////////////////////////
