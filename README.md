@@ -10,7 +10,8 @@ Amplitudes can be encoded in linear PCM using 8, 16, 24, or 32 bits and float PC
 ## Reading a WAV
 
 ### Opening a file
-```
+
+```cpp
 #include <wav-plus-plus/Reader.hpp>
 #include <wav-plus-plus/Exceptions.hpp>
 
@@ -24,20 +25,20 @@ const auto samples {reader.samples()};
 
 #### entire file into std::vector
 
-```
+```cpp
 std::vector<float> buffer (samples);
 const auto samplesRead = reader.read (buffer);
 ```
 #### entire file into array
 
-```
+```cpp
 float * const buffer = new float [samples];
 const auto samplesRead = reader.read (buffer, samples);
 delete[] buffer;
 ```
-
 #### incremental read into std::vector, array, or std::array
-```
+
+```cpp
 constexpr size_t bufferSize {1024}; // in samples
 
 // Choose one:
@@ -52,14 +53,13 @@ while (samplesLeft)
     // process buffer
 }
 ```
-
 ### Reading into separate channels (deinterleaving)
 
 To separate the interleaved audio into channels, pass an array of pointers to destinations (`T**`) for each channel's audio, along with desired channel and frame counts. There are many possibilities including but not limited to:
 
 #### a fixed number of channels into named vectors
 
-```
+```cpp
 std::vector<float> left (frames);
 std::vector<float> right (frames);
 std::vector<float *> destinations {left.data(), right.data()};
@@ -68,7 +68,8 @@ reader.read (destinations.data(), destinations.size(), frames);
 ```
 
 #### a fixed number of channels into named arrays
-```
+
+```cpp
 constexpr size_t channelsToRead {3};
 float * left = new float [frames];
 float * right = new float [frames];
@@ -83,7 +84,8 @@ delete[] center;
 ```
 
 #### all channels into a vector of vectors
-```
+
+```cpp
 std::vector<std::vector<float>> buffers (channels, std::vector<float> (frames));
 
 std::vector<float *> destinations (channels);
@@ -96,7 +98,8 @@ const size_t framesRead = reader.read (destinations.data(), channels, frames);
 ```
 
 #### all channels into a single vector
-```
+
+```cpp
 std::vector<float> buffer (samples);
 
 std::vector<float *> destinations (channels);
@@ -108,7 +111,8 @@ for (size_t i = 0; i < channels; ++i)
 const auto framesRead = reader.read (destinations.data(), channels, frames);
 ```
 #### all channels into a single array
-```
+
+```cpp
 float * buffer = new float [samples];
 
 float * * destinations = new float * [channels];
