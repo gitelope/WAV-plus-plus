@@ -49,7 +49,7 @@ std::vector<float> buffer (bufferSize);
 std::array<float,bufferSize> buffer;
 float buffer [bufferSize];
 
-size_t samplesLeft {reader.samples()};
+auto samplesLeft {reader.samples()};
 while (samplesLeft)
 {
     samplesLeft -= reader.read (buffer);
@@ -67,7 +67,7 @@ std::vector<float> left (frames);
 std::vector<float> right (frames);
 std::vector<float *> destinations {left.data(), right.data()};
 
-reader.read (destinations.data(), destinations.size(), frames);
+const auto framesRead = reader.read (destinations.data(), destinations.size(), frames);
 ```
 
 #### a fixed number of channels into named arrays
@@ -97,7 +97,7 @@ for (size_t i = 0; i < channels; ++i)
     destinations[i] = buffers[i].data();
 }
 
-const size_t framesRead = reader.read (destinations.data(), channels, frames);
+const auto framesRead = reader.read (destinations.data(), channels, frames);
 ```
 
 #### all channels into a single vector
