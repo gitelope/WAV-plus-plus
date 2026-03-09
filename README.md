@@ -3,7 +3,7 @@
 A header-only C++ library for reading and writing WAV files.
 
 ## Installation
-```shell
+```bash
 git clone https://github.com/gitelope/WAV-plus-plus.git
 ```
 Add the `include/` subdirectory to your header search paths.
