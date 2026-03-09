@@ -138,5 +138,11 @@ To perform an incremental de-interleaving read, pass in a value to the `frames` 
 
 Both `Reader`'s constructor and `Reader::read` throw a `wav::ReadError` when a problem is encountered so it's a good idea to use a `try-catch` when constructing a `Reader` or calling `read`.
 
+## Writing a WAV
+
+## Inspecting a WAV
+
+To inspect the non-data information in a WAV, load it into a `wav::ChunkInfo`.
+
 ## License
 WAV++ is licensed under the MIT License. See LICENSE.txt for details.
