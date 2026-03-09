@@ -3,7 +3,7 @@
 A header-only C++ library for reading and writing WAV files.
 
 ## Installation
-```Shell
+```shell
 git clone https://github.com/gitelope/WAV-plus-plus.git
 ```
 Add the `include/` subdirectory to your header search paths.
@@ -32,6 +32,7 @@ const auto samples {reader.samples()};
 std::vector<float> buffer (samples);
 const auto samplesRead = reader.read (buffer);
 ```
+
 #### entire file into array
 
 ```C++
@@ -39,6 +40,7 @@ float * const buffer = new float [samples];
 const auto samplesRead = reader.read (buffer, samples);
 delete[] buffer;
 ```
+
 #### incremental read into std::vector, array, or std::array
 
 ```C++
@@ -56,6 +58,7 @@ while (samplesLeft)
     // process buffer
 }
 ```
+
 ### Reading into separate channels (deinterleaving)
 
 To separate the interleaved audio into channels, pass an array of pointers to destinations (`T**`) for each channel's audio, along with desired channel and frame counts. There are many possibilities including but not limited to:
@@ -113,6 +116,7 @@ for (size_t i = 0; i < channels; ++i)
 
 const auto framesRead = reader.read (destinations.data(), channels, frames);
 ```
+
 #### all channels into a single array
 
 ```C++
