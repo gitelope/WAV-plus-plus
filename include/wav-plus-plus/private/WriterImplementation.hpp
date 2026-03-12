@@ -86,13 +86,6 @@ size_t Writer::write (T const * source, size_t samplesToWrite)
     return samplesToWrite;
 }
 
-// fixed-size array
-template <FloatOrDouble T, size_t N>
-size_t Writer::write (const T (&source)[N])
-{
-    return write (source, N);
-}
-
 // std::vector
 template <FloatOrDouble T>
 size_t Writer::write (std::vector<T> const & source)

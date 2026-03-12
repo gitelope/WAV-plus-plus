@@ -30,19 +30,14 @@ public:
     // Write interleaved samples from user-provided buffer.
     // Returns the number of samples written.
     // May throw wav::WriteError.
+    //
+    // This is the overload to which all the convenience overloads delegate.
+    // It does the heavy lifting.
     template <FloatOrDouble T>
     size_t write (T const * source, size_t samplesToWrite);
 
     // write() convenience overloads
     //
-    // fixed-size C-style array (write all samples)
-    // May throw wav::WriteError.
-    template <FloatOrDouble T, size_t N>
-    size_t write (const T (&source)[N]);
-    //
-    // Main overload of write() is called for all C-style arrays,
-    // so both fixed-sized and dynamically-sized,
-    // when samples to write is provided.
     //
     // std::vector (write all samples)
     // May throw wav::WriteError.
