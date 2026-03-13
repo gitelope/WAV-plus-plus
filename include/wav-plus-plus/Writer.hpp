@@ -46,12 +46,6 @@ public:
     // May throw wav::WriteError.
     template <FloatOrDouble T>
     size_t write (std::vector<T> const & source, size_t samplesToWrite);
-    //
-    // std::array (write number of samples specified)
-    // Checks that samplesToWrite does not exceed source.size()
-    // May throw wav::WriteError.
-    template <FloatOrDouble T, size_t N>
-    size_t write (std::array<T,N> const & source, size_t samplesToWrite);
 
     // Convenience methods for specifying number of frames to write
     // instead of number of samples. Returns the number of frames written.
@@ -72,14 +66,6 @@ public:
     // May throw wav::WriteError.
     template <FloatOrDouble T>
     size_t writeFrames (std::vector<T> & source, size_t framesToWrite);
-    //
-    // std::array (write number of frames specified)
-    // Checks that framesToWrite does not exceed the size in frames of the source.
-    // May throw wav::WriteError.
-    template <FloatOrDouble T, size_t N>
-    size_t writeFrames (std::array<T,N> const & source, size_t framesToWrite);
-
-
 
     bool isOpen() const { return file != nullptr; }
 

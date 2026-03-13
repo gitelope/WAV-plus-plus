@@ -102,16 +102,6 @@ size_t Writer::write (std::vector<T> const & source, size_t samplesToWrite)
     return write (source.data(), samplesToWrite);
 }
 
-template <FloatOrDouble T, size_t N>
-size_t Writer::write (std::array<T,N> const & source, size_t samplesToWrite)
-{
-    if (samplesToWrite > N)
-    {
-        throw WriteError ("samples to write > source size");
-    }
-    return write (source.data(), samplesToWrite);
-}
-
 template <FloatOrDouble T>
 size_t Writer::writeFrames (T const * source, size_t framesToWrite)
 {
@@ -133,16 +123,6 @@ template <FloatOrDouble T>
 size_t Writer::writeFrames (std::vector<T> & source, size_t framesToWrite)
 {
     if (framesToWrite * channels > source.size())
-    {
-        throw WriteError ("frames to write exceeds the size of source");
-    }
-    return write (source.data(), framesToWrite * channels) / channels;
-}
-
-template <FloatOrDouble T, size_t N>
-size_t Writer::writeFrames (std::array<T,N> const & source, size_t framesToWrite)
-{
-    if (framesToWrite * channels > N)
     {
         throw WriteError ("frames to write exceeds the size of source");
     }

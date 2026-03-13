@@ -86,39 +86,16 @@ size_t Reader::read (T * destination, size_t samplesRequested)
     return samplesToRead;
 }
 
-// fixed-size array
-template <FloatOrDouble T, size_t N>
-size_t Reader::read (T (&destination)[N])
-{
-    return read (destination, N);
-}
-
-// std::vector
 template <FloatOrDouble T>
 size_t Reader::read (std::vector<T> & destination)
 {
     return read (destination.data(), destination.size());
 }
 
-// std::vector
 template <FloatOrDouble T>
 size_t Reader::read (std::vector<T> & destination, size_t samplesRequested)
 {
     return read (destination.data(), std::min (samplesRequested, destination.size()));
-}
-
-// std::array
-template <FloatOrDouble T, size_t N>
-size_t Reader::read (std::array<T,N> & destination)
-{
-    return read (destination.data(), N);
-}
-
-// std::array
-template <FloatOrDouble T, size_t N>
-size_t Reader::read (std::array<T,N> & destination, size_t samplesRequested)
-{
-    return read (destination.data(), std::min (samplesRequested, N));
 }
 
 template <FloatOrDouble T>

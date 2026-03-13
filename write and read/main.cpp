@@ -256,35 +256,6 @@ int main ()
             Print (in, n);
         }
     }
-    Example ("incremental read with std::array (samples requested = container size)");
-    {
-        wav::Reader reader {filename};
-        std::array<float,readBufferSize> in;
-
-        // 2 buffer-filling reads and 1 partially-buffer read
-        size_t samplesRead {0};
-        while (samplesRead < reader.samples())
-        {
-            const size_t n = reader.read (in);
-            samplesRead += n;
-            Print (in.data(), n);
-        }
-    }
-
-    Example ("incremental read with stack-allocated C array (samples requested = container size)");
-    {
-        wav::Reader reader {filename};
-        float in [readBufferSize];
-
-        // 2 buffer-filling reads and 1 partially-buffer read
-        size_t samplesRead {0};
-        while (samplesRead < reader.samples())
-        {
-            const size_t n = reader.read (in);
-            samplesRead += n;
-            Print (in, n);
-        }
-    }
 
     Section ("error handling");
 

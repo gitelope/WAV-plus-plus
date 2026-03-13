@@ -36,15 +36,6 @@ public:
 
     // read() convenience overloads
     //
-    // fixed-size C-style array (fill with samples)
-    // May throw wav::ReadError.
-    template <FloatOrDouble T, size_t N>
-    size_t read (T (&destination)[N]);
-    //
-    // Main overload of read() is called for all C-style arrays,
-    // so both fixed-sized and dynamically-sized,
-    // when samples requested is provided.
-    //
     // std::vector (fill with samples)
     // May throw wav::ReadError.
     template <FloatOrDouble T>
@@ -54,16 +45,6 @@ public:
     // May throw wav::ReadError.
     template <FloatOrDouble T>
     size_t read (std::vector<T> & destination, size_t samplesRequested);
-    //
-    // std::array (fill with samples)
-    // May throw wav::ReadError.
-    template <FloatOrDouble T, size_t N>
-    size_t read (std::array<T,N> & destination);
-    //
-    // std::array (fill with number of samples requested)
-    // May throw wav::ReadError.
-    template <FloatOrDouble T, size_t N>
-    size_t read (std::array<T,N> & destination, size_t samplesRequested);
 
     // A convenience function that calls read.
     // Returns the number of whole frames read.
