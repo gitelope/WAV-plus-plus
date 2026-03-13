@@ -212,7 +212,7 @@ template <FloatOrDouble T>
 size_t Writer::write (std::vector<T> const &);
 ```
 
-The main overload to which all the convenience overloads delegate:
+The main, general-purpose overload to which all the convenience overloads delegate:
 
 ```cpp
 template <FloatOrDouble T>
@@ -222,11 +222,11 @@ can be used with raw arrays:
 ```cpp
 const auto samplesWritten = writer.write (array, samplesToWrite);
 ```
-but also any container with underlying contiguous storage which can provide a pointer to its first element:
+as well as any container with underlying contiguous storage which can provide a pointer to its first element:
 ```cpp
 const auto samplesWritten = writer.write (container.ptrToFirstElement(), samplesToWrite);
 ```
-For example, it can be used with `std::vector`:
+So, for example, it can be used with `std::vector`:
 
 ```cpp
 const auto samplesWritten = writer.write (std_vector.data(), samplesToWrite);
@@ -247,7 +247,7 @@ It also provides a little more safety by checking that `samplesToWrite` does not
 
 Both of these overloads can be used to write entire renders all at once or for repeated incremental writes with smaller buffers.
 
-And finally, there's a more specialized overload for `std::vector` that uses its size to determine the number of samples to write:
+Lastly, there's a more specialized overload for `std::vector` that uses its size to determine the number of samples to write:
 ```cpp
 template <FloatOrDouble T>
 size_t Writer::write (std::vector<T> const &);
