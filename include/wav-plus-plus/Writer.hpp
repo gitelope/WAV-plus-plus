@@ -29,10 +29,8 @@ public:
 
     // Write interleaved samples from user-provided buffer.
     // Returns the number of samples written.
-    // May throw wav::WriteError.
-    //
     // This is the overload to which all the convenience overloads delegate.
-    // It does the heavy lifting.
+    // May throw wav::WriteError.
     template <FloatOrDouble T>
     size_t write (T const * source, size_t samplesToWrite);
 
@@ -44,20 +42,44 @@ public:
     size_t write (std::vector<T> const & source);
     //
     // std::vector (write number of samples specified)
+    // Checks that samplesToWrite does not exceed source.size()
     // May throw wav::WriteError.
     template <FloatOrDouble T>
     size_t write (std::vector<T> const & source, size_t samplesToWrite);
     //
     // std::array (write number of samples specified)
+    // Checks that samplesToWrite does not exceed source.size()
     // May throw wav::WriteError.
     template <FloatOrDouble T, size_t N>
     size_t write (std::array<T,N> const & source, size_t samplesToWrite);
 
-    // A convenience method for specifying number of frames to write
+    // Convenience methods for specifying number of frames to write
     // instead of number of samples. Returns the number of frames written.
+    //
+    // The general purpose overload.
     // May throw wav::WriteError.
     template <FloatOrDouble T>
     size_t writeFrames (T const * source, size_t framesToWrite);
+    //
+    // std::vector (write all frames)
+    // Checks that vector size in samples is a whole number of frames.
+    // May throw wav::WriteError.
+    template <FloatOrDouble T>
+    size_t writeFrames (std::vector<T> & source);
+    //
+    // std::vector (write number of frames specified)
+    // Checks that framesToWrite does not exceed the size in frames of the source.
+    // May throw wav::WriteError.
+    template <FloatOrDouble T>
+    size_t writeFrames (std::vector<T> & source, size_t framesToWrite);
+    //
+    // std::array (write number of frames specified)
+    // Checks that framesToWrite does not exceed the size in frames of the source.
+    // May throw wav::WriteError.
+    template <FloatOrDouble T, size_t N>
+    size_t writeFrames (std::array<T,N> const & source, size_t framesToWrite);
+
+
 
     bool isOpen() const { return file != nullptr; }
 

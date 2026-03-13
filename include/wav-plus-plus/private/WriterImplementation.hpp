@@ -86,30 +86,67 @@ size_t Writer::write (T const * source, size_t samplesToWrite)
     return samplesToWrite;
 }
 
-// std::vector
 template <FloatOrDouble T>
 size_t Writer::write (std::vector<T> const & source)
 {
     return write (source.data(), source.size());
 }
 
-// std::vector
 template <FloatOrDouble T>
 size_t Writer::write (std::vector<T> const & source, size_t samplesToWrite)
 {
-    return write (source.data(), std::min (samplesToWrite, source.size()));
+    if (samplesToWrite > source.size())
+    {
+        throw WriteError ("samples to write > source size");
+    }
+    return write (source.data(), samplesToWrite);
 }
 
 template <FloatOrDouble T, size_t N>
 size_t Writer::write (std::array<T,N> const & source, size_t samplesToWrite)
 {
-    return write (source.data(), std::min (samplesToWrite, N));
+    if (samplesToWrite > N)
+    {
+        throw WriteError ("samples to write > source size");
+    }
+    return write (source.data(), samplesToWrite);
 }
 
 template <FloatOrDouble T>
 size_t Writer::writeFrames (T const * source, size_t framesToWrite)
 {
     return write (source, framesToWrite * channels) / channels;
+}
+
+template <FloatOrDouble T>
+size_t Writer::writeFrames (std::vector<T> & source)
+{
+    // check that there are a whole number of frames
+    if ((source.size() / channels) * channels != source.size())
+    {
+        throw WriteError ("vector size is not a whole number of frames.");
+    }
+    return write (source.data, source.size()) / channels;
+}
+
+template <FloatOrDouble T>
+size_t Writer::writeFrames (std::vector<T> & source, size_t framesToWrite)
+{
+    if (framesToWrite * channels > source.size())
+    {
+        throw WriteError ("frames to write exceeds the size of source");
+    }
+    return write (source.data(), framesToWrite * channels) / channels;
+}
+
+template <FloatOrDouble T, size_t N>
+size_t Writer::writeFrames (std::array<T,N> const & source, size_t framesToWrite)
+{
+    if (framesToWrite * channels > N)
+    {
+        throw WriteError ("frames to write exceeds the size of source");
+    }
+    return write (source.data(), framesToWrite * channels) / channels;
 }
 
 template <FloatOrDouble T>
