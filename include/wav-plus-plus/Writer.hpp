@@ -38,7 +38,6 @@ public:
 
     // write() convenience overloads
     //
-    //
     // std::vector (write all samples)
     // May throw wav::WriteError.
     template <FloatOrDouble T>
@@ -48,11 +47,6 @@ public:
     // May throw wav::WriteError.
     template <FloatOrDouble T>
     size_t write (std::vector<T> const & source, size_t samplesToWrite);
-    //
-    // std::array (write all samples)
-    // May throw wav::WriteError.
-    template <FloatOrDouble T, size_t N>
-    size_t write (std::array<T,N> const & source);
     //
     // std::array (write number of samples specified)
     // May throw wav::WriteError.

@@ -101,12 +101,6 @@ size_t Writer::write (std::vector<T> const & source, size_t samplesToWrite)
 }
 
 template <FloatOrDouble T, size_t N>
-size_t Writer::write (std::array<T,N> const & source)
-{
-    return write (source.data(), N);
-}
-
-template <FloatOrDouble T, size_t N>
 size_t Writer::write (std::array<T,N> const & source, size_t samplesToWrite)
 {
     return write (source.data(), std::min (samplesToWrite, N));
