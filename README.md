@@ -31,7 +31,7 @@ const auto samples {reader.samples()};
 
 ### Reading while preserving interleaved formatting
 
-#### entire file read
+#### reading the entire file all at once
 
 ```cpp
 std::vector<float> buffer (samples);
@@ -52,17 +52,20 @@ const auto samplesRead = reader.read (cc.ptrToFirstElement(), samples);
 ```
 
 
-#### incremental read
+#### reading incrementally
+
+Buffer size fixed at compile time:
+```cpp
+float buffer [fixedSize];
+std::array<float,fixedSize> buffer;
+```
+Dynamically-sized buffer size determined at runtime:
+```cpp
+std::vector<float> buffer (dynamicSize);
+auto * buffer = new float[dynamicSize]; <--- this one would require supplying the size so would not work as "reader.read (buffer)" down below
+```
 
 ```cpp
-constexpr size_t bufferSize {1024}; // in samples
-
-// Choose one:
-float buffer [bufferSize]; <-- size fixed at compile time. Not so good.
-std::vector<float> buffer (bufferSize);
-std::array<float,bufferSize> buffer; <-- same here
-
-
 auto samplesLeft {reader.samples()};
 while (samplesLeft)
 {
@@ -202,31 +205,86 @@ The main overload to which all the convenience overloads delegate:
 template <FloatOrDouble T>
 size_t Writer::write (T const *, size_t)
 ```
-can be used with any container with underlying contiguous storage which can provide a pointer to its first element. For example, you can pass it a raw array directly:
+can be used with raw arrays:
 ```cpp
 const auto samplesWritten = writer.write (array, samplesToWrite);
 ```
- and you can use it with `std::vector` and `std::array` by calling their `data()` members:
+but also any container with underlying contiguous storage which can provide a pointer to its first element:
+```cpp
+const auto samplesWritten = writer.write (container.ptrToFirstElement(), samplesToWrite);
+```
+so it can be used with `std::vector`:
 
 ```cpp
 const auto samplesWritten = writer.write (std_vector.data(), samplesToWrite);
-const auto samplesWritten = writer.write (std_array.data(),  samplesToWrite);
 ```
 
-However, for the latter two containers there are preferable overloads that provide a little more convenience and safety:
+but there is a preferable overload for `std::vector` that provides a little more convenience:
+
+```cpp
+template <FloatOrDouble T>
+size_t Writer::write (std::vector<T> const &, size_t)
+```
+because it takes a `std::vector` directly:
+
 ```cpp
 const auto samplesWritten = writer.write (std_vector, samplesToWrite);
-const auto samplesWritten = writer.write (std_array,  samplesToWrite);
 ```
-They provide some additional safety by checking that `samplesToWrite` does not exceed the container size.
+It also provides a little more safety by checking that `samplesToWrite` does not exceed the `vector`'s size.
 
-All of these can be used to write entire renders all at once or for repeated incremental writes with smaller buffers.
+Both of these overloads can be used to write entire renders all at once or for repeated incremental writes with smaller buffers.
 
-And finally, there's an overload for `std::vector` that uses its size to determine the number of samples to write:
+And finally, there's another overload for `std::vector` that uses its size to determine the number of samples to write:
+```cpp
+template <FloatOrDouble T>
+size_t Writer::write (std::vector<T> const &)
+```
+
 ```cpp
 const auto samplesWritten = writer.write (std_vector);
 ```
-It can be useful when an entire render has been stored in memory and completely fills its container. It's not so useful for writing incrementally as the last buffer of samples is likely to be only partially filled and there's no way to indicate the number of valid samples.
+It can be useful when an entire render has been stored in memory and completely fills its container. In general, it's not useful for writing incrementally as the last buffer of samples is likely to be only partially filled and there's no way to indicate the number of valid samples.
+
+### Writer::write() (alternate version)
+
+There are three overloads of `write()`:
+
+```cpp
+template <FloatOrDouble T>
+size_t Writer::write (T const * source, size_t samplesToWrite)
+
+template <FloatOrDouble T>
+size_t Writer::write (std::vector<T> const & source, size_t samplesToWrite)
+
+template <FloatOrDouble T>
+size_t Writer::write (std::vector<T> const & source)
+```
+
+The first does all the heavy lifting. It's really all you need. The other two are convenience overloads for `std::vector` which delegate to it. It can be used with raw arrays:
+```cpp
+const auto samplesWritten = writer.write (array, samplesToWrite);
+```
+and any container with underlying contiguous storage which can provide a pointer to its first element:
+
+```cpp
+const auto samplesWritten = writer.write (container.ptrToFirstElement(), samplesToWrite);
+```
+So, it can be used with `std::vector`:
+
+```cpp
+const auto samplesWritten = writer.write (std_vector.data(), samplesToWrite);
+```
+However, the second overload is preferable because it provides a little more convenience and checks that `samplesToWrite` does not exceed the `vector`'s size:
+```cpp
+const auto samplesWritten = writer.write (std_vector, samplesToWrite);
+```
+Both of these overloads can be used to write entire renders all at once or for repeated incremental writes with smaller buffers.
+
+The last overload is most convenient for the special case in which an entire render that completely fills a `std::vector` is being written all at once:
+```cpp
+const auto samplesWritten = writer.write (std_vector);
+```
+In general, it can't be used for incremental writing since the last buffer of samples is likely to be only partially filled and there's no way to indicate the number of valid samples.
 
 ### Writer::writeFrames()
 
@@ -235,13 +293,11 @@ To specify the number of frames instead of samples when writing use `writeFrames
 ```cpp
 const auto framesWritten = writer.writeFrames (array,             framesToWrite);
 const auto framesWritten = writer.writeFrames (std_vector.data(), framesToWrite);
-const auto framesWritten = writer.writeFrames (std_array.data(),  framesToWrite);
 ```
 And similarly for a little more convenience (and safety):
 
 ```cpp
 const auto framesWritten = writer.writeFrames (std_vector, framesToWrite);
-const auto framesWritten = writer.writeFrames (std_array,  framesToWrite);
 ```
 These check the client hasn't requested a number off frames exceeding the container's capacity.
 
