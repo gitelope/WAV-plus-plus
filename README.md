@@ -8,16 +8,15 @@ git clone https://github.com/gitelope/WAV-plus-plus.git
 ```
 Add the `include/` subdirectory to your header search paths.
 
-## Encoding Options
-Amplitudes can be encoded in linear PCM using 8, 16, 24, or 32 bits and float PCM using 32 or 64 bits. Mono, stereo, and multichannel layouts are supported.
-
 ## Reading a WAV
+
+```cpp
+#include <wav-plus-plus/Reader.hpp>
+```
 
 ### Opening a file
 
-```C++
-#include <wav-plus-plus/Reader.hpp>
-
+```cpp
 wav::Reader reader {filepath};
 const auto channels {reader.channels()};
 const auto frames {reader.frames()};
@@ -28,28 +27,29 @@ const auto samples {reader.samples()};
 
 #### entire file into std::vector
 
-```C++
+```cpp
 std::vector<float> buffer (samples);
 const auto samplesRead = reader.read (buffer);
 ```
 
 #### entire file into array
 
-```C++
+```cpp
 float * const buffer = new float [samples];
 const auto samplesRead = reader.read (buffer, samples);
 delete[] buffer;
 ```
 
-#### incremental read into std::vector, array, or std::array
+#### incremental read into an array, std::vector, or std::array
 
-```C++
+```cpp
 constexpr size_t bufferSize {1024}; // in samples
 
 // Choose one:
+float buffer [bufferSize];
 std::vector<float> buffer (bufferSize);
 std::array<float,bufferSize> buffer;
-float buffer [bufferSize];
+
 
 auto samplesLeft {reader.samples()};
 while (samplesLeft)
@@ -65,7 +65,7 @@ To separate the interleaved audio into channels, pass an array of pointers to de
 
 #### a fixed number of channels into named vectors
 
-```C++
+```cpp
 std::vector<float> left (frames);
 std::vector<float> right (frames);
 std::vector<float *> destinations {left.data(), right.data()};
@@ -75,7 +75,7 @@ const auto framesRead = reader.read (destinations.data(), destinations.size(), f
 
 #### a fixed number of channels into named arrays
 
-```C++
+```cpp
 constexpr size_t channelsToRead {3};
 float * left = new float [frames];
 float * right = new float [frames];
@@ -91,7 +91,7 @@ delete[] center;
 
 #### all channels into a vector of vectors
 
-```C++
+```cpp
 std::vector<std::vector<float>> buffers (channels, std::vector<float> (frames));
 
 std::vector<float *> destinations (channels);
@@ -105,7 +105,7 @@ const auto framesRead = reader.read (destinations.data(), channels, frames);
 
 #### all channels into a single vector
 
-```C++
+```cpp
 std::vector<float> buffer (samples);
 
 std::vector<float *> destinations (channels);
@@ -119,7 +119,7 @@ const auto framesRead = reader.read (destinations.data(), channels, frames);
 
 #### all channels into a single array
 
-```C++
+```cpp
 float * buffer = new float [samples];
 
 float * * destinations = new float * [channels];
@@ -143,6 +143,87 @@ To perform an incremental de-interleaving read, pass in a value to the `frames` 
 Both `Reader`'s constructor and `Reader::read` throw a `wav::ReadError` when a problem is encountered so it's a good idea to use a `try-catch` when constructing a `Reader` or calling `read`.
 
 ## Writing a WAV
+
+```C++
+#include <wav-plus-plus/Writer.hpp>
+```
+### Encoding Options
+
+Amplitudes can be encoded in linear PCM using 8, 16, 24, or 32 bits and float PCM using 32 or 64 bits:
+
+```cpp
+wav::ExportFormat::LinearPCM_8
+wav::ExportFormat::LinearPCM_16
+wav::ExportFormat::LinearPCM_24
+wav::ExportFormat::LinearPCM_32
+
+wav::ExportFormat::FloatPCM_32
+wav::ExportFormat::FloatPCM_64
+```
+Mono, stereo, and multichannel layouts are supported.
+
+### Opening a file
+
+```cpp
+const auto filepath   {"test.wav"};
+const auto encoding   {wav::ExportFormat::LinearPCM_24};
+const auto sampleRate {48000};
+const auto channels   {2};
+
+wav::Writer writer {filepath, encoding, sampleRate, channels};
+```
+
+### Sample ordering
+
+Samples should be interleaved (as they will be in the WAV file). WAV++ does not  currently support deinterleaved input for writing.
+
+### Writer::write()
+
+The main overload to which all the convenience overloads delegate:
+
+```cpp
+template <FloatOrDouble T>
+size_t Writer::write (T const *, size_t)
+```
+can be used with any container with underlying contiguous storage which can provide a pointer to its first element. For example, you can pass it a raw array directly:
+```cpp
+const auto samplesWritten = writer.write (array, samplesToWrite);
+```
+ and you can use it with `std::vector` and `std::array` by calling their `data()` members:
+
+```cpp
+const auto samplesWritten = writer.write (std_vector.data(), samplesToWrite);
+const auto samplesWritten = writer.write (std_array.data(),  samplesToWrite);
+```
+
+However, for the latter two containers there are convenience overloads that simplify usage:
+```cpp
+const auto samplesWritten = writer.write (std_vector, samplesToWrite);
+const auto samplesWritten = writer.write (std_array,  samplesToWrite);
+```
+They provide some additional safety by clamping samplesToWrite to the size of the container.
+
+All of these can be used to write entire renders all at once or for repeated incremental writes with smaller buffers.
+
+And finally, there is an overload for `std::vector` that uses its size to determine the number of samples to write:
+```cpp
+const auto samplesWritten = writer.write (std_vector);
+```
+It can be useful when an entire render has been stored in memory and completely fills its container. It's not so useful for writing incrementally as the last buffer of samples is likely to be only partially filled and there's no way to indicate the number of valid samples.
+
+### Writer::writeFrames()
+
+To specify the number of frames instead of samples:
+```cpp
+const auto framesWritten = writer.write (array,             framesToWrite);
+const auto framesWritten = writer.write (std_vector.data(), framesToWrite);
+const auto framesWritten = writer.write (std_array.data(),  framesToWrite);
+```
+but like with `write()` it can be used with any container with underlying contiguous storage that provides a pointer to its first element.
+
+### Closing a file
+
+The file will be closed when the `Writer` goes out of scope and is destroyed but it can be closed earlier with `wav::Writer::Close()`.
 
 ## Inspecting a WAV
 
