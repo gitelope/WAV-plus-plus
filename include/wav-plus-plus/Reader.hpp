@@ -52,6 +52,12 @@ public:
     template <FloatOrDouble T>
     size_t readFrames (T * destination, size_t framesRequested);
 
+    template <FloatOrDouble T>
+    size_t readFrames (std::vector<T> & destination);
+
+    template <FloatOrDouble T>
+    size_t readFrames (std::vector<T> & destination, size_t framesRequested);
+
     // CHANNEL-SEPARATED READING ////////////////////////
 
     // channel-separated reading with raw pointers

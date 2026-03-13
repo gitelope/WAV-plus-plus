@@ -109,18 +109,18 @@ size_t Writer::writeFrames (T const * source, size_t framesToWrite)
 }
 
 template <FloatOrDouble T>
-size_t Writer::writeFrames (std::vector<T> & source)
+size_t Writer::writeFrames (std::vector<T> const & source)
 {
     // check that there are a whole number of frames
-    if ((source.size() / channels) * channels != source.size())
+    if (source.size() % channels != 0)
     {
         throw WriteError ("vector size is not a whole number of frames.");
     }
-    return write (source.data, source.size()) / channels;
+    return write (source.data(), source.size()) / channels;
 }
 
 template <FloatOrDouble T>
-size_t Writer::writeFrames (std::vector<T> & source, size_t framesToWrite)
+size_t Writer::writeFrames (std::vector<T> const & source, size_t framesToWrite)
 {
     if (framesToWrite * channels > source.size())
     {

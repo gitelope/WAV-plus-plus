@@ -95,12 +95,36 @@ size_t Reader::read (std::vector<T> & destination)
 template <FloatOrDouble T>
 size_t Reader::read (std::vector<T> & destination, size_t samplesRequested)
 {
-    return read (destination.data(), std::min (samplesRequested, destination.size()));
+    if (samplesRequested > destination.size())
+    {
+        throw ReadError ("samples requested > destination size");
+    }
+    return read (destination.data(), samplesRequested);
 }
 
 template <FloatOrDouble T>
 size_t Reader::readFrames (T * destination, size_t framesRequested)
 {
+    return read (destination, framesRequested * channels()) / channels();
+}
+
+template <FloatOrDouble T>
+size_t Reader::readFrames (std::vector<T> & destination)
+{
+    if (destination.size() % channels() != 0)
+    {
+        throw ReadError ("destination size in samples is not a whole number of frames");
+    }
+    return read (destination, destination.size()) / channels();
+}
+
+template <FloatOrDouble T>
+size_t Reader::readFrames (std::vector<T> & destination, size_t framesRequested)
+{
+    if (framesRequested * channels() > destination.size())
+    {
+        throw ReadError ("frames requested > destination size");
+    }
     return read (destination, framesRequested * channels()) / channels();
 }
 
