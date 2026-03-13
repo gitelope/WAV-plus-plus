@@ -150,7 +150,7 @@ Both `Reader`'s constructor and `Reader::read` throw a `wav::ReadError` when a p
 
 ### Dequantization
 
-See dequantization.md.
+See [dequantization.md](dequantization.md).
 
 ## Writing a WAV
 
@@ -253,11 +253,11 @@ The file will be closed when the `Writer` is destroyed but it can be closed earl
 
 ### Quantization
 
-See dequantization.md.
+See [quantization.md](quantization.md).
 
 ## Inspecting a WAV
 
 To inspect the non-data information in a WAV, load it into a `wav::ChunkInfo`.
 
 ## License
-WAV++ is licensed under the MIT License. See LICENSE.txt for details.
+WAV++ is licensed under the MIT License. See [LICENSE.txt](LICENSE.txt) for details.

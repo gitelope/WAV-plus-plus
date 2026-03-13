@@ -1,5 +1,5 @@
 
-double or float -> signed integer (16, 24 and 32 bits):
+# double or float -> signed integer (16, 24 and 32 bits):
 1. Multiply by 2^(bits-1) - 1
 (e.g. 32,767 for 16-bit linear PCM)
 2. Round to nearest integer.*
