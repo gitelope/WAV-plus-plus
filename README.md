@@ -199,11 +199,24 @@ Samples should be interleaved (as they will be in the WAV file). WAV++ does not 
 
 ### Writer::write()
 
+There are three overloads of `write`:
+
+```cpp
+template <FloatOrDouble T>
+size_t Writer::write (T const *, size_t);
+
+template <FloatOrDouble T>
+size_t Writer::write (std::vector<T> const &, size_t);
+
+template <FloatOrDouble T>
+size_t Writer::write (std::vector<T> const &);
+```
+
 The main overload to which all the convenience overloads delegate:
 
 ```cpp
 template <FloatOrDouble T>
-size_t Writer::write (T const *, size_t)
+size_t Writer::write (T const *, size_t);
 ```
 can be used with raw arrays:
 ```cpp
@@ -213,17 +226,17 @@ but also any container with underlying contiguous storage which can provide a po
 ```cpp
 const auto samplesWritten = writer.write (container.ptrToFirstElement(), samplesToWrite);
 ```
-so it can be used with `std::vector`:
+For example, it can be used with `std::vector`:
 
 ```cpp
 const auto samplesWritten = writer.write (std_vector.data(), samplesToWrite);
 ```
 
-but there is a preferable overload for `std::vector` that provides a little more convenience:
+However, there is a preferable overload for `std::vector` that provides a little more convenience:
 
 ```cpp
 template <FloatOrDouble T>
-size_t Writer::write (std::vector<T> const &, size_t)
+size_t Writer::write (std::vector<T> const &, size_t);
 ```
 because it takes a `std::vector` directly:
 
@@ -234,57 +247,16 @@ It also provides a little more safety by checking that `samplesToWrite` does not
 
 Both of these overloads can be used to write entire renders all at once or for repeated incremental writes with smaller buffers.
 
-And finally, there's another overload for `std::vector` that uses its size to determine the number of samples to write:
+And finally, there's a more specialized overload for `std::vector` that uses its size to determine the number of samples to write:
 ```cpp
 template <FloatOrDouble T>
-size_t Writer::write (std::vector<T> const &)
+size_t Writer::write (std::vector<T> const &);
 ```
 
 ```cpp
 const auto samplesWritten = writer.write (std_vector);
 ```
 It can be useful when an entire render has been stored in memory and completely fills its container. In general, it's not useful for writing incrementally as the last buffer of samples is likely to be only partially filled and there's no way to indicate the number of valid samples.
-
-### Writer::write() (alternate version)
-
-There are three overloads of `write()`:
-
-```cpp
-template <FloatOrDouble T>
-size_t Writer::write (T const * source, size_t samplesToWrite)
-
-template <FloatOrDouble T>
-size_t Writer::write (std::vector<T> const & source, size_t samplesToWrite)
-
-template <FloatOrDouble T>
-size_t Writer::write (std::vector<T> const & source)
-```
-
-The first does all the heavy lifting. It's really all you need. The other two are convenience overloads for `std::vector` which delegate to it. It can be used with raw arrays:
-```cpp
-const auto samplesWritten = writer.write (array, samplesToWrite);
-```
-and any container with underlying contiguous storage which can provide a pointer to its first element:
-
-```cpp
-const auto samplesWritten = writer.write (container.ptrToFirstElement(), samplesToWrite);
-```
-So, it can be used with `std::vector`:
-
-```cpp
-const auto samplesWritten = writer.write (std_vector.data(), samplesToWrite);
-```
-However, the second overload is preferable because it provides a little more convenience and checks that `samplesToWrite` does not exceed the `vector`'s size:
-```cpp
-const auto samplesWritten = writer.write (std_vector, samplesToWrite);
-```
-Both of these overloads can be used to write entire renders all at once or for repeated incremental writes with smaller buffers.
-
-The last overload is most convenient for the special case in which an entire render that completely fills a `std::vector` is being written all at once:
-```cpp
-const auto samplesWritten = writer.write (std_vector);
-```
-In general, it can't be used for incremental writing since the last buffer of samples is likely to be only partially filled and there's no way to indicate the number of valid samples.
 
 ### Writer::writeFrames()
 
