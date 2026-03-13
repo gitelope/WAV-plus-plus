@@ -31,14 +31,12 @@ const auto samples {reader.samples()};
 
 ### Reading while preserving interleaved formatting
 
-#### entire file into std::vector
+#### entire file read
 
 ```cpp
 std::vector<float> buffer (samples);
 const auto samplesRead = reader.read (buffer);
 ```
-
-#### entire file into array
 
 ```cpp
 float * const buffer = new float [samples];
@@ -46,15 +44,23 @@ const auto samplesRead = reader.read (buffer, samples);
 delete[] buffer;
 ```
 
-#### incremental read into an array, std::vector, or std::array
+Any container that can provide a pointer to the first element of underlying dynamically-sizeable contiguous storage can be used:
+
+```cpp
+CustomContainer cc {samples};
+const auto samplesRead = reader.read (cc.ptrToFirstElement(), samples);
+```
+
+
+#### incremental read
 
 ```cpp
 constexpr size_t bufferSize {1024}; // in samples
 
 // Choose one:
-float buffer [bufferSize];
+float buffer [bufferSize]; <-- size fixed at compile time. Not so good.
 std::vector<float> buffer (bufferSize);
-std::array<float,bufferSize> buffer;
+std::array<float,bufferSize> buffer; <-- same here
 
 
 auto samplesLeft {reader.samples()};
