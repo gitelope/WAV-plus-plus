@@ -23,6 +23,8 @@ Mono, stereo, and multichannel layouts.
 ```cpp
 #include <wav-plus-plus/Reader.hpp>
 
+const auto filepath {"in.wav"};
+
 wav::Reader reader {filepath};
 const auto channels {reader.channels()};
 const auto frames {reader.frames()};
@@ -153,13 +155,13 @@ delete[] buffer;
 
 To perform an incremental de-interleaving read, pass in a value to the `frames` parameter that is less than the total number of frames. Similarly, you need not read all channels present in a file. You may instead request the first `n` channels less than or equal to the total number of channels in the file.
 
-### Error handling
-
-Both `Reader`'s constructor and `Reader::read` throw a `wav::ReadError` when a problem is encountered so it's a good idea to use a `try-catch` when constructing a `Reader` or calling `read`.
-
 ### Dequantization
 
 See [dequantization.md](dequantization.md).
+
+### Error handling
+
+`Reader::Reader`, `Reader::read`, and `Reader::readFrames` throw a `wav::ReadError` when a problem is encountered so it's a good idea to use a `try-catch` when constructing a `Reader`, or calling `read` or `readFrames`.
 
 ## Writing a WAV
 
@@ -180,12 +182,12 @@ Mono, stereo, and multichannel layouts are supported.
 
 `PCMWAVEFORMAT` is used.
 
-### Opening a file
+### Opening a file for writing
 
 ```cpp
 #include <wav-plus-plus/Writer.hpp>
 
-const auto filepath   {"test.wav"};
+const auto filepath   {"out.wav"};
 const auto encoding   {wav::ExportFormat::LinearPCM_24};
 const auto sampleRate {48000};
 const auto channels   {2};
@@ -260,26 +262,22 @@ It can be useful when an entire render has been stored in memory and completely 
 
 ### Writer::writeFrames()
 
-To specify the number of frames instead of samples when writing use `writeFrames()`. As with `write()` it can be used with any container with underlying contiguous storage that provides a pointer to its first element:
+Similarly to `write`, `writeFrames` has three overloads:
 
 ```cpp
-const auto framesWritten = writer.writeFrames (array,             framesToWrite);
-const auto framesWritten = writer.writeFrames (std_vector.data(), framesToWrite);
-```
-And similarly for a little more convenience (and safety):
+template <FloatOrDouble T>
+size_t writeFrames (T const *, size_t);
 
-```cpp
-const auto framesWritten = writer.writeFrames (std_vector, framesToWrite);
-```
-These check the client hasn't requested a number off frames exceeding the container's capacity.
+template <FloatOrDouble T>
+size_t writeFrames (std::vector<T> const &, size_t);
 
-All of these can be used equally well for writing entire renders all at once or a buffer at a time.
-
-And finally:
-```cpp
-const auto framesWritten = writer.writeFrames (std_vector);
+template <FloatOrDouble T>
+size_t writeFrames (std::vector<T> const &);
 ```
-It checks to make sure it's `std::vector`'s length corresponds to a whole number of frames. Like its `write()` counterpart, it's convenient for writing an entire render all at once, assuming the render fills its container entirely, but not well-suited for incremental writing.
+
+They function the same way as their `write` counterparts except they take the number of *frames* to write and return the number of *frames* written as opposed to the number of *samples*.
+
+Like its counterpart, the first `std::vector` overload performs bounds checking and provides convenience for all `std::vector` use cases. The second checks that the `vector` contains a whole number of frames and, like its counterpart, provides more convenience for a more specialized use case.
 
 ### Closing a file
 
@@ -288,6 +286,10 @@ The file will be closed when the `Writer` is destroyed but it can be closed earl
 ### Quantization
 
 See [quantization.md](quantization.md).
+
+### Error handling
+
+`Writer::Writer`, `Writer::write`, and `Writer::writeFrames` throw a `wav::WriteError` when a problem is encountered so it's a good idea to use a `try-catch` when constructing a `Writer`, or calling `write` or `writeFrames`.
 
 ## Inspecting a WAV
 
