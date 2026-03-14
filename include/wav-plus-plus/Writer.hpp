@@ -27,43 +27,29 @@ public:
 
     ~Writer(); // Closes file if client does not.
 
-    // Write interleaved samples from user-provided buffer.
-    // Returns the number of samples written.
-    // This is the overload to which all the convenience overloads delegate.
+    // write()
+    // Write interleaved samples. Return the number of samples written.
     // May throw wav::WriteError.
+    //
     template <FloatOrDouble T>
     size_t write (T const * source, size_t samplesToWrite);
-
-    // write() convenience overloads
     //
-    // std::vector (write number of samples specified)
-    // Checks that samplesToWrite does not exceed source.size()
-    // May throw wav::WriteError.
     template <FloatOrDouble T>
     size_t write (std::vector<T> const & source, size_t samplesToWrite);
     //
-    // std::vector (write all samples)
-    // May throw wav::WriteError.
     template <FloatOrDouble T>
     size_t write (std::vector<T> const & source);
 
-    // Convenience methods for specifying number of frames to write
-    // instead of number of samples. Returns the number of frames written.
-    //
-    // The general purpose overload.
+    // writeFrames
+    // Write a number of frames. Return the number of frames written.
     // May throw wav::WriteError.
+    //
     template <FloatOrDouble T>
     size_t writeFrames (T const * source, size_t framesToWrite);
     //
-    // std::vector (write number of frames specified)
-    // Checks that framesToWrite does not exceed the size in frames of the source.
-    // May throw wav::WriteError.
     template <FloatOrDouble T>
     size_t writeFrames (std::vector<T> const & source, size_t framesToWrite);
-     //
-    // std::vector (write all frames)
-    // Checks that vector size in samples is a whole number of frames.
-    // May throw wav::WriteError.
+    //
     template <FloatOrDouble T>
     size_t writeFrames (std::vector<T> const & source);
 
