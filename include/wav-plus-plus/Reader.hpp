@@ -28,39 +28,38 @@ public:
 
     // INTERLEAVED READING //////////////////////////////
 
-    // Fill user-provided buffer with interleaved samples.
-    // Returns the number of samples read.
+    // read()
+    // Read in interleaved samples. Return the number of samples read.
     // May throw wav::ReadError.
+    //
     template <FloatOrDouble T>
     size_t read (T * destination, size_t samplesRequested);
-
-    // read() convenience overloads
     //
-    // std::vector (fill with samples)
-    // May throw wav::ReadError.
     template <FloatOrDouble T>
     size_t read (std::vector<T> & destination);
     //
-    // std::vector (fill with number of samples requested)
-    // May throw wav::ReadError.
     template <FloatOrDouble T>
     size_t read (std::vector<T> & destination, size_t samplesRequested);
 
-    // A convenience function that calls read.
-    // Returns the number of whole frames read.
+    // readFrames()
+    // Read in a number of frames. Return the number of frames read.
     // May throw wav::ReadError.
+    //
     template <FloatOrDouble T>
     size_t readFrames (T * destination, size_t framesRequested);
-
+    //
     template <FloatOrDouble T>
     size_t readFrames (std::vector<T> & destination);
-
+    //
     template <FloatOrDouble T>
     size_t readFrames (std::vector<T> & destination, size_t framesRequested);
 
     // CHANNEL-SEPARATED READING ////////////////////////
 
-    // channel-separated reading with raw pointers
+    // read() - deinterleaving version
+    // Read frames, grouping samples by channel. Return the number of frames read.
+    // May throw wav::ReadError.
+    //
     template <FloatOrDouble T>
     size_t read (T ** const destinations, size_t numChannels, size_t framesRequested);
 
