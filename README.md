@@ -62,7 +62,11 @@ const auto isFloatPCM          {fileInfo.isFloatPCM};
 
 ```
 
-### Reading while preserving interleaved formatting
+### Sample ordering
+
+Samples can be read in interleaved as they are in the WAV file or deinterleaved into separate channels.
+
+### Interleaved Reads
 
 #### Reading the entire file all at once
 
@@ -107,7 +111,7 @@ while (samplesLeft)
 }
 ```
 
-### Reading into separate channels (deinterleaving)
+### Deinterleaved Reads
 
 To separate the interleaved audio into channels, pass an array of pointers to destinations (`T**`) for each channel's audio, along with desired channel and frame counts. There are many possibilities including but not limited to:
 
@@ -245,81 +249,30 @@ template <FloatOrDouble T>
 size_t Writer::write (std::vector<T> const &);
 ```
 
-The main, general-purpose overload to which all the convenience overloads delegate:
-
-```cpp
-template <FloatOrDouble T>
-size_t Writer::write (T const *, size_t);
-```
-can be used with raw arrays:
+The pointer + size overload is for raw arrays and other contiguous containers:
 ```cpp
 const auto samplesWritten = writer.write (array, samplesToWrite);
-```
-as well as any container with underlying contiguous storage which can provide a pointer to its first element:
-```cpp
 const auto samplesWritten = writer.write (container.ptrToFirstElement(), samplesToWrite);
 ```
-So, for example, it can be used with `std::vector`:
 
+The `std::vector` overloads provide convenience when writing to a `vector`:
+
+```cpp
+const auto samplesWritten = writer.write (std_vector, samplesToWrite);
+const auto samplesWritten = writer.write (std_vector);
+```
+
+To be clear, you could use the pointer + size overload with `std::vector`---it's just a little more verbose:
 ```cpp
 const auto samplesWritten = writer.write (std_vector.data(), samplesToWrite);
+const auto samplesWritten = writer.write (std_vector.data(), std_vector.size());
 ```
 
-However, there is a preferable overload for `std::vector` that provides a little more convenience:
-
-```cpp
-template <FloatOrDouble T>
-size_t Writer::write (std::vector<T> const &, size_t);
-```
-because it takes a `std::vector` directly:
-
-```cpp
-const auto samplesWritten = writer.write (std_vector, samplesToWrite);
-```
-It also provides a little more safety by checking that `samplesToWrite` does not exceed the `vector`'s size.
-
-Both of these overloads can be used to write entire renders all at once or for repeated incremental writes with smaller buffers.
-
-Lastly, there's a more specialized overload for `std::vector` that uses its size to determine the number of samples to write:
-```cpp
-template <FloatOrDouble T>
-size_t Writer::write (std::vector<T> const &);
-```
-
-```cpp
-const auto samplesWritten = writer.write (std_vector);
-```
-It can be useful when an entire render has been stored in memory and completely fills its container. In general, it's not useful for writing incrementally as the last buffer of samples is likely to be only partially filled and there's no way to indicate the number of valid samples.
-
-### Writer::write() (alternate)
-
-There are three overloads of `write`:
-
-```cpp
-template <FloatOrDouble T>
-size_t Writer::write (T const *, size_t);
-
-template <FloatOrDouble T>
-size_t Writer::write (std::vector<T> const &, size_t);
-
-template <FloatOrDouble T>
-size_t Writer::write (std::vector<T> const &);
-```
-
-Use the `std::vector` overloads when you have a `std::vector` (they add convenience and bounds checking); use the pointer + size overload for raw arrays and other contiguous containers.
-
-```cpp
-const auto samplesWritten = writer.write (std_vector, samplesToWrite);
-const auto samplesWritten = writer.write (std_vector);
-```
-```cpp
-const auto samplesWritten = writer.write (array, samplesToWrite);
-const auto samplesWritten = writer.write (container.ptrToFirstElement(), samplesToWrite);
-```
+The overloads with the `size_t` parameter are the most versatile because they also allow partial-buffer writes.
 
 ### Writer::writeFrames()
 
-Similarly to `write`, `writeFrames` has three overloads:
+`writeFrames` also has three overloads:
 
 ```cpp
 template <FloatOrDouble T>
@@ -332,9 +285,7 @@ template <FloatOrDouble T>
 size_t writeFrames (std::vector<T> const &);
 ```
 
-They function the same way as their `write` counterparts except they take the number of *frames* to write and return the number of *frames* written as opposed to the number of *samples*.
-
-Like its counterpart, the first `std::vector` overload performs bounds checking and provides convenience for all `std::vector` use cases. The second checks that the `vector` contains a whole number of frames and, like its counterpart, provides more convenience for a more specialized use case.
+They function the same way as their `write` counterparts except they take the number of *frames* to write and return the number of *frames* written.
 
 ### Closing a file
 
