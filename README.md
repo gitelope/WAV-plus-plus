@@ -291,6 +291,32 @@ const auto samplesWritten = writer.write (std_vector);
 ```
 It can be useful when an entire render has been stored in memory and completely fills its container. In general, it's not useful for writing incrementally as the last buffer of samples is likely to be only partially filled and there's no way to indicate the number of valid samples.
 
+### Writer::write() (alternate)
+
+There are three overloads of `write`:
+
+```cpp
+template <FloatOrDouble T>
+size_t Writer::write (T const *, size_t);
+
+template <FloatOrDouble T>
+size_t Writer::write (std::vector<T> const &, size_t);
+
+template <FloatOrDouble T>
+size_t Writer::write (std::vector<T> const &);
+```
+
+Use the `std::vector` overloads when you have a `std::vector` (they add convenience and bounds checking); use the pointer + size overload for raw arrays and other contiguous containers.
+
+```cpp
+const auto samplesWritten = writer.write (std_vector, samplesToWrite);
+const auto samplesWritten = writer.write (std_vector);
+```
+```cpp
+const auto samplesWritten = writer.write (array, samplesToWrite);
+const auto samplesWritten = writer.write (container.ptrToFirstElement(), samplesToWrite);
+```
+
 ### Writer::writeFrames()
 
 Similarly to `write`, `writeFrames` has three overloads:
