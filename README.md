@@ -10,7 +10,7 @@ Add the `include/` subdirectory to your header search paths.
 
 ## Reading a WAV
 
-### Supported formats
+### Supported Formats
 
 Linear PCM using 8, 16, 24, or 32 bits and float PCM using 32 or 64 bits.
 
@@ -24,16 +24,47 @@ Mono, stereo, and multichannel layouts.
 #include <wav-plus-plus/Reader.hpp>
 
 const auto filepath {"in.wav"};
-
 wav::Reader reader {filepath};
+```
+### Information you may need for allocating a buffer before reading
+```cpp
 const auto channels {reader.channels()};
-const auto frames {reader.frames()};
-const auto samples {reader.samples()};
+const auto frames   {reader.frames()};
+const auto samples  {reader.samples()}; // = frames * channels
+```
+### Useful information for playback
+```cpp
+const auto sampleRate {reader.sampleRate()};
+```
+### Additional file encoding information
+
+```cpp
+const auto bitDepth            {reader.bitDepth()};
+const auto containerSizeInBits {reader.containerSizeInBits()};
+const auto isLinearPCM         {reader.isLinearPCM()};
+const auto isFloatPCM          {reader.isFloatPCM()};
+```
+
+### wav::FileInfo
+
+All file information is also conveniently packaged in a `wav::FileInfo`:
+```cpp
+const auto fileInfo {reader.getInfo()};
+
+const auto channels            {fileInfo.channels};
+const auto frames              {fileInfo.frames};
+const auto samples             {channels * frames}; // this you must calculate
+const auto sampleRate          {fileInfo.sampleRate};
+const auto bitDepth            {fileInfo.bitDepth};
+const auto containerSizeInBits {fileInfo.containerSizeInBits};
+const auto isLinearPCM         {fileInfo.isLinearPCM};
+const auto isFloatPCM          {fileInfo.isFloatPCM};
+
 ```
 
 ### Reading while preserving interleaved formatting
 
-#### reading the entire file all at once
+#### Reading the entire file all at once
 
 ```cpp
 std::vector<float> buffer (samples);
@@ -54,7 +85,7 @@ const auto samplesRead = reader.read (cc.ptrToFirstElement(), samples);
 ```
 
 
-#### reading incrementally
+#### Incremental reads
 
 Buffer size fixed at compile time:
 ```cpp
@@ -80,7 +111,7 @@ while (samplesLeft)
 
 To separate the interleaved audio into channels, pass an array of pointers to destinations (`T**`) for each channel's audio, along with desired channel and frame counts. There are many possibilities including but not limited to:
 
-#### a fixed number of channels into named vectors
+#### A fixed number of channels into named vectors
 
 ```cpp
 std::vector<float> left (frames);
@@ -90,7 +121,7 @@ std::vector<float *> destinations {left.data(), right.data()};
 const auto framesRead = reader.read (destinations.data(), destinations.size(), frames);
 ```
 
-#### a fixed number of channels into named arrays
+#### A fixed number of channels into named arrays
 
 ```cpp
 constexpr size_t channelsToRead {3};
@@ -106,7 +137,7 @@ delete[] right;
 delete[] center;
 ```
 
-#### all channels into a vector of vectors
+#### All channels into a vector of vectors
 
 ```cpp
 std::vector<std::vector<float>> buffers (channels, std::vector<float> (frames));
@@ -120,7 +151,7 @@ for (size_t i = 0; i < channels; ++i)
 const auto framesRead = reader.read (destinations.data(), channels, frames);
 ```
 
-#### all channels into a single vector
+#### All channels into a single vector
 
 ```cpp
 std::vector<float> buffer (samples);
@@ -134,7 +165,7 @@ for (size_t i = 0; i < channels; ++i)
 const auto framesRead = reader.read (destinations.data(), channels, frames);
 ```
 
-#### all channels into a single array
+#### All channels into a single array
 
 ```cpp
 float * buffer = new float [samples];
@@ -151,7 +182,7 @@ delete[] destinations;
 delete[] buffer;
 ```
 
-#### incremental de-interleaving reads
+#### Incremental de-interleaving reads
 
 To perform an incremental de-interleaving read, pass in a value to the `frames` parameter that is less than the total number of frames. Similarly, you need not read all channels present in a file. You may instead request the first `n` channels less than or equal to the total number of channels in the file.
 
