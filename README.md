@@ -63,50 +63,57 @@ const auto isFloatPCM          {fileInfo.isFloatPCM};
 
 Samples can be read in interleaved as they are in the WAV file or deinterleaved into separate channels.
 
-### Interleaved Reads
+### Interleaved Reading
 
-#### Reading the entire file all at once
+#### `Reader::read()`
 
-```cpp
-std::vector<float> buffer (samples);
-const auto samplesRead = reader.read (buffer);
-```
+There are three overloads of `read` that read in samples in interleaved order:
 
 ```cpp
-float * const buffer = new float [samples];
-const auto samplesRead = reader.read (buffer, samples);
-delete[] buffer;
+template <FloatOrDouble T>
+size_t read (T *, size_t);
+
+template <FloatOrDouble T>
+size_t read (std::vector<T> &, size_t);
+
+template <FloatOrDouble T>
+size_t read (std::vector<T> &);
 ```
 
-Any container that can provide a pointer to the first element of underlying dynamically-sizeable contiguous storage can be used:
+The pointer + size overload works with any contiguous-storage container that provides a pointer to its first element:
+```cpp
+const auto samplesRead = reader.read (array, samplesRequested);
+const auto samplesRead = reader.read (container.ptrToFirstElement(), samplesRequested);
+```
+
+The remaining two are convenience overloads for use with `std::vector`:
+```cpp
+const auto samplesRead = reader.read (std_vector, samplesRequested);
+const auto samplesRead = reader.read (std_vector);
+```
+
+To be clear, you can use the pointer + size overload with `std::vector`---it's just a little more verbose:
+```cpp
+const auto samplesRead = reader.read (std_vector.data(), samplesRequested);
+const auto samplesRead = reader.read (std_vector.data(), std_vector.size());
+```
+
+#### `Reader::readFrames()`
+
+`readFrames` also has three overloads:
 
 ```cpp
-CustomContainer cc {samples};
-const auto samplesRead = reader.read (cc.ptrToFirstElement(), samples);
+template <FloatOrDouble T>
+size_t readFrames (T *, size_t);
+
+template <FloatOrDouble T>
+size_t readFrames (std::vector<T> &, size_t);
+
+template <FloatOrDouble T>
+size_t readFrames (std::vector<T> &);
 ```
 
-
-#### Incremental reads
-
-Buffer size fixed at compile time:
-```cpp
-float buffer [fixedSize];
-std::array<float,fixedSize> buffer;
-```
-Dynamically-sized buffer size determined at runtime:
-```cpp
-std::vector<float> buffer (dynamicSize);
-auto * buffer = new float[dynamicSize]; <--- this one would require supplying the size so would not work as "reader.read (buffer)" down below
-```
-
-```cpp
-auto samplesLeft {reader.samples()};
-while (samplesLeft)
-{
-    samplesLeft -= reader.read (buffer);
-    // process buffer
-}
-```
+They function the same way as their `read` counterparts except they take the number of *frames* to read and return the number of *frames* read.
 
 ### Deinterleaved Reads
 
@@ -252,14 +259,14 @@ const auto samplesWritten = writer.write (array, samplesToWrite);
 const auto samplesWritten = writer.write (container.ptrToFirstElement(), samplesToWrite);
 ```
 
-There are convenience overloads for use with `std::vector`:
+The remaining two are convenience overloads for use with `std::vector`:
 
 ```cpp
 const auto samplesWritten = writer.write (std_vector, samplesToWrite);
 const auto samplesWritten = writer.write (std_vector);
 ```
 
-To be clear, you could use the pointer + size overload with `std::vector`---it's just a little more verbose:
+To be clear, you can use the pointer + size overload with `std::vector`---it's just a little more verbose:
 ```cpp
 const auto samplesWritten = writer.write (std_vector.data(), samplesToWrite);
 const auto samplesWritten = writer.write (std_vector.data(), std_vector.size());
