@@ -36,10 +36,10 @@ public:
     size_t read (T * destination, size_t samplesRequested);
     //
     template <FloatOrDouble T>
-    size_t read (std::vector<T> & destination);
+    size_t read (std::vector<T> & destination, size_t samplesRequested);
     //
     template <FloatOrDouble T>
-    size_t read (std::vector<T> & destination, size_t samplesRequested);
+    size_t read (std::vector<T> & destination);
 
     // readFrames()
     // Read in a number of frames. Return the number of frames read.
@@ -49,10 +49,10 @@ public:
     size_t readFrames (T * destination, size_t framesRequested);
     //
     template <FloatOrDouble T>
-    size_t readFrames (std::vector<T> & destination);
+    size_t readFrames (std::vector<T> & destination, size_t framesRequested);
     //
     template <FloatOrDouble T>
-    size_t readFrames (std::vector<T> & destination, size_t framesRequested);
+    size_t readFrames (std::vector<T> & destination);
 
     // CHANNEL-SEPARATED READING ////////////////////////
 
