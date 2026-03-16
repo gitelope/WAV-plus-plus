@@ -26,18 +26,17 @@ Mono, stereo, and multichannel layouts.
 const auto filepath {"in.wav"};
 wav::Reader reader {filepath};
 ```
-### Information you may need for allocating a buffer before reading
+### File Metadata
+
+Information for allocating a buffer, reading, and playback:
 ```cpp
-const auto channels {reader.channels()};
-const auto frames   {reader.frames()};
-const auto samples  {reader.samples()}; // = frames * channels
-```
-### Useful information for playback
-```cpp
+const auto channels   {reader.channels()};
+const auto frames     {reader.frames()};
+const auto samples    {reader.samples()};     // = frames * channels
 const auto sampleRate {reader.sampleRate()};
 ```
-### Additional file encoding information
 
+Additional file encoding information:
 ```cpp
 const auto bitDepth            {reader.bitDepth()};
 const auto containerSizeInBits {reader.containerSizeInBits()};
@@ -45,15 +44,13 @@ const auto isLinearPCM         {reader.isLinearPCM()};
 const auto isFloatPCM          {reader.isFloatPCM()};
 ```
 
-### wav::FileInfo
-
-All file information is also conveniently packaged in a `wav::FileInfo`:
+Alternatively, you can get all the metadata packaged in a single `wav::FileInfo` object:
 ```cpp
-const auto fileInfo {reader.getInfo()};
+const auto fileInfo            {reader.getInfo()};
 
 const auto channels            {fileInfo.channels};
 const auto frames              {fileInfo.frames};
-const auto samples             {channels * frames}; // this you must calculate
+const auto samples             {channels * frames};
 const auto sampleRate          {fileInfo.sampleRate};
 const auto bitDepth            {fileInfo.bitDepth};
 const auto containerSizeInBits {fileInfo.containerSizeInBits};
