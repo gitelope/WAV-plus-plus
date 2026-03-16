@@ -249,7 +249,7 @@ template <FloatOrDouble T>
 size_t Writer::write (std::vector<T> const &);
 ```
 
-The pointer + size overload is for raw arrays and other contiguous containers:
+The pointer + size overload works with any contiguous-storage container for which a pointer to the first element is available:
 ```cpp
 const auto samplesWritten = writer.write (array, samplesToWrite);
 const auto samplesWritten = writer.write (container.ptrToFirstElement(), samplesToWrite);
@@ -267,8 +267,6 @@ To be clear, you could use the pointer + size overload with `std::vector`---it's
 const auto samplesWritten = writer.write (std_vector.data(), samplesToWrite);
 const auto samplesWritten = writer.write (std_vector.data(), std_vector.size());
 ```
-
-The overloads with the `size_t` parameter are the most versatile because they also allow partial-buffer writes.
 
 ### Writer::writeFrames()
 
