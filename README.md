@@ -115,37 +115,43 @@ size_t readFrames (std::vector<T> &);
 
 They function the same way as their `read` counterparts except they take the number of *frames* to read and return the number of *frames* read.
 
-### Deinterleaved Reads
+### Deinterleaved Reading
 
-To separate the interleaved audio into channels, pass an array of pointers to destinations (`T**`) for each channel's audio, along with desired channel and frame counts. There are many possibilities including but not limited to:
+To separate the interleaved audio into channels, pass an array of pointers to destinations (`T**`) for each channel's audio, along with desired channel and frame counts.
+```cpp
+template <FloatOrDouble T>
+size_t read (T ** const destinations, size_t channelsRequested, size_t framesRequested);
+```
+Following are some examples of the many possible use cases and approaches.
 
-#### A fixed number of channels into named vectors
+Reading a fixed number of channels into named vectors:
 
 ```cpp
 std::vector<float> left (frames);
 std::vector<float> right (frames);
+
 std::vector<float *> destinations {left.data(), right.data()};
 
 const auto framesRead = reader.read (destinations.data(), destinations.size(), frames);
 ```
 
-#### A fixed number of channels into named arrays
+Reading a fixed number of channels into named arrays:
 
 ```cpp
-constexpr size_t channelsToRead {3};
-float * left = new float [frames];
-float * right = new float [frames];
+float * left   = new float [frames];
+float * right  = new float [frames];
 float * center = new float [frames];
+
 float * destinations[] = {left, right, center};
 
-const auto framesRead = reader.read (destinations, channelsToRead, frames);
+const auto framesRead = reader.read (destinations, 3, frames);
 
 delete[] left;
 delete[] right;
 delete[] center;
 ```
 
-#### All channels into a vector of vectors
+Reading all channels into a vector of vectors:
 
 ```cpp
 std::vector<std::vector<float>> buffers (channels, std::vector<float> (frames));
@@ -159,7 +165,7 @@ for (size_t i = 0; i < channels; ++i)
 const auto framesRead = reader.read (destinations.data(), channels, frames);
 ```
 
-#### All channels into a single vector
+Reading all channels into a single vector:
 
 ```cpp
 std::vector<float> buffer (samples);
@@ -173,7 +179,7 @@ for (size_t i = 0; i < channels; ++i)
 const auto framesRead = reader.read (destinations.data(), channels, frames);
 ```
 
-#### All channels into a single array
+Reading all channels into a single array:
 
 ```cpp
 float * buffer = new float [samples];
@@ -189,10 +195,6 @@ const auto framesRead = reader.read (destinations, channels, frames);
 delete[] destinations;
 delete[] buffer;
 ```
-
-#### Incremental de-interleaving reads
-
-To perform an incremental de-interleaving read, pass in a value to the `frames` parameter that is less than the total number of frames. Similarly, you need not read all channels present in a file. You may instead request the first `n` channels less than or equal to the total number of channels in the file.
 
 ### Dequantization
 
