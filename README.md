@@ -255,7 +255,7 @@ const auto samplesWritten = writer.write (array, samplesToWrite);
 const auto samplesWritten = writer.write (container.ptrToFirstElement(), samplesToWrite);
 ```
 
-The `std::vector` overloads provide convenience when writing to a `vector`:
+There are convenience overloads for use with `std::vector`:
 
 ```cpp
 const auto samplesWritten = writer.write (std_vector, samplesToWrite);
