@@ -249,7 +249,7 @@ template <FloatOrDouble T>
 size_t Writer::write (std::vector<T> const &);
 ```
 
-The pointer + size overload works with any contiguous-storage container for which a pointer to the first element is available:
+The pointer + size overload works with any contiguous-storage container that provides a pointer to its first element:
 ```cpp
 const auto samplesWritten = writer.write (array, samplesToWrite);
 const auto samplesWritten = writer.write (container.ptrToFirstElement(), samplesToWrite);
