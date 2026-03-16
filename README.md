@@ -92,7 +92,7 @@ const auto samplesRead = reader.read (std_vector, samplesRequested);
 const auto samplesRead = reader.read (std_vector);
 ```
 
-To be clear, you can use the pointer + size overload with `std::vector`---it's just a little more verbose:
+To be clear, you can use the pointer + size overload with `std::vector`&mdash;it's just a little more verbose:
 ```cpp
 const auto samplesRead = reader.read (std_vector.data(), samplesRequested);
 const auto samplesRead = reader.read (std_vector.data(), std_vector.size());
@@ -268,7 +268,7 @@ const auto samplesWritten = writer.write (std_vector, samplesToWrite);
 const auto samplesWritten = writer.write (std_vector);
 ```
 
-To be clear, you can use the pointer + size overload with `std::vector`---it's just a little more verbose:
+To be clear, you can use the pointer + size overload with `std::vector`&mdash;it's just a little more verbose:
 ```cpp
 const auto samplesWritten = writer.write (std_vector.data(), samplesToWrite);
 const auto samplesWritten = writer.write (std_vector.data(), std_vector.size());

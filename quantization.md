@@ -17,4 +17,4 @@ Let max = 2<sup>(n-1)</sup> - 1, where n is the bit depth.
 3. Round to the nearest integer.*
 4. Clamp to [1, 255].
 
-\* Dither---not yet implemented---would come before rounding.
+\* Dither&mdash;not yet implemented&mdash;would come before rounding.
