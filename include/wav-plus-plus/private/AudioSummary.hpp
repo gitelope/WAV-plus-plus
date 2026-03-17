@@ -13,9 +13,10 @@ inline std::string channelString (uint16_t channels);
 inline std::string durationString (uint32_t, uint32_t);
 inline std::string sizeString (uint64_t);
 
-// Synchronizes the order of parameter output for ChunkInfo::summary
-// and std::ostream & operator<< (std::ostream &, FileInfo const &)
-// Does a little formatting but delegates formatting for length in time and storage.
+// Synchronizes the order and formatting of parameter output for
+// std::string ChunkInfo::summary()
+// and
+// std::ostream & operator<< (std::ostream &, FileInfo const &).
 
 inline std::string audioSummary (std::string const & formatString,
                                  uint32_t sampleRate,
@@ -60,8 +61,6 @@ inline std::string sizeString (uint64_t bytes)
     else if (bytes >= kB) return std::format ("{:.1f} kB of audio", static_cast<double> (bytes) / kB);
     else                  return std::to_string (bytes) + " bytes of audio";
 }
-
-
 
 } // namespace wav
 
