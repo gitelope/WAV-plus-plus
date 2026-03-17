@@ -3,13 +3,13 @@
 #define wavplusplus_ChunkInfoImplementation_hpp
 
 #include "ReadingBytes.hpp"
+#include "AudioSummary.hpp"
 
 #include <algorithm>
 #include <array>
 #include <cassert>
 #include <format>
 #include <limits>
-#include <sstream>
 #include <string_view>
 #include <type_traits>
 #include <utility>
@@ -32,77 +32,42 @@ ChunkInfo::ChunkInfo (FILE * in)
 
 inline std::string ChunkInfo::summary() const
 {
-    std::string channelString;
-    switch (format.channels)
-    {
-        case 1: channelString = "mono"; break;
-        case 2: channelString = "stereo"; break;
-        default: channelString = std::to_string (format.channels) + " channels"; break;
-    }
-
     const auto frames = data.size / format.blockAlign;
-    const auto duration = frames / static_cast<double> (format.sampleRate);
 
-    std::string format_string;
-
+    std::string formatString;
     switch (format.code)
     {
         case FormatCode::LinearPCM:
         {
-            format_string = std::to_string (format.bitsPerSample) + "-bit linear PCM";
+            formatString = std::to_string (format.bitsPerSample) + "-bit linear PCM";
             const int container_size_in_bits = 8 * format.blockAlign / format.channels;
             if (format.bitsPerSample < container_size_in_bits)
-                format_string += std::format (" / {}-bit container", container_size_in_bits);
+                formatString += std::format (" / {}-bit container", container_size_in_bits);
             break;
         }
         case FormatCode::FloatPCM:
         {
-            format_string = std::to_string (format.bitsPerSample) + "-bit float PCM";
+            formatString = std::to_string (format.bitsPerSample) + "-bit float PCM";
             break;
         }
         case FormatCode::Extensible:
         {
-            format_string = "extensible ";
-            format_string += std::to_string (format.validBitsPerSample) + "-bit ";
+            formatString = "extensible ";
+            formatString += std::to_string (format.validBitsPerSample) + "-bit ";
 
-            if (format.subFormat == ExtensibleFormat::LinearPCM) format_string += "linear PCM";
-            else if (format.subFormat == ExtensibleFormat::FloatPCM) format_string += "float PCM";
+            if (format.subFormat == ExtensibleFormat::LinearPCM) formatString += "linear PCM";
+            else if (format.subFormat == ExtensibleFormat::FloatPCM) formatString += "float PCM";
             else assert (false);
 
             if (format.validBitsPerSample < format.bitsPerSample)
-                format_string += std::format (" / {}-bit container", format.bitsPerSample);
+                formatString += std::format (" / {}-bit container", format.bitsPerSample);
             break;
         }
         default:
-            format_string = "unsupported format";
+            formatString = "unsupported format";
     }
-    std::ostringstream oss;
 
-    const uint64_t bytes = data.size;
-
-    constexpr uint64_t kB = 1'000;
-    constexpr uint64_t MB = 1'000'000;
-    constexpr uint64_t GB = 1'000'000'000;
-
-    std::string sizeString;
-
-    if      (bytes >= GB) sizeString = std::format("{:.1f} GB of audio", static_cast<double>(bytes) / GB);
-    else if (bytes >= MB) sizeString = std::format("{:.1f} MB of audio", static_cast<double>(bytes) / MB);
-    else if (bytes >= kB) sizeString = std::format("{:.1f} kB of audio", static_cast<double>(bytes) / kB);
-    else                  sizeString = std::to_string(bytes) + " bytes of audio";
-
-    oss << riff.format << " "
-    << format_string << " / "
-    << format.sampleRate / 1000 << " kHz / "
-    << channelString << " / "
-    << (duration < 0.1 ?
-        std::format("{:.1f} ms", duration * 1000.0) :
-        std::format("{:.1f} seconds", duration))
-    << " / "
-    << frames << " frames" << " / "
-    << sizeString << std::endl;
-
-    return oss.str();
+    return audioSummary (formatString, format.sampleRate, format.channels, frames, data.size);
 }
 
 int peek (FILE * in); // check if there's data available

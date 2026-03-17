@@ -69,6 +69,7 @@
 		C41045252EF1CD5E0013E245 /* FileInfo.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = FileInfo.hpp; sourceTree = "<group>"; };
 		C41045282EF1CD5E0013E245 /* Reader.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Reader.hpp; sourceTree = "<group>"; };
 		C410452A2EF1CD5E0013E245 /* Writer.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Writer.hpp; sourceTree = "<group>"; };
+		C470C0272F6A058B00F3A7D1 /* AudioSummary.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = AudioSummary.hpp; sourceTree = "<group>"; };
 		C48AB6732F636A5900C70CDA /* read */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = read; sourceTree = BUILT_PRODUCTS_DIR; };
 		C48AB67B2F636A6C00C70CDA /* read.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = read.cpp; sourceTree = "<group>"; };
 		C48AB6822F636AC800C70CDA /* write */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = write; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -214,6 +215,7 @@
 				C4C641CD2F469567005545BE /* int24.hpp */,
 				C4C641CE2F469567005545BE /* QuantizationConstants.hpp */,
 				C4C641CF2F469567005545BE /* ReadingBytes.hpp */,
+				C470C0272F6A058B00F3A7D1 /* AudioSummary.hpp */,
 			);
 			path = private;
 			sourceTree = "<group>";

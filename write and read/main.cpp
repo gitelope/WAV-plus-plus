@@ -32,7 +32,7 @@ int main ()
     // write test file (and display file info)
     {
         std::vector<float> out = {0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0};
-        std::cout << "\nwriting: [" << out << "]" << std::endl;
+        std::cout << "\nwriting: [" << out << "]" << "\n" << std::endl;
 
         wav::Writer writer {filename, wav::ExportFormat::LinearPCM_24, 48000, 2};
         writer.write (out);
@@ -68,7 +68,7 @@ int main ()
     // write test file (and display file info)
     {
         const std::vector<float> out {0.1, 1.1, 0.2, 1.2, 0.3, 1.3, 0.4, 1.4};
-        std::cout << "\nwriting: [" << out << "]" << std::endl;
+        std::cout << "\nwriting: [" << out << "]" << "\n" << std::endl;
 
         wav::Writer writer {filename, wav::ExportFormat::FloatPCM_32, 48000, 2};
         writer.write (out);
@@ -147,7 +147,7 @@ int main ()
     // write test file (and display file info)
     {
         const std::vector<float> out {0.1, 1.1, 2.1, 0.2, 1.2, 2.2, 0.3, 1.3, 2.3, 0.4, 1.4, 2.4};
-        std::cout << "\nwriting: [" << out << "]" << std::endl;
+        std::cout << "\nwriting: [" << out << "]" << "\n" << std::endl;
 
         wav::Writer writer {filename, wav::ExportFormat::FloatPCM_32, 48000, 3};
         writer.write (out);

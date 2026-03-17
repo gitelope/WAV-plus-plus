@@ -2,6 +2,8 @@
 #ifndef wavplusplus_FileInfoImplementation_hpp
 #define wavplusplus_FileInfoImplementation_hpp
 
+#include "AudioSummary.hpp"
+
 #include <cassert>
 #include <format>
 
@@ -85,32 +87,14 @@ inline void FileInfo::ExtractFrom (ChunkInfo const & chunkInfo)
 
 inline std::ostream & operator<< (std::ostream & os, FileInfo const & info)
 {
-    os << "WAVE ";
-    if      (info.isLinearPCM) os << std::format ("{}-bit linear PCM", info.bitDepth);
-    else if (info.isFloatPCM)  os << std::format ("{}-bit float PCM",  info.bitDepth);
+    std::string formatString;
+    if      (info.isLinearPCM) formatString = std::format ("{}-bit linear PCM", info.bitDepth);
+    else if (info.isFloatPCM)  formatString = std::format ("{}-bit float PCM",  info.bitDepth);
     else assert (false);
-    os << std::format (" / {} kHz / ", info.sampleRate / 1000);
-    switch (info.channels)
-    {
-        case 1:  os << "mono";   break;
-        case 2:  os << "stereo"; break;
-        default: os << std::format("{} channels", info.channels); break;
-    }
-    const double seconds = static_cast<double>(info.frames) / info.sampleRate;
-    if (seconds < 0.1)
-        os << std::format(" / {:.1f} ms / {} frames / ", seconds * 1000.0, info.frames);
-    else
-        os << std::format(" / {:.1f} seconds / {} frames / ", seconds, info.frames);
 
     const auto bytes = static_cast<uint64_t> (info.frames) * info.channels * info.containerSizeInBits / 8U;
-    constexpr uint64_t kB = 1'000;
-    constexpr uint64_t MB = 1'000'000;
-    constexpr uint64_t GB = 1'000'000'000;
 
-    if      (bytes >= GB) os << std::format ("{:.1f} GB of audio\n", static_cast<double>(bytes) / GB);
-    else if (bytes >= MB) os << std::format ("{:.1f} MB of audio\n", static_cast<double>(bytes) / MB);
-    else if (bytes >= kB) os << std::format ("{:.1f} kB of audio\n", static_cast<double>(bytes) / kB);
-    else                  os << bytes << " bytes of audio";
+    os << audioSummary (formatString, info.sampleRate, info.channels, info.frames, bytes);
 
     return os;
 }

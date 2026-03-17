@@ -14,7 +14,7 @@ int main ()
     writer.Close(); // not necessary if Writer is destroyed before attempt to access file
 
     wav::ChunkInfo info {filename};
-    std::cout << '\n' << filename << "\n\n" << info << "\n" << info.summary() << std::endl;
+    std::cout << '\n' << filename << "\n\n" << info << "\n" << info.summary() << "\n" << std::endl;
 
     return 0;
 }
