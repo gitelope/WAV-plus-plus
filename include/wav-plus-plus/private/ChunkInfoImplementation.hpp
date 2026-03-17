@@ -84,8 +84,8 @@ inline std::string ChunkInfo::summary() const
     << channelString << " / "
     << (duration < 0.1 ?
         std::format("{:.1f} ms", duration * 1000.0) :
-        std::format("{:.3f} seconds", duration)) << " / "
-    << frames << " frames" << " / "
+        std::format("{:.3f} seconds", duration))
+    << " / "
     << frames << " frames" << " / "
     << data.size << " bytes of audio" << std::endl;
 
