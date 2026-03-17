@@ -100,7 +100,7 @@ inline std::ostream & operator<< (std::ostream & os, FileInfo const & info)
     if (seconds < 0.1)
         os << std::format(" / {:.1f} ms / {} frames / ", seconds * 1000.0, info.frames);
     else
-        os << std::format(" / {:.3f} seconds / {} frames / ", seconds, info.frames);
+        os << std::format(" / {:.1f} seconds / {} frames / ", seconds, info.frames);
 
     const auto bytes = static_cast<uint64_t> (info.frames) * info.channels * info.containerSizeInBits / 8U;
     constexpr uint64_t kB = 1'000;

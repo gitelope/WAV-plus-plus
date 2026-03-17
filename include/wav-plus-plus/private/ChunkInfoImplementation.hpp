@@ -78,16 +78,29 @@ inline std::string ChunkInfo::summary() const
     }
     std::ostringstream oss;
 
+    const uint64_t bytes = data.size;
+
+    constexpr uint64_t kB = 1'000;
+    constexpr uint64_t MB = 1'000'000;
+    constexpr uint64_t GB = 1'000'000'000;
+
+    std::string sizeString;
+
+    if      (bytes >= GB) sizeString = std::format("{:.1f} GB of audio", static_cast<double>(bytes) / GB);
+    else if (bytes >= MB) sizeString = std::format("{:.1f} MB of audio", static_cast<double>(bytes) / MB);
+    else if (bytes >= kB) sizeString = std::format("{:.1f} kB of audio", static_cast<double>(bytes) / kB);
+    else                  sizeString = std::to_string(bytes) + " bytes of audio";
+
     oss << riff.format << " "
     << format_string << " / "
     << format.sampleRate / 1000 << " kHz / "
     << channelString << " / "
     << (duration < 0.1 ?
         std::format("{:.1f} ms", duration * 1000.0) :
-        std::format("{:.3f} seconds", duration))
+        std::format("{:.1f} seconds", duration))
     << " / "
     << frames << " frames" << " / "
-    << data.size << " bytes of audio" << std::endl;
+    << sizeString << std::endl;
 
     return oss.str();
 }
@@ -398,7 +411,7 @@ inline std::ostream & operator<< (std::ostream & os, RiffChunk const & riff)
     << "RIFF chunk" << '\n'
     << "----------" << '\n'
     << "id: " << riff.id << '\n'
-    << "chunk size: " << riff.size << " ( = file size in bytes minus 8)" << '\n'
+    << "chunk size: " << riff.size << " (= file size in bytes minus 8)" << '\n'
     << "format: " << riff.format;
 }
 
