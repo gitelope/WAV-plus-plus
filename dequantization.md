@@ -21,7 +21,7 @@ The results will be in the range [-1, 127/128].
 
 If the file was written by WAV++, the range is further constrained to [-127/128, +127/128].
 
-## Guarantees
-Dequantized samples will never exceed [-1.0, +1.0] and dequantization does not clip.
+## Properties
+Dequantized samples will lie within [-1.0, +1.0]; dequantization does not clip.
 
 When dequantized, samples written by WAV++ will lie in a range that is symmetric about zero.
