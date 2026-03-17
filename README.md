@@ -308,4 +308,4 @@ See [quantization.md](quantization.md).
 To inspect the non-data information in a WAV, load it into a `wav::ChunkInfo`.
 
 ## License
-WAV++ is licensed under the MIT License. See [LICENSE.txt](LICENSE.txt) for details.
+WAV++ is licensed under the MIT License. See [LICENSE](LICENSE) for details.
