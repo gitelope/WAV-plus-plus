@@ -82,6 +82,7 @@ inline void FileInfo::ExtractFrom (ChunkInfo const & chunkInfo)
             else if (chunkInfo.format.subFormat == ExtensibleFormat::FloatPCM)  isFloatPCM  = true;
             break;
         }
+        default: assert (false); // should have been caught earlier
     }
 }
 

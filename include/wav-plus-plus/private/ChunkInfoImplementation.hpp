@@ -59,7 +59,7 @@ inline std::string ChunkInfo::summary() const
             bitDepth = format.validBitsPerSample;
             containerSize = format.bitsPerSample;
             break;
-        default: assert (false);
+        default: assert (false); // should have been caught earlier
     }
 
     const auto frames = data.size / format.blockAlign;

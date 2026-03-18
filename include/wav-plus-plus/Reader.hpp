@@ -24,7 +24,7 @@ class Reader
 public:
 
     // May throw wav::ReadError.
-    explicit Reader (std::string const & filepath, uint64_t suggestedBufferSizeKB = 32);
+    explicit Reader (std::string const & filepath, uint32_t suggestedBufferSizeKB = 32);
 
     // INTERLEAVED READING //////////////////////////////
 
@@ -91,7 +91,7 @@ private:
     std::vector<float>   bufferFloatPCM32;
     std::vector<double>  bufferFloatPCM64;
 
-    void InitializeBuffer (uint64_t suggestedBufferSizeKB);
+    void InitializeBuffer (uint32_t suggestedBufferSizeKB);
     double normalization (uint16_t bitDepth); // divide LPCM (integer) values by return value to convert to normalized double
 
     static constexpr double uint8DequantizationOffset {128.};

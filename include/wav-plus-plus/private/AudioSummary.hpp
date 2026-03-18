@@ -11,8 +11,8 @@ namespace wav
 
 inline std::string channelString (uint16_t channels);
 inline std::string durationString (uint32_t, uint32_t);
-inline std::string formatString (bool isLinear, uint16_t bitDepth, uint16_t containerSize);
-inline std::string sizeString (uint64_t bytes, bool isPadded);
+inline std::string formatString (bool, uint16_t, uint16_t);
+inline std::string sizeString (uint32_t, bool);
 
 // Synchronizes the order and formatting of parameter output for
 // std::string ChunkInfo::summary()
@@ -25,7 +25,7 @@ inline std::string audioSummary (bool isLinear,
                                  uint32_t sampleRate,
                                  uint16_t channels,
                                  uint32_t frames,
-                                 uint64_t bytes,
+                                 uint32_t bytes,
                                  bool isPadded)
 {
     return "WAVE "
@@ -69,11 +69,11 @@ inline std::string durationString (uint32_t frames, uint32_t sampleRate)
         : std::format ("{:.1f} seconds", seconds);
 }
 
-inline std::string sizeString (uint64_t bytes, bool isPadded)
+inline std::string sizeString (uint32_t bytes, bool isPadded)
 {
-    constexpr uint64_t kB = 1'000;
-    constexpr uint64_t MB = 1'000'000;
-    constexpr uint64_t GB = 1'000'000'000;
+    constexpr uint32_t kB = 1'000;
+    constexpr uint32_t MB = 1'000'000;
+    constexpr uint32_t GB = 1'000'000'000;
 
     std::string result;
 

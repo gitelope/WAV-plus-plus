@@ -12,7 +12,7 @@
 namespace wav
 {
 
-Reader::Reader (std::string const & filepath, uint64_t suggestedBufferSizeKB)
+Reader::Reader (std::string const & filepath, uint32_t suggestedBufferSizeKB)
 :file (fopen (filepath.c_str(), "rb"), fclose)
 {
     // Check if file opened successfully
@@ -719,7 +719,7 @@ void Reader::ReadFloatPCM64 (T ** const destinations, size_t channelsToRead, siz
 }
 
 /// Initialize the buffer needed for the current file format.
-inline void Reader::InitializeBuffer (uint64_t suggestedBufferSizeKB)
+inline void Reader::InitializeBuffer (uint32_t suggestedBufferSizeKB)
 {
     // Size buffer so that it holds a whole number of frames, at least one frame,
     // and is no bigger than what would be required to read in the entire data chunk:
