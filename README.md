@@ -56,7 +56,15 @@ const auto bitDepth            {fileInfo.bitDepth};
 const auto containerSizeInBits {fileInfo.containerSizeInBits};
 const auto isLinearPCM         {fileInfo.isLinearPCM};
 const auto isFloatPCM          {fileInfo.isFloatPCM};
+```
 
+You can log or display a short summary of `FileInfo` with the stream insertion operator, `<<`:
+
+```cpp
+std::cout << reader.getInfo() << std::endl;
+```
+```
+WAVE 24-bit linear PCM / 48 kHz / stereo / 0.1 ms / 5 frames / 30 bytes of audio
 ```
 
 ### Sample ordering
@@ -305,7 +313,53 @@ See [quantization.md](quantization.md).
 
 ## Inspecting a WAV
 
-To inspect the non-data information in a WAV, load it into a `wav::ChunkInfo`.
+To inspect the non-data information in a WAV, use a `wav::ChunkInfo`:
+
+```cpp
+#include <wav-plus-plus/ChunkInfo.hpp>
+
+const auto filepath {"in.wav"};
+
+wav::ChunkInfo info {filename};
+std::cout << info << std::endl;
+```
+```
+chunks present
+--------------
+RIFF 0
+fmt  12
+data 36
+
+RIFF chunk
+----------
+id: RIFF
+chunk size: 1536036 (= file size in bytes minus 8)
+format: WAVE
+
+fmt  chunk
+----------
+format id: fmt 
+format chunk size: 16 (PCMWAVEFORMAT)
+format: 0x0003 (IEEE float)
+channels: 1
+sample rate: 48000
+byte rate: 192000
+block align: 4
+bits per sample: 32
+
+data chunk
+----------
+id: data
+chunk size: 1536000
+[DATA]
+```
+For a short metadata summary:
+```cpp
+std::cout << info.summary() << std::endl;
+```
+```
+WAVE 32-bit float PCM / 48 kHz / mono / 8.0 seconds / 384000 frames / 1.5 MB of audio
+```
 
 ## License
 WAV++ is licensed under the MIT License. See [LICENSE](LICENSE) for details.
