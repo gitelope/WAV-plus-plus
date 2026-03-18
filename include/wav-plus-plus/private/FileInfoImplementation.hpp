@@ -67,7 +67,7 @@ inline void FileInfo::ExtractFrom (ChunkInfo const & chunkInfo)
         case FormatChunkSize::WAVEFORMATEXTENSIBLE:
             containerSizeInBits = chunkInfo.format.bitsPerSample;
             bitDepth = chunkInfo.format.validBitsPerSample;
-            // Note: FWIW containerSizeInBits should also be equal 8 * chunkInfo.format.blockAlign / channels.
+            // Note: FWIW containerSizeInBits should also be equal to 8 * chunkInfo.format.blockAlign / channels.
             break;
 
         default: assert (false); // should have been caught earlier
@@ -87,14 +87,13 @@ inline void FileInfo::ExtractFrom (ChunkInfo const & chunkInfo)
 
 inline std::ostream & operator<< (std::ostream & os, FileInfo const & info)
 {
-    std::string formatString;
-    if      (info.isLinearPCM) formatString = std::format ("{}-bit linear PCM", info.bitDepth);
-    else if (info.isFloatPCM)  formatString = std::format ("{}-bit float PCM",  info.bitDepth);
-    else assert (false);
+    const auto bytes = info.frames * info.channels * info.containerSizeInBits / 8U;
+    const bool isPadded = info.containerSizeInBits > info.bitDepth;
 
-    const auto bytes = static_cast<uint64_t> (info.frames) * info.channels * info.containerSizeInBits / 8U;
+    assert (info.isLinearPCM || info.isFloatPCM);
 
-    os << audioSummary (formatString, info.sampleRate, info.channels, info.frames, bytes);
+    os << audioSummary (info.isLinearPCM, info.bitDepth, info.containerSizeInBits,
+                        info.sampleRate, info.channels, info.frames, bytes, isPadded);
 
     return os;
 }

@@ -11,25 +11,44 @@ namespace wav
 
 inline std::string channelString (uint16_t channels);
 inline std::string durationString (uint32_t, uint32_t);
-inline std::string sizeString (uint64_t);
+inline std::string formatString (bool isLinear, uint16_t bitDepth, uint16_t containerSize);
+inline std::string sizeString (uint64_t bytes, bool isPadded);
 
 // Synchronizes the order and formatting of parameter output for
 // std::string ChunkInfo::summary()
 // and
 // std::ostream & operator<< (std::ostream &, FileInfo const &).
 
-inline std::string audioSummary (std::string const & formatString,
+inline std::string audioSummary (bool isLinear,
+                                 uint16_t bitDepth,
+                                 uint16_t containerSize,
                                  uint32_t sampleRate,
                                  uint16_t channels,
                                  uint32_t frames,
-                                 uint64_t bytes)
+                                 uint64_t bytes,
+                                 bool isPadded)
 {
-    return "WAVE " + formatString
-    + " / " + std::to_string (sampleRate / 1000) + " kHz"
-    + " / " + channelString (channels)
-    + " / " + durationString (frames, sampleRate)
-    + " / " + std::to_string (frames) + " frames"
-    + " / " + sizeString (bytes);
+    return "WAVE "
+        + formatString (isLinear, bitDepth, containerSize)
+        + " / " + std::to_string (sampleRate / 1000) + " kHz"
+        + " / " + channelString (channels)
+        + " / " + durationString (frames, sampleRate)
+        + " / " + std::to_string (frames) + " frames"
+        + " / " + sizeString (bytes, isPadded);
+}
+
+inline std::string formatString (bool isLinear, uint16_t bitDepth, uint16_t containerSize)
+{
+    // Sample encoding assumed to be either linear or float.
+    const auto amplitudeEncoding {isLinear ? "linear" : "float"};
+    auto result = std::format ("{}-bit {} PCM", bitDepth, amplitudeEncoding);
+
+    if (containerSize > bitDepth)
+    {
+        result += std::format (" / {}-bit container", containerSize);
+    }
+
+    return result;
 }
 
 inline std::string channelString (uint16_t channels)
@@ -50,16 +69,21 @@ inline std::string durationString (uint32_t frames, uint32_t sampleRate)
         : std::format ("{:.1f} seconds", seconds);
 }
 
-inline std::string sizeString (uint64_t bytes)
+inline std::string sizeString (uint64_t bytes, bool isPadded)
 {
     constexpr uint64_t kB = 1'000;
     constexpr uint64_t MB = 1'000'000;
     constexpr uint64_t GB = 1'000'000'000;
 
-    if      (bytes >= GB) return std::format ("{:.1f} GB of audio", static_cast<double> (bytes) / GB);
-    else if (bytes >= MB) return std::format ("{:.1f} MB of audio", static_cast<double> (bytes) / MB);
-    else if (bytes >= kB) return std::format ("{:.1f} kB of audio", static_cast<double> (bytes) / kB);
-    else                  return std::to_string (bytes) + " bytes of audio";
+    std::string result;
+
+    if      (bytes >= GB) result = std::format ("{:.1f} GB of audio", static_cast<double> (bytes) / GB);
+    else if (bytes >= MB) result = std::format ("{:.1f} MB of audio", static_cast<double> (bytes) / MB);
+    else if (bytes >= kB) result = std::format ("{:.1f} kB of audio", static_cast<double> (bytes) / kB);
+    else                  result = std::to_string (bytes) + " bytes of audio";
+
+    if (isPadded) result += " (includes padding)";
+    return result;
 }
 
 } // namespace wav

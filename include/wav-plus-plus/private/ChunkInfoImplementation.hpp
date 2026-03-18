@@ -32,42 +32,41 @@ ChunkInfo::ChunkInfo (FILE * in)
 
 inline std::string ChunkInfo::summary() const
 {
-    const auto frames = data.size / format.blockAlign;
+    bool isLinear;
+    uint16_t bitDepth;
+    uint16_t containerSize;
 
-    std::string formatString;
     switch (format.code)
     {
         case FormatCode::LinearPCM:
-        {
-            formatString = std::to_string (format.bitsPerSample) + "-bit linear PCM";
-            const int container_size_in_bits = 8 * format.blockAlign / format.channels;
-            if (format.bitsPerSample < container_size_in_bits)
-                formatString += std::format (" / {}-bit container", container_size_in_bits);
+            isLinear = true;
+            bitDepth = format.bitsPerSample;
+            containerSize = 8 * format.blockAlign / format.channels;
             break;
-        }
         case FormatCode::FloatPCM:
-        {
-            formatString = std::to_string (format.bitsPerSample) + "-bit float PCM";
+            isLinear = false; // must be floating-point
+            bitDepth = format.bitsPerSample;
+            containerSize = bitDepth;
+            assert (containerSize == 8 * format.blockAlign / format.channels);
             break;
-        }
         case FormatCode::Extensible:
-        {
-            formatString = "extensible ";
-            formatString += std::to_string (format.validBitsPerSample) + "-bit ";
-
-            if (format.subFormat == ExtensibleFormat::LinearPCM) formatString += "linear PCM";
-            else if (format.subFormat == ExtensibleFormat::FloatPCM) formatString += "float PCM";
-            else assert (false);
-
-            if (format.validBitsPerSample < format.bitsPerSample)
-                formatString += std::format (" / {}-bit container", format.bitsPerSample);
+            if (format.subFormat == ExtensibleFormat::LinearPCM) isLinear = true;
+            else
+            {
+                assert (format.subFormat == ExtensibleFormat::FloatPCM);
+                isLinear = false;
+            }
+            bitDepth = format.validBitsPerSample;
+            containerSize = format.bitsPerSample;
             break;
-        }
-        default:
-            formatString = "unsupported format";
+        default: assert (false);
     }
 
-    return audioSummary (formatString, format.sampleRate, format.channels, frames, data.size);
+    const auto frames = data.size / format.blockAlign;
+    const bool isPadded = (containerSize > bitDepth);
+
+    return audioSummary (isLinear, bitDepth, containerSize, format.sampleRate,
+                         format.channels, frames, data.size, isPadded);
 }
 
 int peek (FILE * in); // check if there's data available
