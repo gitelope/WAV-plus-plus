@@ -414,9 +414,9 @@
 		C48AB6772F636A5900C70CDA /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_CXX_LANGUAGE_STANDARD = "c++23";
 				CODE_SIGN_STYLE = Automatic;
-				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_C_LANGUAGE_STANDARD = c23;
 				MACOSX_DEPLOYMENT_TARGET = 15.7;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
@@ -425,9 +425,9 @@
 		C48AB6782F636A5900C70CDA /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_CXX_LANGUAGE_STANDARD = "c++23";
 				CODE_SIGN_STYLE = Automatic;
-				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_C_LANGUAGE_STANDARD = c23;
 				MACOSX_DEPLOYMENT_TARGET = 15.7;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};

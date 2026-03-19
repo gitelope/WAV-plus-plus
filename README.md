@@ -159,20 +159,6 @@ delete[] right;
 delete[] center;
 ```
 
-Reading all channels into a vector of vectors:
-
-```cpp
-std::vector<std::vector<float>> buffers (channels, std::vector<float> (frames));
-
-std::vector<float *> destinations (channels);
-for (size_t i = 0; i < channels; ++i)
-{
-    destinations[i] = buffers[i].data();
-}
-
-const auto framesRead = reader.read (destinations.data(), channels, frames);
-```
-
 Reading all channels into a single vector:
 
 ```cpp
@@ -202,6 +188,25 @@ const auto framesRead = reader.read (destinations, channels, frames);
 
 delete[] destinations;
 delete[] buffer;
+```
+
+Reading all channels into a vector of vectors:
+
+```cpp
+std::vector<std::vector<float>> buffers (channels);
+for (auto & buffer : buffers)
+{
+    buffer.resize (frames);
+}
+
+std::vector<float*> destinations;
+destinations.reserve (channels);
+for (auto & channel : buffers)
+{
+    destinations.push_back (channel.data());
+}
+
+const auto framesRead = reader.read (destinations.data(), channels, frames);
 ```
 
 ### Dequantization
