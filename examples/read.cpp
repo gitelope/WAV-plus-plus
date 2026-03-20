@@ -223,60 +223,38 @@ int main ()
         delete[] buffer;
     }
 
-    // wav::Reader constructor can throw
+    // Exception handling*
+    //
+    // *This example is somewhat artificial in that you wouldn't proceed to reading the file
+    // if there was an exception thrown while opening it and parsing the header.
+    // Additionally, you might choose not to handle errors from the two phases separately.
     {
-        // file does not exist:
+        std::unique_ptr<wav::Reader> reader;
+
+        // 1) Construction
         try
         {
-            wav::Reader reader {"nonexistent.wav"};
+            reader = std::make_unique<wav::Reader> (filepath);
         }
         catch (wav::ReadError const & e)
         {
-            std::cerr << "\n" << "wav::ReadError: " << e.what() << std::endl;
+            // File not found, not a valid WAV file,
+            // unsupported encoding, etc.
+
+            // handle exception
         }
 
-        // invalid file:
-        {
-            const auto filename {"cest_nest_pas_un_wav.wav"};
-            {
-                std::ofstream emptyFile {filename, std::ios::binary};
-            }
-            try
-            {
-                // Try to read empty file.
-                // Exception thrown when RIFF chunk ID not found.
-                wav::Reader reader {filename};
-            }
-            catch (wav::ReadError const & e)
-            {
-                std::cerr << "wav::ReadError: " << e.what() << std::endl;
-            }
-        }
-    }
-
-    // wav::Reader::read can throw
-    {
-        // Open 2-channel file.
-        wav::Reader reader  {filepath};
-        const auto frames   {reader.frames()};
-
-        // Prepare to read 3 channels.
-        const auto channels {3};
-        std::vector<float> deinterleaved (frames * channels);
-        std::vector<float *> destinations (channels);
-        for (size_t i=0; i < channels; ++i)
-        {
-            destinations[i] = deinterleaved.data() + i * frames;
-        }
-
+        // 2) Reading
         try
         {
-            // Oops! Trying to read 3 channels from a stereo file:
-            reader.read (destinations.data(), channels, frames);
+            std::vector<float> buffer (reader->samples());
+            reader->read (buffer);
         }
         catch (wav::ReadError const & e)
         {
-            std::cerr << "wav::ReadError: " << e.what() << '\n' << std::endl;
+            // I/O failure, API usage errors, etc.
+
+            // handle exception
         }
     }
 }

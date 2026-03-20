@@ -85,9 +85,8 @@ int main ()
     // Exception handling*
     //
     // *This example is somewhat artificial in that you wouldn't proceed from one phase
-    // to the next if an exception was actually thrown.
-    // The important thing is that there are three phases of exception handling.
-    // 
+    // to the next if an exception was actually thrown. Also, you might choose not to
+    // handle errors from each of the three phases separately.
     {
         std::unique_ptr<wav::Writer> writer;
 
@@ -100,16 +99,21 @@ int main ()
         }
         catch (wav::WriteError const & e)
         {
+            // Failed to create/open file or write the header.
+
             // handle exception
         }
 
         // 2) Writing
         try
         {
-            writer->write(buffer);
+            writer->write (buffer);
         }
         catch (wav::WriteError const & e)
         {
+            // Disk full or unavailable, other I/O failure,
+            // WAV file size limit exceeded, API usage error, etc.
+
             // handle exception
         }
 
@@ -120,6 +124,10 @@ int main ()
         }
         catch (wav::WriteError const & e)
         {
+            // Failed to flush file buffers;
+            // error finalizing data chunk size, RIFF chunk size, or padding;
+            // failed to close file; etc.
+
             // handle exception
         }
     }
