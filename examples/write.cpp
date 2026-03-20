@@ -82,5 +82,47 @@ int main ()
         delete[] buffer;
     }
 
+    // Exception handling*
+    //
+    // *This example is somewhat artificial in that you wouldn't proceed from one phase
+    // to the next if an exception was actually thrown.
+    // The important thing is that there are three phases of exception handling.
+    // 
+    {
+        std::unique_ptr<wav::Writer> writer;
+
+        std::vector<float> buffer {0.f, 0.1f, 0.2f, 0.3f, 0.4f, 0.5f};
+
+        // 1) Construction
+        try
+        {
+            writer = std::make_unique<wav::Writer> (filepath, encoding, sampleRate, channels);
+        }
+        catch (wav::WriteError const & e)
+        {
+            // handle exception
+        }
+
+        // 2) Writing
+        try
+        {
+            writer->write(buffer);
+        }
+        catch (wav::WriteError const & e)
+        {
+            // handle exception
+        }
+
+        // 3) Manual Close() allows for exception handling.
+        try
+        {
+            writer->Close();
+        }
+        catch (wav::WriteError const & e)
+        {
+            // handle exception
+        }
+    }
+
     return EXIT_SUCCESS;
 }
