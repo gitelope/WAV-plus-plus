@@ -28,8 +28,8 @@ std::string TestLog::formattedResults() const
 {
     std::string output;
     assert (descriptions.size()==results.size());
-    output += "\nTest results\n";
-    output += "----------------\n";
+    output += "\ntest results\n";
+    output += "------------\n";
     for(size_t i=0; i<descriptions.size(); ++i)
     {
         output += (results[i]==true ? "pass - " : "fail - ") + descriptions[i] + "\n";
