@@ -1,10 +1,10 @@
 
 #include "helper_functions.hpp"
 #include <algorithm>
-#include <cassert>
 #include <cmath>
 #include <iostream>
 
+/*
 // test Buffers for equality by comparing difference
 // to a threshold.
 bool areEqual (std::vector<double> const & a,
@@ -56,13 +56,5 @@ void Print (std::vector<double> const & v)
     for (auto const & element : v) std::cout << element << " ";
     std::cout << std::endl;
 }
+*/
 
-bool areEqual (std::vector<uint8_t> const & a, std::vector<uint8_t> const & b)
-{
-    assert (a.size() == b.size());
-    for (size_t i = 0; i < a.size(); ++i)
-    {
-        if (a[i] != b[i]) return false;
-    }
-    return true;
-}

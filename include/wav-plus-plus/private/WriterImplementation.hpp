@@ -258,10 +258,10 @@ void Writer::WriteLPCMU8 (T const * source, size_t totalSamplesToWrite)
     const auto bufferSize {bufferLPCMU8.size()};
     constexpr size_t bytesPerSample {1};
 
-    constexpr auto scale  {static_cast<T> (uint8Scale)};
-    constexpr auto offset {static_cast<T> (uint8QuantizationOffset)};
-    constexpr auto min    {static_cast<T> (uint8Min)};
-    constexpr auto max    {static_cast<T> (uint8Max)};
+    constexpr double scale  {uint8Scale};
+    constexpr double offset {uint8QuantizationOffset};
+    constexpr double min    {uint8Min};
+    constexpr double max    {uint8Max};
 
     size_t samplesRemaining {totalSamplesToWrite};
     size_t readPosition {0};
@@ -273,7 +273,7 @@ void Writer::WriteLPCMU8 (T const * source, size_t totalSamplesToWrite)
         // Quantize.
         for (size_t i = 0; i < samplesToWrite; ++i)
         {
-            const auto scaled {scale * source [readPosition + i]};
+            const auto scaled {scale * static_cast<double> (source [readPosition + i])};
             /* dither */
             const auto rounded {std::round (scaled)};
             const auto shifted {rounded + offset};
@@ -308,9 +308,9 @@ void Writer::WriteLPCM16 (T const * source, size_t totalSamplesToWrite)
     const auto bufferSize {bufferLPCM16.size()};
     constexpr size_t bytesPerSample {2};
 
-    constexpr auto scale {static_cast<T> (int16Scale)};
-    constexpr auto min   {static_cast<T> (int16Min)};
-    constexpr auto max   {static_cast<T> (int16Max)};
+    constexpr double scale {int16Scale};
+    constexpr double min   {int16Min};
+    constexpr double max   {int16Max};
 
     size_t samplesRemaining {totalSamplesToWrite};
     size_t readPosition {0};
@@ -322,7 +322,7 @@ void Writer::WriteLPCM16 (T const * source, size_t totalSamplesToWrite)
         // Quantize.
         for (size_t i = 0; i < samplesToWrite; ++i)
         {
-            buffer [i] = static_cast<int16_t> (quantized (source [readPosition + i], scale, min, max));
+            buffer [i] = static_cast<int16_t> (quantized (static_cast<double> (source [readPosition + i]), scale, min, max));
         }
 
         // Byteswap if needed.
@@ -352,9 +352,9 @@ void Writer::WriteLPCM24 (T const * source, size_t totalSamplesToWrite)
     const auto bufferSize {bufferLPCM24.size()};
     constexpr size_t bytesPerSample {3};
 
-    constexpr auto scale {static_cast<T> (int24Scale)};
-    constexpr auto min   {static_cast<T> (int24Min)};
-    constexpr auto max   {static_cast<T> (int24Max)};
+    constexpr double scale {int24Scale};
+    constexpr double min   {int24Min};
+    constexpr double max   {int24Max};
 
     size_t samplesRemaining {totalSamplesToWrite};
     size_t readPosition {0};
@@ -366,7 +366,7 @@ void Writer::WriteLPCM24 (T const * source, size_t totalSamplesToWrite)
         // Quantize.
         for (size_t i = 0; i < samplesToWrite; ++i)
         {
-            buffer [i] = static_cast<int24> (quantized (source [readPosition + i], scale, min, max));
+            buffer [i] = static_cast<int24> (quantized (static_cast<double> (source [readPosition + i]), scale, min, max));
         }
 
         // Byteswap if needed.
