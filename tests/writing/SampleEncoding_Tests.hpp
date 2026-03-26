@@ -38,7 +38,7 @@ void TestSampleEncoding (TestLog & log)
 
         in.read (reinterpret_cast<char *> (actual.data()),
                 static_cast<std::streamsize> (actual.size()));
-        log.Record (areEqual (actual, expected), description);
+        log.Record (areEqual (actual, expected), "WRITE ENCODING - " + description);
     };
 
     {
