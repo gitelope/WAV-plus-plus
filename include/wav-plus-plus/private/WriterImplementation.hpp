@@ -395,9 +395,10 @@ void Writer::WriteLPCM32 (T const * source, size_t totalSamplesToWrite)
     const auto bufferSize {bufferLPCM32.size()};
     constexpr size_t bytesPerSample {4};
 
-    constexpr auto scale {static_cast<T> (int32Scale)};
-    constexpr auto min   {static_cast<T> (int32Min)};
-    constexpr auto max   {static_cast<T> (int32Max)};
+    // Need to use double because floats can't represent all the 32-bit int values.
+    constexpr double scale {int32Scale};
+    constexpr double min   {int32Min};
+    constexpr double max   {int32Max};
 
     size_t samplesRemaining {totalSamplesToWrite};
     size_t readPosition {0};
@@ -409,7 +410,8 @@ void Writer::WriteLPCM32 (T const * source, size_t totalSamplesToWrite)
         // Quantize.
         for (size_t i = 0; i < samplesToWrite; ++i)
         {
-            buffer [i] = static_cast<int32_t> (quantized (source [readPosition + i], scale, min, max));
+            // Need to use double to quantize since float can't represent all the 32-bit values.
+            buffer [i] = static_cast<int32_t> (quantized (static_cast<double> (source [readPosition + i]), scale, min, max));
         }
 
         // Byteswap if needed.
