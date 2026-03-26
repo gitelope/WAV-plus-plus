@@ -11,9 +11,9 @@
 void TestSampleEncoding (TestLog & log)
 {
     const std::string filename {"test.wav"};
-    constexpr auto sampleRate {48000};
-    constexpr auto channels {1};
-    constexpr auto headerSize {44}; // this could change.
+    constexpr auto sampleRate  {48000};
+    constexpr auto channels    {1};
+    constexpr auto headerSize  {44};
 
     const std::vector<float>  out_float
     {-1.f, -0.875f, -0.75f, -0.625f, -0.5f, -0.25f, 0.f, 0.25f, 0.5f, 0.625f, 0.75f, 0.875f, 1.f};
@@ -21,8 +21,28 @@ void TestSampleEncoding (TestLog & log)
     const std::vector<double> out_double
     {-1., -0.875, -0.75, -0.625, -0.5, -0.25, 0., 0.25, 0.5, 0.625, 0.75, 0.875, 1.};
 
-    // unsigned 8-bit LPCM
+    const auto RunTest = [&log, &filename]
+    <typename T> (wav::ExportFormat encoding,
+                  std::vector<T> const & source,
+                  std::vector<uint8_t> const & expected,
+                  std::string const & description)
     {
+        std::vector<uint8_t> actual(expected.size());
+
+        wav::Writer writer {filename, encoding, sampleRate, channels};
+        writer.write(source);
+        writer.Close();
+
+        std::ifstream in {filename, std::ios::binary};
+        in.seekg (headerSize);
+
+        in.read (reinterpret_cast<char *> (actual.data()),
+                static_cast<std::streamsize> (actual.size()));
+        log.Record (areEqual (actual, expected), description);
+    };
+
+    {
+        // unsigned 8-bit LPCM
         constexpr auto encoding {wav::ExportFormat::LinearPCM_8};
         // multiply by 127, round to nearest integer, add 128, clamp to [1, 255]
         const std::vector<uint8_t> expected
@@ -42,31 +62,8 @@ void TestSampleEncoding (TestLog & log)
             0xFF, // 1111 1111, 255,  1
         };
 
-        // float
-        {
-            wav::Writer writer {filename, encoding, sampleRate, channels};
-            writer.write (out_float);
-            writer.Close();
-
-            std::ifstream in {filename, std::ios::binary};
-            in.seekg (headerSize);
-            std::vector<uint8_t> actual (expected.size());
-            in.read (reinterpret_cast<char*> (actual.data()), static_cast<std::streamsize> (actual.size()));
-            log.Record (areEqual (actual, expected), "float -> unsigned 8-bit LPCM");
-        }
-
-        // double
-        {
-            wav::Writer writer {filename, encoding, sampleRate, channels};
-            writer.write (out_double);
-            writer.Close();
-
-            std::ifstream in {filename, std::ios::binary};
-            in.seekg (headerSize);
-            std::vector<uint8_t> actual (expected.size());
-            in.read (reinterpret_cast<char*> (actual.data()), static_cast<std::streamsize> (actual.size()));
-            log.Record (areEqual (actual, expected), "double -> unsigned 8-bit LPCM");
-        }
+        RunTest (encoding, out_float,  expected, "float  -> unsigned 8-bit LPCM");
+        RunTest (encoding, out_double, expected, "double -> unsigned 8-bit LPCM");
     }
 
     // signed 16-bit LPCM
@@ -90,31 +87,8 @@ void TestSampleEncoding (TestLog & log)
             0xFF, 0x7F, // 0x7FFF, 0111 1111 1111 1111,  32767,  1
         };
 
-        // float
-        {
-            wav::Writer writer {filename, encoding, sampleRate, channels};
-            writer.write (out_float);
-            writer.Close();
-
-            std::ifstream in {filename, std::ios::binary};
-            in.seekg (headerSize);
-            std::vector<uint8_t> actual (expected.size());
-            in.read (reinterpret_cast<char*> (actual.data()), static_cast<std::streamsize> (actual.size()));
-            log.Record (areEqual (actual, expected), "float -> signed 16-bit LPCM");
-        }
-
-        // double
-        {
-            wav::Writer writer {filename, encoding, sampleRate, channels};
-            writer.write (out_double);
-            writer.Close();
-
-            std::ifstream in {filename, std::ios::binary};
-            in.seekg (headerSize);
-            std::vector<uint8_t> actual (expected.size());
-            in.read (reinterpret_cast<char*> (actual.data()), static_cast<std::streamsize> (actual.size()));
-            log.Record (areEqual (actual, expected), "double -> signed 16-bit LPCM");
-        }
+        RunTest (encoding, out_float,  expected, "float  -> signed 16-bit LPCM");
+        RunTest (encoding, out_double, expected, "double -> signed 16-bit LPCM");
     }
 
     // signed 24-bit LPCM
@@ -138,33 +112,8 @@ void TestSampleEncoding (TestLog & log)
             0xFF, 0xFF, 0x7F, // 0x7FFFFF, 0111 1111 1111 1111 1111 1111,  8388607,  1
         };
 
-        // float
-        {
-            wav::Writer writer {filename, encoding, sampleRate, channels};
-            writer.write (out_float);
-            writer.Close();
-
-            std::ifstream in {filename, std::ios::binary};
-            in.seekg (headerSize);
-            std::vector<uint8_t> actual (expected.size());
-            in.read (reinterpret_cast<char*> (actual.data()), static_cast<std::streamsize> (actual.size()));
-            log.Record (areEqual (actual, expected), "float -> signed 24-bit LPCM");
-            
-        }
-
-        // double
-        {
-            wav::Writer writer {filename, encoding, sampleRate, channels};
-            writer.write (out_double);
-            writer.Close();
-
-            std::ifstream in {filename, std::ios::binary};
-            in.seekg (headerSize);
-            std::vector<uint8_t> actual (expected.size());
-            in.read (reinterpret_cast<char*> (actual.data()), static_cast<std::streamsize> (actual.size()));
-            log.Record (areEqual (actual, expected), "double -> signed 24-bit LPCM");
-        }
-
+        RunTest (encoding, out_float,  expected, "float  -> signed 24-bit LPCM");
+        RunTest (encoding, out_double, expected, "double -> signed 24-bit LPCM");
     }
 
     // signed 32-bit LPCM
@@ -188,31 +137,8 @@ void TestSampleEncoding (TestLog & log)
             0xFF, 0xFF, 0xFF, 0x7F, // 0x7FFFFFFF, 0111 1111 1111 1111 1111 1111 1111 1111,  2147483647,  1
         };
 
-        // float
-        {
-            wav::Writer writer {filename, encoding, sampleRate, channels};
-            writer.write (out_float);
-            writer.Close();
-
-            std::ifstream in {filename, std::ios::binary};
-            in.seekg (headerSize);
-            std::vector<uint8_t> actual (expected.size());
-            in.read (reinterpret_cast<char*> (actual.data()), static_cast<std::streamsize> (actual.size()));
-            log.Record (areEqual (actual, expected), "float -> signed 32-bit LPCM");
-        }
-
-        // double
-        {
-            wav::Writer writer {filename, encoding, sampleRate, channels};
-            writer.write (out_double);
-            writer.Close();
-
-            std::ifstream in {filename, std::ios::binary};
-            in.seekg (headerSize);
-            std::vector<uint8_t> actual (expected.size());
-            in.read (reinterpret_cast<char*> (actual.data()), static_cast<std::streamsize> (actual.size()));
-            log.Record (areEqual (actual, expected), "double -> signed 32-bit LPCM");
-        }
+        RunTest (encoding, out_float,  expected, "float  -> signed 32-bit LPCM");
+        RunTest (encoding, out_double, expected, "double -> signed 32-bit LPCM");
     }
 
     // 32-bit float PCM
@@ -236,31 +162,8 @@ void TestSampleEncoding (TestLog & log)
             0x00, 0x00, 0x80, 0x3F, // 0x3F800000, 0 | 01111111 | 00000000000000000000000,  1
         };
 
-        // float
-        {
-            wav::Writer writer {filename, encoding, sampleRate, channels};
-            writer.write (out_float);
-            writer.Close();
-
-            std::ifstream in {filename, std::ios::binary};
-            in.seekg (headerSize);
-            std::vector<uint8_t> actual (expected.size());
-            in.read (reinterpret_cast<char*> (actual.data()), static_cast<std::streamsize> (actual.size()));
-            log.Record (areEqual (actual, expected), "float -> 32-bit float PCM");
-        }
-
-        // double
-        {
-            wav::Writer writer {filename, encoding, sampleRate, channels};
-            writer.write (out_double);
-            writer.Close();
-
-            std::ifstream in {filename, std::ios::binary};
-            in.seekg (headerSize);
-            std::vector<uint8_t> actual (expected.size());
-            in.read (reinterpret_cast<char*> (actual.data()), static_cast<std::streamsize> (actual.size()));
-            log.Record (areEqual (actual, expected), "double -> 32-bit float PCM");
-        }
+        RunTest (encoding, out_float,  expected, "float  -> 32-bit float PCM");
+        RunTest (encoding, out_double, expected, "double -> 32-bit float PCM");
     }
 
     // 64-bit float PCM
@@ -284,31 +187,8 @@ void TestSampleEncoding (TestLog & log)
             0x00,0x00,0x00,0x00,0x00,0x00,0xF0,0x3F, // 0x3FF0000000000000, 0 | 01111111111 | 000...0, 1
         };
 
-        // float
-        {
-            wav::Writer writer {filename, encoding, sampleRate, channels};
-            writer.write (out_float);
-            writer.Close();
-
-            std::ifstream in {filename, std::ios::binary};
-            in.seekg (headerSize);
-            std::vector<uint8_t> actual (expected.size());
-            in.read (reinterpret_cast<char*> (actual.data()), static_cast<std::streamsize> (actual.size()));
-            log.Record (areEqual (actual, expected), "float -> 64-bit float PCM");
-        }
-
-        // double
-        {
-            wav::Writer writer {filename, encoding, sampleRate, channels};
-            writer.write (out_double);
-            writer.Close();
-
-            std::ifstream in {filename, std::ios::binary};
-            in.seekg (headerSize);
-            std::vector<uint8_t> actual (expected.size());
-            in.read (reinterpret_cast<char*> (actual.data()), static_cast<std::streamsize> (actual.size()));
-            log.Record (areEqual (actual, expected), "double -> 64-bit float PCM");
-        }
+        RunTest (encoding, out_float,  expected, "float  -> 64-bit float PCM");
+        RunTest (encoding, out_double, expected, "double -> 64-bit float PCM");
     }
 }
 
