@@ -110,6 +110,7 @@
 		C4D146F02F4E7AD8002DCA78 /* FileInfoImplementation.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = FileInfoImplementation.hpp; sourceTree = "<group>"; };
 		C4F096452F7489C700C1852B /* helper_functions.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = helper_functions.hpp; sourceTree = "<group>"; };
 		C4F096462F7489C700C1852B /* helper_functions.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = helper_functions.cpp; sourceTree = "<group>"; };
+		C4F0964A2F7B2FBC00C1852B /* ReadingTests.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = ReadingTests.hpp; sourceTree = "<group>"; };
 		C4F704F62EA6CB4500243874 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
@@ -167,6 +168,7 @@
 				C40B8FC22F73229900FDFC86 /* TestLog.cpp */,
 				C4F096452F7489C700C1852B /* helper_functions.hpp */,
 				C4F096462F7489C700C1852B /* helper_functions.cpp */,
+				C4F096492F7B2F9200C1852B /* reading */,
 				C40B8FC52F73233100FDFC86 /* writing */,
 			);
 			path = tests;
@@ -271,6 +273,14 @@
 				C470C0272F6A058B00F3A7D1 /* AudioSummary.hpp */,
 			);
 			path = private;
+			sourceTree = "<group>";
+		};
+		C4F096492F7B2F9200C1852B /* reading */ = {
+			isa = PBXGroup;
+			children = (
+				C4F0964A2F7B2FBC00C1852B /* ReadingTests.hpp */,
+			);
+			path = reading;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */

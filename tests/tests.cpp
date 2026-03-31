@@ -1,6 +1,7 @@
 
 #include "TestLog.hpp"
 #include "writing/WritingTests.hpp"
+#include "reading/ReadingTests.hpp"
 #include <iostream>
 
 int main ()
