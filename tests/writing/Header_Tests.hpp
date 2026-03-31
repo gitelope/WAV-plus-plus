@@ -30,18 +30,18 @@ void TestHeaders (TestLog & log)
 
 /*
 
- WAV++ uses PCMWAVEFORMAT (fmt chunk size = 16)
+ WAV++ uses WAVEFORMATEX (fmt chunk size = 18)
  with the following chunk order:
 
  RIFF
      fmt
      data
 
- Headers will always be 44 bytes long and are defined as
+ Headers will always be 46 bytes long and are defined as
  everything from "RIFF" through the data chunk size that
  precedes the data portion of the data chunk.
 
- File size (in bytes) = 44 + dataChunkSize + pad,
+ File size (in bytes) = 46 + dataChunkSize + pad,
  where pad is 1 if dataChunkSize is odd and 0 if even
 
  File size (in bytes) = riffChunkSize + 8
@@ -64,6 +64,7 @@ struct Header
     ,byteRate      (wav::uint32_le (in))
     ,blockAlign    (wav::uint16_le (in))
     ,bitsPerSample (wav::uint16_le (in))
+    ,cbSize        (wav::uint16_le (in))
 
     ,dataID        (wav::fourCharacterCode (in))
     ,dataChunkSize (wav::uint32_le (in))
@@ -83,6 +84,7 @@ struct Header
     uint32_t byteRate;
     uint16_t blockAlign;
     uint16_t bitsPerSample;
+    uint16_t cbSize;
 
     // data subchunk (does not include the actual data)
     std::string dataID;
@@ -114,14 +116,14 @@ void TestHeader (wav::ExportFormat encoding,
                  TestLog & log)
 {
     constexpr std::string filename {"test.wav"};
-    constexpr auto formatChunkSize {wav::FormatChunkSize::PCMWAVEFORMAT};
+    constexpr auto formatChunkSize {wav::FormatChunkSize::WAVEFORMATEX};
 
     const auto [bitDepth, formatCode] = wav::bitDepthAndFormatCode (encoding);
     const uint16_t bytesPerSample {static_cast<uint16_t> (bitDepth / 8)};
     const uint16_t blockAlign     {static_cast<uint16_t> (channels * bytesPerSample)};
     const uint32_t byteRate       {sampleRate * blockAlign};
     const uint32_t dataChunkSize  {frames * blockAlign};
-    const uint32_t riffChunkSize  {36 + dataChunkSize + (dataChunkSize % 2)};
+    const uint32_t riffChunkSize  {38 + dataChunkSize + (dataChunkSize % 2)};
 
     std::vector<float> zeros (frames * channels, 0.f);
 
@@ -145,6 +147,7 @@ void TestHeader (wav::ExportFormat encoding,
     Compare (h.byteRate == byteRate,            "byte rate", failures);
     Compare (h.blockAlign == blockAlign,        "block align", failures);
     Compare (h.bitsPerSample == bitDepth,       "bit depth", failures);
+    Compare (h.cbSize == 0,                     "cbSize", failures);
 
     Compare (h.dataChunkSize == dataChunkSize,  "data chunk size", failures);
     Compare (h.dataID == "data",                "data id", failures);

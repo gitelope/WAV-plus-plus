@@ -231,10 +231,10 @@ inline void ChunkInfo::ReadFormatChunk (FILE * in)
     // WAVEFORMATEXTENSIBLE should have a format chunk size of 40 (18 + 22) and a cbSize of 22.
     if (format.size == FormatChunkSize::WAVEFORMATEX || format.size == FormatChunkSize::WAVEFORMATEXTENSIBLE)
     {
-        format.extraFormatInformationSize = uint16_le (in); // a.k.a. cbSize
-        if (format.extraFormatInformationSize != format.size - FormatChunkSize::WAVEFORMATEX)
+        format.cbSize = uint16_le (in);
+        if (format.cbSize != format.size - FormatChunkSize::WAVEFORMATEX)
         {
-            throw ReadError ("Invalid cbSize: " + std::to_string (format.extraFormatInformationSize));
+            throw ReadError ("Invalid cbSize: " + std::to_string (format.cbSize));
         }
     }
 
@@ -427,7 +427,7 @@ inline std::ostream & operator<< (std::ostream & os, FormatChunk const & format)
         format.size == FormatChunkSize::WAVEFORMATEXTENSIBLE)
     {
         os << '\n'
-        << "extra format information size (cbSize): " << format.extraFormatInformationSize;
+        << "extra format information size (cbSize): " << format.cbSize;
     }
     // WAVEFORMATEXTENSIBLE
     if (format.size == FormatChunkSize::WAVEFORMATEXTENSIBLE)

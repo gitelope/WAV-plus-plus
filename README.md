@@ -234,7 +234,7 @@ wav::ExportFormat::FloatPCM_64
 ```
 Mono, stereo, and multichannel layouts are supported.
 
-`PCMWAVEFORMAT` (16-byte `fmt` chunk size) is used.
+`WAVEFORMATEX` (18-byte `fmt` chunk size) is used.
 
 ### Opening a file for writing
 
@@ -333,24 +333,25 @@ chunks present
 --------------
 RIFF 0
 fmt  12
-data 36
+data 38
 
 RIFF chunk
 ----------
 id: RIFF
-chunk size: 1536036 (= file size in bytes minus 8)
+chunk size: 1536038 (= file size in bytes minus 8)
 format: WAVE
 
 fmt  chunk
 ----------
 format id: fmt 
-format chunk size: 16 (PCMWAVEFORMAT)
+format chunk size: 18 (WAVEFORMATEX)
 format: 0x0003 (IEEE float)
-channels: 1
+channels: 2
 sample rate: 48000
-byte rate: 192000
-block align: 4
+byte rate: 384000
+block align: 8
 bits per sample: 32
+extra format information size (cbSize): 0
 
 data chunk
 ----------
@@ -363,7 +364,7 @@ For a short metadata summary:
 std::cout << info.summary() << std::endl;
 ```
 ```
-WAVE 32-bit float PCM / 48 kHz / mono / 8.0 seconds / 384000 frames / 1.5 MB of audio
+WAVE 32-bit float PCM / 48 kHz / stereo / 4.0 seconds / 192000 frames / 1.5 MB of audio
 ```
 
 ## License

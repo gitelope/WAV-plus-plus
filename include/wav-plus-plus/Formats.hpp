@@ -48,7 +48,7 @@ namespace FormatChunkSize
 {
 inline constexpr uint32_t WAVEFORMAT           = 14;
 inline constexpr uint32_t PCMWAVEFORMAT        = 16; // 14+2      (adds bitsPerSample)
-inline constexpr uint32_t WAVEFORMATEX         = 18; // 14+2+2    (adds cbSize, here renamed extraFormatInformationSize)
+inline constexpr uint32_t WAVEFORMATEX         = 18; // 14+2+2    (adds cbSize)
 inline constexpr uint32_t WAVEFORMATEXTENSIBLE = 40; // 14+2+2+22 (adds validBitsPerSample, channel bit mask, and sub-format GUID)
 }
 
