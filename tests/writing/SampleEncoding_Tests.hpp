@@ -13,7 +13,7 @@ void TestSampleEncoding (TestLog & log)
     const std::string filename {"test.wav"};
     constexpr auto sampleRate  {48000};
     constexpr auto channels    {1};
-    constexpr auto headerSize  {44};
+    constexpr auto headerSize  {46}; // simple WAVEFORMATEX
 
     const std::vector<float>  out_float
     {-1.f, -0.875f, -0.75f, -0.625f, -0.5f, -0.25f, 0.f, 0.25f, 0.5f, 0.625f, 0.75f, 0.875f, 1.f};

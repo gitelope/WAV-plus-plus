@@ -494,13 +494,15 @@ inline void Writer::WriteHeader (uint32_t sampleRate)
     if (!file) return;
 
     const auto bytesPerSample {bitsPerSample / 8U};
-    constexpr auto formatChunkSize {FormatChunkSize::PCMWAVEFORMAT};
+    constexpr auto formatChunkSize {FormatChunkSize::WAVEFORMATEX};
 
     // blocks/sec * samples/block * bytes/sample = bytes/sec
     const auto bytesPerSecond {sampleRate * channels * bytesPerSample};
 
     // block size in bytes = samples/block * bytes/sample
     const auto blockAlign {static_cast<uint16_t> (channels * bytesPerSample)};
+
+    const auto cbSize {0};
 
     // RIFF header
     WriteToHeader (file.get(), "RIFF");
@@ -520,6 +522,7 @@ inline void Writer::WriteHeader (uint32_t sampleRate)
     WriteToHeader (file.get(), static_cast<uint32_t> (bytesPerSecond));
     WriteToHeader (file.get(), static_cast<uint16_t> (blockAlign));
     WriteToHeader (file.get(), static_cast<uint16_t> (bitsPerSample));
+    WriteToHeader (file.get(), static_cast<uint16_t> (cbSize));
 
     // data chunk header
     WriteToHeader (file.get(), "data");
@@ -554,35 +557,36 @@ inline void Writer::SetMaximumDataChunkSize (uint16_t blockAlign)
     // bytes per second - 4 bytes
     // block align - 2 bytes
     // bits per sample - 2 bytes
+    // cbSize - 2 bytes
     // ---
     // "data" - 4 bytes
     // data chunk size - 4 bytes
     // data - bytes = data chunk size
     // 1 padding byte if data is odd number of bytes
     //
-    // Lettting
+    // Letting
     // R = RIFF chunk size
     // D = data chunk size
     // we can express RIFF chunk size as a function of
     // data chunk size:
     //
-    // R = 36 + D + (D % 2)
+    // R = 38 + D + (D % 2)
     //
     // Since the padding byte for odd sizes ensures that D + (D % 2)
     // is always even, we know that R must be even.
     // Therefore it can't be 2^32 - 1, but it could be 2^32 - 2,
     // which gives us the maximum value for D:
-    // D + (D % 2) = 2^32 - 2 - 36 = 2^32 - 38 = 4,294,967,258
-    // D = 4,294,967,258 - (D % 2)
+    // D + (D % 2) = 2^32 - 2 - 38 = 2^32 - 40 = 4,294,967,256
+    // D = 4,294,967,256 - (D % 2)
     // The largest D will be an even value:
-    // Dmax = 4,294,967,258
+    // Dmax = 4,294,967,256
     //
     // When we constrain the data chunk size so that the data chunk contains
     // whole number of blocks, a.k.a. frames, we get
     // Dmax_blockAligned = floor (Dmax / blockSize) * blockSize
-    // = floor (4,294,967,258 / blockSize) * blockSize
+    // = floor (4,294,967,256 / blockSize) * blockSize
     // (Integer division gives us the floor for free.)
-    maxDataChunkSize = (4'294'967'258 / blockAlign) * blockAlign;
+    maxDataChunkSize = (4'294'967'256 / blockAlign) * blockAlign;
 }
 
 inline void Writer::Close()
@@ -641,9 +645,9 @@ inline void Writer::UpdateHeader (uint32_t dataChunkSize)
     WriteToHeader (file.get(), dataChunkSize);
 
     // Update RIFF chunk size, including padding if present.
-    // See WriteHeader() comments for derivation of:
-    // R = 36 + D + (D % 2)
-    const uint32_t riffChunkSize {36 + dataChunkSize + (dataChunkSize % 2)};
+    // See SetMaximumDataChunkSize() comments for derivation of:
+    // R = 38 + D + (D % 2)
+    const uint32_t riffChunkSize {38 + dataChunkSize + (dataChunkSize % 2)};
     if (fseek (file.get(), riffChunkSizePosition, SEEK_SET) != 0)
     {
         throw WriteError ("Failed to reposition to RIFF chunk size");
