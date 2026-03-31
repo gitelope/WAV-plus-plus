@@ -234,7 +234,7 @@ wav::ExportFormat::FloatPCM_64
 ```
 Mono, stereo, and multichannel layouts are supported.
 
-`PCMWAVEFORMAT` is used.
+`PCMWAVEFORMAT` (16-byte `fmt` chunk size) is used.
 
 ### Opening a file for writing
 
