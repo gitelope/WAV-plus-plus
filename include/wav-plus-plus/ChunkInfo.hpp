@@ -42,6 +42,7 @@ struct FormatChunk
     // WAVEFORMATEXTENSIBLE:
     uint16_t validBitsPerSample {0};
     std::bitset<32> channelMask;
+    std::vector<SpeakerPosition> speakerPositions;
     GUID subFormat;
     std::string channelString () const;
 };

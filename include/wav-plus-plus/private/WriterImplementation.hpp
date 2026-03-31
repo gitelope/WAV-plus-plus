@@ -21,12 +21,36 @@ Writer::Writer (std::string const & filepath,
                 size_t bufferSizeInKB)
 :file (fopen (filepath.c_str(), "wb"), fclose)
 ,channels (channels)
+,fmtChunkSize (channels >= 3 ? FormatChunkSize::WAVEFORMATEXTENSIBLE : FormatChunkSize::WAVEFORMATEX)
 {
     if (!file)
     {
         throw WriteError ("Failed to open file for writing: " + filepath);
     }
 
+    SharedInitialization (exportFormat, sampleRate, bufferSizeInKB);
+}
+
+Writer::Writer (std::string const & filepath,
+                ExportFormat exportFormat,
+                uint32_t sampleRate,
+                std::vector<SpeakerPosition> const & speakerPositions,
+                size_t bufferSizeInKB)
+:file (fopen (filepath.c_str(), "wb"), fclose)
+,channels (static_cast<uint16_t> (speakerPositions.size()))
+,fmtChunkSize (FormatChunkSize::WAVEFORMATEXTENSIBLE)
+,channelMask (channelMaskFromPositions (speakerPositions))
+{
+    if (!file)
+    {
+        throw WriteError ("Failed to open file for writing: " + filepath);
+    }
+
+    SharedInitialization (exportFormat, sampleRate, bufferSizeInKB);
+}
+
+void Writer::SharedInitialization (ExportFormat exportFormat, uint32_t sampleRate, size_t bufferSizeInKB)
+{
     std::tie (this->bitsPerSample, this->formatCode) = bitDepthAndFormatCode (exportFormat);
 
     // Write header with placeholders for RIFF chunk size and data chunk size.
@@ -489,20 +513,29 @@ void WriteToHeader (FILE * out, T value)
     }
 }
 
+inline void WriteToHeader (FILE * out, GUID const & guid)
+{
+    WriteToHeader (out, guid.data1);
+    WriteToHeader (out, guid.data2);
+    WriteToHeader (out, guid.data3);
+    if (fwrite (guid.data4.data(), 1, guid.data4.size(), out) != guid.data4.size())
+    {
+        throw WriteError ("Failed to write GUID to file.");
+    }
+}
+
 inline void Writer::WriteHeader (uint32_t sampleRate)
 {
     if (!file) return;
 
     const auto bytesPerSample {bitsPerSample / 8U};
-    constexpr auto formatChunkSize {FormatChunkSize::WAVEFORMATEX};
+    const bool useExtensible {fmtChunkSize == FormatChunkSize::WAVEFORMATEXTENSIBLE};
 
     // blocks/sec * samples/block * bytes/sample = bytes/sec
     const auto bytesPerSecond {sampleRate * channels * bytesPerSample};
 
     // block size in bytes = samples/block * bytes/sample
     const auto blockAlign {static_cast<uint16_t> (channels * bytesPerSample)};
-
-    const auto cbSize {0};
 
     // RIFF header
     WriteToHeader (file.get(), "RIFF");
@@ -513,16 +546,31 @@ inline void Writer::WriteHeader (uint32_t sampleRate)
     WriteToHeader (file.get(), static_cast<uint32_t> (0));
     WriteToHeader (file.get(), "WAVE");
 
-    // fmt chunk
+    // fmt chunk — common to WAVEFORMATEX and WAVEFORMATEXTENSIBLE
     WriteToHeader (file.get(), "fmt ");
-    WriteToHeader (file.get(), static_cast<uint32_t> (formatChunkSize));
-    WriteToHeader (file.get(), static_cast<uint16_t> (formatCode));
+    WriteToHeader (file.get(), static_cast<uint32_t> (fmtChunkSize));
+    WriteToHeader (file.get(), static_cast<uint16_t> (useExtensible ? FormatCode::Extensible : formatCode));
     WriteToHeader (file.get(), static_cast<uint16_t> (channels));
     WriteToHeader (file.get(), static_cast<uint32_t> (sampleRate));
     WriteToHeader (file.get(), static_cast<uint32_t> (bytesPerSecond));
     WriteToHeader (file.get(), static_cast<uint16_t> (blockAlign));
     WriteToHeader (file.get(), static_cast<uint16_t> (bitsPerSample));
-    WriteToHeader (file.get(), static_cast<uint16_t> (cbSize));
+
+    if (useExtensible)
+    {
+        // fmt - WAVEFORMATEXTENSIBLE-specific
+        WriteToHeader (file.get(), static_cast<uint16_t> (22)); // cbSize
+        WriteToHeader (file.get(), static_cast<uint16_t> (bitsPerSample)); // validBitsPerSample
+        WriteToHeader (file.get(), static_cast<uint32_t> (channelMask));
+        WriteToHeader (file.get(), formatCode == FormatCode::LinearPCM
+                                   ? ExtensibleFormat::LinearPCM
+                                   : ExtensibleFormat::FloatPCM); // subformat
+    }
+    else
+    {
+        // fmt - WAVEFORMATEX-specific
+        WriteToHeader (file.get(), static_cast<uint16_t> (0)); // cbSize
+    }
 
     // data chunk header
     WriteToHeader (file.get(), "data");
@@ -545,48 +593,50 @@ inline void Writer::SetMaximumDataChunkSize (uint16_t blockAlign)
     // The maximum value can therefore be no more than 2^32 - 1
     // = 4,294,967,295.
     //
-    // RIFF chunk size includes:
+    // RIFF chunk size includes (everything after "RIFF" and its
+    // 4-byte size field):
     //
-    // "WAVE" - 4 bytes
-    // ---
-    // "fmt " - 4 bytes
-    // format chunk size - 4 bytes
-    // format code - 2 bytes
-    // channels - 2 bytes
-    // sample rate - 4 bytes
-    // bytes per second - 4 bytes
-    // block align - 2 bytes
-    // bits per sample - 2 bytes
-    // cbSize - 2 bytes
-    // ---
-    // "data" - 4 bytes
-    // data chunk size - 4 bytes
-    // data - bytes = data chunk size
-    // 1 padding byte if data is odd number of bytes
+    // "WAVE"             4 bytes
+    //
+    // "fmt "             4 bytes
+    // format chunk size  4 bytes (WAVEFORMATEX: 18, WAVEFORMATEXTENSIBLE: 40)
+    // format code        2 bytes
+    // channels           2 bytes
+    // sample rate        4 bytes
+    // bytes per second   4 bytes
+    // block align        2 bytes
+    // bits per sample    2 bytes
+    // cbSize             2 bytes (WAVEFORMATEX: 0, WAVEFORMATEXTENSIBLE: 22)
+    //
+    // "data"             4 bytes
+    // data chunk size    4 bytes
+    // [data]             <data chunk size> bytes
+    // padding            <data chunk size> % 2 bytes (= 1 byte of padding if odd, else none)
     //
     // Letting
     // R = RIFF chunk size
     // D = data chunk size
-    // we can express RIFF chunk size as a function of
-    // data chunk size:
+    // F = format chunk size
     //
-    // R = 38 + D + (D % 2)
+    // R = (20 + F) + D + (D % 2)
     //
     // Since the padding byte for odd sizes ensures that D + (D % 2)
     // is always even, we know that R must be even.
     // Therefore it can't be 2^32 - 1, but it could be 2^32 - 2,
     // which gives us the maximum value for D:
-    // D + (D % 2) = 2^32 - 2 - 38 = 2^32 - 40 = 4,294,967,256
-    // D = 4,294,967,256 - (D % 2)
+    // D + (D % 2) = 2^32 - 2 - 20 - F = 4,294,967,274 - F
+    // D = 4,294,967,274 - F - (D % 2)
     // The largest D will be an even value:
-    // Dmax = 4,294,967,256
+    // Dmax = 4,294,967,274 - F
     //
-    // When we constrain the data chunk size so that the data chunk contains
-    // whole number of blocks, a.k.a. frames, we get
-    // Dmax_blockAligned = floor (Dmax / blockSize) * blockSize
-    // = floor (4,294,967,256 / blockSize) * blockSize
+    // WAVEFORMATEX         (F = 18): Dmax = 4,294,967,256
+    // WAVEFORMATEXTENSIBLE (F = 40): Dmax = 4,294,967,234
+    //
+    // When we constrain the data chunk size so that the data chunk
+    // contains a whole number of blocks, a.k.a. frames, we get
+    // Dmax_blockAligned = floor (Dmax / blockAlign) * blockAlign
     // (Integer division gives us the floor for free.)
-    maxDataChunkSize = (4'294'967'256 / blockAlign) * blockAlign;
+    maxDataChunkSize = ((4'294'967'274 - fmtChunkSize) / blockAlign) * blockAlign;
 }
 
 inline void Writer::Close()
@@ -646,8 +696,8 @@ inline void Writer::UpdateHeader (uint32_t dataChunkSize)
 
     // Update RIFF chunk size, including padding if present.
     // See SetMaximumDataChunkSize() comments for derivation of:
-    // R = 38 + D + (D % 2)
-    const uint32_t riffChunkSize {38 + dataChunkSize + (dataChunkSize % 2)};
+    // R = (20 + F) + D + (D % 2)
+    const uint32_t riffChunkSize {(20 + fmtChunkSize) + dataChunkSize + (dataChunkSize % 2)};
     if (fseek (file.get(), riffChunkSizePosition, SEEK_SET) != 0)
     {
         throw WriteError ("Failed to reposition to RIFF chunk size");

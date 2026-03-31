@@ -30,22 +30,26 @@ void TestHeaders (TestLog & log)
 
 /*
 
- WAV++ uses WAVEFORMATEX (fmt chunk size = 18)
- with the following chunk order:
+ WAV++ uses the following chunk order:
 
  RIFF
      fmt
      data
 
- Headers will always be 46 bytes long and are defined as
- everything from "RIFF" through the data chunk size that
- precedes the data portion of the data chunk.
+ When channels <= 2 and channel positions are not specified,
+ WAVEFORMATEX is used (fmt chunk size = 18, header size = 46 bytes).
 
- File size (in bytes) = 46 + dataChunkSize + pad,
- where pad is 1 if dataChunkSize is odd and 0 if even
+ When channels >= 3 or channel positions are specified,
+ WAVEFORMATEXTENSIBLE is used (fmt chunk size = 40, header size = 68 bytes).
 
- File size (in bytes) = riffChunkSize + 8
+ (A header is here defined as everything from "RIFF" through the data chunk
+ size that precedes the data portion of the data chunk.)
 
+ File size (in bytes)
+ = headerSize + dataChunkSize + pad*
+ = riffChunkSize + 8
+
+ * Pad is 1 if dataChunkSize is odd and 0 if even.
 */
 
 struct Header
@@ -65,17 +69,24 @@ struct Header
     ,blockAlign    (wav::uint16_le (in))
     ,bitsPerSample (wav::uint16_le (in))
     ,cbSize        (wav::uint16_le (in))
+    {
+        if (fmtChunkSize == wav::FormatChunkSize::WAVEFORMATEXTENSIBLE)
+        {
+            validBitsPerSample = wav::uint16_le (in);
+            channelMaskValue   = wav::uint32_le (in);
+            subFormat          = wav::guid (in);
+        }
 
-    ,dataID        (wav::fourCharacterCode (in))
-    ,dataChunkSize (wav::uint32_le (in))
-    {}
+        dataID        = wav::fourCharacterCode (in);
+        dataChunkSize = wav::uint32_le (in);
+    }
 
     // RIFF
     std::string riffID;
     uint32_t riffChunkSize;
     std::string riffFormat;
 
-    // fmt subchunk
+    // fmt subchunk — fields common to WAVEFORMATEX and WAVEFORMATEXTENSIBLE
     std::string fmtID;
     uint32_t fmtChunkSize;
     uint16_t formatCode;
@@ -85,6 +96,11 @@ struct Header
     uint16_t blockAlign;
     uint16_t bitsPerSample;
     uint16_t cbSize;
+
+    // fmt subchunk — WAVEFORMATEXTENSIBLE-specific fields
+    uint16_t validBitsPerSample {0};
+    uint32_t channelMaskValue {0};
+    wav::GUID subFormat {};
 
     // data subchunk (does not include the actual data)
     std::string dataID;
@@ -116,14 +132,22 @@ void TestHeader (wav::ExportFormat encoding,
                  TestLog & log)
 {
     constexpr std::string filename {"test.wav"};
-    constexpr auto formatChunkSize {wav::FormatChunkSize::WAVEFORMATEX};
+    const bool useExtensible {channels >= 3};
+
+    const auto expectedFmtChunkSize {useExtensible
+        ? wav::FormatChunkSize::WAVEFORMATEXTENSIBLE
+        : wav::FormatChunkSize::WAVEFORMATEX};
 
     const auto [bitDepth, formatCode] = wav::bitDepthAndFormatCode (encoding);
-    const uint16_t bytesPerSample {static_cast<uint16_t> (bitDepth / 8)};
-    const uint16_t blockAlign     {static_cast<uint16_t> (channels * bytesPerSample)};
-    const uint32_t byteRate       {sampleRate * blockAlign};
-    const uint32_t dataChunkSize  {frames * blockAlign};
-    const uint32_t riffChunkSize  {38 + dataChunkSize + (dataChunkSize % 2)};
+    const uint16_t expectedFormatCode {useExtensible
+        ? wav::FormatCode::Extensible
+        : formatCode};
+
+    const auto bytesPerSample {bitDepth / 8U};
+    const auto blockAlign     {channels * bytesPerSample};
+    const auto byteRate       {sampleRate * blockAlign};
+    const auto dataChunkSize  {frames * blockAlign};
+    const auto riffChunkSize  {(20 + expectedFmtChunkSize) + dataChunkSize + (dataChunkSize % 2)};
 
     std::vector<float> zeros (frames * channels, 0.f);
 
@@ -135,27 +159,121 @@ void TestHeader (wav::ExportFormat encoding,
 
     std::string failures;
 
-    Compare (h.riffID == "RIFF",                "RIFF id", failures);
-    Compare (h.riffChunkSize == riffChunkSize,  "RIFF chunk size", failures);
-    Compare (h.riffFormat == "WAVE",            "RIFF format (WAVE)", failures);
+    Compare (h.riffID == "RIFF",                         "RIFF id", failures);
+    Compare (h.riffChunkSize == riffChunkSize,           "RIFF chunk size", failures);
+    Compare (h.riffFormat == "WAVE",                     "RIFF format (WAVE)", failures);
 
-    Compare (h.fmtID == "fmt ",                 "fmt id", failures);
-    Compare (h.fmtChunkSize == formatChunkSize, "fmt chunk size", failures);
-    Compare (h.formatCode == formatCode,        "format code", failures);
-    Compare (h.channels == channels,            "channels", failures);
-    Compare (h.sampleRate == sampleRate,        "sample rate", failures);
-    Compare (h.byteRate == byteRate,            "byte rate", failures);
-    Compare (h.blockAlign == blockAlign,        "block align", failures);
-    Compare (h.bitsPerSample == bitDepth,       "bit depth", failures);
-    Compare (h.cbSize == 0,                     "cbSize", failures);
+    Compare (h.fmtID == "fmt ",                          "fmt id", failures);
+    Compare (h.fmtChunkSize == expectedFmtChunkSize,     "fmt chunk size", failures);
+    Compare (h.formatCode == expectedFormatCode,         "format code", failures);
+    Compare (h.channels == channels,                     "channels", failures);
+    Compare (h.sampleRate == sampleRate,                 "sample rate", failures);
+    Compare (h.byteRate == byteRate,                     "byte rate", failures);
+    Compare (h.blockAlign == blockAlign,                 "block align", failures);
+    Compare (h.bitsPerSample == bitDepth,                "bit depth", failures);
 
-    Compare (h.dataChunkSize == dataChunkSize,  "data chunk size", failures);
-    Compare (h.dataID == "data",                "data id", failures);
+    if (useExtensible)
+    {
+        Compare (h.cbSize == 22,                         "cbSize", failures);
+        Compare (h.validBitsPerSample == bitDepth,       "validBitsPerSample", failures);
+        Compare (h.channelMaskValue == 0,                "channel mask", failures);
+
+        const auto expectedGUID {formatCode == wav::FormatCode::LinearPCM
+            ? wav::ExtensibleFormat::LinearPCM
+            : wav::ExtensibleFormat::FloatPCM};
+        Compare (h.subFormat == expectedGUID,            "SubFormat GUID", failures);
+    }
+    else
+    {
+        Compare (h.cbSize == 0,                          "cbSize", failures);
+    }
+
+    Compare (h.dataID == "data",                         "data id", failures);
+    Compare (h.dataChunkSize == dataChunkSize,           "data chunk size", failures);
 
     const auto logMessage
     {"WRITE HEADER - " + label + (failures.empty() ? "" : " failures: " + failures)};
 
     log.Record (failures.empty(), logMessage);
+}
+
+void TestSpeakerPositionHeader (TestLog & log)
+{
+    constexpr std::string filename {"test.wav"};
+
+    const std::vector<wav::SpeakerPosition> positions
+    {
+        wav::SpeakerPosition::FrontLeft,
+        wav::SpeakerPosition::FrontRight,
+        wav::SpeakerPosition::FrontCenter,
+        wav::SpeakerPosition::LowFrequency,
+        wav::SpeakerPosition::BackLeft,
+        wav::SpeakerPosition::BackRight
+    };
+
+    const auto channels   {static_cast<uint16_t> (positions.size())};
+    const auto encoding   {wav::ExportFormat::LinearPCM_24};
+    const auto sampleRate {48000};
+    const auto frames     {10};
+
+    const auto [bitDepth, formatCode] = wav::bitDepthAndFormatCode (encoding);
+    const auto bytesPerSample {bitDepth / 8U};
+    const auto blockAlign     {channels * bytesPerSample};
+    const auto byteRate       {sampleRate * blockAlign};
+    const auto dataChunkSize  {frames * blockAlign};
+    const auto expectedMask   {wav::channelMaskFromPositions (positions)};
+    const auto riffChunkSize  {(20 + wav::FormatChunkSize::WAVEFORMATEXTENSIBLE) + dataChunkSize + (dataChunkSize % 2)};
+
+    std::vector<float> zeros (frames * channels, 0.f);
+
+    wav::Writer writer {filename, encoding, sampleRate, positions};
+    writer.write (zeros);
+    writer.Close();
+
+    const auto h = ReadHeader (filename);
+
+    std::string failures;
+
+    Compare (h.riffID == "RIFF",                                           "RIFF id", failures);
+    Compare (h.riffChunkSize == riffChunkSize,                             "RIFF chunk size", failures);
+    Compare (h.riffFormat == "WAVE",                                       "RIFF format (WAVE)", failures);
+
+    Compare (h.fmtID == "fmt ",                                            "fmt id", failures);
+    Compare (h.fmtChunkSize == wav::FormatChunkSize::WAVEFORMATEXTENSIBLE, "fmt chunk size", failures);
+    Compare (h.formatCode == wav::FormatCode::Extensible,                  "format code", failures);
+    Compare (h.channels == channels,                                       "channels", failures);
+    Compare (h.sampleRate == sampleRate,                                   "sample rate", failures);
+    Compare (h.byteRate == byteRate,                                       "byte rate", failures);
+    Compare (h.blockAlign == blockAlign,                                   "block align", failures);
+    Compare (h.bitsPerSample == bitDepth,                                  "bit depth", failures);
+    Compare (h.cbSize == 22,                                               "cbSize", failures);
+    Compare (h.validBitsPerSample == bitDepth,                             "validBitsPerSample", failures);
+    Compare (h.channelMaskValue == expectedMask,                           "channel mask", failures);
+    Compare (h.subFormat == wav::ExtensibleFormat::LinearPCM,              "SubFormat GUID", failures);
+
+    Compare (h.dataID == "data",                                           "data id", failures);
+    Compare (h.dataChunkSize == dataChunkSize,                             "data chunk size", failures);
+
+    const auto logMessage {"WRITE HEADER - speaker positions (5.1)"
+        + std::string {failures.empty() ? "" : " failures: " + failures}};
+
+    log.Record (failures.empty(), logMessage);
+}
+
+void TestSpeakerPositionValidation (TestLog & log)
+{
+    // Duplicate speaker positions
+    bool caughtDuplicate {false};
+    try
+    {
+        wav::Writer writer {"test.wav", wav::ExportFormat::LinearPCM_16, 44100,
+            {wav::SpeakerPosition::FrontLeft, wav::SpeakerPosition::FrontLeft, wav::SpeakerPosition::FrontRight}};
+    }
+    catch (wav::WriteError const &)
+    {
+        caughtDuplicate = true;
+    }
+    log.Record (caughtDuplicate, "WRITE HEADER - duplicate speaker positions throws");
 }
 
 #endif

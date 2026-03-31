@@ -2,6 +2,8 @@
 #ifndef FormatsImplementation_hpp
 #define FormatsImplementation_hpp
 
+#include "../Exceptions.hpp"
+
 #include <format>
 #include <sstream>
 
@@ -54,6 +56,57 @@ inline std::string GUID::str() const
     std::ostringstream oss;
     oss << *this;
     return oss.str();
+}
+
+inline uint32_t channelMaskFromPositions (std::vector<SpeakerPosition> const & positions)
+{
+    uint32_t channelMask {0};
+    for (auto position : positions)
+    {
+        const auto positionBit {static_cast<uint32_t> (position)};
+        if (channelMask & positionBit)
+        {
+            throw WriteError ("Duplicate speaker position in channel mask.");
+        }
+        channelMask |= positionBit;
+    }
+    return channelMask;
+}
+
+inline std::vector<SpeakerPosition> speakerPositionsFromMask (uint32_t channelMask)
+{
+    constexpr std::array<SpeakerPosition, 18> allPositions
+    {
+        SpeakerPosition::FrontLeft,
+        SpeakerPosition::FrontRight,
+        SpeakerPosition::FrontCenter,
+        SpeakerPosition::LowFrequency,
+        SpeakerPosition::BackLeft,
+        SpeakerPosition::BackRight,
+        SpeakerPosition::FrontLeftOfCenter,
+        SpeakerPosition::FrontRightOfCenter,
+        SpeakerPosition::BackCenter,
+        SpeakerPosition::SideLeft,
+        SpeakerPosition::SideRight,
+        SpeakerPosition::TopCenter,
+        SpeakerPosition::TopFrontLeft,
+        SpeakerPosition::TopFrontCenter,
+        SpeakerPosition::TopFrontRight,
+        SpeakerPosition::TopBackLeft,
+        SpeakerPosition::TopBackCenter,
+        SpeakerPosition::TopBackRight
+    };
+
+    std::vector<SpeakerPosition> result;
+    for (auto position : allPositions)
+    {
+        const auto positionBit {static_cast<uint32_t> (position)};
+        if (channelMask & positionBit)
+        {
+            result.push_back (position);
+        }
+    }
+    return result;
 }
 
 }

@@ -234,7 +234,9 @@ wav::ExportFormat::FloatPCM_64
 ```
 Mono, stereo, and multichannel layouts are supported.
 
-`WAVEFORMATEX` (18-byte `fmt` chunk size) is used.
+For mono and stereo files, `WAVEFORMATEX` is used (18-byte `fmt` chunk) unless speaker positions are specified.
+
+For multichannel files (3+ channels) and files where speaker positions have been specified, WAVEFORMATEXTENSIBLE` is used (40-byte `fmt` chunk).
 
 ### Opening a file for writing
 
@@ -248,6 +250,28 @@ const auto channels   {2};
 
 wav::Writer writer {filepath, encoding, sampleRate, channels};
 ```
+
+#### Speaker positions (channel mask)
+
+An overloaded constructor accepts a `std::vector<wav::SpeakerPosition>` in place of `channels`:
+
+```cpp
+const std::vector<wav::SpeakerPosition> positions
+{
+    wav::SpeakerPosition::FrontLeft,
+    wav::SpeakerPosition::FrontRight,
+    wav::SpeakerPosition::FrontCenter,
+    wav::SpeakerPosition::LowFrequency,
+    wav::SpeakerPosition::BackLeft,
+    wav::SpeakerPosition::BackRight
+};
+
+wav::Writer writer {filepath, encoding, sampleRate, positions};
+```
+
+Available speaker positions: `FrontLeft`, `FrontRight`, `FrontCenter`, `LowFrequency`, `BackLeft`, `BackRight`, `FrontLeftOfCenter`, `FrontRightOfCenter`, `BackCenter`, `SideLeft`, `SideRight`, `TopCenter`, `TopFrontLeft`, `TopFrontCenter`, `TopFrontRight`, `TopBackLeft`, `TopBackCenter`, `TopBackRight`.
+
+When no speaker positions are specified but there are three or more channels, `WAVEFORMATEXTENSIBLE` is still used but the channel mask is set to `0`.
 
 ### Sample ordering
 

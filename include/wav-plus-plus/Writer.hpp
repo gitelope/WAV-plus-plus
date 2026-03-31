@@ -25,6 +25,15 @@ public:
             uint16_t channels,
             size_t bufferSizeInKB = 32);
 
+    // Use to specify speaker positions in a multichannel file.
+    // (Other ctor can be used to create a multichannel file with
+    // unassigned speaker positions.)
+    Writer (std::string const & filepath,
+            ExportFormat exportFormat,
+            uint32_t sampleRate,
+            std::vector<SpeakerPosition> const & speakerPositions,
+            size_t bufferSizeInKB = 32);
+
     ~Writer(); // Closes file if client does not.
 
     // write()
@@ -66,6 +75,8 @@ private:
     uint16_t channels;
     uint16_t bitsPerSample;
     uint16_t formatCode;
+    uint32_t fmtChunkSize;
+    uint32_t channelMask {0};
 
     size_t totalSamplesWritten {0};
     // Largest allowable data chunk given header size, encoding, channels,
@@ -86,6 +97,7 @@ private:
     std::vector<float>   bufferFloatPCM32;
     std::vector<double>  bufferFloatPCM64;
 
+    void SharedInitialization (ExportFormat exportFormat, uint32_t sampleRate, size_t bufferSizeInKB);
     void WriteHeader (uint32_t sampleRate);
     void SetMaximumDataChunkSize (uint16_t blockAlign);
 

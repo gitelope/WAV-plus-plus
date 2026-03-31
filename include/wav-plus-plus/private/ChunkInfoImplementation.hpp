@@ -242,7 +242,9 @@ inline void ChunkInfo::ReadFormatChunk (FILE * in)
     if (format.size == FormatChunkSize::WAVEFORMATEXTENSIBLE)
     {
         format.validBitsPerSample = uint16_le (in);
-        format.channelMask = std::bitset<32> (uint32_le (in));
+        const auto channelMaskValue {uint32_le (in)};
+        format.channelMask = std::bitset<32> (channelMaskValue);
+        format.speakerPositions = speakerPositionsFromMask (channelMaskValue);
         format.subFormat = guid (in);
 
         if (format.subFormat != ExtensibleFormat::LinearPCM && format.subFormat != ExtensibleFormat::FloatPCM)
