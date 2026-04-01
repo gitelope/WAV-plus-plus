@@ -9,6 +9,7 @@
 #include <cstdint>
 #include <cstdio>
 #include <string>
+#include <utility>
 #include <vector>
 
 void TestHeader (wav::ExportFormat,
@@ -21,51 +22,61 @@ void TestHeader (wav::ExportFormat,
 void TestHeaders (TestLog & log)
 {
     // Verify the entire header.
-
+    //
     // WAVEFORMATEX when channels <= 2, channelMask == 0, and bitsPerSample <= 16.
-    // WAVEFORMATEXTENSIBLE otherwise.
-
-    // Each encoding is tested at mono, stereo, and 3+ channels.
-
+    // WAVEFORMATEXTENSIBLE otherwise:
+    //
+    // unsigned 8-bit LPCM: WAVEFORMATEX for channels <= 2, WAVEFORMATEXTENSIBLE for 3+ channels
+    // signed 16-bit LPCM:  WAVEFORMATEX for channels <= 2, WAVEFORMATEXTENSIBLE for 3+ channels
+    // signed 24-bit LPCM:  WAVEFORMATEXTENSIBLE
+    // signed 32-bit LPCM:  WAVEFORMATEXTENSIBLE
+    // 32-bit float PCM:    WAVEFORMATEXTENSIBLE
+    // 64-bit float PCM:    WAVEFORMATEXTENSIBLE
+    //
     // Padding is tested for 8-bit and 24-bit—the only encodings that can produce
-    // an odd block align (bytes per frame) since that requires byte depth, number
-    // of frames, and number of channels all to be odd.
-
+    // an odd number of data bytes since that requires bytes per sample,
+    // channel count, and frame count to all be odd.
+    //
     // Speaker position and channel mask validation are tested separately.
 
-    //          encoding                          sr       ch  frames  label
-    //-----------------------------------------------------------------------------------
-    //
-    // unsigned 8-bit LPCM — WAVEFORMATEX for channels <= 2, WAVEFORMATEXTENSIBLE for 3+ channels
-    TestHeader (wav::ExportFormat::LinearPCM_8,   22050,   1,  4,      "u8 mono",        log);
-    TestHeader (wav::ExportFormat::LinearPCM_8,   22050,   1,  5,      "u8 mono (pad)",  log);
-    TestHeader (wav::ExportFormat::LinearPCM_8,   22050,   2,  3,      "u8 stereo",      log);
-    TestHeader (wav::ExportFormat::LinearPCM_8,   22050,   3,  5,      "u8 3ch (pad)",   log);
-    //
-    // signed 16-bit LPCM — WAVEFORMATEX for channels <= 2, WAVEFORMATEXTENSIBLE for 3+ channels
-    TestHeader (wav::ExportFormat::LinearPCM_16,  44100,   1,  3,      "s16 mono",       log);
-    TestHeader (wav::ExportFormat::LinearPCM_16,  44100,   2,  3,      "s16 stereo",     log);
-    TestHeader (wav::ExportFormat::LinearPCM_16,  44100,   3,  5,      "s16 3ch",        log);
-    //
-    // signed 24-bit LPCM — WAVEFORMATEXTENSIBLE
-    TestHeader (wav::ExportFormat::LinearPCM_24,  48000,   1,  7,      "s24 mono (pad)", log);
-    TestHeader (wav::ExportFormat::LinearPCM_24,  48000,   2,  5,      "s24 stereo",     log);
-    TestHeader (wav::ExportFormat::LinearPCM_24,  48000,   3,  3,      "s24 3ch (pad)",  log);
-    //
-    // signed 32-bit LPCM — WAVEFORMATEXTENSIBLE
-    TestHeader (wav::ExportFormat::LinearPCM_32,  96000,   1,  5,      "s32 mono",       log);
-    TestHeader (wav::ExportFormat::LinearPCM_32,  96000,   2,  5,      "s32 stereo",     log);
-    TestHeader (wav::ExportFormat::LinearPCM_32,  96000,   3,  5,      "s32 3ch",        log);
+    constexpr auto maxChannels {4};
 
-    // 32-bit float PCM — WAVEFORMATEXTENSIBLE
-    TestHeader (wav::ExportFormat::FloatPCM_32,   192000,  1,  3,      "f32 mono",       log);
-    TestHeader (wav::ExportFormat::FloatPCM_32,   192000,  2,  3,      "f32 stereo",     log);
-    TestHeader (wav::ExportFormat::FloatPCM_32,   192000,  5,  3,      "f32 5ch",        log);
+    constexpr auto frames {5};
+    constexpr auto sampleRate {48000};
 
-    // 64-bit float PCM — WAVEFORMATEXTENSIBLE
-    TestHeader (wav::ExportFormat::FloatPCM_64,   384000,  1,  5,      "f64 mono",       log);
-    TestHeader (wav::ExportFormat::FloatPCM_64,   384000,  2,  5,      "f64 stereo",     log);
-    TestHeader (wav::ExportFormat::FloatPCM_64,   384000,  4,  5,      "f64 4ch",        log);
+    const std::vector<std::pair<wav::ExportFormat, std::string>> exportFormatAndLabelPrefix
+    {
+        {wav::ExportFormat::LinearPCM_8,  "u8"},
+        {wav::ExportFormat::LinearPCM_16, "s16"},
+        {wav::ExportFormat::LinearPCM_24, "s24"},
+        {wav::ExportFormat::LinearPCM_32, "s32"},
+        {wav::ExportFormat::FloatPCM_32,  "f32"},
+        {wav::ExportFormat::FloatPCM_64,  "f64"},
+    };
+
+    auto const testLabel = [] (std::string const & prefix,
+                               wav::ExportFormat encoding, int channels)
+    {
+        const auto [bitDepth, _] = wav::bitDepthAndFormatCode (encoding);
+        const auto bytesPerSample {bitDepth / 8};
+
+        std::string label {prefix};
+        label += ", " + std::to_string (channels) + "ch";
+        if (channels >= 3 || bitDepth > 16) label += ", WAVEFORMATEXTENSIBLE";
+        else label += ", WAVEFORMATEX";
+        if ((frames * channels * bytesPerSample) % 2) label += " (padded)";
+        return label;
+    };
+
+    for (auto const & [exportFormat, prefix] : exportFormatAndLabelPrefix)
+    {
+        for (auto channels = 1; channels <= maxChannels; ++channels)
+        {
+            const auto label = testLabel (prefix, exportFormat, channels);
+
+            TestHeader (exportFormat, sampleRate, channels, frames, label, log);
+        }
+    }
 }
 
 /*
