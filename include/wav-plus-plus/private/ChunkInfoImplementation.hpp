@@ -7,6 +7,7 @@
 
 #include <algorithm>
 #include <array>
+#include <bit>
 #include <cassert>
 #include <format>
 #include <limits>
@@ -242,9 +243,8 @@ inline void ChunkInfo::ReadFormatChunk (FILE * in)
     if (format.size == FormatChunkSize::WAVEFORMATEXTENSIBLE)
     {
         format.validBitsPerSample = uint16_le (in);
-        const auto channelMaskValue {uint32_le (in)};
-        format.channelMask = std::bitset<32> (channelMaskValue);
-        format.speakerPositions = speakerPositionsFromMask (channelMaskValue);
+        format.channelMask = uint32_le (in);
+        format.speakerPositions = speakerPositionsFromMask (format.channelMask);
         format.subFormat = guid (in);
 
         if (format.subFormat != ExtensibleFormat::LinearPCM && format.subFormat != ExtensibleFormat::FloatPCM)
@@ -436,8 +436,20 @@ inline std::ostream & operator<< (std::ostream & os, FormatChunk const & format)
     {
         os << '\n'
         << "valid bits per sample: " << format.validBitsPerSample << '\n'
-        << "channel mask: " << format.channelMask << '\n' << format.channelString() << '\n'
-        << "sub format GUID: " << format.subFormat;
+        << "channel mask: " << std::format ("0x{:08X}", format.channelMask) << '\n'
+        // << std::format ("{:032b}",  format.channelMask) << '\n' \\ binary
+        << format.channelString() << '\n'
+        << "sub format GUID: " << format.subFormat << " (";
+        if (format.subFormat == ExtensibleFormat::LinearPCM)
+        {
+            os << "linear PCM";
+        }
+        else
+        {
+            assert (format.subFormat == ExtensibleFormat::FloatPCM);
+            os << "float PCM";
+        }
+        os << ")";
     }
 
     return os;
@@ -523,7 +535,7 @@ inline std::string FormatChunk::channelString() const
      Note: Channel number is channel's position in the data interleaving sequence, not channel mask index.
      */
 
-    constexpr std::array<std::string_view,18> speakerPositions
+    constexpr std::array<std::string_view,18> speakerPositionsNames
     {
         "front left",             //     0x1   0
         "front right",            //     0x2   1
@@ -549,27 +561,27 @@ inline std::string FormatChunk::channelString() const
 
     int channel {0};
     size_t speaker_index {0};
-    size_t positions_assigned {0};
+    int positions_assigned {0};
     bool first_element {true};
-
-    constexpr std::string indent = "    ";
 
     // Assign speaker position strings to channels until we either
     // run out of channels or run out of speaker positions set in the channel mask.
-    for (; channel < channels && positions_assigned < channelMask.count(); ++speaker_index)
+    for (; channel < channels && positions_assigned < std::popcount (channelMask); ++speaker_index)
     {
-        if (channelMask.test (speaker_index))
+        if ((channelMask >> speaker_index) & 1u)
         {
             ++positions_assigned;
-            result += std::exchange(first_element, false) ? indent : ", ";
-            result += "[" + std::to_string (channel++) + "] " + std::string(speakerPositions [speaker_index]);
+            if (first_element) first_element = false;
+            else result += ", ";
+            result += "[" + std::to_string (channel++) + "] " + std::string (speakerPositionsNames [speaker_index]);
         }
     }
 
     // Declare any channels without assigned speaker positions as "unassigned".
     for (; channel < channels; ++channel)
     {
-        result += std::exchange(first_element, false) ? indent : ", ";
+        if (first_element) first_element = false;
+        else result += ", ";
         result += "[" + std::to_string (channel) + "] unassigned";
     }
 
@@ -577,13 +589,21 @@ inline std::string FormatChunk::channelString() const
     // in the channel mask than there are actual channels of audio.
     first_element = true;
 
-    for (; positions_assigned < channelMask.count(); ++speaker_index)
+    for (; positions_assigned < std::popcount (channelMask); ++speaker_index)
     {
-        if (channelMask.test (speaker_index))
+        if ((channelMask >> speaker_index) & 1u)
         {
             ++positions_assigned;
-            result += std::exchange(first_element, false) ? "\n" + indent + "No audio found for position(s) set in channel mask: " : ", ";
-            result += speakerPositions [speaker_index];
+            if (first_element)
+            {
+                result += "\nNo audio found for position(s) set in channel mask: ";
+                first_element = false;
+            }
+            else
+            {
+                result += ", ";
+            }
+            result += speakerPositionsNames [speaker_index];
         }
     }
 
