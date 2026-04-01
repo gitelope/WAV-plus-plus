@@ -234,9 +234,9 @@ wav::ExportFormat::FloatPCM_64
 ```
 Mono, stereo, and multichannel layouts are supported.
 
-For mono and stereo files, `WAVEFORMATEX` is used (18-byte `fmt` chunk) unless speaker positions are specified.
+`WAVEFORMATEX` is used (18-byte `fmt` chunk) for mono and stereo 8-bit and 16-bit LPCM files without a channel mask.
 
-For multichannel files (3+ channels) and files where speaker positions have been specified, `WAVEFORMATEXTENSIBLE` is used (40-byte `fmt` chunk).
+`WAVEFORMATEXTENSIBLE` is used (40-byte `fmt` chunk) when the channel count is 3 or more, a channel mask is set, or the bit depth exceeds 16.
 
 ### Opening a file for writing
 

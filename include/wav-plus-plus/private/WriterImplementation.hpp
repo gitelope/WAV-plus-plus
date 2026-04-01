@@ -22,7 +22,6 @@ Writer::Writer (std::string const & filepath,
                 size_t bufferSizeInKB)
 :file (fopen (filepath.c_str(), "wb"), fclose)
 ,channels (channels)
-,fmtChunkSize ((channels >= 3 || channelMask) ? FormatChunkSize::WAVEFORMATEXTENSIBLE : FormatChunkSize::WAVEFORMATEX)
 ,channelMask (channelMask)
 {
     if (channelMask & ~SpeakerPosition::ValidBits)
@@ -36,6 +35,10 @@ Writer::Writer (std::string const & filepath,
     }
 
     std::tie (this->bitsPerSample, this->formatCode) = bitDepthAndFormatCode (exportFormat);
+
+    fmtChunkSize = (channels >= 3 || channelMask || bitsPerSample > 16)
+        ? FormatChunkSize::WAVEFORMATEXTENSIBLE
+        : FormatChunkSize::WAVEFORMATEX;
 
     // Write header with placeholders for RIFF chunk size and data chunk size.
     WriteHeader (sampleRate);
