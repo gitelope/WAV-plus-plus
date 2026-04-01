@@ -5,19 +5,14 @@
 #include "../../include/wav-plus-plus/Writer.hpp"
 #include "../../include/wav-plus-plus/private/ReadingBytes.hpp"
 
+#include <array>
 #include <bit>
 #include <cstdint>
 #include <cstdio>
 #include <string>
-#include <utility>
 #include <vector>
 
-void TestHeader (wav::ExportFormat,
-                 uint32_t sampleRate,
-                 uint16_t channels,
-                 uint32_t frames,
-                 std::string const & label,
-                 TestLog &);
+void TestHeader (wav::ExportFormat, uint32_t, uint16_t, uint32_t, TestLog &);
 
 void TestHeaders (TestLog & log)
 {
@@ -44,37 +39,21 @@ void TestHeaders (TestLog & log)
     constexpr auto frames {5};
     constexpr auto sampleRate {48000};
 
-    const std::vector<std::pair<wav::ExportFormat, std::string>> exportFormatAndLabelPrefix
-    {
-        {wav::ExportFormat::LinearPCM_8,  "u8"},
-        {wav::ExportFormat::LinearPCM_16, "s16"},
-        {wav::ExportFormat::LinearPCM_24, "s24"},
-        {wav::ExportFormat::LinearPCM_32, "s32"},
-        {wav::ExportFormat::FloatPCM_32,  "f32"},
-        {wav::ExportFormat::FloatPCM_64,  "f64"},
-    };
+    constexpr std::array<wav::ExportFormat, 6> exportFormats
+    {{
+        wav::ExportFormat::LinearPCM_8,
+        wav::ExportFormat::LinearPCM_16,
+        wav::ExportFormat::LinearPCM_24,
+        wav::ExportFormat::LinearPCM_32,
+        wav::ExportFormat::FloatPCM_32,
+        wav::ExportFormat::FloatPCM_64,
+    }};
 
-    auto const testLabel = [] (std::string const & prefix,
-                               wav::ExportFormat encoding, int channels)
+    for (auto const exportFormat : exportFormats)
     {
-        const auto [bitDepth, _] = wav::bitDepthAndFormatCode (encoding);
-        const auto bytesPerSample {bitDepth / 8};
-
-        std::string label {prefix};
-        label += ", " + std::to_string (channels) + "ch";
-        if (channels >= 3 || bitDepth > 16) label += ", WAVEFORMATEXTENSIBLE";
-        else label += ", WAVEFORMATEX";
-        if ((frames * channels * bytesPerSample) % 2) label += " (padded)";
-        return label;
-    };
-
-    for (auto const & [exportFormat, prefix] : exportFormatAndLabelPrefix)
-    {
-        for (auto channels = 1; channels <= maxChannels; ++channels)
+        for (uint16_t channels = 1; channels <= maxChannels; ++channels)
         {
-            const auto label = testLabel (prefix, exportFormat, channels);
-
-            TestHeader (exportFormat, sampleRate, channels, frames, label, log);
+            TestHeader (exportFormat, sampleRate, channels, frames, log);
         }
     }
 }
@@ -84,8 +63,8 @@ void TestHeaders (TestLog & log)
  WAV++ uses the following chunk order:
 
  RIFF
-     fmt
-     data
+ fmt
+ data
 
  WAVEFORMATEX is used (fmt chunk size = 18, header size = 46 bytes)
  when channels <= 2, channelMask == 0, and bitsPerSample <= 16.
@@ -101,7 +80,7 @@ void TestHeaders (TestLog & log)
  = riffChunkSize + 8
 
  * Pad is 1 if dataChunkSize is odd and 0 if even.
-*/
+ */
 
 struct Header
 {
@@ -158,31 +137,94 @@ struct Header
     uint32_t dataChunkSize;
 };
 
-Header ReadHeader (std::string const & filepath)
+Header ReadHeader (std::string const &);
+void Compare (bool, std::string const &, std::string &);
+
+void TestSpeakerPositionHeader (TestLog & log)
 {
-    auto in = wav::fileForReading (filepath);
-    const Header h {in.get()};
-    wav::Close (in);
-    return h;
+    constexpr std::string filename {"test.wav"};
+
+    const uint32_t channelMask =
+    wav::SpeakerPosition::FrontLeft    |
+    wav::SpeakerPosition::FrontRight   |
+    wav::SpeakerPosition::FrontCenter  |
+    wav::SpeakerPosition::LowFrequency |
+    wav::SpeakerPosition::BackLeft     |
+    wav::SpeakerPosition::BackRight;
+
+    const auto channels   {std::popcount (channelMask)};
+    const auto encoding   {wav::ExportFormat::LinearPCM_24};
+    const auto sampleRate {48000};
+    const auto frames     {10};
+
+    const auto [bitDepth, formatCode] = wav::bitDepthAndFormatCode (encoding);
+    const auto bytesPerSample {bitDepth / 8U};
+    const auto blockAlign     {channels * bytesPerSample};
+    const auto byteRate       {sampleRate * blockAlign};
+    const auto dataChunkSize  {frames * blockAlign};
+    const auto riffChunkSize  {(20 + wav::FormatChunkSize::WAVEFORMATEXTENSIBLE) + dataChunkSize + (dataChunkSize % 2)};
+
+    std::vector<float> zeros (frames * channels, 0.f);
+
+    wav::Writer writer {filename, encoding, sampleRate, channels, channelMask};
+    writer.write (zeros);
+    writer.Close();
+
+    const auto h = ReadHeader (filename);
+
+    std::string failures;
+
+    Compare (h.riffID == "RIFF",                                           "RIFF id", failures);
+    Compare (h.riffChunkSize == riffChunkSize,                             "RIFF chunk size", failures);
+    Compare (h.riffFormat == "WAVE",                                       "RIFF format (WAVE)", failures);
+
+    Compare (h.fmtID == "fmt ",                                            "fmt id", failures);
+    Compare (h.fmtChunkSize == wav::FormatChunkSize::WAVEFORMATEXTENSIBLE, "fmt chunk size", failures);
+    Compare (h.formatCode == wav::FormatCode::Extensible,                  "format code", failures);
+    Compare (h.channels == channels,                                       "channels", failures);
+    Compare (h.sampleRate == sampleRate,                                   "sample rate", failures);
+    Compare (h.byteRate == byteRate,                                       "byte rate", failures);
+    Compare (h.blockAlign == blockAlign,                                   "block align", failures);
+    Compare (h.bitsPerSample == bitDepth,                                  "bit depth", failures);
+    Compare (h.cbSize == 22,                                               "cbSize", failures);
+    Compare (h.validBitsPerSample == bitDepth,                             "validBitsPerSample", failures);
+    Compare (h.channelMask == channelMask,                                 "channel mask", failures);
+    Compare (h.subFormat == wav::ExtensibleFormat::LinearPCM,              "SubFormat GUID", failures);
+
+    Compare (h.dataID == "data",                                           "data id", failures);
+    Compare (h.dataChunkSize == dataChunkSize,                             "data chunk size", failures);
+
+    const auto logMessage {"WRITE HEADER - speaker positions (5.1)"
+        + std::string {failures.empty() ? "" : " failures: " + failures}};
+
+    log.Record (failures.empty(), logMessage);
 }
 
-void Compare (bool passes, std::string const & failure, std::string & failures)
+void TestSpeakerPositionValidation (TestLog & log)
 {
-    if (!passes)
+    bool caughtInvalid {false};
+    try
     {
-        if (!failures.empty()) failures += ", ";
-        failures += failure;
+        wav::Writer writer {"test.wav", wav::ExportFormat::LinearPCM_16, 44100, 1, 0x00080000};
     }
+    catch (wav::WriteError const &)
+    {
+        caughtInvalid = true;
+    }
+    log.Record (caughtInvalid, "WRITE HEADER - invalid channel mask bits throws");
 }
+
+std::string headerTestLabel (wav::ExportFormat, uint16_t, uint32_t);
 
 void TestHeader (wav::ExportFormat encoding,
                  uint32_t sampleRate,
                  uint16_t channels,
                  uint32_t frames,
-                 std::string const & label,
                  TestLog & log)
 {
     constexpr std::string filename {"test.wav"};
+
+    std::string const label = headerTestLabel (encoding, channels, frames);
 
     const auto [bitDepth, formatCode] = wav::bitDepthAndFormatCode (encoding);
     const bool useExtensible {channels >= 3 || bitDepth > 16};
@@ -249,78 +291,48 @@ void TestHeader (wav::ExportFormat encoding,
     log.Record (failures.empty(), logMessage);
 }
 
-void TestSpeakerPositionHeader (TestLog & log)
+Header ReadHeader (std::string const & filepath)
 {
-    constexpr std::string filename {"test.wav"};
-
-    const uint32_t channelMask =
-        wav::SpeakerPosition::FrontLeft    |
-        wav::SpeakerPosition::FrontRight   |
-        wav::SpeakerPosition::FrontCenter  |
-        wav::SpeakerPosition::LowFrequency |
-        wav::SpeakerPosition::BackLeft     |
-        wav::SpeakerPosition::BackRight;
-
-    const auto channels   {std::popcount (channelMask)};
-    const auto encoding   {wav::ExportFormat::LinearPCM_24};
-    const auto sampleRate {48000};
-    const auto frames     {10};
-
-    const auto [bitDepth, formatCode] = wav::bitDepthAndFormatCode (encoding);
-    const auto bytesPerSample {bitDepth / 8U};
-    const auto blockAlign     {channels * bytesPerSample};
-    const auto byteRate       {sampleRate * blockAlign};
-    const auto dataChunkSize  {frames * blockAlign};
-    const auto riffChunkSize  {(20 + wav::FormatChunkSize::WAVEFORMATEXTENSIBLE) + dataChunkSize + (dataChunkSize % 2)};
-
-    std::vector<float> zeros (frames * channels, 0.f);
-
-    wav::Writer writer {filename, encoding, sampleRate, channels, channelMask};
-    writer.write (zeros);
-    writer.Close();
-
-    const auto h = ReadHeader (filename);
-
-    std::string failures;
-
-    Compare (h.riffID == "RIFF",                                           "RIFF id", failures);
-    Compare (h.riffChunkSize == riffChunkSize,                             "RIFF chunk size", failures);
-    Compare (h.riffFormat == "WAVE",                                       "RIFF format (WAVE)", failures);
-
-    Compare (h.fmtID == "fmt ",                                            "fmt id", failures);
-    Compare (h.fmtChunkSize == wav::FormatChunkSize::WAVEFORMATEXTENSIBLE, "fmt chunk size", failures);
-    Compare (h.formatCode == wav::FormatCode::Extensible,                  "format code", failures);
-    Compare (h.channels == channels,                                       "channels", failures);
-    Compare (h.sampleRate == sampleRate,                                   "sample rate", failures);
-    Compare (h.byteRate == byteRate,                                       "byte rate", failures);
-    Compare (h.blockAlign == blockAlign,                                   "block align", failures);
-    Compare (h.bitsPerSample == bitDepth,                                  "bit depth", failures);
-    Compare (h.cbSize == 22,                                               "cbSize", failures);
-    Compare (h.validBitsPerSample == bitDepth,                             "validBitsPerSample", failures);
-    Compare (h.channelMask == channelMask,                                 "channel mask", failures);
-    Compare (h.subFormat == wav::ExtensibleFormat::LinearPCM,              "SubFormat GUID", failures);
-
-    Compare (h.dataID == "data",                                           "data id", failures);
-    Compare (h.dataChunkSize == dataChunkSize,                             "data chunk size", failures);
-
-    const auto logMessage {"WRITE HEADER - speaker positions (5.1)"
-        + std::string {failures.empty() ? "" : " failures: " + failures}};
-
-    log.Record (failures.empty(), logMessage);
+    auto in = wav::fileForReading (filepath);
+    const Header h {in.get()};
+    wav::Close (in);
+    return h;
 }
 
-void TestSpeakerPositionValidation (TestLog & log)
+void Compare (bool passes, std::string const & failure, std::string & failures)
 {
-    bool caughtInvalid {false};
-    try
+    if (!passes)
     {
-        wav::Writer writer {"test.wav", wav::ExportFormat::LinearPCM_16, 44100, 1, 0x00080000};
+        if (!failures.empty()) failures += ", ";
+        failures += failure;
     }
-    catch (wav::WriteError const &)
+}
+
+std::string exportFormatShortPrefix (wav::ExportFormat encoding)
+{
+    switch (encoding)
     {
-        caughtInvalid = true;
+        case wav::ExportFormat::LinearPCM_8:  return "u8";
+        case wav::ExportFormat::LinearPCM_16: return "s16";
+        case wav::ExportFormat::LinearPCM_24: return "s24";
+        case wav::ExportFormat::LinearPCM_32: return "s32";
+        case wav::ExportFormat::FloatPCM_32:  return "f32";
+        case wav::ExportFormat::FloatPCM_64:  return "f64";
+        default: return "?";
     }
-    log.Record (caughtInvalid, "WRITE HEADER - invalid channel mask bits throws");
+}
+
+std::string headerTestLabel (wav::ExportFormat encoding, uint16_t channels, uint32_t frames)
+{
+    const auto [bitDepth, _] = wav::bitDepthAndFormatCode (encoding);
+    const auto bytesPerSample {bitDepth / 8U};
+
+    std::string label {exportFormatShortPrefix (encoding)};
+    label += ", " + std::to_string (channels) + "ch";
+    if (channels >= 3 || bitDepth > 16) label += ", WAVEFORMATEXTENSIBLE";
+    else label += ", WAVEFORMATEX";
+    if ((frames * channels * bytesPerSample) % 2) label += " (padded)";
+    return label;
 }
 
 #endif
