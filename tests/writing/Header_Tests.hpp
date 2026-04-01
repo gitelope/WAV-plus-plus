@@ -5,6 +5,7 @@
 #include "../../include/wav-plus-plus/Writer.hpp"
 #include "../../include/wav-plus-plus/private/ReadingBytes.hpp"
 
+#include <bit>
 #include <cstdint>
 #include <cstdio>
 #include <string>
@@ -73,7 +74,7 @@ struct Header
         if (fmtChunkSize == wav::FormatChunkSize::WAVEFORMATEXTENSIBLE)
         {
             validBitsPerSample = wav::uint16_le (in);
-            channelMaskValue   = wav::uint32_le (in);
+            channelMask        = wav::uint32_le (in);
             subFormat          = wav::guid (in);
         }
 
@@ -98,9 +99,9 @@ struct Header
     uint16_t cbSize;
 
     // fmt subchunk — WAVEFORMATEXTENSIBLE-specific fields
-    uint16_t validBitsPerSample {0};
-    uint32_t channelMaskValue {0};
-    wav::GUID subFormat {};
+    uint16_t validBitsPerSample {0xFFFF};
+    uint32_t channelMask        {0xFFFFFFFF};
+    wav::GUID subFormat         {};
 
     // data subchunk (does not include the actual data)
     std::string dataID;
@@ -176,7 +177,7 @@ void TestHeader (wav::ExportFormat encoding,
     {
         Compare (h.cbSize == 22,                         "cbSize", failures);
         Compare (h.validBitsPerSample == bitDepth,       "validBitsPerSample", failures);
-        Compare (h.channelMaskValue == 0,                "channel mask", failures);
+        Compare (h.channelMask == 0,                     "channel mask", failures);
 
         const auto expectedGUID {formatCode == wav::FormatCode::LinearPCM
             ? wav::ExtensibleFormat::LinearPCM
@@ -201,17 +202,15 @@ void TestSpeakerPositionHeader (TestLog & log)
 {
     constexpr std::string filename {"test.wav"};
 
-    const std::vector<wav::SpeakerPosition> positions
-    {
-        wav::SpeakerPosition::FrontLeft,
-        wav::SpeakerPosition::FrontRight,
-        wav::SpeakerPosition::FrontCenter,
-        wav::SpeakerPosition::LowFrequency,
-        wav::SpeakerPosition::BackLeft,
-        wav::SpeakerPosition::BackRight
-    };
+    const uint32_t channelMask =
+        wav::SpeakerPosition::FrontLeft    |
+        wav::SpeakerPosition::FrontRight   |
+        wav::SpeakerPosition::FrontCenter  |
+        wav::SpeakerPosition::LowFrequency |
+        wav::SpeakerPosition::BackLeft     |
+        wav::SpeakerPosition::BackRight;
 
-    const auto channels   {static_cast<uint16_t> (positions.size())};
+    const auto channels   {std::popcount (channelMask)};
     const auto encoding   {wav::ExportFormat::LinearPCM_24};
     const auto sampleRate {48000};
     const auto frames     {10};
@@ -221,12 +220,11 @@ void TestSpeakerPositionHeader (TestLog & log)
     const auto blockAlign     {channels * bytesPerSample};
     const auto byteRate       {sampleRate * blockAlign};
     const auto dataChunkSize  {frames * blockAlign};
-    const auto expectedMask   {wav::channelMaskFromPositions (positions)};
     const auto riffChunkSize  {(20 + wav::FormatChunkSize::WAVEFORMATEXTENSIBLE) + dataChunkSize + (dataChunkSize % 2)};
 
     std::vector<float> zeros (frames * channels, 0.f);
 
-    wav::Writer writer {filename, encoding, sampleRate, positions};
+    wav::Writer writer {filename, encoding, sampleRate, channels, channelMask};
     writer.write (zeros);
     writer.Close();
 
@@ -248,7 +246,7 @@ void TestSpeakerPositionHeader (TestLog & log)
     Compare (h.bitsPerSample == bitDepth,                                  "bit depth", failures);
     Compare (h.cbSize == 22,                                               "cbSize", failures);
     Compare (h.validBitsPerSample == bitDepth,                             "validBitsPerSample", failures);
-    Compare (h.channelMaskValue == expectedMask,                           "channel mask", failures);
+    Compare (h.channelMask == channelMask,                                 "channel mask", failures);
     Compare (h.subFormat == wav::ExtensibleFormat::LinearPCM,              "SubFormat GUID", failures);
 
     Compare (h.dataID == "data",                                           "data id", failures);
@@ -262,18 +260,16 @@ void TestSpeakerPositionHeader (TestLog & log)
 
 void TestSpeakerPositionValidation (TestLog & log)
 {
-    // Duplicate speaker positions
-    bool caughtDuplicate {false};
+    bool caughtInvalid {false};
     try
     {
-        wav::Writer writer {"test.wav", wav::ExportFormat::LinearPCM_16, 44100,
-            {wav::SpeakerPosition::FrontLeft, wav::SpeakerPosition::FrontLeft, wav::SpeakerPosition::FrontRight}};
+        wav::Writer writer {"test.wav", wav::ExportFormat::LinearPCM_16, 44100, 1, 0x00080000};
     }
     catch (wav::WriteError const &)
     {
-        caughtDuplicate = true;
+        caughtInvalid = true;
     }
-    log.Record (caughtDuplicate, "WRITE HEADER - duplicate speaker positions throws");
+    log.Record (caughtInvalid, "WRITE HEADER - invalid channel mask bits throws");
 }
 
 #endif

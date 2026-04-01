@@ -236,7 +236,7 @@ Mono, stereo, and multichannel layouts are supported.
 
 For mono and stereo files, `WAVEFORMATEX` is used (18-byte `fmt` chunk) unless speaker positions are specified.
 
-For multichannel files (3+ channels) and files where speaker positions have been specified, WAVEFORMATEXTENSIBLE` is used (40-byte `fmt` chunk).
+For multichannel files (3+ channels) and files where speaker positions have been specified, `WAVEFORMATEXTENSIBLE` is used (40-byte `fmt` chunk).
 
 ### Opening a file for writing
 
@@ -251,25 +251,42 @@ const auto channels   {2};
 wav::Writer writer {filepath, encoding, sampleRate, channels};
 ```
 
-#### Speaker positions (channel mask)
+#### Speaker positions
 
-An overloaded constructor accepts a `std::vector<wav::SpeakerPosition>` in place of `channels`:
+A channel mask can be provided to assign speaker positions:
 
 ```cpp
-const std::vector<wav::SpeakerPosition> positions
-{
-    wav::SpeakerPosition::FrontLeft,
-    wav::SpeakerPosition::FrontRight,
-    wav::SpeakerPosition::FrontCenter,
-    wav::SpeakerPosition::LowFrequency,
-    wav::SpeakerPosition::BackLeft,
-    wav::SpeakerPosition::BackRight
-};
+const auto channelMask =
+    wav::SpeakerPosition::FrontLeft    |
+    wav::SpeakerPosition::FrontRight   |
+    wav::SpeakerPosition::FrontCenter  |
+    wav::SpeakerPosition::LowFrequency |
+    wav::SpeakerPosition::BackLeft     |
+    wav::SpeakerPosition::BackRight;
 
-wav::Writer writer {filepath, encoding, sampleRate, positions};
+const auto numChannels {std::popcount (channelMask)};
+wav::Writer writer {filepath, encoding, sampleRate, numChannels, channelMask};
 ```
 
-Available speaker positions: `FrontLeft`, `FrontRight`, `FrontCenter`, `LowFrequency`, `BackLeft`, `BackRight`, `FrontLeftOfCenter`, `FrontRightOfCenter`, `BackCenter`, `SideLeft`, `SideRight`, `TopCenter`, `TopFrontLeft`, `TopFrontCenter`, `TopFrontRight`, `TopBackLeft`, `TopBackCenter`, `TopBackRight`.
+There are 18 defined positions:<br><br>
+`FrontLeft`<br>
+`FrontRight`<br>
+`FrontCenter`<br>
+`LowFrequency`<br>
+`BackLeft`<br>
+`BackRight`<br>
+`FrontLeftOfCenter`<br>
+`FrontRightOfCenter`<br>
+`BackCenter`<br>
+`SideLeft`<br>
+`SideRight`<br>
+`TopCenter`<br>
+`TopFrontLeft`<br>
+`TopFrontCenter`<br>
+`TopFrontRight`<br>
+`TopBackLeft`<br>
+`TopBackCenter`<br>
+`TopBackRight`<br>
 
 When no speaker positions are specified but there are three or more channels, `WAVEFORMATEXTENSIBLE` is still used but the channel mask is set to `0`.
 

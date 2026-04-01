@@ -244,7 +244,6 @@ inline void ChunkInfo::ReadFormatChunk (FILE * in)
     {
         format.validBitsPerSample = uint16_le (in);
         format.channelMask = uint32_le (in);
-        format.speakerPositions = speakerPositionsFromMask (format.channelMask);
         format.subFormat = guid (in);
 
         if (format.subFormat != ExtensibleFormat::LinearPCM && format.subFormat != ExtensibleFormat::FloatPCM)

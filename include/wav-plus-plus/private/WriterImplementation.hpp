@@ -18,39 +18,23 @@ Writer::Writer (std::string const & filepath,
                 ExportFormat exportFormat,
                 uint32_t sampleRate,
                 uint16_t channels,
+                uint32_t channelMask,
                 size_t bufferSizeInKB)
 :file (fopen (filepath.c_str(), "wb"), fclose)
 ,channels (channels)
-,fmtChunkSize (channels >= 3 ? FormatChunkSize::WAVEFORMATEXTENSIBLE : FormatChunkSize::WAVEFORMATEX)
+,fmtChunkSize ((channels >= 3 || channelMask) ? FormatChunkSize::WAVEFORMATEXTENSIBLE : FormatChunkSize::WAVEFORMATEX)
+,channelMask (channelMask)
 {
+    if (channelMask & ~SpeakerPosition::ValidBits)
+    {
+        throw WriteError ("Channel mask contains undefined speaker position bits.");
+    }
+
     if (!file)
     {
         throw WriteError ("Failed to open file for writing: " + filepath);
     }
 
-    SharedInitialization (exportFormat, sampleRate, bufferSizeInKB);
-}
-
-Writer::Writer (std::string const & filepath,
-                ExportFormat exportFormat,
-                uint32_t sampleRate,
-                std::vector<SpeakerPosition> const & speakerPositions,
-                size_t bufferSizeInKB)
-:file (fopen (filepath.c_str(), "wb"), fclose)
-,channels (static_cast<uint16_t> (speakerPositions.size()))
-,fmtChunkSize (FormatChunkSize::WAVEFORMATEXTENSIBLE)
-,channelMask (channelMaskFromPositions (speakerPositions))
-{
-    if (!file)
-    {
-        throw WriteError ("Failed to open file for writing: " + filepath);
-    }
-
-    SharedInitialization (exportFormat, sampleRate, bufferSizeInKB);
-}
-
-void Writer::SharedInitialization (ExportFormat exportFormat, uint32_t sampleRate, size_t bufferSizeInKB)
-{
     std::tie (this->bitsPerSample, this->formatCode) = bitDepthAndFormatCode (exportFormat);
 
     // Write header with placeholders for RIFF chunk size and data chunk size.
