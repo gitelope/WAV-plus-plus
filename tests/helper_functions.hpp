@@ -24,5 +24,6 @@ bool areEqual (std::vector<T> const & a, std::vector<T> const & b)
     return true;
 }
 
+void Compare (bool passes, std::string const & failure, std::string & failures);
 
 #endif

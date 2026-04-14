@@ -4,6 +4,15 @@
 #include <cmath>
 #include <iostream>
 
+void Compare (bool passes, std::string const & failure, std::string & failures)
+{
+    if (!passes)
+    {
+        if (!failures.empty()) failures += ", ";
+        failures += failure;
+    }
+}
+
 /*
 // test Buffers for equality by comparing difference
 // to a threshold.
