@@ -2,6 +2,8 @@
 #ifndef FormatsImplementation_hpp
 #define FormatsImplementation_hpp
 
+#include "../Exceptions.hpp"
+
 #include <format>
 #include <sstream>
 

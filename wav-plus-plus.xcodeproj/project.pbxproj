@@ -88,6 +88,8 @@
 		C41045252EF1CD5E0013E245 /* FileInfo.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = FileInfo.hpp; sourceTree = "<group>"; };
 		C41045282EF1CD5E0013E245 /* Reader.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Reader.hpp; sourceTree = "<group>"; };
 		C410452A2EF1CD5E0013E245 /* Writer.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Writer.hpp; sourceTree = "<group>"; };
+		C46085F02F8EC53B007F0361 /* ReadingHeaders_Tests.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = ReadingHeaders_Tests.hpp; sourceTree = "<group>"; };
+		C46085F12F8EC5DB007F0361 /* SampleDecoding_Tests.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = SampleDecoding_Tests.hpp; sourceTree = "<group>"; };
 		C470C0272F6A058B00F3A7D1 /* AudioSummary.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = AudioSummary.hpp; sourceTree = "<group>"; };
 		C48AB6732F636A5900C70CDA /* read */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = read; sourceTree = BUILT_PRODUCTS_DIR; };
 		C48AB67B2F636A6C00C70CDA /* read.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = read.cpp; sourceTree = "<group>"; };
@@ -279,6 +281,8 @@
 			isa = PBXGroup;
 			children = (
 				C4F0964A2F7B2FBC00C1852B /* ReadingTests.hpp */,
+				C46085F02F8EC53B007F0361 /* ReadingHeaders_Tests.hpp */,
+				C46085F12F8EC5DB007F0361 /* SampleDecoding_Tests.hpp */,
 			);
 			path = reading;
 			sourceTree = "<group>";

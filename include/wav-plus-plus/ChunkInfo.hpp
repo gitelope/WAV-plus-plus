@@ -5,7 +5,6 @@
 #include "Exceptions.hpp"
 #include "Formats.hpp"
 
-#include <bitset>
 #include <cstdint>
 #include <cstdio>
 #include <ostream>
@@ -41,7 +40,7 @@ struct FormatChunk
 
     // WAVEFORMATEXTENSIBLE:
     uint16_t validBitsPerSample {0};
-    std::bitset<32> channelMask;
+    uint32_t channelMask {0};
     GUID subFormat;
     std::string channelString () const;
 };

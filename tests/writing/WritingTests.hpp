@@ -9,6 +9,8 @@ void TestWriting (TestLog & log)
 {
     TestSampleEncoding (log);
     TestHeaders (log);
+    TestSpeakerPositionHeader (log);
+    TestSpeakerPositionValidation (log);
 }
 
 #endif

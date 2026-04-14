@@ -23,6 +23,7 @@ public:
             ExportFormat exportFormat,
             uint32_t sampleRate,
             uint16_t channels,
+            uint32_t channelMask = 0,
             size_t bufferSizeInKB = 32);
 
     ~Writer(); // Closes file if client does not.
@@ -66,6 +67,8 @@ private:
     uint16_t channels;
     uint16_t bitsPerSample;
     uint16_t formatCode;
+    uint32_t fmtChunkSize;
+    uint32_t channelMask {0};
 
     size_t totalSamplesWritten {0};
     // Largest allowable data chunk given header size, encoding, channels,

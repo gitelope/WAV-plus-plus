@@ -75,6 +75,33 @@ inline constexpr GUID FloatPCM
 
 inline std::ostream & operator<< (std::ostream & os, GUID const & guid);
 
+// Channel mask bits for WAVEFORMATEXTENSIBLE.
+// Channels are interleaved in bit order (LSB first).
+// The channel count and number of assigned speaker positions
+// need not be equal: the channel mask is written as given.
+namespace SpeakerPosition
+{
+inline constexpr uint32_t FrontLeft          = 0x00000001;
+inline constexpr uint32_t FrontRight         = 0x00000002;
+inline constexpr uint32_t FrontCenter        = 0x00000004;
+inline constexpr uint32_t LowFrequency       = 0x00000008;
+inline constexpr uint32_t BackLeft           = 0x00000010;
+inline constexpr uint32_t BackRight          = 0x00000020;
+inline constexpr uint32_t FrontLeftOfCenter  = 0x00000040;
+inline constexpr uint32_t FrontRightOfCenter = 0x00000080;
+inline constexpr uint32_t BackCenter         = 0x00000100;
+inline constexpr uint32_t SideLeft           = 0x00000200;
+inline constexpr uint32_t SideRight          = 0x00000400;
+inline constexpr uint32_t TopCenter          = 0x00000800;
+inline constexpr uint32_t TopFrontLeft       = 0x00001000;
+inline constexpr uint32_t TopFrontCenter     = 0x00002000;
+inline constexpr uint32_t TopFrontRight      = 0x00004000;
+inline constexpr uint32_t TopBackLeft        = 0x00008000;
+inline constexpr uint32_t TopBackCenter      = 0x00010000;
+inline constexpr uint32_t TopBackRight       = 0x00020000;
+inline constexpr uint32_t ValidBits          = 0x0003FFFF;
+}
+
 template <typename T>
 concept FloatOrDouble = std::same_as <T,float> || std::same_as <T,double>;
 
