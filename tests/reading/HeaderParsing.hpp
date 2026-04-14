@@ -31,12 +31,12 @@ void TestWAVEFORMAT (TestLog & log)
 
     const std::vector<wav::ExportFormat> encodings
     {
-        {wav::ExportFormat::LinearPCM_8},
-        {wav::ExportFormat::LinearPCM_16},
-        {wav::ExportFormat::LinearPCM_24},
-        {wav::ExportFormat::LinearPCM_32},
-        {wav::ExportFormat::FloatPCM_32},
-        {wav::ExportFormat::FloatPCM_64}
+        wav::ExportFormat::LinearPCM_8,
+        wav::ExportFormat::LinearPCM_16,
+        wav::ExportFormat::LinearPCM_24,
+        wav::ExportFormat::LinearPCM_32,
+        wav::ExportFormat::FloatPCM_32,
+        wav::ExportFormat::FloatPCM_64
     };
 
     for (auto const & encoding : encodings)
