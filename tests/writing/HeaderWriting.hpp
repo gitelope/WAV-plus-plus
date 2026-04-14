@@ -299,20 +299,6 @@ Header ReadHeader (std::string const & filepath)
     return h;
 }
 
-std::string exportFormatShortPrefix (wav::ExportFormat encoding)
-{
-    switch (encoding)
-    {
-        case wav::ExportFormat::LinearPCM_8:  return "u8";
-        case wav::ExportFormat::LinearPCM_16: return "s16";
-        case wav::ExportFormat::LinearPCM_24: return "s24";
-        case wav::ExportFormat::LinearPCM_32: return "s32";
-        case wav::ExportFormat::FloatPCM_32:  return "f32";
-        case wav::ExportFormat::FloatPCM_64:  return "f64";
-        default: return "?";
-    }
-}
-
 std::string headerTestLabel (wav::ExportFormat encoding, uint16_t channels, uint32_t frames)
 {
     const auto [bitDepth, _] = wav::bitDepthAndFormatCode (encoding);

@@ -19,7 +19,7 @@ void TestHeaderParsing (TestLog & log)
 }
 //////////////////////////////////////
 
-std::vector<uint8_t> buildWAVEFORMAT (uint16_t, uint16_t, uint32_t, uint16_t, uint32_t);
+std::vector<uint8_t> buildWAVEFORMAT (uint16_t, uint16_t, uint16_t, uint32_t, uint32_t);
 void writeFile (std::string const &, std::vector<uint8_t> const &);
 
 void TestWAVEFORMAT (TestLog & log)
@@ -29,51 +29,46 @@ void TestWAVEFORMAT (TestLog & log)
     constexpr uint32_t sampleRate  {44100};
     constexpr uint32_t frames      {10};
 
-    struct TestCase
+    const std::vector<wav::ExportFormat> encodings
     {
-        uint16_t     formatCode;
-        uint16_t     bitDepth;
-        bool         expectLinearPCM;
-        bool         expectFloatPCM;
-        const char * label;
+        {wav::ExportFormat::LinearPCM_8},
+        {wav::ExportFormat::LinearPCM_16},
+        {wav::ExportFormat::LinearPCM_24},
+        {wav::ExportFormat::LinearPCM_32},
+        {wav::ExportFormat::FloatPCM_32},
+        {wav::ExportFormat::FloatPCM_64}
     };
 
-    const TestCase tests[]
+    for (auto const & encoding : encodings)
     {
-        {wav::FormatCode::LinearPCM, 8,  true,  false, "WAVEFORMAT u8"},
-        {wav::FormatCode::LinearPCM, 16, true,  false, "WAVEFORMAT s16"},
-        {wav::FormatCode::LinearPCM, 24, true,  false, "WAVEFORMAT s24"},
-        {wav::FormatCode::LinearPCM, 32, true,  false, "WAVEFORMAT s32"},
-        {wav::FormatCode::FloatPCM,  32, false, true,  "WAVEFORMAT f32"},
-        {wav::FormatCode::FloatPCM,  64, false, true,  "WAVEFORMAT f64"},
-    };
+        const auto [bitDepth, formatCode] = bitDepthAndFormatCode (encoding);
+        const bool isLinearPCM {formatCode == wav::FormatCode::LinearPCM};
+        const bool isFloatPCM  {formatCode == wav::FormatCode::FloatPCM};
 
-    for (auto const & test : tests)
-    {
-        std::string failures;
-
-        const auto bytes = buildWAVEFORMAT (test.formatCode, channels, sampleRate, test.bitDepth, frames);
+        const auto bytes = buildWAVEFORMAT (formatCode, bitDepth, channels, sampleRate, frames);
         writeFile (filename, bytes);
+
+        std::string failures;
 
         try
         {
             wav::Reader reader {filename};
 
-            Compare (reader.channels()            == channels,             "channels",            failures);
-            Compare (reader.sampleRate()          == sampleRate,           "sampleRate",          failures);
-            Compare (reader.frames()              == frames,               "frames",              failures);
-            Compare (reader.bitDepth()            == test.bitDepth,        "bitDepth",            failures);
-            Compare (reader.containerSizeInBits() == test.bitDepth,        "containerSizeInBits", failures);
-            Compare (reader.isLinearPCM()         == test.expectLinearPCM, "isLinearPCM",         failures);
-            Compare (reader.isFloatPCM()          == test.expectFloatPCM,  "isFloatPCM",          failures);
+            Compare (reader.channels()            == channels,    "channels",            failures);
+            Compare (reader.sampleRate()          == sampleRate,  "sampleRate",          failures);
+            Compare (reader.frames()              == frames,      "frames",              failures);
+            Compare (reader.bitDepth()            == bitDepth,    "bitDepth",            failures);
+            Compare (reader.containerSizeInBits() == bitDepth,    "containerSizeInBits", failures);
+            Compare (reader.isLinearPCM()         == isLinearPCM, "isLinearPCM",         failures);
+            Compare (reader.isFloatPCM()          == isFloatPCM,  "isFloatPCM",          failures);
         }
         catch (std::exception const & e)
         {
             failures = std::string {"exception: "} + e.what();
         }
 
-        const std::string message {std::string {"Read Header - "} + test.label
-            + (failures.empty() ? "" : " failures: " + failures)};
+        const auto label {"WAVEFORMAT " + exportFormatShortPrefix (encoding)};
+        const std::string message {"Read Header - " + label + (failures.empty() ? "" : " failures: " + failures)};
 
         log.Record (failures.empty(), message);
     }
@@ -93,12 +88,11 @@ void push_fourCC    (std::vector<uint8_t> &, const char *);
 //   data chunk    (8 + dataSize bytes)
 //   padding byte  (if dataSize is odd)
 //
-std::vector<uint8_t> buildWAVEFORMAT (uint16_t formatCode,
-                                      uint16_t channels,
-                                      uint32_t sampleRate,
-                                      uint16_t bitDepth,
-                                      uint32_t frames)
+std::vector<uint8_t> buildWAVEFORMAT (uint16_t formatCode, uint16_t bitDepth, uint16_t channels,
+                                      uint32_t sampleRate, uint32_t frames)
 {
+    constexpr uint32_t formatChunkSize {14};
+
     assert (bitDepth % 8 == 0);
     const auto bytesPerSample {static_cast<uint16_t> (bitDepth / 8)};
     const auto blockAlign {static_cast<uint16_t> (channels * bytesPerSample)};
@@ -115,7 +109,7 @@ std::vector<uint8_t> buildWAVEFORMAT (uint16_t formatCode,
 
     // fmt chunk (14 bytes)
     push_fourCC    (wav, "fmt ");
-    push_uint32_le (wav, 14);
+    push_uint32_le (wav, formatChunkSize);
     push_uint16_le (wav, formatCode);
     push_uint16_le (wav, channels);
     push_uint32_le (wav, sampleRate);
