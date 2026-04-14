@@ -9,6 +9,7 @@ int main ()
     TestLog log;
 
     TestWriting (log);
+    TestReading (log);
 
     std::cout << log.formattedResults() << std::endl;
 
