@@ -2,7 +2,7 @@
 #ifndef wavplusplus_tests_PCMWAVEFORMAT_hpp
 #define wavplusplus_tests_PCMWAVEFORMAT_hpp
 
-std::vector<uint8_t> buildPCMWAVEFORMAT (uint16_t, uint16_t, uint16_t, uint32_t, uint32_t);
+std::vector<uint8_t> buildPCMWAVEFORMAT (uint16_t, uint16_t, uint16_t, uint16_t, uint32_t, uint32_t);
 
 inline void TestPCMWAVEFORMAT (TestLog & log)
 {
@@ -28,7 +28,8 @@ inline void TestPCMWAVEFORMAT (TestLog & log)
             const bool isLinearPCM {formatCode == wav::FormatCode::LinearPCM};
             const bool isFloatPCM  {formatCode == wav::FormatCode::FloatPCM};
 
-            const auto bytes = buildPCMWAVEFORMAT (formatCode, bitDepth, channels, sampleRate, frames);
+            const auto containerSize = bitDepth;
+            const auto bytes = buildPCMWAVEFORMAT (formatCode, bitDepth, containerSize, channels, sampleRate, frames);
             writeFile (filename, bytes);
 
             std::string failures;
@@ -72,13 +73,13 @@ inline void TestPCMWAVEFORMAT (TestLog & log)
 //   data chunk    (8 + dataSize bytes)
 //   padding byte  (if dataSize is odd)
 //
-inline std::vector<uint8_t> buildPCMWAVEFORMAT (uint16_t formatCode, uint16_t bitDepth, uint16_t channels,
-                                                uint32_t sampleRate, uint32_t frames)
+inline std::vector<uint8_t> buildPCMWAVEFORMAT (uint16_t formatCode, uint16_t bitDepth, uint16_t containerSizeInBits,
+                                                uint16_t channels, uint32_t sampleRate, uint32_t frames)
 {
     constexpr uint32_t formatChunkSize {16};
 
     assert (bitDepth % 8 == 0);
-    const auto bytesPerSample {static_cast<uint16_t> (bitDepth / 8)};
+    const auto bytesPerSample {static_cast<uint16_t> (containerSizeInBits / 8)};
     const auto blockAlign {static_cast<uint16_t> (channels * bytesPerSample)};
     const auto byteRate {sampleRate * blockAlign};
     const auto dataChunkSize {frames * blockAlign};
@@ -86,32 +87,16 @@ inline std::vector<uint8_t> buildPCMWAVEFORMAT (uint16_t formatCode, uint16_t bi
 
     std::vector<uint8_t> wav;
 
-    // RIFF header
-    push_fourCC    (wav, "RIFF");
-    push_uint32_le (wav, riffChunkSize);
-    push_fourCC    (wav, "WAVE");
+    // RIFF
+    push_riff_header (wav, riffChunkSize);
 
-    // fmt chunk (16 bytes)
-    // WAVEFORMAT
-    push_fourCC    (wav, "fmt ");
-    push_uint32_le (wav, formatChunkSize);
-    push_uint16_le (wav, formatCode);
-    push_uint16_le (wav, channels);
-    push_uint32_le (wav, sampleRate);
-    push_uint32_le (wav, byteRate);
-    push_uint16_le (wav, blockAlign);
-    // PCMWAVEFORMAT
-    push_uint16_le (wav, bitDepth);
+    // fmt
+    push_fmt_header        (wav, formatChunkSize);
+    push_WAVEFORMAT_fmt    (wav, formatCode, channels, sampleRate, byteRate, blockAlign); // 14 bytes
+    push_PCMWAVEFORMAT_fmt (wav, bitDepth); // 2 bytes
 
-    // data chunk header
-    push_fourCC    (wav, "data");
-    push_uint32_le (wav, dataChunkSize);
-
-    // insert silence into data chunk
-    wav.resize (wav.size() + dataChunkSize, 0);
-
-    // padding byte if odd
-    if (dataChunkSize % 2) wav.push_back (0);
+    // data
+    push_silent_data_chunk (wav, dataChunkSize);
 
     return wav;
 }

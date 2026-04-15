@@ -86,29 +86,15 @@ inline std::vector<uint8_t> buildWAVEFORMAT (uint16_t formatCode, uint16_t bitDe
 
     std::vector<uint8_t> wav;
 
-    // RIFF header
-    push_fourCC    (wav, "RIFF");
-    push_uint32_le (wav, riffChunkSize);
-    push_fourCC    (wav, "WAVE");
+    // RIFF
+    push_riff_header (wav, riffChunkSize);
 
-    // fmt chunk (14 bytes)
-    push_fourCC    (wav, "fmt ");
-    push_uint32_le (wav, formatChunkSize);
-    push_uint16_le (wav, formatCode);
-    push_uint16_le (wav, channels);
-    push_uint32_le (wav, sampleRate);
-    push_uint32_le (wav, byteRate);
-    push_uint16_le (wav, blockAlign);
+    // fmt
+    push_fmt_header        (wav, formatChunkSize);
+    push_WAVEFORMAT_fmt    (wav, formatCode, channels, sampleRate, byteRate, blockAlign); // 14 bytes
 
-    // data chunk header
-    push_fourCC    (wav, "data");
-    push_uint32_le (wav, dataChunkSize);
-
-    // insert silence into data chunk
-    wav.resize (wav.size() + dataChunkSize, 0);
-
-    // padding byte if odd
-    if (dataChunkSize % 2) wav.push_back (0);
+    // data
+    push_silent_data_chunk (wav, dataChunkSize);
 
     return wav;
 }
