@@ -211,6 +211,17 @@
 			path = include;
 			sourceTree = "<group>";
 		};
+		C46085F92F9046E6007F0361 /* headers */ = {
+			isa = PBXGroup;
+			children = (
+				C46085F02F8EC53B007F0361 /* HeaderParsing.hpp */,
+				C46085F42F903EB5007F0361 /* reading_tests_helper_functions.hpp */,
+				C46085F62F903F96007F0361 /* WAVEFORMAT.hpp */,
+				C46085F72F9041E8007F0361 /* PCMWAVEFORMAT.hpp */,
+			);
+			path = headers;
+			sourceTree = "<group>";
+		};
 		C48AB67A2F636A5E00C70CDA /* examples */ = {
 			isa = PBXGroup;
 			children = (
@@ -284,10 +295,7 @@
 			isa = PBXGroup;
 			children = (
 				C4F0964A2F7B2FBC00C1852B /* ReadingTests.hpp */,
-				C46085F02F8EC53B007F0361 /* HeaderParsing.hpp */,
-				C46085F62F903F96007F0361 /* WAVEFORMAT.hpp */,
-				C46085F72F9041E8007F0361 /* PCMWAVEFORMAT.hpp */,
-				C46085F42F903EB5007F0361 /* reading_tests_helper_functions.hpp */,
+				C46085F92F9046E6007F0361 /* headers */,
 				C46085F12F8EC5DB007F0361 /* SampleDecoding.hpp */,
 			);
 			path = reading;
