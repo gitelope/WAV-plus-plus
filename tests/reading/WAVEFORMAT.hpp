@@ -1,6 +1,6 @@
 
-#ifndef wavplusplus_tests_TestWAVEFORMAT_hpp
-#define wavplusplus_tests_TestWAVEFORMAT_hpp
+#ifndef wavplusplus_tests_WAVEFORMAT_hpp
+#define wavplusplus_tests_WAVEFORMAT_hpp
 
 std::vector<uint8_t> buildWAVEFORMAT (uint16_t, uint16_t, uint16_t, uint32_t, uint32_t);
 
@@ -73,7 +73,7 @@ inline void TestWAVEFORMAT (TestLog & log)
 //   padding byte  (if dataSize is odd)
 //
 inline std::vector<uint8_t> buildWAVEFORMAT (uint16_t formatCode, uint16_t bitDepth, uint16_t channels,
-                                      uint32_t sampleRate, uint32_t frames)
+                                             uint32_t sampleRate, uint32_t frames)
 {
     constexpr uint32_t formatChunkSize {14};
 
@@ -82,7 +82,7 @@ inline std::vector<uint8_t> buildWAVEFORMAT (uint16_t formatCode, uint16_t bitDe
     const auto blockAlign {static_cast<uint16_t> (channels * bytesPerSample)};
     const auto byteRate {sampleRate * blockAlign};
     const auto dataChunkSize {frames * blockAlign};
-    const auto riffChunkSize {4 + (8 + 14) + (8 + dataChunkSize) + (dataChunkSize % 2)};
+    const auto riffChunkSize {4 + (8 + formatChunkSize) + (8 + dataChunkSize + (dataChunkSize % 2))};
 
     std::vector<uint8_t> wav;
 

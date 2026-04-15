@@ -4,7 +4,8 @@
 
 #include "../../include/wav-plus-plus/Reader.hpp"
 #include "reading_tests_helper_functions.hpp"
-#include "TestWAVEFORMAT.hpp"
+#include "WAVEFORMAT.hpp"
+#include "PCMWAVEFORMAT.hpp"
 
 #include <cassert>
 #include <cstdint>
@@ -12,13 +13,10 @@
 #include <string>
 #include <vector>
 
-void TestWAVEFORMATEX         (TestLog & log);
-void TestWAVEFORMATEXTENSIBLE (TestLog & log);
-
 void TestHeaderParsing (TestLog & log)
 {
     TestWAVEFORMAT    (log);
-    //TestPCMWAVEFORMAT (log);
+    // TestPCMWAVEFORMAT (log);
 }
 
 #endif
