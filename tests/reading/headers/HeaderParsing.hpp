@@ -16,7 +16,7 @@
 void TestHeaderParsing (TestLog & log)
 {
     TestWAVEFORMAT    (log);
-    // TestPCMWAVEFORMAT (log);
+    TestPCMWAVEFORMAT (log);
 }
 
 #endif

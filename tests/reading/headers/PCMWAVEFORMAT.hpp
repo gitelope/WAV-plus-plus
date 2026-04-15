@@ -50,7 +50,7 @@ inline void TestPCMWAVEFORMAT (TestLog & log)
                 failures = std::string {"exception: "} + e.what();
             }
 
-            std::string label {"WAVEFORMAT " + exportFormatShortPrefix (encoding)};
+            std::string label {"PCMWAVEFORMAT " + exportFormatShortPrefix (encoding)};
             label += ", " + std::to_string (channels) + "ch";
             assert (bitDepth % 8 == 0);
             const auto blockSizeInBytes {frames * channels * bitDepth / 8U};
@@ -64,11 +64,11 @@ inline void TestPCMWAVEFORMAT (TestLog & log)
     std::remove (filename.c_str());
 }
 
-// Build a WAVEFORMAT WAV file (14-byte fmt chunk).
+// Build a PCMWAVEFORMAT WAV file (16-byte fmt chunk).
 //
 // Layout:
 //   RIFF header   (12 bytes)
-//   fmt  chunk    (8 + 14 = 22 bytes)
+//   fmt  chunk    (8 + 16 = 24 bytes)
 //   data chunk    (8 + dataSize bytes)
 //   padding byte  (if dataSize is odd)
 //
@@ -82,7 +82,7 @@ inline std::vector<uint8_t> buildPCMWAVEFORMAT (uint16_t formatCode, uint16_t bi
     const auto blockAlign {static_cast<uint16_t> (channels * bytesPerSample)};
     const auto byteRate {sampleRate * blockAlign};
     const auto dataChunkSize {frames * blockAlign};
-    const auto riffChunkSize {4 + (8 + formatChunkSize) + (8 + dataChunkSize) + (dataChunkSize % 2)};
+    const auto riffChunkSize {4 + (8 + formatChunkSize) + (8 + dataChunkSize + (dataChunkSize % 2))};
 
     std::vector<uint8_t> wav;
 
@@ -91,7 +91,8 @@ inline std::vector<uint8_t> buildPCMWAVEFORMAT (uint16_t formatCode, uint16_t bi
     push_uint32_le (wav, riffChunkSize);
     push_fourCC    (wav, "WAVE");
 
-    // fmt chunk (14 bytes)
+    // fmt chunk (16 bytes)
+    // WAVEFORMAT
     push_fourCC    (wav, "fmt ");
     push_uint32_le (wav, formatChunkSize);
     push_uint16_le (wav, formatCode);
@@ -99,6 +100,8 @@ inline std::vector<uint8_t> buildPCMWAVEFORMAT (uint16_t formatCode, uint16_t bi
     push_uint32_le (wav, sampleRate);
     push_uint32_le (wav, byteRate);
     push_uint16_le (wav, blockAlign);
+    // PCMWAVEFORMAT
+    push_uint16_le (wav, bitDepth);
 
     // data chunk header
     push_fourCC    (wav, "data");
