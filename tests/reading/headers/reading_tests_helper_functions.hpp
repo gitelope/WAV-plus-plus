@@ -43,11 +43,18 @@ inline void push_fourCC (std::vector<uint8_t> & v, const char * fourCC)
     v.push_back (static_cast<uint8_t> (fourCC[3]));
 }
 
-inline void push_riff_header (std::vector<uint8_t> & v, uint32_t riffChunkSize)
+inline uint32_t riffChunkSize (uint32_t formatChunkSize, uint32_t dataChunkSize)
+{
+    return 4
+    + (8 + formatChunkSize)
+    + (8 + dataChunkSize + (dataChunkSize % 2));
+}
+
+inline void push_riff_header (std::vector<uint8_t> & v, uint32_t formatChunkSize, uint32_t dataChunkSize)
 {
     // RIFF header
     push_fourCC    (v, "RIFF");
-    push_uint32_le (v, riffChunkSize);
+    push_uint32_le (v, riffChunkSize (formatChunkSize, dataChunkSize));
     push_fourCC    (v, "WAVE");
 }
 

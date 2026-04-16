@@ -37,25 +37,25 @@ inline void TestWAVEFORMAT (TestLog & log)
             {
                 wav::Reader reader {filename};
 
-                Compare (reader.channels()            == channels,    "channels",            failures);
-                Compare (reader.sampleRate()          == sampleRate,  "sampleRate",          failures);
-                Compare (reader.frames()              == frames,      "frames",              failures);
-                Compare (reader.bitDepth()            == bitDepth,    "bitDepth",            failures);
-                Compare (reader.containerSizeInBits() == bitDepth,    "containerSizeInBits", failures);
-                Compare (reader.isLinearPCM()         == isLinearPCM, "isLinearPCM",         failures);
-                Compare (reader.isFloatPCM()          == isFloatPCM,  "isFloatPCM",          failures);
+                Compare (reader.channels()            == channels,    "unexpected channels",            failures);
+                Compare (reader.sampleRate()          == sampleRate,  "unexpected sampleRate",          failures);
+                Compare (reader.frames()              == frames,      "unexpected frames",              failures);
+                Compare (reader.bitDepth()            == bitDepth,    "unexpected bitDepth",            failures);
+                Compare (reader.containerSizeInBits() == bitDepth,    "unexpected containerSizeInBits", failures);
+                Compare (reader.isLinearPCM()         == isLinearPCM, "unexpected isLinearPCM",         failures);
+                Compare (reader.isFloatPCM()          == isFloatPCM,  "unexpected isFloatPCM",          failures);
             }
-            catch (std::exception const & e)
+            catch (wav::ReadError const & e)
             {
-                failures = std::string {"exception: "} + e.what();
+                failures = std::string {"wav::ReadError - "} + e.what();
             }
 
             std::string label {"WAVEFORMAT " + exportFormatShortPrefix (encoding)};
-            label += ", " + std::to_string (channels) + "ch";
+            label += std::format (", {}ch", channels);
             assert (bitDepth % 8 == 0);
-            const auto blockSizeInBytes {frames * channels * bitDepth / 8U};
-            if (blockSizeInBytes % 2) label += " (padded)";
-            const std::string message {"Read Header - " + label + (failures.empty() ? "" : " failures: " + failures)};
+            if ((frames * channels * bitDepth / 8U) % 2) label += " (padded)";
+            const auto failureSuffix {failures.empty() ? "" : ", failures: " + failures};
+            const auto message = std::format ("Read Header - {}{}", label, failureSuffix);
 
             log.Record (failures.empty(), message);
         }
@@ -78,16 +78,14 @@ inline std::vector<uint8_t> buildWAVEFORMAT (uint16_t formatCode, uint16_t bitDe
     constexpr uint32_t formatChunkSize {14};
 
     assert (bitDepth % 8 == 0);
-    const auto bytesPerSample {static_cast<uint16_t> (bitDepth / 8)};
-    const auto blockAlign {static_cast<uint16_t> (channels * bytesPerSample)};
+    const auto blockAlign {static_cast<uint16_t> (channels * bitDepth / 8)};
     const auto byteRate {sampleRate * blockAlign};
     const auto dataChunkSize {frames * blockAlign};
-    const auto riffChunkSize {4 + (8 + formatChunkSize) + (8 + dataChunkSize + (dataChunkSize % 2))};
 
     std::vector<uint8_t> wav;
 
     // RIFF
-    push_riff_header (wav, riffChunkSize);
+    push_riff_header (wav, formatChunkSize, dataChunkSize);
 
     // fmt
     push_fmt_header        (wav, formatChunkSize);

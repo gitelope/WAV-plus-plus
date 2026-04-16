@@ -10,26 +10,37 @@ inline void TestPCMWAVEFORMAT (TestLog & log)
     constexpr uint32_t sampleRate  {44100};
     constexpr uint32_t frames      {7};
 
-    const std::vector<wav::ExportFormat> encodings
+    struct TestCase
     {
-        wav::ExportFormat::LinearPCM_8,
-        wav::ExportFormat::LinearPCM_16,
-        wav::ExportFormat::LinearPCM_24,
-        wav::ExportFormat::LinearPCM_32,
-        wav::ExportFormat::FloatPCM_32,
-        wav::ExportFormat::FloatPCM_64
+        wav::ExportFormat encoding;
+        uint16_t validBitDepth;
     };
 
-    for (uint16_t channels = 1; channels <= 2; ++channels)
+    const std::vector<TestCase> testCases
     {
-        for (auto const & encoding : encodings)
+        {wav::ExportFormat::LinearPCM_8, 8},
+        {wav::ExportFormat::LinearPCM_16, 16},
+        {wav::ExportFormat::LinearPCM_24, 24},
+        {wav::ExportFormat::LinearPCM_32, 32},
+        {wav::ExportFormat::FloatPCM_32, 32},
+        {wav::ExportFormat::FloatPCM_64, 64},
+
+        {wav::ExportFormat::LinearPCM_16, 12}, // 12 in 16
+        {wav::ExportFormat::LinearPCM_24, 20}, // 20 in 24
+        {wav::ExportFormat::LinearPCM_32, 24}, // 24 in 32
+    };
+
+    for (uint16_t channels = 1; channels <= 3; ++channels)
+    {
+        for (auto const & testCase : testCases)
         {
-            const auto [bitDepth, formatCode] = bitDepthAndFormatCode (encoding);
+            const auto [containerSizeInBits, formatCode] = bitDepthAndFormatCode (testCase.encoding);
+            const auto validBitDepth {testCase.validBitDepth};
+
             const bool isLinearPCM {formatCode == wav::FormatCode::LinearPCM};
             const bool isFloatPCM  {formatCode == wav::FormatCode::FloatPCM};
 
-            const auto containerSize = bitDepth;
-            const auto bytes = buildPCMWAVEFORMAT (formatCode, bitDepth, containerSize, channels, sampleRate, frames);
+            const auto bytes = buildPCMWAVEFORMAT (formatCode, validBitDepth, containerSizeInBits, channels, sampleRate, frames);
             writeFile (filename, bytes);
 
             std::string failures;
@@ -38,25 +49,27 @@ inline void TestPCMWAVEFORMAT (TestLog & log)
             {
                 wav::Reader reader {filename};
 
-                Compare (reader.channels()            == channels,    "channels",            failures);
-                Compare (reader.sampleRate()          == sampleRate,  "sampleRate",          failures);
-                Compare (reader.frames()              == frames,      "frames",              failures);
-                Compare (reader.bitDepth()            == bitDepth,    "bitDepth",            failures);
-                Compare (reader.containerSizeInBits() == bitDepth,    "containerSizeInBits", failures);
-                Compare (reader.isLinearPCM()         == isLinearPCM, "isLinearPCM",         failures);
-                Compare (reader.isFloatPCM()          == isFloatPCM,  "isFloatPCM",          failures);
+                Compare (reader.channels()            == channels,            "unexpected channels",            failures);
+                Compare (reader.sampleRate()          == sampleRate,          "unexpected sampleRate",          failures);
+                Compare (reader.frames()              == frames,              "unexpected frames",              failures);
+                Compare (reader.bitDepth()            == validBitDepth,       "unexpected validBitDepth",       failures);
+                Compare (reader.containerSizeInBits() == containerSizeInBits, "unexpected containerSizeInBits", failures);
+                Compare (reader.isLinearPCM()         == isLinearPCM,         "unexpected isLinearPCM",         failures);
+                Compare (reader.isFloatPCM()          == isFloatPCM,          "unexpected isFloatPCM",          failures);
             }
-            catch (std::exception const & e)
+            catch (wav::ReadError const & e)
             {
-                failures = std::string {"exception: "} + e.what();
+                failures = std::string {"wav::ReadError - "} + e.what();
             }
 
-            std::string label {"PCMWAVEFORMAT " + exportFormatShortPrefix (encoding)};
-            label += ", " + std::to_string (channels) + "ch";
-            assert (bitDepth % 8 == 0);
-            const auto blockSizeInBytes {frames * channels * bitDepth / 8U};
-            if (blockSizeInBytes % 2) label += " (padded)";
-            const std::string message {"Read Header - " + label + (failures.empty() ? "" : " failures: " + failures)};
+            std::string label {"PCMWAVEFORMAT " + exportFormatShortPrefix (testCase.encoding)};
+            if (validBitDepth < containerSizeInBits)
+                label += std::format (" ({} bits packed in {})", validBitDepth, containerSizeInBits);
+            label += std::format (", {}ch", channels);
+            assert (containerSizeInBits % 8 == 0);
+            if ((frames * channels * containerSizeInBits / 8U) % 2) label += " (padded)";
+            const auto failureSuffix {failures.empty() ? "" : ", failures: " + failures};
+            const auto message = std::format ("Read Header - {}{}", label, failureSuffix);
 
             log.Record (failures.empty(), message);
         }
@@ -73,27 +86,25 @@ inline void TestPCMWAVEFORMAT (TestLog & log)
 //   data chunk    (8 + dataSize bytes)
 //   padding byte  (if dataSize is odd)
 //
-inline std::vector<uint8_t> buildPCMWAVEFORMAT (uint16_t formatCode, uint16_t bitDepth, uint16_t containerSizeInBits,
+inline std::vector<uint8_t> buildPCMWAVEFORMAT (uint16_t formatCode, uint16_t validBitDepth, uint16_t containerSizeInBits,
                                                 uint16_t channels, uint32_t sampleRate, uint32_t frames)
 {
     constexpr uint32_t formatChunkSize {16};
 
-    assert (bitDepth % 8 == 0);
-    const auto bytesPerSample {static_cast<uint16_t> (containerSizeInBits / 8)};
-    const auto blockAlign {static_cast<uint16_t> (channels * bytesPerSample)};
+    assert (containerSizeInBits % 8 == 0);
+    const auto blockAlign {static_cast<uint16_t> (channels * containerSizeInBits / 8)};
     const auto byteRate {sampleRate * blockAlign};
     const auto dataChunkSize {frames * blockAlign};
-    const auto riffChunkSize {4 + (8 + formatChunkSize) + (8 + dataChunkSize + (dataChunkSize % 2))};
 
     std::vector<uint8_t> wav;
 
     // RIFF
-    push_riff_header (wav, riffChunkSize);
+    push_riff_header (wav, formatChunkSize, dataChunkSize);
 
     // fmt
     push_fmt_header        (wav, formatChunkSize);
     push_WAVEFORMAT_fmt    (wav, formatCode, channels, sampleRate, byteRate, blockAlign); // 14 bytes
-    push_PCMWAVEFORMAT_fmt (wav, bitDepth); // 2 bytes
+    push_PCMWAVEFORMAT_fmt (wav, validBitDepth); // 2 bytes
 
     // data
     push_silent_data_chunk (wav, dataChunkSize);
