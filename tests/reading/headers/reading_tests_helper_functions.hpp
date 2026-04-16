@@ -93,4 +93,9 @@ inline void push_PCMWAVEFORMAT_fmt (std::vector<uint8_t> & v, uint16_t bitDepth)
     push_uint16_le (v, bitDepth);
 }
 
+inline void push_WAVEFORMATEX_fmt (std::vector<uint8_t> & v, uint16_t cbSize)
+{
+    push_uint16_le (v, cbSize);
+}
+
 #endif

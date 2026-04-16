@@ -6,6 +6,7 @@
 #include "reading_tests_helper_functions.hpp"
 #include "WAVEFORMAT.hpp"
 #include "PCMWAVEFORMAT.hpp"
+#include "WAVEFORMATEX.hpp"
 
 #include <cassert>
 #include <cstdint>
@@ -17,6 +18,7 @@ void TestHeaderParsing (TestLog & log)
 {
     TestWAVEFORMAT    (log);
     TestPCMWAVEFORMAT (log);
+    TestWAVEFORMATEX  (log);
 }
 
 #endif

@@ -93,6 +93,7 @@
 		C46085F42F903EB5007F0361 /* reading_tests_helper_functions.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = reading_tests_helper_functions.hpp; sourceTree = "<group>"; };
 		C46085F62F903F96007F0361 /* WAVEFORMAT.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = WAVEFORMAT.hpp; sourceTree = "<group>"; };
 		C46085F72F9041E8007F0361 /* PCMWAVEFORMAT.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = PCMWAVEFORMAT.hpp; sourceTree = "<group>"; };
+		C46085FA2F91763E007F0361 /* WAVEFORMATEX.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = WAVEFORMATEX.hpp; sourceTree = "<group>"; };
 		C470C0272F6A058B00F3A7D1 /* AudioSummary.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = AudioSummary.hpp; sourceTree = "<group>"; };
 		C48AB6732F636A5900C70CDA /* read */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = read; sourceTree = BUILT_PRODUCTS_DIR; };
 		C48AB67B2F636A6C00C70CDA /* read.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = read.cpp; sourceTree = "<group>"; };
@@ -218,6 +219,7 @@
 				C46085F42F903EB5007F0361 /* reading_tests_helper_functions.hpp */,
 				C46085F62F903F96007F0361 /* WAVEFORMAT.hpp */,
 				C46085F72F9041E8007F0361 /* PCMWAVEFORMAT.hpp */,
+				C46085FA2F91763E007F0361 /* WAVEFORMATEX.hpp */,
 			);
 			path = headers;
 			sourceTree = "<group>";
