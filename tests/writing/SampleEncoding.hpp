@@ -2,7 +2,6 @@
 #ifndef wavplusplus_tests_SampleEncoding_Tests_hpp
 #define wavplusplus_tests_SampleEncoding_Tests_hpp
 
-#include "../helper_functions.hpp"
 #include "../../include/wav-plus-plus/Writer.hpp"
 
 #include <fstream>

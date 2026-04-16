@@ -138,7 +138,6 @@ struct Header
 };
 
 Header ReadHeader (std::string const &);
-void Compare (bool, std::string const &, std::string &);
 
 void TestSpeakerPositionHeader (TestLog & log)
 {

@@ -5,6 +5,7 @@
 #include "../include/wav-plus-plus/Formats.hpp"
 
 #include <cassert>
+#include <string>
 #include <vector>
 
 /*

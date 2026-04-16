@@ -2,6 +2,13 @@
 #ifndef wavplusplus_reading_tests_helper_functions_hpp
 #define wavplusplus_reading_tests_helper_functions_hpp
 
+#include <cstdint>
+#include <cstdio>
+#include <memory>
+#include <stdexcept>
+#include <string>
+#include <vector>
+
 // Write byte vector to a file.
 inline void writeFile (std::string const & filepath, std::vector<uint8_t> const & bytes)
 {
