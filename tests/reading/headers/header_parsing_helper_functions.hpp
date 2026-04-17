@@ -50,6 +50,22 @@ inline void push_fourCC (std::vector<uint8_t> & v, const char * fourCC)
     v.push_back (static_cast<uint8_t> (fourCC[3]));
 }
 
+inline void push_GUID (std::vector<uint8_t> & v, wav::GUID const & guid)
+{
+    // GUID layout:
+    // data1 (uint32)
+    // data2 (uint16)
+    // data3 (uint16)
+    // data4 (8 byte array)
+    push_uint32_le (v, guid.data1);
+    push_uint16_le (v, guid.data2);
+    push_uint16_le (v, guid.data3);
+    for (uint8_t byte : guid.data4)
+    {
+        v.push_back (byte);
+    }
+}
+
 inline uint32_t riffChunkSize (uint32_t formatChunkSize, uint32_t dataChunkSize)
 {
     return 4
@@ -103,6 +119,13 @@ inline void push_PCMWAVEFORMAT_fmt (std::vector<uint8_t> & v, uint16_t bitDepth)
 inline void push_WAVEFORMATEX_fmt (std::vector<uint8_t> & v, uint16_t cbSize)
 {
     push_uint16_le (v, cbSize);
+}
+
+inline void push_WAVEFORMATEXTENSIBLE_fmt (std::vector<uint8_t> & v, uint16_t validBitsPerSample, uint32_t channelMask, wav::GUID subformat)
+{
+    push_uint16_le (v, validBitsPerSample);
+    push_uint32_le (v, channelMask);
+    push_GUID      (v, subformat);
 }
 
 #endif

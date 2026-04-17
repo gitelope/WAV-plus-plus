@@ -106,8 +106,10 @@ inline std::vector<uint8_t> buildWAVEFORMATEX (uint16_t formatCode, uint16_t val
     // fmt
     push_fmt_header        (wav, formatChunkSize);
     push_WAVEFORMAT_fmt    (wav, formatCode, channels, sampleRate, byteRate, blockAlign); // 14 bytes
-    push_PCMWAVEFORMAT_fmt (wav, validBitDepth); // 2 bytes
-    push_WAVEFORMATEX_fmt  (wav, cbSize); // 2 bytes
+    push_PCMWAVEFORMAT_fmt (wav, validBitDepth);                                          //  2 bytes
+    push_WAVEFORMATEX_fmt  (wav, cbSize);                                                 //  2 bytes
+                                                                                          // --------
+                                                                                          // 18 bytes
 
     // data
     push_silent_data_chunk (wav, dataChunkSize);
