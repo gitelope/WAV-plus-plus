@@ -30,10 +30,11 @@ wav::Reader reader {filepath};
 
 Information for allocating a buffer, reading, and playback:
 ```cpp
-const auto channels   {reader.channels()};
-const auto frames     {reader.frames()};
-const auto samples    {reader.samples()};     // = frames * channels
-const auto sampleRate {reader.sampleRate()};
+const auto channels    {reader.channels()};
+const auto frames      {reader.frames()};
+const auto samples     {reader.samples()};     // = frames * channels
+const auto sampleRate  {reader.sampleRate()};
+const auto channelMask {reader.channelMask()};
 ```
 
 Additional file encoding information:
@@ -52,6 +53,7 @@ const auto channels            {fileInfo.channels};
 const auto frames              {fileInfo.frames};
 const auto samples             {channels * frames};
 const auto sampleRate          {fileInfo.sampleRate};
+const auto channelMask         {fileInfo.channelMask};
 const auto bitDepth            {fileInfo.bitDepth};
 const auto containerSizeInBits {fileInfo.containerSizeInBits};
 const auto isLinearPCM         {fileInfo.isLinearPCM};
