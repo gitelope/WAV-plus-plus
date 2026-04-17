@@ -6,9 +6,10 @@ std::vector<uint8_t> buildWAVEFORMAT (uint16_t, uint16_t, uint16_t, uint32_t, ui
 
 inline void TestWAVEFORMAT (TestLog & log)
 {
-    constexpr std::string filename {"test.wav"};
-    constexpr uint32_t sampleRate  {44100};
-    constexpr uint32_t frames      {7};
+    const std::string filename    {"test_WAVEFORMAT_header_parsing.wav"};
+    constexpr uint32_t sampleRate {44100};
+    // Frames should be odd to enable testing for padding for odd channel and byte depth combinations.
+    constexpr uint32_t frames     {7};
 
     const std::vector<wav::ExportFormat> encodings
     {

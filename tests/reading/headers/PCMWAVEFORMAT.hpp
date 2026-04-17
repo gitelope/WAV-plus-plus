@@ -6,9 +6,10 @@ std::vector<uint8_t> buildPCMWAVEFORMAT (uint16_t, uint16_t, uint16_t, uint16_t,
 
 inline void TestPCMWAVEFORMAT (TestLog & log)
 {
-    constexpr std::string filename {"test.wav"};
-    constexpr uint32_t sampleRate  {44100};
-    constexpr uint32_t frames      {7};
+    const std::string filename    {"test_PCMWAVEFORMAT_header_parsing.wav"};
+    constexpr uint32_t sampleRate {44100};
+    // Frames should be odd to enable testing for padding for odd channel and byte depth combinations.
+    constexpr uint32_t frames     {7};
 
     struct TestCase
     {

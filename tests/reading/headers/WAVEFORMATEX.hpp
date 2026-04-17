@@ -6,9 +6,10 @@ std::vector<uint8_t> buildWAVEFORMATEX (uint16_t, uint16_t, uint16_t, uint16_t, 
 
 inline void TestWAVEFORMATEX (TestLog & log)
 {
-    constexpr std::string filename {"test.wav"};
-    constexpr uint32_t sampleRate  {44100};
-    constexpr uint32_t frames      {7};
+    const std::string filename    {"test_WAVEFORMATEX_header_parsing.wav"};
+    constexpr uint32_t sampleRate {44100};
+    // Frames should be odd to enable testing for padding for odd channel and byte depth combinations.
+    constexpr uint32_t frames     {7};
 
     struct TestCase
     {
@@ -87,7 +88,7 @@ inline void TestWAVEFORMATEX (TestLog & log)
 //   padding byte  (if dataSize is odd)
 //
 inline std::vector<uint8_t> buildWAVEFORMATEX (uint16_t formatCode, uint16_t validBitDepth, uint16_t containerSizeInBits,
-                                                uint16_t channels, uint32_t sampleRate, uint32_t frames)
+                                               uint16_t channels, uint32_t sampleRate, uint32_t frames)
 {
     constexpr uint32_t formatChunkSize {18};
 

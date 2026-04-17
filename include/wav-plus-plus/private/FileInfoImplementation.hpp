@@ -67,6 +67,7 @@ inline void FileInfo::ExtractFrom (ChunkInfo const & chunkInfo)
         case FormatChunkSize::WAVEFORMATEXTENSIBLE:
             containerSizeInBits = chunkInfo.format.bitsPerSample;
             bitDepth = chunkInfo.format.validBitsPerSample;
+            channelMask = chunkInfo.format.channelMask;
             // Note: FWIW containerSizeInBits should also be equal to 8 * chunkInfo.format.blockAlign / channels.
             break;
 

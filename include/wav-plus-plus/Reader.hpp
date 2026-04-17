@@ -69,6 +69,7 @@ public:
     uint16_t channels() const {return info.channels;}
     uint32_t frames() const {return info.frames;}
     uint32_t samples() const {return channels() * frames();}
+    uint32_t channelMask() const {return info.channelMask;}
     uint32_t sampleRate() const {return info.sampleRate;}
     uint16_t bitDepth() const {return info.bitDepth;}
     uint16_t containerSizeInBits() const {return info.containerSizeInBits;}

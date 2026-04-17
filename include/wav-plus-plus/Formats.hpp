@@ -3,6 +3,7 @@
 #define wavplusplus_Formats_hpp
 
 #include <array>
+#include <cassert>
 #include <climits>
 #include <concepts>
 #include <cstdint>
@@ -101,6 +102,51 @@ inline constexpr uint32_t TopBackCenter      = 0x00010000;
 inline constexpr uint32_t TopBackRight       = 0x00020000;
 inline constexpr uint32_t ValidBits          = 0x0003FFFF;
 }
+
+// Some common speaker configs to save some typing.
+namespace SpeakerConfigurations
+{
+inline constexpr uint32_t Unassigned {0};
+inline constexpr uint32_t Stereo
+{
+    wav::SpeakerPosition::FrontLeft |
+    wav::SpeakerPosition::FrontRight
+};
+inline constexpr uint32_t Quadraphonic
+{
+    wav::SpeakerPosition::FrontLeft    |
+    wav::SpeakerPosition::FrontRight   |
+    wav::SpeakerPosition::BackLeft     |
+    wav::SpeakerPosition::BackRight
+};
+inline constexpr uint32_t Five_Point_One
+{
+    wav::SpeakerPosition::FrontLeft    |
+    wav::SpeakerPosition::FrontRight   |
+    wav::SpeakerPosition::FrontCenter  |
+    wav::SpeakerPosition::LowFrequency |
+    wav::SpeakerPosition::SideLeft     |
+    wav::SpeakerPosition::SideRight
+};
+inline constexpr uint32_t Seven_Point_One
+{
+    wav::SpeakerPosition::FrontLeft    |
+    wav::SpeakerPosition::FrontRight   |
+    wav::SpeakerPosition::FrontCenter  |
+    wav::SpeakerPosition::LowFrequency |
+    wav::SpeakerPosition::BackLeft     |
+    wav::SpeakerPosition::BackRight    |
+    wav::SpeakerPosition::SideLeft     |
+    wav::SpeakerPosition::SideRight
+};
+
+static_assert (Unassigned      == 0x0000);
+static_assert (Stereo          == 0x0003);
+static_assert (Quadraphonic    == 0x0033);
+static_assert (Five_Point_One  == 0x060F);
+static_assert (Seven_Point_One == 0x063F);
+}
+
 
 template <typename T>
 concept FloatOrDouble = std::same_as <T,float> || std::same_as <T,double>;
