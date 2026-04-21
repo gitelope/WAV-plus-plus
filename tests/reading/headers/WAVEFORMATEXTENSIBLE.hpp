@@ -118,7 +118,7 @@ inline std::vector<uint8_t> buildWAVEFORMATEXTENSIBLE (wav::GUID const & subform
                                                        uint16_t channels, uint32_t sampleRate,
                                                        uint32_t frames, uint32_t channelMask)
 {
-    constexpr uint32_t formatChunkSize {40};
+    constexpr uint32_t formatChunkSize {wav::FormatChunkSize::WAVEFORMATEXTENSIBLE};
 
     assert (containerSizeInBits % 8 == 0);
     const auto blockAlign {static_cast<uint16_t> (channels * containerSizeInBits / 8)};

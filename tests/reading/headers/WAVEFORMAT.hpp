@@ -76,7 +76,7 @@ inline void TestWAVEFORMAT (TestLog & log)
 inline std::vector<uint8_t> buildWAVEFORMAT (uint16_t formatCode, uint16_t bitDepth, uint16_t channels,
                                              uint32_t sampleRate, uint32_t frames)
 {
-    constexpr uint32_t formatChunkSize {14};
+    constexpr uint32_t formatChunkSize {wav::FormatChunkSize::WAVEFORMAT};
 
     assert (bitDepth % 8 == 0);
     const auto blockAlign {static_cast<uint16_t> (channels * bitDepth / 8)};

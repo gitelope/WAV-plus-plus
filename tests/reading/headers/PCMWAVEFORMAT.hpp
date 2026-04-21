@@ -90,7 +90,7 @@ inline void TestPCMWAVEFORMAT (TestLog & log)
 inline std::vector<uint8_t> buildPCMWAVEFORMAT (uint16_t formatCode, uint16_t validBitDepth, uint16_t containerSizeInBits,
                                                 uint16_t channels, uint32_t sampleRate, uint32_t frames)
 {
-    constexpr uint32_t formatChunkSize {16};
+    constexpr uint32_t formatChunkSize {wav::FormatChunkSize::PCMWAVEFORMAT};
 
     assert (containerSizeInBits % 8 == 0);
     const auto blockAlign {static_cast<uint16_t> (channels * containerSizeInBits / 8)};

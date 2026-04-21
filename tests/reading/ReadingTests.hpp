@@ -3,7 +3,7 @@
 #define wavplusplus_tests_ReadingTests_hpp
 
 #include "headers/HeaderParsing.hpp"
-#include "SampleDecoding.hpp"
+#include "decoding/SampleDecoding.hpp"
 
 void TestReading (TestLog & log)
 {

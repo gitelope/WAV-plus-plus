@@ -90,7 +90,7 @@ inline void TestWAVEFORMATEX (TestLog & log)
 inline std::vector<uint8_t> buildWAVEFORMATEX (uint16_t formatCode, uint16_t validBitDepth, uint16_t containerSizeInBits,
                                                uint16_t channels, uint32_t sampleRate, uint32_t frames)
 {
-    constexpr uint32_t formatChunkSize {18};
+    constexpr uint32_t formatChunkSize {wav::FormatChunkSize::WAVEFORMATEX};
 
     assert (containerSizeInBits % 8 == 0);
     const auto blockAlign {static_cast<uint16_t> (channels * containerSizeInBits / 8)};

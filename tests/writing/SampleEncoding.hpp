@@ -9,7 +9,7 @@
 
 void TestSampleEncoding (TestLog & log)
 {
-    const std::string filename {"test.wav"};
+    const std::string filename {"testSampleEncoding.wav"};
     constexpr auto sampleRate  {48000};
     constexpr auto channels    {1};
 
