@@ -80,16 +80,22 @@
 		C40B8FC12F73229900FDFC86 /* TestLog.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = TestLog.hpp; sourceTree = "<group>"; };
 		C40B8FC22F73229900FDFC86 /* TestLog.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TestLog.cpp; sourceTree = "<group>"; };
 		C40B8FC62F73237D00FDFC86 /* WritingTests.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = WritingTests.hpp; sourceTree = "<group>"; };
-		C40B8FC72F73250900FDFC86 /* SampleEncoding_Tests.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = SampleEncoding_Tests.hpp; sourceTree = "<group>"; };
-		C40B8FC82F7326C200FDFC86 /* Header_Tests.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Header_Tests.hpp; sourceTree = "<group>"; };
+		C40B8FC72F73250900FDFC86 /* SampleEncoding.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = SampleEncoding.hpp; sourceTree = "<group>"; };
+		C40B8FC82F7326C200FDFC86 /* HeaderWriting.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = HeaderWriting.hpp; sourceTree = "<group>"; };
 		C41045222EF1CD5E0013E245 /* ChunkInfo.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = ChunkInfo.hpp; sourceTree = "<group>"; };
 		C41045232EF1CD5E0013E245 /* Exceptions.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Exceptions.hpp; sourceTree = "<group>"; };
 		C41045242EF1CD5E0013E245 /* Formats.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Formats.hpp; sourceTree = "<group>"; };
 		C41045252EF1CD5E0013E245 /* FileInfo.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = FileInfo.hpp; sourceTree = "<group>"; };
 		C41045282EF1CD5E0013E245 /* Reader.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Reader.hpp; sourceTree = "<group>"; };
 		C410452A2EF1CD5E0013E245 /* Writer.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Writer.hpp; sourceTree = "<group>"; };
-		C46085F02F8EC53B007F0361 /* ReadingHeaders_Tests.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = ReadingHeaders_Tests.hpp; sourceTree = "<group>"; };
-		C46085F12F8EC5DB007F0361 /* SampleDecoding_Tests.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = SampleDecoding_Tests.hpp; sourceTree = "<group>"; };
+		C46085F02F8EC53B007F0361 /* HeaderParsing.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = HeaderParsing.hpp; sourceTree = "<group>"; };
+		C46085F12F8EC5DB007F0361 /* SampleDecoding.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = SampleDecoding.hpp; sourceTree = "<group>"; };
+		C46085F42F903EB5007F0361 /* header_parsing_helper_functions.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = header_parsing_helper_functions.hpp; sourceTree = "<group>"; };
+		C46085F62F903F96007F0361 /* WAVEFORMAT.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = WAVEFORMAT.hpp; sourceTree = "<group>"; };
+		C46085F72F9041E8007F0361 /* PCMWAVEFORMAT.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = PCMWAVEFORMAT.hpp; sourceTree = "<group>"; };
+		C46085FA2F91763E007F0361 /* WAVEFORMATEX.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = WAVEFORMATEX.hpp; sourceTree = "<group>"; };
+		C46085FB2F929631007F0361 /* WAVEFORMATEXTENSIBLE.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = WAVEFORMATEXTENSIBLE.hpp; sourceTree = "<group>"; };
+		C46085FC2F96C1A5007F0361 /* reading_helper_functions.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = reading_helper_functions.hpp; sourceTree = "<group>"; };
 		C470C0272F6A058B00F3A7D1 /* AudioSummary.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = AudioSummary.hpp; sourceTree = "<group>"; };
 		C48AB6732F636A5900C70CDA /* read */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = read; sourceTree = BUILT_PRODUCTS_DIR; };
 		C48AB67B2F636A6C00C70CDA /* read.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = read.cpp; sourceTree = "<group>"; };
@@ -180,8 +186,8 @@
 			isa = PBXGroup;
 			children = (
 				C40B8FC62F73237D00FDFC86 /* WritingTests.hpp */,
-				C40B8FC72F73250900FDFC86 /* SampleEncoding_Tests.hpp */,
-				C40B8FC82F7326C200FDFC86 /* Header_Tests.hpp */,
+				C40B8FC82F7326C200FDFC86 /* HeaderWriting.hpp */,
+				C40B8FC72F73250900FDFC86 /* SampleEncoding.hpp */,
 			);
 			path = writing;
 			sourceTree = "<group>";
@@ -206,6 +212,27 @@
 				C410452B2EF1CD5E0013E245 /* wav-plus-plus */,
 			);
 			path = include;
+			sourceTree = "<group>";
+		};
+		C46085F92F9046E6007F0361 /* headers */ = {
+			isa = PBXGroup;
+			children = (
+				C46085F02F8EC53B007F0361 /* HeaderParsing.hpp */,
+				C46085F42F903EB5007F0361 /* header_parsing_helper_functions.hpp */,
+				C46085F62F903F96007F0361 /* WAVEFORMAT.hpp */,
+				C46085F72F9041E8007F0361 /* PCMWAVEFORMAT.hpp */,
+				C46085FA2F91763E007F0361 /* WAVEFORMATEX.hpp */,
+				C46085FB2F929631007F0361 /* WAVEFORMATEXTENSIBLE.hpp */,
+			);
+			path = headers;
+			sourceTree = "<group>";
+		};
+		C46085FE2F96C36A007F0361 /* decoding */ = {
+			isa = PBXGroup;
+			children = (
+				C46085F12F8EC5DB007F0361 /* SampleDecoding.hpp */,
+			);
+			path = decoding;
 			sourceTree = "<group>";
 		};
 		C48AB67A2F636A5E00C70CDA /* examples */ = {
@@ -281,8 +308,9 @@
 			isa = PBXGroup;
 			children = (
 				C4F0964A2F7B2FBC00C1852B /* ReadingTests.hpp */,
-				C46085F02F8EC53B007F0361 /* ReadingHeaders_Tests.hpp */,
-				C46085F12F8EC5DB007F0361 /* SampleDecoding_Tests.hpp */,
+				C46085FC2F96C1A5007F0361 /* reading_helper_functions.hpp */,
+				C46085F92F9046E6007F0361 /* headers */,
+				C46085FE2F96C36A007F0361 /* decoding */,
 			);
 			path = reading;
 			sourceTree = "<group>";

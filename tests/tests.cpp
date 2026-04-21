@@ -1,7 +1,10 @@
 
 #include "TestLog.hpp"
+#include "helper_functions.hpp"
+
 #include "writing/WritingTests.hpp"
 #include "reading/ReadingTests.hpp"
+
 #include <iostream>
 
 int main ()

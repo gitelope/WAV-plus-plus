@@ -18,6 +18,7 @@ struct FileInfo
     uint32_t frames {0};
     // total samples = channels * frames
     // length in seconds = frames / sampleRate
+    uint32_t channelMask {0}; // Only found in WAVEFORMATEXTENSIBLE (though it may be set to 0 inside that format).
 
     // sample encoding (in the source WAV file)
     uint16_t bitDepth {0}; // bits per sample

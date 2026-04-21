@@ -1,8 +1,32 @@
 
 #include "helper_functions.hpp"
+
 #include <algorithm>
 #include <cmath>
 #include <iostream>
+
+void Compare (bool passes, std::string const & failure, std::string & failures)
+{
+    if (!passes)
+    {
+        if (!failures.empty()) failures += ", ";
+        failures += failure;
+    }
+}
+
+std::string exportFormatShortPrefix (wav::ExportFormat encoding)
+{
+    switch (encoding)
+    {
+        case wav::ExportFormat::LinearPCM_8:  return "u8";
+        case wav::ExportFormat::LinearPCM_16: return "s16";
+        case wav::ExportFormat::LinearPCM_24: return "s24";
+        case wav::ExportFormat::LinearPCM_32: return "s32";
+        case wav::ExportFormat::FloatPCM_32:  return "f32";
+        case wav::ExportFormat::FloatPCM_64:  return "f64";
+        default: return "?";
+    }
+}
 
 /*
 // test Buffers for equality by comparing difference

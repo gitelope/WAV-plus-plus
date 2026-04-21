@@ -138,7 +138,6 @@ struct Header
 };
 
 Header ReadHeader (std::string const &);
-void Compare (bool, std::string const &, std::string &);
 
 void TestSpeakerPositionHeader (TestLog & log)
 {
@@ -194,7 +193,7 @@ void TestSpeakerPositionHeader (TestLog & log)
     Compare (h.dataID == "data",                                           "data id", failures);
     Compare (h.dataChunkSize == dataChunkSize,                             "data chunk size", failures);
 
-    const auto logMessage {"WRITE HEADER - speaker positions (5.1)"
+    const auto logMessage {"Write Header - speaker positions (5.1)"
         + std::string {failures.empty() ? "" : " failures: " + failures}};
 
     log.Record (failures.empty(), logMessage);
@@ -211,7 +210,7 @@ void TestSpeakerPositionValidation (TestLog & log)
     {
         caughtInvalid = true;
     }
-    log.Record (caughtInvalid, "WRITE HEADER - invalid channel mask bits throws");
+    log.Record (caughtInvalid, "Write Header - invalid channel mask bits throws");
 }
 
 std::string headerTestLabel (wav::ExportFormat, uint16_t, uint32_t);
@@ -286,7 +285,7 @@ void TestHeader (wav::ExportFormat encoding,
     Compare (h.dataChunkSize == dataChunkSize,           "data chunk size", failures);
 
     const auto logMessage
-    {"WRITE HEADER - " + label + (failures.empty() ? "" : " failures: " + failures)};
+    {"Write Header - " + label + (failures.empty() ? "" : " failures: " + failures)};
 
     log.Record (failures.empty(), logMessage);
 }
@@ -297,29 +296,6 @@ Header ReadHeader (std::string const & filepath)
     const Header h {in.get()};
     wav::Close (in);
     return h;
-}
-
-void Compare (bool passes, std::string const & failure, std::string & failures)
-{
-    if (!passes)
-    {
-        if (!failures.empty()) failures += ", ";
-        failures += failure;
-    }
-}
-
-std::string exportFormatShortPrefix (wav::ExportFormat encoding)
-{
-    switch (encoding)
-    {
-        case wav::ExportFormat::LinearPCM_8:  return "u8";
-        case wav::ExportFormat::LinearPCM_16: return "s16";
-        case wav::ExportFormat::LinearPCM_24: return "s24";
-        case wav::ExportFormat::LinearPCM_32: return "s32";
-        case wav::ExportFormat::FloatPCM_32:  return "f32";
-        case wav::ExportFormat::FloatPCM_64:  return "f64";
-        default: return "?";
-    }
 }
 
 std::string headerTestLabel (wav::ExportFormat encoding, uint16_t channels, uint32_t frames)

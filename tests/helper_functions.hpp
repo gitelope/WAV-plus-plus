@@ -2,7 +2,10 @@
 #ifndef wavplusplus_tests_helper_functions_hpp
 #define wavplusplus_tests_helper_functions_hpp
 
+#include "../include/wav-plus-plus/Formats.hpp"
+
 #include <cassert>
+#include <string>
 #include <vector>
 
 /*
@@ -24,5 +27,8 @@ bool areEqual (std::vector<T> const & a, std::vector<T> const & b)
     return true;
 }
 
+void Compare (bool passes, std::string const & failure, std::string & failures);
+
+std::string exportFormatShortPrefix (wav::ExportFormat encoding);
 
 #endif

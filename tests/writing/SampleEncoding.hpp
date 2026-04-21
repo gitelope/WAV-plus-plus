@@ -2,7 +2,6 @@
 #ifndef wavplusplus_tests_SampleEncoding_Tests_hpp
 #define wavplusplus_tests_SampleEncoding_Tests_hpp
 
-#include "../helper_functions.hpp"
 #include "../../include/wav-plus-plus/Writer.hpp"
 
 #include <fstream>
@@ -10,7 +9,7 @@
 
 void TestSampleEncoding (TestLog & log)
 {
-    const std::string filename {"test.wav"};
+    const std::string filename {"testSampleEncoding.wav"};
     constexpr auto sampleRate  {48000};
     constexpr auto channels    {1};
 
@@ -40,7 +39,7 @@ void TestSampleEncoding (TestLog & log)
 
         in.read (reinterpret_cast<char *> (actual.data()),
                 static_cast<std::streamsize> (actual.size()));
-        log.Record (areEqual (actual, expected), "WRITE ENCODING - " + description);
+        log.Record (areEqual (actual, expected), "Write Encoding - " + description);
     };
 
     {
