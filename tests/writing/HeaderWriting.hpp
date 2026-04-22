@@ -139,9 +139,9 @@ struct Header
 
 Header ReadHeader (std::string const &);
 
-void TestSpeakerPositionHeader (TestLog & log)
+void TestSpeakerPosition (TestLog & log)
 {
-    constexpr std::string filename {"test.wav"};
+    const auto filename {"testSpeakerPosition.wav"};
 
     const uint32_t channelMask =
     wav::SpeakerPosition::FrontLeft    |
@@ -197,20 +197,25 @@ void TestSpeakerPositionHeader (TestLog & log)
         + std::string {failures.empty() ? "" : " failures: " + failures}};
 
     log.Record (failures.empty(), logMessage);
+
+    std::remove (filename);
 }
 
 void TestSpeakerPositionValidation (TestLog & log)
 {
+    const auto filename {"testSpeakerPositionValidation.wav"};
     bool caughtInvalid {false};
     try
     {
-        wav::Writer writer {"test.wav", wav::ExportFormat::LinearPCM_16, 44100, 1, 0x00080000};
+        wav::Writer writer {filename, wav::ExportFormat::LinearPCM_16, 44100, 1, 0x00080000};
     }
     catch (wav::WriteError const &)
     {
         caughtInvalid = true;
     }
     log.Record (caughtInvalid, "Write Header - invalid channel mask bits throws");
+    
+    std::remove (filename);
 }
 
 std::string headerTestLabel (wav::ExportFormat, uint16_t, uint32_t);
@@ -221,7 +226,7 @@ void TestHeader (wav::ExportFormat encoding,
                  uint32_t frames,
                  TestLog & log)
 {
-    constexpr std::string filename {"test.wav"};
+    const auto filename {"testHeader.wav"};
 
     std::string const label = headerTestLabel (encoding, channels, frames);
 
@@ -288,6 +293,8 @@ void TestHeader (wav::ExportFormat encoding,
     {"Write Header - " + label + (failures.empty() ? "" : " failures: " + failures)};
 
     log.Record (failures.empty(), logMessage);
+
+    std::remove (filename);
 }
 
 Header ReadHeader (std::string const & filepath)

@@ -15,7 +15,7 @@ void TestSampleDecoding (TestLog & log)
 {
     constexpr auto sampleRate {44100};
     constexpr auto channels {1};
-    const std::string filename {"testSampleDecoding.wav"};
+    const auto filename {"testSampleDecoding.wav"};
 
     struct TestCase
     {
@@ -118,7 +118,7 @@ void TestSampleDecoding (TestLog & log)
             log.Record (samplesRead == testCase.expected.size() && areEqual (actual, testCase.expected), "Sample Decoding - " + exportFormatShortPrefix (testCase.encoding) + " -> double");
         }
     }
-    std::remove (filename.c_str());
+    std::remove (filename);
 }
 // Build a WAVEFORMATEX WAV file (18-byte fmt chunk).
 //

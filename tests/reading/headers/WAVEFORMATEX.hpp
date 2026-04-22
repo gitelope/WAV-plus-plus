@@ -6,7 +6,7 @@ std::vector<uint8_t> buildWAVEFORMATEX (uint16_t, uint16_t, uint16_t, uint16_t, 
 
 inline void TestWAVEFORMATEX (TestLog & log)
 {
-    const std::string filename    {"test_WAVEFORMATEX_header_parsing.wav"};
+    const auto filename           {"test_WAVEFORMATEX_header_parsing.wav"};
     constexpr uint32_t sampleRate {44100};
     // Frames should be odd to enable testing for padding for odd channel and byte depth combinations.
     constexpr uint32_t frames     {7};
@@ -76,7 +76,7 @@ inline void TestWAVEFORMATEX (TestLog & log)
         }
     }
 
-    std::remove (filename.c_str());
+    std::remove (filename);
 }
 
 // Build a WAVEFORMATEX WAV file (18-byte fmt chunk).

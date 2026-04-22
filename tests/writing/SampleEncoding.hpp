@@ -9,8 +9,8 @@
 
 void TestSampleEncoding (TestLog & log)
 {
-    const std::string filename {"testSampleEncoding.wav"};
-    constexpr auto sampleRate  {48000};
+    const auto filename       {"testSampleEncoding.wav"};
+    constexpr auto sampleRate {48000};
     constexpr auto channels    {1};
 
     const std::vector<float>  out_float
@@ -191,6 +191,8 @@ void TestSampleEncoding (TestLog & log)
         RunTest (encoding, out_float,  expected, "float  -> f64");
         RunTest (encoding, out_double, expected, "double -> f64");
     }
+
+    std::remove (filename);
 }
 
 #endif
