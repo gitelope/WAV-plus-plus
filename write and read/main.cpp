@@ -17,9 +17,6 @@ template <typename T> void Print (std::vector<std::vector<T>> const &, size_t);
 template <typename T>
 std::ostream & operator<< (std::ostream & os, std::vector<T> const & testSequence);
 
-//template <typename T> void Print (std::vector<std::vector<T>> const &);
-//template <typename T> void Print (T const * const * const array, size_t, size_t);
-
 void Section (std::string const & title);
 void Example (std::string const & title);
 

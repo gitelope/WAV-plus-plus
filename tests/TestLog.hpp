@@ -73,12 +73,9 @@ inline std::string TestLog::formattedResults() const
         {
             if (results[i]==false) output +=  descriptions[i] + "\n";
         }
-
-        //output += "\n\n!!!!!!!!!!!!!!!!!!!!!!!!!!";
         output += "\n\n" + std::to_string(testCount()) + " tests in total.\n";
         output += "\n\n*** " + std::to_string(failures()) + " *** " + (failures()==1 ? " test" : " tests") + " failed.\n";
         output += "failure rate: " + std::to_string(100. * failureRate()) + "%";
-        //output += "\n--------------------------";
     }
     output += "\n\n";
     return output;
