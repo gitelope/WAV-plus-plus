@@ -8,7 +8,6 @@
 
 /* Begin PBXBuildFile section */
 		C40B8FBE2F7321A600FDFC86 /* tests.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C40B8FBC2F7321A600FDFC86 /* tests.cpp */; };
-		C40B8FC42F73229900FDFC86 /* TestLog.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C40B8FC22F73229900FDFC86 /* TestLog.cpp */; };
 		C48AB67D2F636A6C00C70CDA /* read.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C48AB67B2F636A6C00C70CDA /* read.cpp */; };
 		C48AB6852F636AC800C70CDA /* write.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C48AB6842F636AC800C70CDA /* write.cpp */; };
 		C48AB6902F636B3100C70CDA /* inspect.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C48AB68F2F636B3100C70CDA /* inspect.cpp */; };
@@ -78,7 +77,6 @@
 		C40B8FB52F7321A000FDFC86 /* tests */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = tests; sourceTree = BUILT_PRODUCTS_DIR; };
 		C40B8FBC2F7321A600FDFC86 /* tests.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = tests.cpp; sourceTree = "<group>"; };
 		C40B8FC12F73229900FDFC86 /* TestLog.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = TestLog.hpp; sourceTree = "<group>"; };
-		C40B8FC22F73229900FDFC86 /* TestLog.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TestLog.cpp; sourceTree = "<group>"; };
 		C40B8FC62F73237D00FDFC86 /* WritingTests.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = WritingTests.hpp; sourceTree = "<group>"; };
 		C40B8FC72F73250900FDFC86 /* SampleEncoding.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = SampleEncoding.hpp; sourceTree = "<group>"; };
 		C40B8FC82F7326C200FDFC86 /* HeaderWriting.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = HeaderWriting.hpp; sourceTree = "<group>"; };
@@ -173,7 +171,6 @@
 			children = (
 				C40B8FBC2F7321A600FDFC86 /* tests.cpp */,
 				C40B8FC12F73229900FDFC86 /* TestLog.hpp */,
-				C40B8FC22F73229900FDFC86 /* TestLog.cpp */,
 				C4F096452F7489C700C1852B /* helper_functions.hpp */,
 				C4F096462F7489C700C1852B /* helper_functions.cpp */,
 				C4F096492F7B2F9200C1852B /* reading */,
@@ -492,7 +489,6 @@
 			files = (
 				C4F096472F7489C700C1852B /* helper_functions.cpp in Sources */,
 				C40B8FBE2F7321A600FDFC86 /* tests.cpp in Sources */,
-				C40B8FC42F73229900FDFC86 /* TestLog.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
