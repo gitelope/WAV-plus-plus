@@ -8,14 +8,6 @@
 #include <string>
 #include <vector>
 
-/*
-bool areEqual (double a, double b, double threshold);
-bool areEqual (std::vector<double> const & a, std::vector<double> const & b, double threshold);
-bool areEqual (std::vector<double> const & a, std::vector<double> const & b, size_t elementsToCompare, double threshold);
-bool areEqual (std::vector<std::vector<double>> const & a, std::vector<std::vector<double>> const & b, double threshold);
-void Print (std::vector<double> const & v);
-*/
-
 template <typename T>
 bool areEqual (std::vector<T> const & a, std::vector<T> const & b)
 {
@@ -27,8 +19,27 @@ bool areEqual (std::vector<T> const & a, std::vector<T> const & b)
     return true;
 }
 
-void Compare (bool passes, std::string const & failure, std::string & failures);
+inline void Compare (bool passes, std::string const & failure, std::string & failures)
+{
+    if (!passes)
+    {
+        if (!failures.empty()) failures += ", ";
+        failures += failure;
+    }
+}
 
-std::string exportFormatShortPrefix (wav::ExportFormat encoding);
+inline std::string exportFormatShortPrefix (wav::ExportFormat encoding)
+{
+    switch (encoding)
+    {
+        case wav::ExportFormat::LinearPCM_8:  return "u8";
+        case wav::ExportFormat::LinearPCM_16: return "s16";
+        case wav::ExportFormat::LinearPCM_24: return "s24";
+        case wav::ExportFormat::LinearPCM_32: return "s32";
+        case wav::ExportFormat::FloatPCM_32:  return "f32";
+        case wav::ExportFormat::FloatPCM_64:  return "f64";
+        default: return "?";
+    }
+}
 
 #endif
