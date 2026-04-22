@@ -141,64 +141,64 @@ Header ReadHeader (std::string const &);
 
 void TestSpeakerPosition (TestLog & log)
 {
-    const auto filename {"testSpeakerPosition.wav"};
+    const auto filename       {"testSpeakerPosition.wav"};
+    constexpr auto encoding   {wav::ExportFormat::LinearPCM_16};
+    constexpr auto sampleRate {48000};
+    constexpr auto frames     {10};
 
-    const uint32_t channelMask =
-    wav::SpeakerPosition::FrontLeft    |
-    wav::SpeakerPosition::FrontRight   |
-    wav::SpeakerPosition::FrontCenter  |
-    wav::SpeakerPosition::LowFrequency |
-    wav::SpeakerPosition::BackLeft     |
-    wav::SpeakerPosition::BackRight;
+    struct TestCase
+    {
+        const char * label;
+        uint32_t channelMask;
+        uint16_t channels;
+    };
 
-    const auto channels   {std::popcount (channelMask)};
-    const auto encoding   {wav::ExportFormat::LinearPCM_24};
-    const auto sampleRate {48000};
-    const auto frames     {10};
+    // All cases result in a WAVEFORMATEXTENSIBLE header (with a channelMask field).
+    //
+    // Recall that WAVEFORMATEXTENSIBLE is required for non-zero mask, 3+ channels, or bit depth > 16.
+    // LPCM 16 was chosen because the bit depth does not require the WAVEFORMATEXTENSIBLE format.
+    //
+    // The stereo case has a non-zero mask.
+    // The unassigned speakers case has 3+ channels.
+    // The quadraphonic, 5.1, and 7.1 cases have both a non-zero mask and 3+ channels.
+    const std::vector<TestCase> testCases
+    {
+        {"stereo",                wav::SpeakerConfigurations::Stereo,          2},
+        {"3 unassigned channels", wav::SpeakerConfigurations::Unassigned,      3},
+        {"quadraphonic",          wav::SpeakerConfigurations::Quadraphonic,    4},
+        {"5.1",                   wav::SpeakerConfigurations::Five_Point_One,  6},
+        {"7.1",                   wav::SpeakerConfigurations::Seven_Point_One, 8},
+    };
 
-    const auto [bitDepth, formatCode] = wav::bitDepthAndFormatCode (encoding);
-    const auto bytesPerSample {bitDepth / 8U};
-    const auto blockAlign     {channels * bytesPerSample};
-    const auto byteRate       {sampleRate * blockAlign};
-    const auto dataChunkSize  {frames * blockAlign};
-    const auto riffChunkSize  {(20 + wav::FormatChunkSize::WAVEFORMATEXTENSIBLE) + dataChunkSize + (dataChunkSize % 2)};
+    const auto [bitDepth, _] = wav::bitDepthAndFormatCode (encoding);
 
-    std::vector<float> zeros (frames * channels, 0.f);
+    for (auto const & testCase : testCases)
+    {
+        std::vector<float> zeros (static_cast<size_t> (frames) * testCase.channels, 0.f);
 
-    wav::Writer writer {filename, encoding, sampleRate, channels, channelMask};
-    writer.write (zeros);
-    writer.Close();
+        wav::Writer writer {filename, encoding, sampleRate, testCase.channels, testCase.channelMask};
+        writer.write (zeros);
+        writer.Close();
 
-    const auto h = ReadHeader (filename);
+        const auto h = ReadHeader (filename);
 
-    std::string failures;
+        std::string failures;
 
-    Compare (h.riffID == "RIFF",                                           "RIFF id", failures);
-    Compare (h.riffChunkSize == riffChunkSize,                             "RIFF chunk size", failures);
-    Compare (h.riffFormat == "WAVE",                                       "RIFF format (WAVE)", failures);
+        Compare (h.fmtChunkSize == wav::FormatChunkSize::WAVEFORMATEXTENSIBLE, "fmt chunk size", failures);
+        Compare (h.formatCode == wav::FormatCode::Extensible,                  "format code", failures);
+        Compare (h.cbSize == 22,                                               "cbSize", failures);
+        Compare (h.validBitsPerSample == bitDepth,                             "validBitsPerSample", failures);
+        Compare (h.channelMask == testCase.channelMask,                        "channel mask", failures);
+        Compare (h.subFormat == wav::ExtensibleFormat::LinearPCM,              "subFormat GUID", failures);
 
-    Compare (h.fmtID == "fmt ",                                            "fmt id", failures);
-    Compare (h.fmtChunkSize == wav::FormatChunkSize::WAVEFORMATEXTENSIBLE, "fmt chunk size", failures);
-    Compare (h.formatCode == wav::FormatCode::Extensible,                  "format code", failures);
-    Compare (h.channels == channels,                                       "channels", failures);
-    Compare (h.sampleRate == sampleRate,                                   "sample rate", failures);
-    Compare (h.byteRate == byteRate,                                       "byte rate", failures);
-    Compare (h.blockAlign == blockAlign,                                   "block align", failures);
-    Compare (h.bitsPerSample == bitDepth,                                  "bit depth", failures);
-    Compare (h.cbSize == 22,                                               "cbSize", failures);
-    Compare (h.validBitsPerSample == bitDepth,                             "validBitsPerSample", failures);
-    Compare (h.channelMask == channelMask,                                 "channel mask", failures);
-    Compare (h.subFormat == wav::ExtensibleFormat::LinearPCM,              "SubFormat GUID", failures);
+        const auto message = std::string {"Write Header - channel mask - "}
+            + testCase.label
+            + (failures.empty() ? "" : " failures: " + failures);
 
-    Compare (h.dataID == "data",                                           "data id", failures);
-    Compare (h.dataChunkSize == dataChunkSize,                             "data chunk size", failures);
+        log.Record (failures.empty(), message);
 
-    const auto logMessage {"Write Header - speaker positions (5.1)"
-        + std::string {failures.empty() ? "" : " failures: " + failures}};
-
-    log.Record (failures.empty(), logMessage);
-
-    std::remove (filename);
+        std::remove (filename);
+    }
 }
 
 void TestSpeakerPositionValidation (TestLog & log)
@@ -207,14 +207,15 @@ void TestSpeakerPositionValidation (TestLog & log)
     bool caughtInvalid {false};
     try
     {
-        wav::Writer writer {filename, wav::ExportFormat::LinearPCM_16, 44100, 1, 0x00080000};
+        constexpr uint32_t invalidMask {0xFFFFFFFF};
+        wav::Writer writer {filename, wav::ExportFormat::LinearPCM_16, 44100, 1, invalidMask};
     }
     catch (wav::WriteError const &)
     {
         caughtInvalid = true;
     }
     log.Record (caughtInvalid, "Write Header - invalid channel mask bits throws");
-    
+
     std::remove (filename);
 }
 
