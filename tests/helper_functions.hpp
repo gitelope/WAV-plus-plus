@@ -4,17 +4,33 @@
 
 #include "../include/wav-plus-plus/Formats.hpp"
 
+#include <bit>
 #include <cassert>
+#include <cstdint>
 #include <string>
+#include <type_traits>
 #include <vector>
 
-template <typename T>
+template <typename IntegralType>
+requires std::is_integral_v<IntegralType>
+bool areEqual (std::vector<IntegralType> const & a, std::vector<IntegralType> const & b)
+{
+    assert (a.size() == b.size());
+    return std::equal (a.begin(), a.end(), b.begin());
+}
+
+template <wav::FloatOrDouble T>
 bool areEqual (std::vector<T> const & a, std::vector<T> const & b)
 {
     assert (a.size() == b.size());
+
+    static_assert (sizeof (T) == 4 || sizeof (T) == 8);
+    using unsignedType = std::conditional_t <sizeof(T) == 4, uint32_t, uint64_t>;
+
     for (size_t i = 0; i < a.size(); ++i)
     {
-        if (a[i] != b[i]) return false;
+        if (std::bit_cast<unsignedType> (a[i]) != std::bit_cast<unsignedType> (b[i]))
+            return false;
     }
     return true;
 }

@@ -709,6 +709,10 @@
 					"-Wdouble-promotion",
 					"-Wformat-nonliteral",
 					"-Wmissing-braces",
+					"-Wreorder",
+					"-Wsign-compare",
+					"-Wimplicit-int-conversion",
+					"-Wimplicit-int-float-conversion",
 				);
 			};
 			name = Debug;
@@ -797,6 +801,10 @@
 					"-Wdouble-promotion",
 					"-Wformat-nonliteral",
 					"-Wmissing-braces",
+					"-Wreorder",
+					"-Wsign-compare",
+					"-Wimplicit-int-conversion",
+					"-Wimplicit-int-float-conversion",
 				);
 			};
 			name = Release;

@@ -36,7 +36,7 @@ inline void push_data_chunk (std::vector<uint8_t> & v, std::vector<uint8_t> cons
 {
     // header
     push_fourCC    (v, "data");
-    push_uint32_le (v, data.size());
+    push_uint32_le (v, static_cast<uint32_t> (data.size()));
 
     v.append_range (data);
     if (data.size() % 2) v.push_back (0);
