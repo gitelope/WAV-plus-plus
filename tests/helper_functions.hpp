@@ -11,28 +11,11 @@
 #include <type_traits>
 #include <vector>
 
-template <typename IntegralType>
-requires std::is_integral_v<IntegralType>
-bool areEqual (std::vector<IntegralType> const & a, std::vector<IntegralType> const & b)
-{
-    assert (a.size() == b.size());
-    return std::equal (a.begin(), a.end(), b.begin());
-}
-
-template <wav::FloatOrDouble T>
+template <typename T>
 bool areEqual (std::vector<T> const & a, std::vector<T> const & b)
 {
     assert (a.size() == b.size());
-
-    static_assert (sizeof (T) == 4 || sizeof (T) == 8);
-    using unsignedType = std::conditional_t <sizeof(T) == 4, uint32_t, uint64_t>;
-
-    for (size_t i = 0; i < a.size(); ++i)
-    {
-        if (std::bit_cast<unsignedType> (a[i]) != std::bit_cast<unsignedType> (b[i]))
-            return false;
-    }
-    return true;
+    return std::equal (a.begin(), a.end(), b.begin());
 }
 
 inline void Compare (bool passes, std::string const & failure, std::string & failures)
