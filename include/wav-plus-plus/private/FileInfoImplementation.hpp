@@ -5,7 +5,6 @@
 #include "AudioSummary.hpp"
 
 #include <cassert>
-#include <format>
 
 namespace wav
 {

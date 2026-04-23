@@ -7,13 +7,11 @@
 
 #include <algorithm>
 #include <array>
-#include <bit>
 #include <cassert>
 #include <format>
 #include <limits>
 #include <string_view>
 #include <type_traits>
-#include <utility>
 
 namespace wav
 {

@@ -2,6 +2,7 @@
 #ifndef wavplusplus_WriterImplementation_hpp
 #define wavplusplus_WriterImplementation_hpp
 
+#include "Byteswap.hpp"
 #include "QuantizationConstants.hpp"
 
 #include <algorithm>
@@ -159,7 +160,7 @@ void Writer::WriteFloatPCM_NoConversion (T const * source, size_t samplesToWrite
             // Byteswap and copy to buffer.
             for (size_t i = 0; i < samplesToWrite; ++i)
             {
-                buffer [i] = std::bit_cast<float> (std::byteswap (std::bit_cast<uint32_t> (source[i])));
+                buffer [i] = wav::byteswap (source[i]);
             }
             if (fwrite (buffer, 4, samplesToWrite, file.get()) != samplesToWrite)
             {
@@ -173,7 +174,7 @@ void Writer::WriteFloatPCM_NoConversion (T const * source, size_t samplesToWrite
             // Byteswap and copy to buffer.
             for (size_t i = 0; i < samplesToWrite; ++i)
             {
-                buffer [i] = std::bit_cast<double> (std::byteswap (std::bit_cast<uint64_t> (source[i])));
+                buffer [i] = wav::byteswap (source[i]);
             }
             if (fwrite (buffer, 8, samplesToWrite, file.get()) != samplesToWrite)
             {
@@ -208,7 +209,7 @@ void Writer::WriteFloatToDouble (float const * source, size_t totalSamplesToWrit
         {
             for (size_t i = 0; i < samplesToWrite; ++i)
             {
-                buffer [i] = std::bit_cast<double> (std::byteswap (std::bit_cast<uint64_t> (buffer [i])));
+                buffer [i] = wav::byteswap (buffer [i]);
             }
         }
 
@@ -247,7 +248,7 @@ void Writer::WriteDoubleToFloat (double const * source, size_t totalSamplesToWri
         {
             for (size_t i = 0; i < samplesToWrite; ++i)
             {
-                buffer [i] = std::bit_cast<float> (std::byteswap (std::bit_cast<uint32_t> (buffer [i])));
+                buffer [i] = wav::byteswap (buffer [i]);
             }
         }
 
@@ -341,7 +342,7 @@ void Writer::WriteLPCM16 (T const * source, size_t totalSamplesToWrite)
         {
             for (size_t i = 0; i < samplesToWrite; ++i)
             {
-                buffer [i] = std::byteswap (buffer [i]);
+                buffer [i] = wav::byteswap (buffer [i]);
             }
         }
 
@@ -430,7 +431,7 @@ void Writer::WriteLPCM32 (T const * source, size_t totalSamplesToWrite)
         {
             for (size_t i = 0; i < samplesToWrite; ++i)
             {
-                buffer [i] = std::byteswap (buffer [i]);
+                buffer [i] = wav::byteswap (buffer [i]);
             }
         }
 

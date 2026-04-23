@@ -3,7 +3,6 @@
 #define wavplusplus_Formats_hpp
 
 #include <array>
-#include <cassert>
 #include <climits>
 #include <concepts>
 #include <cstdint>

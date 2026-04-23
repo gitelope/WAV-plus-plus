@@ -3,6 +3,7 @@
 #define wavplusplus_ReaderImplementation_hpp
 
 #include "BufferSizing.hpp"
+#include "Byteswap.hpp"
 
 #include <algorithm>
 #include <bit>
@@ -185,7 +186,7 @@ void Reader::ReadLPCM16 (T * destination, size_t totalSamplesToRead)
         {
             for (size_t i = 0; i < samplesToRead; ++i)
             {
-                buffer [i] = std::byteswap (buffer [i]);
+                buffer [i] = wav::byteswap (buffer [i]);
             }
         }
 
@@ -265,7 +266,7 @@ void Reader::ReadLPCM32 (T * destination, size_t totalSamplesToRead)
         {
             for (size_t i = 0; i < samplesToRead; ++i)
             {
-                buffer [i] = std::byteswap (buffer [i]);
+                buffer [i] = wav::byteswap (buffer [i]);
             }
         }
 
@@ -295,14 +296,7 @@ void Reader::ReadFloatPCMNoConversion (T * destination, size_t samplesToRead)
     {
         for (size_t i = 0; i < samplesToRead; ++i)
         {
-            if constexpr (std::is_same_v<T, float>)
-            {
-                destination [i] = std::bit_cast<float> (std::byteswap (std::bit_cast<uint32_t> (destination [i])));
-            }
-            else // double
-            {
-                destination [i] = std::bit_cast<double> (std::byteswap (std::bit_cast<uint64_t> (destination [i])));
-            }
+            destination [i] = wav::byteswap (destination [i]);
         }
     }
 }
@@ -329,7 +323,7 @@ inline void Reader::ReadFloatToDouble (double * destination, size_t totalSamples
         {
             for (size_t i = 0; i < samplesToRead; ++i)
             {
-                buffer [i] = std::bit_cast<float> (std::byteswap (std::bit_cast<uint32_t> (buffer [i])));
+                buffer [i] = wav::byteswap (buffer [i]);
             }
         }
 
@@ -366,7 +360,7 @@ inline void Reader::ReadDoubleToFloat (float * destination, size_t totalSamplesT
         {
             for (size_t i = 0; i < samplesToRead; ++i)
             {
-                buffer [i] = std::bit_cast<double> (std::byteswap (std::bit_cast<uint64_t> (buffer [i])));
+                buffer [i] = wav::byteswap (buffer [i]);
             }
         }
 
@@ -497,7 +491,7 @@ void Reader::ReadLPCM16 (T ** const destinations, size_t channelsToRead, size_t 
         {
             for (size_t i = 0; i < samplesThisChunk; ++i)
             {
-                buffer[i] = std::byteswap (buffer[i]);
+                buffer[i] = wav::byteswap (buffer[i]);
             }
         }
 
@@ -597,7 +591,7 @@ void Reader::ReadLPCM32 (T ** const destinations, size_t channelsToRead, size_t 
         {
             for (size_t i = 0; i < samplesThisChunk; ++i)
             {
-                buffer[i] = std::byteswap (buffer[i]);
+                buffer[i] = wav::byteswap (buffer[i]);
             }
         }
 
@@ -646,7 +640,7 @@ void Reader::ReadFloatPCM32 (T ** const destinations, size_t channelsToRead, siz
         {
             for (size_t i = 0; i < samplesThisChunk; ++i)
             {
-                buffer[i] = std::bit_cast<float> (std::byteswap (std::bit_cast<uint32_t> (buffer[i])));
+                buffer[i] = wav::byteswap (buffer[i]);
             }
         }
 
@@ -697,7 +691,7 @@ void Reader::ReadFloatPCM64 (T ** const destinations, size_t channelsToRead, siz
         {
             for (size_t i = 0; i < samplesThisChunk; ++i)
             {
-                buffer[i] = std::bit_cast<double> (std::byteswap (std::bit_cast<uint64_t> (buffer[i])));
+                buffer[i] = wav::byteswap (buffer[i]);
             }
         }
 

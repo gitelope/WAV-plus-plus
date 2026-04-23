@@ -113,6 +113,7 @@
 		C4D146EE2F4E584E002DCA78 /* ChunkInfoImplementation.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = ChunkInfoImplementation.hpp; sourceTree = "<group>"; };
 		C4D146EF2F4E6E4C002DCA78 /* FormatsImplementation.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = FormatsImplementation.hpp; sourceTree = "<group>"; };
 		C4D146F02F4E7AD8002DCA78 /* FileInfoImplementation.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = FileInfoImplementation.hpp; sourceTree = "<group>"; };
+		C4E4D40C2F9AA6150059CA2F /* Byteswap.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Byteswap.hpp; sourceTree = "<group>"; };
 		C4F096452F7489C700C1852B /* helper_functions.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = helper_functions.hpp; sourceTree = "<group>"; };
 		C4F0964A2F7B2FBC00C1852B /* ReadingTests.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = ReadingTests.hpp; sourceTree = "<group>"; };
 		C4F704F62EA6CB4500243874 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = SOURCE_ROOT; };
@@ -293,6 +294,7 @@
 				C4C641CD2F469567005545BE /* int24.hpp */,
 				C4C641CE2F469567005545BE /* QuantizationConstants.hpp */,
 				C4C641CF2F469567005545BE /* ReadingBytes.hpp */,
+				C4E4D40C2F9AA6150059CA2F /* Byteswap.hpp */,
 				C470C0272F6A058B00F3A7D1 /* AudioSummary.hpp */,
 			);
 			path = private;
@@ -534,9 +536,7 @@
 		C40B8FBA2F7321A000FDFC86 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CLANG_CXX_LANGUAGE_STANDARD = "c++23";
 				CODE_SIGN_STYLE = Automatic;
-				GCC_C_LANGUAGE_STANDARD = c23;
 				MACOSX_DEPLOYMENT_TARGET = 15.7;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
@@ -545,9 +545,7 @@
 		C40B8FBB2F7321A000FDFC86 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CLANG_CXX_LANGUAGE_STANDARD = "c++23";
 				CODE_SIGN_STYLE = Automatic;
-				GCC_C_LANGUAGE_STANDARD = c23;
 				MACOSX_DEPLOYMENT_TARGET = 15.7;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
@@ -556,9 +554,7 @@
 		C48AB6772F636A5900C70CDA /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CLANG_CXX_LANGUAGE_STANDARD = "c++23";
 				CODE_SIGN_STYLE = Automatic;
-				GCC_C_LANGUAGE_STANDARD = c23;
 				MACOSX_DEPLOYMENT_TARGET = 15.7;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
@@ -567,9 +563,7 @@
 		C48AB6782F636A5900C70CDA /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CLANG_CXX_LANGUAGE_STANDARD = "c++23";
 				CODE_SIGN_STYLE = Automatic;
-				GCC_C_LANGUAGE_STANDARD = c23;
 				MACOSX_DEPLOYMENT_TARGET = 15.7;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
@@ -578,9 +572,7 @@
 		C48AB6872F636AC800C70CDA /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CLANG_CXX_LANGUAGE_STANDARD = "c++23";
 				CODE_SIGN_STYLE = Automatic;
-				GCC_C_LANGUAGE_STANDARD = c23;
 				MACOSX_DEPLOYMENT_TARGET = 15.7;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
@@ -589,9 +581,7 @@
 		C48AB6882F636AC800C70CDA /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CLANG_CXX_LANGUAGE_STANDARD = "c++23";
 				CODE_SIGN_STYLE = Automatic;
-				GCC_C_LANGUAGE_STANDARD = c23;
 				MACOSX_DEPLOYMENT_TARGET = 15.7;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
@@ -600,9 +590,7 @@
 		C48AB6922F636B3100C70CDA /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CLANG_CXX_LANGUAGE_STANDARD = "c++23";
 				CODE_SIGN_STYLE = Automatic;
-				GCC_C_LANGUAGE_STANDARD = c23;
 				MACOSX_DEPLOYMENT_TARGET = 15.7;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
@@ -611,9 +599,7 @@
 		C48AB6932F636B3100C70CDA /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CLANG_CXX_LANGUAGE_STANDARD = "c++23";
 				CODE_SIGN_STYLE = Automatic;
-				GCC_C_LANGUAGE_STANDARD = c23;
 				MACOSX_DEPLOYMENT_TARGET = 15.7;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
@@ -626,7 +612,7 @@
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
-				CLANG_CXX_LANGUAGE_STANDARD = "c++23";
+				CLANG_CXX_LANGUAGE_STANDARD = "c++20";
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_ENABLE_OBJC_ARC = YES;
 				CLANG_ENABLE_OBJC_WEAK = YES;
@@ -660,7 +646,7 @@
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
-				GCC_C_LANGUAGE_STANDARD = c23;
+				GCC_C_LANGUAGE_STANDARD = c17;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_OPTIMIZATION_LEVEL = 0;
@@ -723,7 +709,7 @@
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
-				CLANG_CXX_LANGUAGE_STANDARD = "c++23";
+				CLANG_CXX_LANGUAGE_STANDARD = "c++20";
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_ENABLE_OBJC_ARC = YES;
 				CLANG_ENABLE_OBJC_WEAK = YES;
@@ -757,7 +743,7 @@
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
-				GCC_C_LANGUAGE_STANDARD = c23;
+				GCC_C_LANGUAGE_STANDARD = c17;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;

@@ -1,8 +1,5 @@
-
-#ifndef FormatsImplementation_hpp
-#define FormatsImplementation_hpp
-
-#include "../Exceptions.hpp"
+#ifndef wavplusplus_FormatsImplementation_hpp
+#define wavplusplus_FormatsImplementation_hpp
 
 #include <format>
 #include <sstream>

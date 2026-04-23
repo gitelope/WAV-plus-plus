@@ -8,7 +8,6 @@
 #include "ChunkInfo.hpp"
 #include "private/int24.hpp"
 
-#include <array>
 #include <cstdio>
 #include <cstdint> 
 #include <memory>
