@@ -4,6 +4,7 @@
 
 #include "writing/WritingTests.hpp"
 #include "reading/ReadingTests.hpp"
+#include "utilities/UtilitiesTests.hpp"
 
 #include <iostream>
 
@@ -11,10 +12,11 @@ int main ()
 {
     TestLog log;
 
-    TestWriting (log);
-    TestReading (log);
+    TestWriting   (log);
+    TestReading   (log);
+    TestUtilities (log);
 
-    std::cout << log.formattedResults() << std::endl;
+    std::cout << log << std::endl;
 
     return EXIT_SUCCESS;
 }

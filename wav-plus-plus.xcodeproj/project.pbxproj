@@ -114,6 +114,8 @@
 		C4D146EF2F4E6E4C002DCA78 /* FormatsImplementation.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = FormatsImplementation.hpp; sourceTree = "<group>"; };
 		C4D146F02F4E7AD8002DCA78 /* FileInfoImplementation.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = FileInfoImplementation.hpp; sourceTree = "<group>"; };
 		C4E4D40C2F9AA6150059CA2F /* Byteswap.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Byteswap.hpp; sourceTree = "<group>"; };
+		C4E4D40F2F9ABC410059CA2F /* Byteswap.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Byteswap.hpp; sourceTree = "<group>"; };
+		C4E4D4102F9ABE150059CA2F /* UtilitiesTests.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = UtilitiesTests.hpp; sourceTree = "<group>"; };
 		C4F096452F7489C700C1852B /* helper_functions.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = helper_functions.hpp; sourceTree = "<group>"; };
 		C4F0964A2F7B2FBC00C1852B /* ReadingTests.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = ReadingTests.hpp; sourceTree = "<group>"; };
 		C4F704F62EA6CB4500243874 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = SOURCE_ROOT; };
@@ -173,6 +175,7 @@
 				C4F096452F7489C700C1852B /* helper_functions.hpp */,
 				C4F096492F7B2F9200C1852B /* reading */,
 				C40B8FC52F73233100FDFC86 /* writing */,
+				C4E4D40E2F9ABC230059CA2F /* utilities */,
 			);
 			path = tests;
 			sourceTree = "<group>";
@@ -298,6 +301,15 @@
 				C470C0272F6A058B00F3A7D1 /* AudioSummary.hpp */,
 			);
 			path = private;
+			sourceTree = "<group>";
+		};
+		C4E4D40E2F9ABC230059CA2F /* utilities */ = {
+			isa = PBXGroup;
+			children = (
+				C4E4D4102F9ABE150059CA2F /* UtilitiesTests.hpp */,
+				C4E4D40F2F9ABC410059CA2F /* Byteswap.hpp */,
+			);
+			path = utilities;
 			sourceTree = "<group>";
 		};
 		C4F096492F7B2F9200C1852B /* reading */ = {

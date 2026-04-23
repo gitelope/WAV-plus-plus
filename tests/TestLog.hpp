@@ -81,4 +81,9 @@ inline std::string TestLog::formattedResults() const
     return output;
 }
 
+inline std::ostream & operator<< (std::ostream & os, TestLog const & log)
+{
+    return os << log.formattedResults();
+}
+
 #endif
