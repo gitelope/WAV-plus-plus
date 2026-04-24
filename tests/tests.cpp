@@ -18,5 +18,5 @@ int main ()
 
     std::cout << log << std::endl;
 
-    return EXIT_SUCCESS;
+    return (log.failures() == 0) ? EXIT_SUCCESS : EXIT_FAILURE;
 }
