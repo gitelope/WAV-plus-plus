@@ -101,47 +101,13 @@ if (PROJECT_IS_TOP_LEVEL)
     add_custom_target (wav_plus_plus_headers SOURCES ${wav_plus_plus_all_headers})
 endif ()
 
+# ---- Examples ----
+if (WAV_PLUS_PLUS_BUILD_EXAMPLES)
+    add_subdirectory (examples)
+endif ()
 
 # ---- Tests ----
 if (WAV_PLUS_PLUS_BUILD_TESTS)
-    add_executable (tests tests/tests.cpp)
-
-    set (wav_plus_plus_test_headers
-        tests/TestLog.hpp
-        tests/helper_functions.hpp
-
-        tests/reading/ReadingTests.hpp
-        tests/reading/decoding/SampleDecoding.hpp
-        tests/reading/headers/HeaderParsing.hpp
-        tests/reading/headers/PCMWAVEFORMAT.hpp
-        tests/reading/headers/WAVEFORMAT.hpp
-        tests/reading/headers/WAVEFORMATEX.hpp
-        tests/reading/headers/WAVEFORMATEXTENSIBLE.hpp
-        tests/reading/headers/header_parsing_helper_functions.hpp
-        tests/reading/reading_helper_functions.hpp
-
-        tests/utilities/Byteswap.hpp
-        tests/utilities/UtilitiesTests.hpp
-
-        tests/writing/HeaderWriting.hpp
-        tests/writing/SampleEncoding.hpp
-        tests/writing/WritingTests.hpp
-    )
-    source_group (TREE "${CMAKE_CURRENT_SOURCE_DIR}" FILES ${wav_plus_plus_test_headers})
-    target_sources (tests PRIVATE ${wav_plus_plus_test_headers})
-    target_link_libraries (tests PRIVATE wav_plus_plus)
-    target_compile_options (tests PRIVATE ${wav_plus_plus_warning_flags})
-    set_target_properties (tests PROPERTIES CXX_EXTENSIONS OFF)
-    add_test (NAME tests COMMAND tests)
+    add_subdirectory (tests)
 endif ()
 
-
-# ---- Examples ----
-if (WAV_PLUS_PLUS_BUILD_EXAMPLES)
-    foreach (name IN ITEMS read write inspect) # <-- add new examples here
-        add_executable (example_${name} examples/${name}.cpp)
-        target_link_libraries (example_${name} PRIVATE wav_plus_plus)
-        target_compile_options (example_${name} PRIVATE ${wav_plus_plus_warning_flags})
-        set_target_properties (example_${name} PROPERTIES CXX_EXTENSIONS OFF)
-    endforeach ()
-endif ()
