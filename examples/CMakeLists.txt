@@ -8,3 +8,9 @@ foreach (name IN ITEMS read write inspect) # <-- add new examples here
         FOLDER examples
     )
 endforeach ()
+
+# read example shows a couple ways to extract metadata but does not make further use
+# of the variables so we disable the unused but set variable warning.
+if (NOT MSVC)
+    target_compile_options (read PRIVATE -Wno-unused-variable)
+endif ()

@@ -1,3 +1,4 @@
+
 cmake_minimum_required (VERSION 3.21)
 
 project (wav_plus_plus
@@ -5,7 +6,7 @@ project (wav_plus_plus
     LANGUAGES CXX
 )
 
-set_property (GLOBAL PROPERTY USE_FOLDERS ON)
+set_property (GLOBAL PROPERTY USE_FOLDERS ON) # for grouping examples in an IDE
 
 # Build tests and examples by default only when wav_plus_plus is the top-level project.
 # When included via add_subdirectory() in another project, these default to OFF to avoid
@@ -27,7 +28,7 @@ if (PROJECT_IS_TOP_LEVEL)
     set (CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 endif ()
 
-# ---- Warning flags for test and examples ----
+# ---- Warning flags for tests and examples ----
 if (MSVC)
     set (wav_plus_plus_warning_flags /W4 /permissive-)
 else ()
