@@ -5,6 +5,8 @@ project (wav_plus_plus
     LANGUAGES CXX
 )
 
+set_property (GLOBAL PROPERTY USE_FOLDERS ON)
+
 # Build tests and examples by default only when wav_plus_plus is the top-level project.
 # When included via add_subdirectory() in another project, these default to OFF to avoid
 # polluting the parent build with WAV++'s test and examples.
