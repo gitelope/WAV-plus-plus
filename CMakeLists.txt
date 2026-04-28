@@ -8,6 +8,10 @@ project (wav_plus_plus
 option (WAV_PLUS_PLUS_BUILD_TESTS    "Build wav_plus_plus tests"    ${PROJECT_IS_TOP_LEVEL})
 option (WAV_PLUS_PLUS_BUILD_EXAMPLES "Build wav_plus_plus examples" ${PROJECT_IS_TOP_LEVEL})
 
+if (WAV_PLUS_PLUS_BUILD_TESTS)
+    enable_testing ()
+endif ()
+
 add_library (wav_plus_plus INTERFACE)
 target_include_directories (wav_plus_plus INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/include")
 
@@ -16,6 +20,47 @@ target_compile_features (wav_plus_plus INTERFACE cxx_std_20)
 
 if (PROJECT_IS_TOP_LEVEL)
     set (CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+endif ()
+
+# ---- Warning flags for test and examples ----
+if (MSVC)
+    set (wav_plus_plus_warning_flags /W4 /permissive-)
+else ()
+    set (wav_plus_plus_warning_flags
+        -Wall
+        -Wextra
+        -Wpedantic
+        -Wnarrowing
+        -Wconversion
+        -Wcast-align
+        -Wcast-qual
+        -Wold-style-cast
+        -Wshadow
+        -Wunused-but-set-variable
+        -Wunused-but-set-parameter
+        -Wredundant-decls
+        -Wzero-as-null-pointer-constant
+        -Wuninitialized
+        -Wunreachable-code
+        -Wundef
+        -Wmissing-field-initializers
+        -Wtype-limits
+        -Wdeprecated
+        -Wsign-promo
+        -Wnon-virtual-dtor
+        -Wdouble-promotion
+        -Wformat-nonliteral
+        -Wmissing-braces
+        -Wreorder
+        -Wsign-compare
+    )
+    if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+        list (APPEND wav_plus_plus_warning_flags
+            -Wdocumentation
+            -Wimplicit-int-conversion
+            -Wimplicit-int-float-conversion
+        )
+    endif ()
 endif ()
 
 # ---- Header listing for browsing in an IDE ----
@@ -56,8 +101,7 @@ endif ()
 
 # ---- Tests ----
 if (WAV_PLUS_PLUS_BUILD_TESTS)
-    enable_testing ()
-    add_executable (tests    tests/tests.cpp)
+    add_executable (tests tests/tests.cpp)
 
     set (wav_plus_plus_test_headers
         tests/TestLog.hpp
@@ -83,18 +127,18 @@ if (WAV_PLUS_PLUS_BUILD_TESTS)
     source_group (TREE "${CMAKE_CURRENT_SOURCE_DIR}" FILES ${wav_plus_plus_test_headers})
     target_sources (tests PRIVATE ${wav_plus_plus_test_headers})
     target_link_libraries (tests PRIVATE wav_plus_plus)
+    target_compile_options (tests PRIVATE ${wav_plus_plus_warning_flags})
+    set_target_properties (tests PROPERTIES CXX_EXTENSIONS OFF)
     add_test (NAME tests COMMAND tests)
 endif ()
 
 
 # ---- Examples ----
 if (WAV_PLUS_PLUS_BUILD_EXAMPLES)
-    add_executable (example_read       examples/read.cpp)
-    target_link_libraries (example_read PRIVATE wav_plus_plus)
-
-    add_executable (example_write      examples/write.cpp)
-    target_link_libraries (example_write PRIVATE wav_plus_plus)
-
-    add_executable (example_inspect    examples/inspect.cpp)
-    target_link_libraries (example_inspect PRIVATE wav_plus_plus)
+    foreach (name IN ITEMS read write inspect) # <-- add new examples here
+        add_executable (example_${name} examples/${name}.cpp)
+        target_link_libraries (example_${name} PRIVATE wav_plus_plus)
+        target_compile_options (example_${name} PRIVATE ${wav_plus_plus_warning_flags})
+        set_target_properties (example_${name} PROPERTIES CXX_EXTENSIONS OFF)
+    endforeach ()
 endif ()
