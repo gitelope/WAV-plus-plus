@@ -1,6 +1,8 @@
 
 #include <wav-plus-plus/Writer.hpp>
+
 #include <iostream>
+#include <random>
 
 int main ()
 {
@@ -8,6 +10,11 @@ int main ()
     const auto sampleRate {48000};
     const auto encoding   {wav::ExportFormat::FloatPCM_32};
     const auto channels   {2};
+
+    // random number generator
+    std::mt19937 generator {std::random_device{}()};
+    std::uniform_real_distribution<float> distribution {-1.f, 1.f};
+    const auto randomNumber = [&generator, &distribution] {return distribution (generator);};
 
     // Whole file write with std::vector
     {
@@ -39,7 +46,7 @@ int main ()
         // write a series of buffers of noise to the file
         while (samplesRemaining)
         {
-            for (auto & sample : buffer) sample =  (2.f * rand() / RAND_MAX) - 1.f;
+            for (auto & sample : buffer) sample =  randomNumber();
             samplesRemaining -= writer.write (buffer);
         }
     }
@@ -56,7 +63,7 @@ int main ()
         // write a series of buffers of noise to the file
         while (samplesRemaining)
         {
-            for (size_t i=0; i<size; ++i) buffer[i] =  (2.f * rand() / RAND_MAX) - 1.f;
+            for (size_t i=0; i<size; ++i) buffer[i] =  randomNumber();
             samplesRemaining -= writer.write (buffer, size);
         }
 
@@ -75,7 +82,7 @@ int main ()
         // write a series of buffers of noise to the file
         while (framesRemaining)
         {
-            for (size_t i=0; i<sizeInFrames * channels; ++i) buffer[i] =  (2.f * rand() / RAND_MAX) - 1.f;
+            for (size_t i=0; i<sizeInFrames * channels; ++i) buffer[i] =  randomNumber();
             framesRemaining -= writer.write (buffer, sizeInFrames);
         }
 
