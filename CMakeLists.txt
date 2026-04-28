@@ -5,6 +5,9 @@ project (wav_plus_plus
     LANGUAGES CXX
 )
 
+# Build tests and examples by default only when wav_plus_plus is the top-level project.
+# When included via add_subdirectory() in another project, these default to OFF to avoid
+# polluting the parent build with WAV++'s test and examples.
 option (WAV_PLUS_PLUS_BUILD_TESTS    "Build wav_plus_plus tests"    ${PROJECT_IS_TOP_LEVEL})
 option (WAV_PLUS_PLUS_BUILD_EXAMPLES "Build wav_plus_plus examples" ${PROJECT_IS_TOP_LEVEL})
 
