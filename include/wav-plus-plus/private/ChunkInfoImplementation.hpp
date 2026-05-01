@@ -134,10 +134,10 @@ inline void SkipChunk (std::FILE * file, uint32_t size)
 
 inline int peek (std::FILE * in)
 {
-    int c = fgetc (in);
+    int c = std::fgetc (in);
     if (c != EOF)
     {
-        ungetc (c, in); // Put the character back
+        std::ungetc (c, in); // Put the character back
     }
     return c;
 }
