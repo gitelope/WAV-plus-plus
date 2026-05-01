@@ -81,7 +81,7 @@ inline void ChunkInfo::ReadFile (std::FILE * in)
     while (peek (in) != EOF)
     {
         std::fpos_t chunkStart;
-        fgetpos (in, &chunkStart);
+        std::fgetpos (in, &chunkStart);
         const auto chunkID {fourCharacterCode (in)};
         RegisterChunk (chunkID, chunkStart);
 
@@ -309,7 +309,7 @@ inline void ChunkInfo::ReadDataChunkSizeAndSkipSamples (std::FILE * in)
         throw ReadError ("Size of data chunk is not divisible by block_align.");
     }
 
-    if (fgetpos (in, &data.offset) != 0)
+    if (std::fgetpos (in, &data.offset) != 0)
     {
         throw ReadError ("Failed to get current file position for data chunk.");
     }
