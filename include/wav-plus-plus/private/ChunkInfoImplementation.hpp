@@ -80,7 +80,7 @@ inline void ChunkInfo::ReadFile (std::FILE * in)
 
     while (peek (in) != EOF)
     {
-        fpos_t chunkStart;
+        std::fpos_t chunkStart;
         fgetpos (in, &chunkStart);
         const auto chunkID {fourCharacterCode (in)};
         RegisterChunk (chunkID, chunkStart);
@@ -324,9 +324,9 @@ inline void ChunkInfo::ReadDataChunkSizeAndSkipSamples (std::FILE * in)
     SkipChunk (in, data.size);
 }
 
-void ChunkInfo::RegisterChunk (std::string const & id, fpos_t position)
+void ChunkInfo::RegisterChunk (std::string const & id, std::fpos_t position)
 {
-    if constexpr (std::is_integral_v<fpos_t> && requires { std::to_string (position); })
+    if constexpr (std::is_integral_v<std::fpos_t> && requires { std::to_string (position); })
     {
         chunksEncountered.emplace_back (id + " " + std::to_string (position));
     }
@@ -335,9 +335,9 @@ void ChunkInfo::RegisterChunk (std::string const & id, fpos_t position)
         chunksEncountered.emplace_back (id);
     }
 }
-void ChunkInfo::RegisterSkippedChunk (std::string const & id, fpos_t position)
+void ChunkInfo::RegisterSkippedChunk (std::string const & id, std::fpos_t position)
 {
-    if constexpr (std::is_integral_v<fpos_t> && requires { std::to_string (position); })
+    if constexpr (std::is_integral_v<std::fpos_t> && requires { std::to_string (position); })
     {
         chunksSkipped.emplace_back (id + " " + std::to_string (position));
     }

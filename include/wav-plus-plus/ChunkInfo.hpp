@@ -49,7 +49,7 @@ struct DataChunk
 {
     std::string id {"data"};
     uint32_t size {0};
-    fpos_t offset; // first byte of first sample
+    std::fpos_t offset; // first byte of first sample
 };
 
 struct FactChunk
@@ -107,8 +107,8 @@ private:
     void ReadPeakChunk         (std::FILE * in);
     void ReadDataChunkSizeAndSkipSamples (std::FILE * in);
 
-    void RegisterChunk (std::string const & id, [[maybe_unused]] fpos_t position);
-    void RegisterSkippedChunk (std::string const & id, [[maybe_unused]] fpos_t position);
+    void RegisterChunk (std::string const & id, [[maybe_unused]] std::fpos_t position);
+    void RegisterSkippedChunk (std::string const & id, [[maybe_unused]] std::fpos_t position);
 };
 
 std::ostream & operator<< (std::ostream &, ChunkInfo const &);
