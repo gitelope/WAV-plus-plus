@@ -146,7 +146,7 @@ void Writer::WriteFloatPCM_NoConversion (T const * source, size_t samplesToWrite
 {
     if constexpr (std::endian::native == std::endian::little)
     {
-        if (fwrite (source, sizeof (T), samplesToWrite, file.get()) != samplesToWrite)
+        if (std::fwrite (source, sizeof (T), samplesToWrite, file.get()) != samplesToWrite)
         {
             throw WriteError ("Failed to write buffer to file.");
         }
@@ -162,7 +162,7 @@ void Writer::WriteFloatPCM_NoConversion (T const * source, size_t samplesToWrite
             {
                 buffer [i] = wav::byteswap (source[i]);
             }
-            if (fwrite (buffer, 4, samplesToWrite, file.get()) != samplesToWrite)
+            if (std::fwrite (buffer, 4, samplesToWrite, file.get()) != samplesToWrite)
             {
                 throw WriteError ("Failed to write buffer to file.");
             }
@@ -176,7 +176,7 @@ void Writer::WriteFloatPCM_NoConversion (T const * source, size_t samplesToWrite
             {
                 buffer [i] = wav::byteswap (source[i]);
             }
-            if (fwrite (buffer, 8, samplesToWrite, file.get()) != samplesToWrite)
+            if (std::fwrite (buffer, 8, samplesToWrite, file.get()) != samplesToWrite)
             {
                 throw WriteError ("Failed to write buffer to file.");
             }
@@ -213,7 +213,7 @@ void Writer::WriteFloatToDouble (float const * source, size_t totalSamplesToWrit
             }
         }
 
-        if (fwrite (buffer, bytesPerSample, samplesToWrite, file.get()) != samplesToWrite)
+        if (std::fwrite (buffer, bytesPerSample, samplesToWrite, file.get()) != samplesToWrite)
         {
             throw WriteError ("Failed to write buffer to file.");
         }
@@ -252,7 +252,7 @@ void Writer::WriteDoubleToFloat (double const * source, size_t totalSamplesToWri
             }
         }
 
-        if (fwrite (buffer, bytesPerSample, samplesToWrite, file.get()) != samplesToWrite)
+        if (std::fwrite (buffer, bytesPerSample, samplesToWrite, file.get()) != samplesToWrite)
         {
             throw WriteError ("Failed to write buffer to file.");
         }
@@ -293,7 +293,7 @@ void Writer::WriteLPCMU8 (T const * source, size_t totalSamplesToWrite)
             buffer [i] = static_cast<uint8_t> (clamped);
         }
 
-        if (fwrite (buffer, bytesPerSample, samplesToWrite, file.get()) != samplesToWrite)
+        if (std::fwrite (buffer, bytesPerSample, samplesToWrite, file.get()) != samplesToWrite)
         {
             throw WriteError ("Failed to write buffer to file.");
         }
@@ -346,7 +346,7 @@ void Writer::WriteLPCM16 (T const * source, size_t totalSamplesToWrite)
             }
         }
 
-        if (fwrite (buffer, bytesPerSample, samplesToWrite, file.get()) != samplesToWrite)
+        if (std::fwrite (buffer, bytesPerSample, samplesToWrite, file.get()) != samplesToWrite)
         {
             throw WriteError ("Failed to write buffer to file.");
         }
@@ -390,7 +390,7 @@ void Writer::WriteLPCM24 (T const * source, size_t totalSamplesToWrite)
             }
         }
 
-        if (fwrite (buffer, bytesPerSample, samplesToWrite, file.get()) != samplesToWrite)
+        if (std::fwrite (buffer, bytesPerSample, samplesToWrite, file.get()) != samplesToWrite)
         {
             throw WriteError ("Failed to write buffer to file.");
         }
@@ -435,7 +435,7 @@ void Writer::WriteLPCM32 (T const * source, size_t totalSamplesToWrite)
             }
         }
 
-        if (fwrite (buffer, bytesPerSample, samplesToWrite, file.get()) != samplesToWrite)
+        if (std::fwrite (buffer, bytesPerSample, samplesToWrite, file.get()) != samplesToWrite)
         {
             throw WriteError ("Failed to write buffer to file.");
         }
@@ -480,7 +480,7 @@ inline void Writer::InitializeBuffer (size_t sizeInBytes)
 
 inline void WriteToHeader (std::FILE * out, std::string const & str)
 {
-    if (fwrite (str.data(), 1, str.size(), out) != str.size())
+    if (std::fwrite (str.data(), 1, str.size(), out) != str.size())
     {
         throw WriteError ("Failed to write string to file.");
     }
@@ -495,7 +495,7 @@ void WriteToHeader (std::FILE * out, T value)
     {
         bytes[i] = static_cast<std::byte> (value >> (8*i));
     }
-    if (fwrite (bytes.data(), 1, bytes.size(), out) != bytes.size())
+    if (std::fwrite (bytes.data(), 1, bytes.size(), out) != bytes.size())
     {
         throw WriteError ("Failed to write to file.");
     }
@@ -506,7 +506,7 @@ inline void WriteToHeader (std::FILE * out, GUID const & guid)
     WriteToHeader (out, guid.data1);
     WriteToHeader (out, guid.data2);
     WriteToHeader (out, guid.data3);
-    if (fwrite (guid.data4.data(), 1, guid.data4.size(), out) != guid.data4.size())
+    if (std::fwrite (guid.data4.data(), 1, guid.data4.size(), out) != guid.data4.size())
     {
         throw WriteError ("Failed to write GUID to file.");
     }

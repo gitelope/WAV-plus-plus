@@ -21,7 +21,7 @@ inline void writeFile (std::string const & filepath, std::vector<uint8_t> const 
         throw std::runtime_error ("Failed to open file for writing: " + filepath);
     }
 
-    if (fwrite (bytes.data(), 1, bytes.size(), out.get()) != bytes.size())
+    if (std::fwrite (bytes.data(), 1, bytes.size(), out.get()) != bytes.size())
     {
         throw std::runtime_error ("Failed to write file: " + filepath);
     }
