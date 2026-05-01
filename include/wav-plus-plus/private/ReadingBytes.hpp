@@ -68,7 +68,7 @@ void PrintBytesAsHex (std::vector<std::byte> const & bytes);
 inline std::string fourCharacterCode (std::FILE * in)
 {
     std::string code (4, '\0');
-    if (fread (code.data(), 1, 4, in) != 4)
+    if (std::fread (code.data(), 1, 4, in) != 4)
         throw ReadError ("Failed to read 4-character code from file.");
     return code;
 }
@@ -90,7 +90,7 @@ inline GUID guid (std::FILE * in)
 template <size_t N>
 void read (std::FILE * in, std::array<uint8_t,N> & buffer)
 {
-    if (fread (buffer.data(), 1, buffer.size(), in) != buffer.size())
+    if (std::fread (buffer.data(), 1, buffer.size(), in) != buffer.size())
     {
         throw ReadError (std::format ("Failed to read {} bytes from file.", N));
     }
@@ -108,7 +108,7 @@ inline uint8_t uint8 (std::vector<std::byte> const & bytes, size_t & pos)
 inline uint8_t uint8 (std::FILE * in)
 {
     uint8_t result {0};
-    if (fread (&result, 1, 1, in) != 1)
+    if (std::fread (&result, 1, 1, in) != 1)
     {
         throw ReadError ("Failed to read uint8_t from file.");
     }
@@ -277,7 +277,7 @@ inline std::vector<std::byte> ReadBytes (std::string const & filepath)
     const auto length = std::filesystem::file_size (filepath);
     std::vector<std::byte> bytes (length);
 
-    if (fread (bytes.data(), 1, length, in.get()) != length)
+    if (std::fread (bytes.data(), 1, length, in.get()) != length)
     {
         throw ReadError ("Failed to read file.");
     }

@@ -145,7 +145,7 @@ void Reader::ReadLPCMU8 (T * destination, size_t totalSamplesToRead)
     {
         const size_t samplesToRead {std::min (samplesRemaining, buffer.size())};
 
-        if (fread (buffer.data(), bytesPerSample, samplesToRead, file.get()) != samplesToRead)
+        if (std::fread (buffer.data(), bytesPerSample, samplesToRead, file.get()) != samplesToRead)
         {
             throw ReadError ("Failed to read buffer from file.");
         }
@@ -176,7 +176,7 @@ void Reader::ReadLPCM16 (T * destination, size_t totalSamplesToRead)
     {
         const size_t samplesToRead {std::min (samplesRemaining, buffer.size())};
 
-        if (fread (buffer.data(), bytesPerSample, samplesToRead, file.get()) != samplesToRead)
+        if (std::fread (buffer.data(), bytesPerSample, samplesToRead, file.get()) != samplesToRead)
         {
             throw ReadError ("Failed to read buffer from file.");
         }
@@ -216,7 +216,7 @@ void Reader::ReadLPCM24 (T * destination, size_t totalSamplesToRead)
     {
         const size_t samplesToRead {std::min (samplesRemaining, buffer.size())};
 
-        if (fread (buffer.data(), bytesPerSample, samplesToRead, file.get()) != samplesToRead)
+        if (std::fread (buffer.data(), bytesPerSample, samplesToRead, file.get()) != samplesToRead)
         {
             throw ReadError ("Failed to read buffer from file.");
         }
@@ -256,7 +256,7 @@ void Reader::ReadLPCM32 (T * destination, size_t totalSamplesToRead)
     {
         const size_t samplesToRead {std::min (samplesRemaining, buffer.size())};
 
-        if (fread (buffer.data(), bytesPerSample, samplesToRead, file.get()) != samplesToRead)
+        if (std::fread (buffer.data(), bytesPerSample, samplesToRead, file.get()) != samplesToRead)
         {
             throw ReadError ("Failed to read buffer from file.");
         }
@@ -286,7 +286,7 @@ void Reader::ReadFloatPCMNoConversion (T * destination, size_t samplesToRead)
 {
     // Input bit depth same as output: float->float or double->double.
     // Read directly from file to destination.
-    if (fread (destination, sizeof (T), samplesToRead, file.get()) != samplesToRead)
+    if (std::fread (destination, sizeof (T), samplesToRead, file.get()) != samplesToRead)
     {
         throw ReadError ("Failed to read buffer from file.");
     }
@@ -313,7 +313,7 @@ inline void Reader::ReadFloatToDouble (double * destination, size_t totalSamples
     {
         const size_t samplesToRead {std::min (samplesRemaining, buffer.size())};
 
-        if (fread (buffer.data(), bytesPerSample, samplesToRead, file.get()) != samplesToRead)
+        if (std::fread (buffer.data(), bytesPerSample, samplesToRead, file.get()) != samplesToRead)
         {
             throw ReadError ("Failed to read buffer from file.");
         }
@@ -350,7 +350,7 @@ inline void Reader::ReadDoubleToFloat (float * destination, size_t totalSamplesT
     {
         const size_t samplesToRead {std::min (samplesRemaining, buffer.size())};
 
-        if (fread (buffer.data(), bytesPerSample, samplesToRead, file.get()) != samplesToRead)
+        if (std::fread (buffer.data(), bytesPerSample, samplesToRead, file.get()) != samplesToRead)
         {
             throw ReadError ("Failed to read buffer from file.");
         }
@@ -440,7 +440,7 @@ void Reader::ReadLPCMU8 (T ** const destinations, size_t channelsToRead, size_t 
         const size_t framesThisChunk {std::min (framesRemaining, framesPerBuffer)};
         const size_t samplesThisChunk {framesThisChunk * sourceChannels};
 
-        if (fread (buffer.data(), bytesPerSample, samplesThisChunk, file.get()) != samplesThisChunk)
+        if (std::fread (buffer.data(), bytesPerSample, samplesThisChunk, file.get()) != samplesThisChunk)
         {
             throw ReadError ("Failed to read buffer from file.");
         }
@@ -482,7 +482,7 @@ void Reader::ReadLPCM16 (T ** const destinations, size_t channelsToRead, size_t 
         const size_t framesThisChunk {std::min (framesRemaining, framesPerBuffer)};
         const size_t samplesThisChunk {framesThisChunk * sourceChannels};
 
-        if (fread (buffer.data(), bytesPerSample, samplesThisChunk, file.get()) != samplesThisChunk)
+        if (std::fread (buffer.data(), bytesPerSample, samplesThisChunk, file.get()) != samplesThisChunk)
         {
             throw ReadError ("Failed to read buffer from file.");
         }
@@ -532,7 +532,7 @@ void Reader::ReadLPCM24 (T ** const destinations, size_t channelsToRead, size_t 
         const size_t framesThisChunk {std::min (framesRemaining, framesPerBuffer)};
         const size_t samplesThisChunk {framesThisChunk * sourceChannels};
 
-        if (fread (buffer.data(), bytesPerSample, samplesThisChunk, file.get()) != samplesThisChunk)
+        if (std::fread (buffer.data(), bytesPerSample, samplesThisChunk, file.get()) != samplesThisChunk)
         {
             throw ReadError ("Failed to read buffer from file.");
         }
@@ -582,7 +582,7 @@ void Reader::ReadLPCM32 (T ** const destinations, size_t channelsToRead, size_t 
         const size_t framesThisChunk {std::min (framesRemaining, framesPerBuffer)};
         const size_t samplesThisChunk {framesThisChunk * sourceChannels};
 
-        if (fread (buffer.data(), bytesPerSample, samplesThisChunk, file.get()) != samplesThisChunk)
+        if (std::fread (buffer.data(), bytesPerSample, samplesThisChunk, file.get()) != samplesThisChunk)
         {
             throw ReadError ("Failed to read buffer from file.");
         }
@@ -630,7 +630,7 @@ void Reader::ReadFloatPCM32 (T ** const destinations, size_t channelsToRead, siz
         const size_t framesThisChunk {std::min (framesRemaining, framesPerBuffer)};
         const size_t samplesThisChunk {framesThisChunk * sourceChannels};
 
-        if (fread (buffer.data(), bytesPerSample, samplesThisChunk, file.get()) != samplesThisChunk)
+        if (std::fread (buffer.data(), bytesPerSample, samplesThisChunk, file.get()) != samplesThisChunk)
         {
             throw ReadError ("Failed to read buffer from file.");
         }
@@ -681,7 +681,7 @@ void Reader::ReadFloatPCM64 (T ** const destinations, size_t channelsToRead, siz
         const size_t framesThisChunk {std::min (framesRemaining, framesPerBuffer)};
         const size_t samplesThisChunk {framesThisChunk * sourceChannels};
 
-        if (fread (buffer.data(), bytesPerSample, samplesThisChunk, file.get()) != samplesThisChunk)
+        if (std::fread (buffer.data(), bytesPerSample, samplesThisChunk, file.get()) != samplesThisChunk)
         {
             throw ReadError ("Failed to read buffer from file.");
         }
