@@ -15,12 +15,12 @@
 namespace wav
 {
 
-Writer::Writer (std::string const & filepath,
-                ExportFormat exportFormat,
-                uint32_t sampleRate,
-                uint16_t channels,
-                uint32_t channelMask,
-                size_t bufferSizeInKB)
+inline Writer::Writer (std::string const & filepath,
+                       ExportFormat exportFormat,
+                       uint32_t sampleRate,
+                       uint16_t channels,
+                       uint32_t channelMask,
+                       size_t bufferSizeInKB)
 :file (std::fopen (filepath.c_str(), "wb"), std::fclose)
 ,channels (channels)
 ,channelMask (channelMask)
@@ -184,7 +184,7 @@ void Writer::WriteFloatPCM_NoConversion (T const * source, size_t samplesToWrite
     }
 }
 
-void Writer::WriteFloatToDouble (float const * source, size_t totalSamplesToWrite)
+inline void Writer::WriteFloatToDouble (float const * source, size_t totalSamplesToWrite)
 {
     auto * const buffer {bufferFloatPCM64.data()};
     const auto bufferSize {bufferFloatPCM64.size()};
@@ -223,7 +223,7 @@ void Writer::WriteFloatToDouble (float const * source, size_t totalSamplesToWrit
     }
 }
 
-void Writer::WriteDoubleToFloat (double const * source, size_t totalSamplesToWrite)
+inline void Writer::WriteDoubleToFloat (double const * source, size_t totalSamplesToWrite)
 {
     auto * const buffer {bufferFloatPCM32.data()};
     const auto bufferSize {bufferFloatPCM32.size()};

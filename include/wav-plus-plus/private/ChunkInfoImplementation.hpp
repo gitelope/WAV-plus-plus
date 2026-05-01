@@ -16,7 +16,7 @@
 namespace wav
 {
 
-ChunkInfo::ChunkInfo (std::string const & filepath)
+inline ChunkInfo::ChunkInfo (std::string const & filepath)
 {
     auto in = fileForReading (filepath);
     if (!in) throw ReadError ("Failed to open: " + filepath);
@@ -24,7 +24,7 @@ ChunkInfo::ChunkInfo (std::string const & filepath)
     Close (in);
 }
 
-ChunkInfo::ChunkInfo (std::FILE * in)
+inline ChunkInfo::ChunkInfo (std::FILE * in)
 {
     ReadFile (in);
 }
@@ -324,7 +324,7 @@ inline void ChunkInfo::ReadDataChunkSizeAndSkipSamples (std::FILE * in)
     SkipChunk (in, data.size);
 }
 
-void ChunkInfo::RegisterChunk (std::string const & id, std::fpos_t position)
+inline void ChunkInfo::RegisterChunk (std::string const & id, std::fpos_t position)
 {
     if constexpr (std::is_integral_v<std::fpos_t> && requires { std::to_string (position); })
     {
@@ -335,7 +335,7 @@ void ChunkInfo::RegisterChunk (std::string const & id, std::fpos_t position)
         chunksEncountered.emplace_back (id);
     }
 }
-void ChunkInfo::RegisterSkippedChunk (std::string const & id, std::fpos_t position)
+inline void ChunkInfo::RegisterSkippedChunk (std::string const & id, std::fpos_t position)
 {
     if constexpr (std::is_integral_v<std::fpos_t> && requires { std::to_string (position); })
     {

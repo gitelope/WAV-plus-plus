@@ -13,7 +13,7 @@
 namespace wav
 {
 
-Reader::Reader (std::string const & filepath, uint32_t suggestedBufferSizeKB)
+inline Reader::Reader (std::string const & filepath, uint32_t suggestedBufferSizeKB)
 :file (std::fopen (filepath.c_str(), "rb"), std::fclose)
 {
     // Check if file opened successfully
