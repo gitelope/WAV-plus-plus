@@ -28,7 +28,7 @@ Reader::Reader (std::string const & filepath, uint32_t suggestedBufferSizeKB)
     dataChunk = chunkInfo.data;
 
     // Position file at start of data
-    if (fsetpos (file.get(), &dataChunk.offset) != 0)
+    if (std::fsetpos (file.get(), &dataChunk.offset) != 0)
     {
         throw ReadError ("Failed to advance to data portion of data chunk.");
     }
