@@ -676,7 +676,7 @@ inline void Writer::UpdateHeader (uint32_t dataChunkSize)
     if (!file) return;
 
     // Update data chunk size. (Padding does not go into the count.)
-    if (fseek (file.get(), dataChunkSizePosition, SEEK_SET) != 0)
+    if (std::fseek (file.get(), dataChunkSizePosition, SEEK_SET) != 0)
     {
         throw WriteError ("Failed to reposition to data chunk size.");
     }
@@ -686,7 +686,7 @@ inline void Writer::UpdateHeader (uint32_t dataChunkSize)
     // See SetMaximumDataChunkSize() comments for derivation of:
     // R = (20 + F) + D + (D % 2)
     const uint32_t riffChunkSize {(20 + fmtChunkSize) + dataChunkSize + (dataChunkSize % 2)};
-    if (fseek (file.get(), riffChunkSizePosition, SEEK_SET) != 0)
+    if (std::fseek (file.get(), riffChunkSizePosition, SEEK_SET) != 0)
     {
         throw WriteError ("Failed to reposition to RIFF chunk size");
     }

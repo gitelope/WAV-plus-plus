@@ -124,7 +124,7 @@ inline void SkipChunk (std::FILE * file, uint32_t size)
     while (skipAmount)
     {
         const int64_t seekAmount {std::min (skipAmount, maxSeek)};
-        if (fseek (file, static_cast<long> (seekAmount), SEEK_CUR) != 0)
+        if (std::fseek (file, static_cast<long> (seekAmount), SEEK_CUR) != 0)
         {
             throw ReadError ("Failed to skip chunk.");
         }
@@ -270,7 +270,7 @@ inline void ChunkInfo::ReadFormatChunk (std::FILE * in)
     // we must skip the last padding byte.
     if (format.size % 2)
     {
-        fseek (in, 1, SEEK_CUR);
+        std::fseek (in, 1, SEEK_CUR);
         if (ferror (in)) throw ReadError ("Failed to skip format chunk padding.");
     }
 }
