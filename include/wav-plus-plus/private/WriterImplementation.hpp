@@ -528,7 +528,7 @@ inline void Writer::WriteHeader (uint32_t sampleRate)
     // RIFF header
     WriteToHeader (file.get(), "RIFF");
     // Record position of RIFF chunk size so it can be updated later:
-    riffChunkSizePosition = ftell (file.get());
+    riffChunkSizePosition = std::ftell (file.get());
     if (riffChunkSizePosition == -1) throw WriteError ("Failed to get RIFF chunk size position.");
     // Write RIFF chunk size placeholder:
     WriteToHeader (file.get(), static_cast<uint32_t> (0));
@@ -563,7 +563,7 @@ inline void Writer::WriteHeader (uint32_t sampleRate)
     // data chunk header
     WriteToHeader (file.get(), "data");
     // Record position of data chunk size so it can be updated later:
-    dataChunkSizePosition = ftell (file.get());
+    dataChunkSizePosition = std::ftell (file.get());
     if (dataChunkSizePosition == -1) throw WriteError ("Failed to get data chunk size position.");
     // Write data chunk size placeholder:
     WriteToHeader (file.get(), static_cast<uint32_t> (0)); // Will be updated in UpdateHeader()
@@ -632,7 +632,7 @@ inline void Writer::Close()
     if (!file) return;
 
     // Flush any buffered data.
-    if (fflush (file.get()) != 0)
+    if (std::fflush (file.get()) != 0)
     {
         throw WriteError ("Failed to flush file buffers.");
     }
