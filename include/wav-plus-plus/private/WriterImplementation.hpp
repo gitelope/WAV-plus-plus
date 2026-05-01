@@ -21,7 +21,7 @@ Writer::Writer (std::string const & filepath,
                 uint16_t channels,
                 uint32_t channelMask,
                 size_t bufferSizeInKB)
-:file (fopen (filepath.c_str(), "wb"), fclose)
+:file (std::fopen (filepath.c_str(), "wb"), fclose)
 ,channels (channels)
 ,channelMask (channelMask)
 {

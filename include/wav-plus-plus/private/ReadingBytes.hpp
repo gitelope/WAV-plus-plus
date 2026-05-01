@@ -53,7 +53,7 @@ inline auto fileForReading (std::string const & filepath)
     // Open std::FILE and ensure that attempt is made to close file if an exception is thrown.
     // (fclose failure during stack unwinding is ignored to avoid throwing another exception
     // and thus a call to std::terminate.)
-    return std::unique_ptr<std::FILE, decltype (&fclose)> (fopen (filepath.c_str(), "rb"), &fclose);
+    return std::unique_ptr<std::FILE, decltype (&fclose)> (std::fopen (filepath.c_str(), "rb"), &fclose);
 }
 
 void Close (std::unique_ptr<std::FILE, decltype (&fclose)> & filePointer);
