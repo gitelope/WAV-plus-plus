@@ -53,10 +53,10 @@ inline auto fileForReading (std::string const & filepath)
     // Open std::FILE and ensure that attempt is made to close file if an exception is thrown.
     // (fclose failure during stack unwinding is ignored to avoid throwing another exception
     // and thus a call to std::terminate.)
-    return std::unique_ptr<std::FILE, decltype (&fclose)> (std::fopen (filepath.c_str(), "rb"), &fclose);
+    return std::unique_ptr<std::FILE, decltype (&std::fclose)> (std::fopen (filepath.c_str(), "rb"), &std::fclose);
 }
 
-void Close (std::unique_ptr<std::FILE, decltype (&fclose)> & filePointer);
+void Close (std::unique_ptr<std::FILE, decltype (&std::fclose)> & filePointer);
 
 std::vector<std::byte> ReadBytes (std::string const & filePath);
 void PrintBytesAsHex (std::vector<std::byte> const & bytes);
@@ -260,10 +260,10 @@ inline double float64_le (std::vector<std::byte> const & bytes, size_t & pos)
     return std::bit_cast<double> (integer);
 }
 
-inline void Close (std::unique_ptr<std::FILE, decltype (&fclose)> & filePointer)
+inline void Close (std::unique_ptr<std::FILE, decltype (&std::fclose)> & filePointer)
 {
     // Close the file manually so we can throw an exception if it fails.
-    if (fclose (filePointer.release()) != 0)
+    if (std::fclose (filePointer.release()) != 0)
     {
         throw ReadError ("File did not close successfully.");
     }

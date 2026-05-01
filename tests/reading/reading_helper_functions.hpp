@@ -14,7 +14,7 @@
 // Write byte vector to a file.
 inline void writeFile (std::string const & filepath, std::vector<uint8_t> const & bytes)
 {
-    auto out = std::unique_ptr<std::FILE, decltype(&fclose)> (std::fopen (filepath.c_str(), "wb"), &fclose);
+    auto out = std::unique_ptr<std::FILE, decltype(&std::fclose)> (std::fopen (filepath.c_str(), "wb"), &std::fclose);
 
     if (!out)
     {

@@ -21,7 +21,7 @@ Writer::Writer (std::string const & filepath,
                 uint16_t channels,
                 uint32_t channelMask,
                 size_t bufferSizeInKB)
-:file (std::fopen (filepath.c_str(), "wb"), fclose)
+:file (std::fopen (filepath.c_str(), "wb"), std::fclose)
 ,channels (channels)
 ,channelMask (channelMask)
 {
@@ -644,7 +644,7 @@ inline void Writer::Close()
     // Update header with data chunk size and RIFF chunk size.
     UpdateHeader (dataChunkSize);
 
-    if (fclose (file.release()) != 0)
+    if (std::fclose (file.release()) != 0)
     {
         throw WriteError ("Failed to close file");
     }

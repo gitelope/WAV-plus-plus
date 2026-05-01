@@ -77,7 +77,7 @@ public:
 
 private:
 
-    std::unique_ptr<std::FILE, decltype(&fclose)> file;
+    std::unique_ptr<std::FILE, decltype(&std::fclose)> file;
     FileInfo info;
 
     DataChunk dataChunk;
