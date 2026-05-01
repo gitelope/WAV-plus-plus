@@ -82,7 +82,7 @@ inline size_t ioBufferSizeInBytes (size_t numSamples, uint16_t bitsPerSample,
 template <typename ExceptionType>
 void SetInternalIOBufferSize (std::FILE * out, size_t ioBufferSizeInBytes)
 {
-    if (setvbuf (out, nullptr, _IOFBF, ioBufferSizeInBytes) != 0)
+    if (std::setvbuf (out, nullptr, _IOFBF, ioBufferSizeInBytes) != 0)
     {
         throw ExceptionType ("Failed to set file buffer.");
     }

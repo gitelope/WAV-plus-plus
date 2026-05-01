@@ -271,7 +271,7 @@ inline void ChunkInfo::ReadFormatChunk (std::FILE * in)
     if (format.size % 2)
     {
         std::fseek (in, 1, SEEK_CUR);
-        if (ferror (in)) throw ReadError ("Failed to skip format chunk padding.");
+        if (std::ferror (in)) throw ReadError ("Failed to skip format chunk padding.");
     }
 }
 
