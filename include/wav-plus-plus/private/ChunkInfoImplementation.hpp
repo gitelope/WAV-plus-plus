@@ -24,7 +24,7 @@ ChunkInfo::ChunkInfo (std::string const & filepath)
     Close (in);
 }
 
-ChunkInfo::ChunkInfo (FILE * in)
+ChunkInfo::ChunkInfo (std::FILE * in)
 {
     ReadFile (in);
 }
@@ -68,10 +68,10 @@ inline std::string ChunkInfo::summary() const
                          format.channels, frames, data.size, isPadded);
 }
 
-int peek (FILE * in); // check if there's data available
-void SkipChunk (FILE *, uint32_t);
+int peek (std::FILE * in); // check if there's data available
+void SkipChunk (std::FILE *, uint32_t);
 
-inline void ChunkInfo::ReadFile (FILE * in)
+inline void ChunkInfo::ReadFile (std::FILE * in)
 {
     const auto firstChunkID {fourCharacterCode (in)};
     if (firstChunkID != riff.id) throw ReadError ("RIFF chunk ID not found.");
@@ -112,7 +112,7 @@ inline void ChunkInfo::ReadFile (FILE * in)
 /// Carefully handles skipping to the end of chunks
 /// in case long is only 32-bit
 /// (or size is unsigned 32-bit max).
-inline void SkipChunk (FILE * file, uint32_t size)
+inline void SkipChunk (std::FILE * file, uint32_t size)
 {
     int64_t skipAmount {size};
     // Add padding byte if odd.
@@ -132,7 +132,7 @@ inline void SkipChunk (FILE * file, uint32_t size)
     }
 }
 
-inline int peek (FILE * in)
+inline int peek (std::FILE * in)
 {
     int c = fgetc (in);
     if (c != EOF)
@@ -142,7 +142,7 @@ inline int peek (FILE * in)
     return c;
 }
 
-inline void ChunkInfo::ReadRiffChunk (FILE * in)
+inline void ChunkInfo::ReadRiffChunk (std::FILE * in)
 {
     // Technically, the whole file is a RIFF chunk. This is just the first part of it.
     // No need to read id since it has already been read and has the expected value.
@@ -153,7 +153,7 @@ inline void ChunkInfo::ReadRiffChunk (FILE * in)
     }
 }
 
-inline void ChunkInfo::ReadFormatChunk (FILE * in)
+inline void ChunkInfo::ReadFormatChunk (std::FILE * in)
 {
     // These fields are found in formats WAVEFORMAT, PCMWAVEFORMAT, WAVEFORMATEX, and WAVEFORMATEXTENSIBLE:
     //
@@ -275,7 +275,7 @@ inline void ChunkInfo::ReadFormatChunk (FILE * in)
     }
 }
 
-inline void ChunkInfo::ReadFactChunk (FILE * in)
+inline void ChunkInfo::ReadFactChunk (std::FILE * in)
 {
     fact.present = true;
     fact.size = uint32_le (in);
@@ -286,7 +286,7 @@ inline void ChunkInfo::ReadFactChunk (FILE * in)
     fact.fileSize = uint32_le (in);
 }
 
-inline void ChunkInfo::ReadPeakChunk (FILE * in)
+inline void ChunkInfo::ReadPeakChunk (std::FILE * in)
 {
     peak.present = true;
     peak.size = uint32_le (in);
@@ -300,7 +300,7 @@ inline void ChunkInfo::ReadPeakChunk (FILE * in)
     }
 }
 
-inline void ChunkInfo::ReadDataChunkSizeAndSkipSamples (FILE * in)
+inline void ChunkInfo::ReadDataChunkSizeAndSkipSamples (std::FILE * in)
 {
     // No need to read id since it has already been read and has the expected value.
     data.size = uint32_le (in);

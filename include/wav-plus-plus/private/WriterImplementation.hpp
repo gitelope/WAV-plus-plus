@@ -478,7 +478,7 @@ inline void Writer::InitializeBuffer (size_t sizeInBytes)
     }
 }
 
-inline void WriteToHeader (FILE * out, std::string const & str)
+inline void WriteToHeader (std::FILE * out, std::string const & str)
 {
     if (fwrite (str.data(), 1, str.size(), out) != str.size())
     {
@@ -488,7 +488,7 @@ inline void WriteToHeader (FILE * out, std::string const & str)
 
 // Write integer as header field. (Would be a bit slow for writing data chunk.)
 template <std::integral T>
-void WriteToHeader (FILE * out, T value)
+void WriteToHeader (std::FILE * out, T value)
 {
     std::array<std::byte, sizeof(T)> bytes;
     for (size_t i=0; i < bytes.size(); ++i)
@@ -501,7 +501,7 @@ void WriteToHeader (FILE * out, T value)
     }
 }
 
-inline void WriteToHeader (FILE * out, GUID const & guid)
+inline void WriteToHeader (std::FILE * out, GUID const & guid)
 {
     WriteToHeader (out, guid.data1);
     WriteToHeader (out, guid.data2);

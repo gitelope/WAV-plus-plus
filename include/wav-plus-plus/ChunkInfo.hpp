@@ -85,7 +85,7 @@ class ChunkInfo
 public:
 
     ChunkInfo (std::string const & filepath); // opens (and closes) file
-    ChunkInfo (FILE * in);                    // construct from open file
+    ChunkInfo (std::FILE * in);                    // construct from open file
 
     std::string summary() const;
 
@@ -100,12 +100,12 @@ public:
 
 private:
 
-    void ReadFile              (FILE * in);
-    void ReadRiffChunk         (FILE * in);
-    void ReadFormatChunk       (FILE * in);
-    void ReadFactChunk         (FILE * in);
-    void ReadPeakChunk         (FILE * in);
-    void ReadDataChunkSizeAndSkipSamples (FILE * in);
+    void ReadFile              (std::FILE * in);
+    void ReadRiffChunk         (std::FILE * in);
+    void ReadFormatChunk       (std::FILE * in);
+    void ReadFactChunk         (std::FILE * in);
+    void ReadPeakChunk         (std::FILE * in);
+    void ReadDataChunkSizeAndSkipSamples (std::FILE * in);
 
     void RegisterChunk (std::string const & id, [[maybe_unused]] fpos_t position);
     void RegisterSkippedChunk (std::string const & id, [[maybe_unused]] fpos_t position);

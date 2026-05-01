@@ -89,7 +89,7 @@ void TestHeaders (TestLog & log)
 
 struct Header
 {
-    explicit Header (FILE * in)
+    explicit Header (std::FILE * in)
 
     :riffID        (wav::fourCharacterCode (in))
     ,riffChunkSize (wav::uint32_le (in))

@@ -62,7 +62,7 @@ public:
 
 private:
 
-    std::unique_ptr<FILE, decltype(&fclose)> file;
+    std::unique_ptr<std::FILE, decltype(&fclose)> file;
 
     uint16_t channels;
     uint16_t bitsPerSample;

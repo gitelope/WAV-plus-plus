@@ -22,17 +22,17 @@ namespace wav
 
 // These read functions convert bytes to the desired type, return it, and
 // either increment the read position for the byte vector
-// or advance the FILE pointer.
+// or advance the std::FILE pointer.
 //
 // The "le" suffix signifies a little-endian encoding in the WAV file.
-std::string fourCharacterCode (FILE *); // 4 bytes  -> 4-character string
-GUID        guid              (FILE *); // 16 bytes -> GUID struct (WAVEFORMATEXTENSIBLE only)
+std::string fourCharacterCode (std::FILE *); // 4 bytes  -> 4-character string
+GUID        guid              (std::FILE *); // 16 bytes -> GUID struct (WAVEFORMATEXTENSIBLE only)
 //
 // unsigned int
 uint8_t     uint8             (std::vector<std::byte> const &, size_t & pos); // 1 byte   -> 8-bit  unsigned int
-uint8_t     uint8             (FILE *);
-uint16_t    uint16_le         (FILE *);                              // 2 bytes  -> 16-bit unsigned int
-uint32_t    uint32_le         (FILE *);                              // 4 bytes  -> 32-bit unsigned int
+uint8_t     uint8             (std::FILE *);
+uint16_t    uint16_le         (std::FILE *);                              // 2 bytes  -> 16-bit unsigned int
+uint32_t    uint32_le         (std::FILE *);                              // 4 bytes  -> 32-bit unsigned int
 //
 // signed int
 int16_t     int16_le          (std::vector<std::byte> const &, size_t & pos); // 2 bytes -> 16-bit signed int
@@ -41,7 +41,7 @@ int32_t     int32_le          (std::vector<std::byte> const &, size_t & pos); //
 //
 // floating point
 float       float32_le        (std::vector<std::byte> const &, size_t & pos); // 4 bytes -> 32-bit float
-float       float32_le        (FILE *);
+float       float32_le        (std::FILE *);
 double      float64_le        (std::vector<std::byte> const &, size_t & pos); // 8 bytes -> 64-bit double
 
 inline auto fileForReading (std::string const & filepath)
@@ -50,13 +50,13 @@ inline auto fileForReading (std::string const & filepath)
     {
         throw ReadError ("File does not exist: " + filepath);
     }
-    // Open FILE and ensure that attempt is made to close file if an exception is thrown.
+    // Open std::FILE and ensure that attempt is made to close file if an exception is thrown.
     // (fclose failure during stack unwinding is ignored to avoid throwing another exception
     // and thus a call to std::terminate.)
-    return std::unique_ptr<FILE, decltype (&fclose)> (fopen (filepath.c_str(), "rb"), &fclose);
+    return std::unique_ptr<std::FILE, decltype (&fclose)> (fopen (filepath.c_str(), "rb"), &fclose);
 }
 
-void Close (std::unique_ptr<FILE, decltype (&fclose)> & filePointer);
+void Close (std::unique_ptr<std::FILE, decltype (&fclose)> & filePointer);
 
 std::vector<std::byte> ReadBytes (std::string const & filePath);
 void PrintBytesAsHex (std::vector<std::byte> const & bytes);
@@ -65,7 +65,7 @@ void PrintBytesAsHex (std::vector<std::byte> const & bytes);
 ///////////////////////////////////////////////////////////
 
 
-inline std::string fourCharacterCode (FILE * in)
+inline std::string fourCharacterCode (std::FILE * in)
 {
     std::string code (4, '\0');
     if (fread (code.data(), 1, 4, in) != 4)
@@ -73,7 +73,7 @@ inline std::string fourCharacterCode (FILE * in)
     return code;
 }
 
-inline GUID guid (FILE * in)
+inline GUID guid (std::FILE * in)
 {
     const auto data1 {uint32_le (in)};
     const auto data2 {uint16_le (in)};
@@ -86,9 +86,9 @@ inline GUID guid (FILE * in)
     return {data1, data2, data3, data4};
 }
 
-// Helper for functions that read directly from a FILE *.
+// Helper for functions that read directly from a std::FILE *.
 template <size_t N>
-void read (FILE * in, std::array<uint8_t,N> & buffer)
+void read (std::FILE * in, std::array<uint8_t,N> & buffer)
 {
     if (fread (buffer.data(), 1, buffer.size(), in) != buffer.size())
     {
@@ -105,7 +105,7 @@ inline uint8_t uint8 (std::vector<std::byte> const & bytes, size_t & pos)
     return static_cast<uint8_t> (bytes [pos++]);
 }
 
-inline uint8_t uint8 (FILE * in)
+inline uint8_t uint8 (std::FILE * in)
 {
     uint8_t result {0};
     if (fread (&result, 1, 1, in) != 1)
@@ -115,7 +115,7 @@ inline uint8_t uint8 (FILE * in)
     return result;
 }
 
-inline uint16_t uint16_le (FILE * in)
+inline uint16_t uint16_le (std::FILE * in)
 {
     std::array<uint8_t, 2> buffer {};
     read (in, buffer);
@@ -126,7 +126,7 @@ inline uint16_t uint16_le (FILE * in)
     );
 }
 
-inline uint32_t uint32_le (FILE * in)
+inline uint32_t uint32_le (std::FILE * in)
 {
     std::array<uint8_t, 4> buffer{};
     read (in, buffer);
@@ -225,7 +225,7 @@ inline float float32_le (std::vector<std::byte> const & bytes, size_t & pos)
     return std::bit_cast<float> (integer);
 }
 
-inline float float32_le (FILE * in)
+inline float float32_le (std::FILE * in)
 {
     std::array<uint8_t, 4> buffer{};
     read (in, buffer);
@@ -260,7 +260,7 @@ inline double float64_le (std::vector<std::byte> const & bytes, size_t & pos)
     return std::bit_cast<double> (integer);
 }
 
-inline void Close (std::unique_ptr<FILE, decltype (&fclose)> & filePointer)
+inline void Close (std::unique_ptr<std::FILE, decltype (&fclose)> & filePointer)
 {
     // Close the file manually so we can throw an exception if it fails.
     if (fclose (filePointer.release()) != 0)
