@@ -258,7 +258,7 @@ wav::Writer writer {filepath, encoding, sampleRate, channels};
 A channel mask can be provided to assign speaker positions:
 
 ```cpp
-const auto channelMask =
+constexpr auto channelMask =
     wav::SpeakerPosition::FrontLeft    |
     wav::SpeakerPosition::FrontRight   |
     wav::SpeakerPosition::FrontCenter  |
@@ -291,6 +291,19 @@ There are 18 defined positions:<br><br>
 `TopBackRight`<br>
 
 When no speaker positions are specified but there are three or more channels, `WAVEFORMATEXTENSIBLE` is still used but the channel mask is set to `0`.
+
+A few common speaker configurations have been defined for convenience:
+```cpp
+wav::SpeakerConfiguration::Unassigned
+wav::SpeakerConfiguration::Stereo
+wav::SpeakerConfiguration::Quadraphonic
+wav::SpeakerConfiguration::Five_Point_One
+wav::SpeakerConfiguration::Seven_Point_One
+```
+```cpp
+constexpr auto channelMask {SpeakerConfiguration::Five_Point_One};
+wav::Writer writer {filepath, encoding, sampleRate, numChannels, channelMask};
+```
 
 ### Sample ordering
 
