@@ -1,3 +1,5 @@
+// WAV++ (c) 2025-2026 David Adams
+// SPDX-License-Identifier: MIT
 
 #ifndef wavplusplus_reading_tests_helper_functions_hpp
 #define wavplusplus_reading_tests_helper_functions_hpp

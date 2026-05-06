@@ -1,3 +1,5 @@
+// WAV++ (c) 2025-2026 David Adams
+// SPDX-License-Identifier: MIT
 
 #include "TestLog.hpp"
 #include "helper_functions.hpp"

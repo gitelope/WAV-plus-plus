@@ -1,14 +1,11 @@
+// WAV++ (c) 2025-2026 David Adams
+// SPDX-License-Identifier: MIT
 
 #ifndef wavplusplus_BufferSizing_hpp
 #define wavplusplus_BufferSizing_hpp
 
 #include <algorithm>
 #include <cstdint>
-/*
-#include <cassert>
-#include <cstddef>
-#include <cstdio>
-*/
 
 namespace wav
 {
