@@ -246,11 +246,11 @@ void TestSpeakerPosition (TestLog & log)
     // The quadraphonic, 5.1, and 7.1 cases have both a non-zero mask and 3+ channels.
     const std::vector<TestCase> testCases
     {
-        {"stereo",                wav::SpeakerConfigurations::Stereo,          2},
-        {"3 unassigned channels", wav::SpeakerConfigurations::Unassigned,      3},
-        {"quadraphonic",          wav::SpeakerConfigurations::Quadraphonic,    4},
-        {"5.1",                   wav::SpeakerConfigurations::Five_Point_One,  6},
-        {"7.1",                   wav::SpeakerConfigurations::Seven_Point_One, 8},
+        {"stereo",                wav::SpeakerConfiguration::Stereo,          2},
+        {"3 unassigned channels", wav::SpeakerConfiguration::Unassigned,      3},
+        {"quadraphonic",          wav::SpeakerConfiguration::Quadraphonic,    4},
+        {"5.1",                   wav::SpeakerConfiguration::Five_Point_One,  6},
+        {"7.1",                   wav::SpeakerConfiguration::Seven_Point_One, 8},
     };
 
     const auto [bitDepth, _] = wav::bitDepthAndFormatCode (encoding);

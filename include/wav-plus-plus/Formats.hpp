@@ -103,7 +103,7 @@ inline constexpr uint32_t ValidBits          = 0x0003FFFF;
 }
 
 // Some common speaker configs to save some typing.
-namespace SpeakerConfigurations
+namespace SpeakerConfiguration
 {
 inline constexpr uint32_t Unassigned {0};
 inline constexpr uint32_t Stereo

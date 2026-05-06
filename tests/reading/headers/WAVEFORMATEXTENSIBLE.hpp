@@ -29,16 +29,16 @@ inline void TestWAVEFORMATEXTENSIBLE (TestLog & log)
 
     const std::vector<TestCase> testCases
     {
-        {wav::ExportFormat::LinearPCM_8,   8, wav::SpeakerConfigurations::Unassigned},
-        {wav::ExportFormat::LinearPCM_16, 16, wav::SpeakerConfigurations::Stereo},
-        {wav::ExportFormat::LinearPCM_24, 24, wav::SpeakerConfigurations::Quadraphonic},
-        {wav::ExportFormat::LinearPCM_32, 32, wav::SpeakerConfigurations::Five_Point_One},
-        {wav::ExportFormat::FloatPCM_32,  32, wav::SpeakerConfigurations::Seven_Point_One},
-        {wav::ExportFormat::FloatPCM_64,  64, wav::SpeakerConfigurations::Unassigned},
+        {wav::ExportFormat::LinearPCM_8,   8, wav::SpeakerConfiguration::Unassigned},
+        {wav::ExportFormat::LinearPCM_16, 16, wav::SpeakerConfiguration::Stereo},
+        {wav::ExportFormat::LinearPCM_24, 24, wav::SpeakerConfiguration::Quadraphonic},
+        {wav::ExportFormat::LinearPCM_32, 32, wav::SpeakerConfiguration::Five_Point_One},
+        {wav::ExportFormat::FloatPCM_32,  32, wav::SpeakerConfiguration::Seven_Point_One},
+        {wav::ExportFormat::FloatPCM_64,  64, wav::SpeakerConfiguration::Unassigned},
 
-        {wav::ExportFormat::LinearPCM_16, 12, wav::SpeakerConfigurations::Stereo},          // 12 bits packed in 16
-        {wav::ExportFormat::LinearPCM_24, 20, wav::SpeakerConfigurations::Five_Point_One},  // 20 bits packed in 24
-        {wav::ExportFormat::LinearPCM_32, 24, wav::SpeakerConfigurations::Seven_Point_One}, // 24 bits packed in 32
+        {wav::ExportFormat::LinearPCM_16, 12, wav::SpeakerConfiguration::Stereo},          // 12 bits packed in 16
+        {wav::ExportFormat::LinearPCM_24, 20, wav::SpeakerConfiguration::Five_Point_One},  // 20 bits packed in 24
+        {wav::ExportFormat::LinearPCM_32, 24, wav::SpeakerConfiguration::Seven_Point_One}, // 24 bits packed in 32
     };
 
     for (uint16_t channels = 1; channels <= 3; ++channels)
@@ -88,11 +88,11 @@ inline void TestWAVEFORMATEXTENSIBLE (TestLog & log)
             if ((frames * channels * containerSizeInBits / 8U) % 2) label += " (padded)";
             switch (channelMask)
             {
-                case wav::SpeakerConfigurations::Unassigned:      label += ", unassigned channels"; break;
-                case wav::SpeakerConfigurations::Stereo:          label += ", stereo";              break;
-                case wav::SpeakerConfigurations::Quadraphonic:    label += ", quadraphonic";        break;
-                case wav::SpeakerConfigurations::Five_Point_One:  label += ", 5.1";                 break;
-                case wav::SpeakerConfigurations::Seven_Point_One: label += ", 7.1";                 break;
+                case wav::SpeakerConfiguration::Unassigned:      label += ", unassigned channels"; break;
+                case wav::SpeakerConfiguration::Stereo:          label += ", stereo";              break;
+                case wav::SpeakerConfiguration::Quadraphonic:    label += ", quadraphonic";        break;
+                case wav::SpeakerConfiguration::Five_Point_One:  label += ", 5.1";                 break;
+                case wav::SpeakerConfiguration::Seven_Point_One: label += ", 7.1";                 break;
                 default: assert (false);
             }
             const auto failureSuffix {failures.empty() ? "" : ", failures: " + failures};
