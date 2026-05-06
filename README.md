@@ -1,6 +1,6 @@
 
 # WAV++
-A header-only C++ library for reading and writing WAV files.
+A header-only, dependency-free C++20 library for reading and writing WAV files.
 
 ## Installation
 ```bash
@@ -376,25 +376,29 @@ chunks present
 --------------
 RIFF 0
 fmt  12
-data 38
+data 60
 
 RIFF chunk
 ----------
 id: RIFF
-chunk size: 1536038 (= file size in bytes minus 8)
+chunk size: 1536060 (= file size in bytes minus 8)
 format: WAVE
 
 fmt  chunk
 ----------
 format id: fmt 
-format chunk size: 18 (WAVEFORMATEX)
-format: 0x0003 (IEEE float)
+format chunk size: 40 (WAVEFORMATEXTENSIBLE)
+format: 0xFFFE (extensible)
 channels: 2
 sample rate: 48000
 byte rate: 384000
 block align: 8
 bits per sample: 32
-extra format information size (cbSize): 0
+extra format information size (cbSize): 22
+valid bits per sample: 32
+channel mask: 0x00000000
+[0] unassigned, [1] unassigned
+sub format GUID: 00000003-0000-0010-8000-00AA00389B71 (float PCM)
 
 data chunk
 ----------
