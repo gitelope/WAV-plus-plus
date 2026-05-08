@@ -1,0 +1,75 @@
+name: CI
+
+# Triggering rerun after permissions update. Delete me now.
+
+on:
+  push:
+    branches: ["main", "develop", "ci-draft"]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build-and-test:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: linux-gcc
+            os: ubuntu-24.04
+            cc: gcc
+            cxx: g++
+
+          - name: linux-clang
+            os: ubuntu-24.04
+            cc: clang
+            cxx: clang++
+
+          - name: macos-apple-clang
+            os: macos-15
+            cc: clang
+            cxx: clang++
+
+          - name: windows-msvc
+            os: windows-2022
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure (Linux/macOS)
+        if: runner.os != 'Windows'
+        env:
+          CC: ${{ matrix.cc }}
+          CXX: ${{ matrix.cxx }}
+        run: >
+          cmake -S . -B build -G Ninja
+          -DCMAKE_BUILD_TYPE=Release
+          -DWAV_PLUS_PLUS_BUILD_TESTS=ON
+          -DWAV_PLUS_PLUS_BUILD_EXAMPLES=ON
+
+      - name: Configure (Windows MSVC)
+        if: runner.os == 'Windows'
+        run: >
+          cmake -S . -B build
+          -G "Visual Studio 17 2022"
+          -A x64
+          -DWAV_PLUS_PLUS_BUILD_TESTS=ON
+          -DWAV_PLUS_PLUS_BUILD_EXAMPLES=ON
+
+      - name: Build (Linux/macOS)
+        if: runner.os != 'Windows'
+        run: cmake --build build --parallel
+
+      - name: Build (Windows)
+        if: runner.os == 'Windows'
+        run: cmake --build build --config Release --parallel
+
+      - name: Test (Linux/macOS)
+        if: runner.os != 'Windows'
+        run: ctest --test-dir build --output-on-failure --parallel
+
+      - name: Test (Windows)
+        if: runner.os == 'Windows'
+        run: ctest --test-dir build -C Release --output-on-failure --parallel
