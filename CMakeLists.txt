@@ -16,6 +16,8 @@ set_property (GLOBAL PROPERTY USE_FOLDERS ON) # for grouping examples in an IDE
 option (WAV_PLUS_PLUS_BUILD_TESTS    "Build wav_plus_plus tests"    ${PROJECT_IS_TOP_LEVEL})
 option (WAV_PLUS_PLUS_BUILD_EXAMPLES "Build wav_plus_plus examples" ${PROJECT_IS_TOP_LEVEL})
 
+option (WAV_PLUS_PLUS_WARNINGS_AS_ERRORS "Treat warnings as errors for WAV++ test/example targets" OFF)
+
 if (WAV_PLUS_PLUS_BUILD_TESTS)
     enable_testing ()
 endif ()
@@ -68,6 +70,14 @@ else ()
             -Wimplicit-int-conversion
             -Wimplicit-int-float-conversion
         )
+    endif ()
+endif ()
+
+if (WAV_PLUS_PLUS_WARNINGS_AS_ERRORS)
+    if (MSVC)
+        list (APPEND wav_plus_plus_warning_flags /WX)
+    else ()
+        list (APPEND wav_plus_plus_warning_flags -Werror)
     endif ()
 endif ()
 

@@ -46,6 +46,7 @@ jobs:
           -DCMAKE_BUILD_TYPE=Release
           -DWAV_PLUS_PLUS_BUILD_TESTS=ON
           -DWAV_PLUS_PLUS_BUILD_EXAMPLES=ON
+          -DWAV_PLUS_PLUS_WARNINGS_AS_ERRORS=ON
 
       - name: Configure (Windows MSVC)
         if: runner.os == 'Windows'
@@ -55,6 +56,7 @@ jobs:
           -A x64
           -DWAV_PLUS_PLUS_BUILD_TESTS=ON
           -DWAV_PLUS_PLUS_BUILD_EXAMPLES=ON
+          -DWAV_PLUS_PLUS_WARNINGS_AS_ERRORS=ON
 
       - name: Build (Linux/macOS)
         if: runner.os != 'Windows'
