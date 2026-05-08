@@ -60,7 +60,9 @@ inline std::string ChunkInfo::summary() const
             bitDepth = format.validBitsPerSample;
             containerSize = format.bitsPerSample;
             break;
-        default: assert (false); // should have been caught earlier
+        default:
+            assert (false); // should have been caught earlier
+            throw ReadError (std::format ("Format not supported: 0x{:04X}. This should have been caught during decoding. Audio may be corrupted.", format.code));
     }
 
     const auto frames = data.size / format.blockAlign;
