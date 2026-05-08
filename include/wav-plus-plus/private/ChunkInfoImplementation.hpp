@@ -78,7 +78,7 @@ inline void ChunkInfo::ReadFile (std::FILE * in)
     const auto firstChunkID {fourCharacterCode (in)};
     if (firstChunkID != riff.id) throw ReadError ("RIFF chunk ID not found.");
     ReadRiffChunk (in);
-    RegisterChunk (firstChunkID, 0);
+    RegisterChunk (firstChunkID, std::fpos_t{});
 
     while (peek (in) != EOF)
     {
@@ -326,27 +326,31 @@ inline void ChunkInfo::ReadDataChunkSizeAndSkipSamples (std::FILE * in)
     SkipChunk (in, data.size);
 }
 
-inline void ChunkInfo::RegisterChunk (std::string const & id, std::fpos_t position)
+// Will append chunk id (and position if fpos_t is convertible to string).
+// Position is templated so that it can be determined if std::fpos_t is convertible to string.
+template <typename T>
+inline void AppendChunkInfo (std::vector<std::string> & chunkInfo,
+                             std::string const & id,
+                             T /*std::fpos_t is expected*/ const & position)
 {
-    if constexpr (std::is_integral_v<std::fpos_t> && requires { std::to_string (position); })
+    if constexpr (requires { std::to_string (position); })
     {
-        chunksEncountered.emplace_back (id + " " + std::to_string (position));
+        chunkInfo.emplace_back (id + " " + std::to_string (position));
     }
     else
     {
-        chunksEncountered.emplace_back (id);
+        chunkInfo.emplace_back (id);
     }
 }
+
+inline void ChunkInfo::RegisterChunk (std::string const & id, std::fpos_t position)
+{
+    AppendChunkInfo (chunksEncountered, id, position);
+}
+
 inline void ChunkInfo::RegisterSkippedChunk (std::string const & id, std::fpos_t position)
 {
-    if constexpr (std::is_integral_v<std::fpos_t> && requires { std::to_string (position); })
-    {
-        chunksSkipped.emplace_back (id + " " + std::to_string (position));
-    }
-    else
-    {
-        chunksSkipped.emplace_back (id);
-    }
+    AppendChunkInfo (chunksSkipped, id, position);
 }
 
 inline std::ostream & operator<< (std::ostream & os, ChunkInfo const & info)
