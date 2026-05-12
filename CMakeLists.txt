@@ -60,7 +60,6 @@ else ()
         -Wnon-virtual-dtor
         -Wdouble-promotion
         -Wformat-nonliteral
-        -Wmissing-braces
         -Wreorder
         -Wsign-compare
     )
@@ -69,6 +68,7 @@ else ()
             -Wdocumentation
             -Wimplicit-int-conversion
             -Wimplicit-int-float-conversion
+            -Wmissing-braces # very noisy in gcc
         )
     endif ()
 endif ()
