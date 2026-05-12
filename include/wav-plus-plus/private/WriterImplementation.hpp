@@ -20,12 +20,12 @@ namespace wav
 inline Writer::Writer (std::string const & filepath,
                        ExportFormat exportFormat,
                        uint32_t sampleRate,
-                       uint16_t channels,
-                       uint32_t channelMask,
+                       uint16_t channels_,
+                       uint32_t channelMask_,
                        size_t bufferSizeInKB)
 :file (fileForWriting (filepath))
-,channels (channels)
-,channelMask (channelMask)
+,channels (channels_)
+,channelMask (channelMask_)
 {
     if (channelMask & ~SpeakerPosition::ValidBits)
     {

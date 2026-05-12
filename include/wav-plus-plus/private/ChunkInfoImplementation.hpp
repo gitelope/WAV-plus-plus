@@ -386,9 +386,9 @@ inline std::ostream & operator<< (std::ostream & os, RiffChunk const & riff)
 
 inline std::ostream & operator<< (std::ostream & os, FormatChunk const & format)
 {
-    auto description = [] (uint16_t format)
+    auto description = [] (uint16_t formatCode)
     {
-        switch (format)
+        switch (formatCode)
         {
             case FormatCode::LinearPCM: return "linear PCM";
             case FormatCode::FloatPCM: return "IEEE float";
