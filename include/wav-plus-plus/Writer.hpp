@@ -7,9 +7,9 @@
 #include "Exceptions.hpp"
 #include "Formats.hpp"
 #include "private/int24.hpp"
+#include "private/File.hpp"
 
 #include <cstdio>
-#include <memory>
 #include <string>
 #include <vector>
 
@@ -58,13 +58,19 @@ public:
 
     bool isOpen() const { return file != nullptr; }
 
-    // Manual finalization allows client to handle exceptions.
-    // Destructor will call if client doesn't, swallowing any exceptions.
+    // Flushes buffers, writes any required padding, finalizes the header, and
+    // closes the file. Throws wav::WriteError on flush or close failure.
+    // 
+    // Safe to call more than once.
+    //
+    // Call manually to handle errors.
+    // (Destructor will call if client doesn't, swallowing any exceptions,
+    // to prevent the possibility of a fatal throw during stack unwinding.)
     void Close();
 
 private:
 
-    std::unique_ptr<std::FILE, decltype(&std::fclose)> file;
+    File file;
 
     uint16_t channels;
     uint16_t bitsPerSample;

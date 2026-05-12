@@ -309,7 +309,6 @@ Header ReadHeader (std::string const & filepath)
 {
     auto in = wav::fileForReading (filepath);
     const Header h {in.get()};
-    wav::Close (in);
     return h;
 }
 

@@ -21,9 +21,7 @@ namespace wav
 inline ChunkInfo::ChunkInfo (std::string const & filepath)
 {
     auto in = fileForReading (filepath);
-    if (!in) throw ReadError ("Failed to open: " + filepath);
     ReadFile (in.get());
-    Close (in);
 }
 
 inline ChunkInfo::ChunkInfo (std::FILE * in)

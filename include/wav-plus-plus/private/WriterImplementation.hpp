@@ -23,18 +23,13 @@ inline Writer::Writer (std::string const & filepath,
                        uint16_t channels,
                        uint32_t channelMask,
                        size_t bufferSizeInKB)
-:file (std::fopen (filepath.c_str(), "wb"), std::fclose)
+:file (fileForWriting (filepath))
 ,channels (channels)
 ,channelMask (channelMask)
 {
     if (channelMask & ~SpeakerPosition::ValidBits)
     {
         throw WriteError ("Channel mask contains undefined speaker position bits.");
-    }
-
-    if (!file)
-    {
-        throw WriteError ("Failed to open file for writing: " + filepath);
     }
 
     std::tie (this->bitsPerSample, this->formatCode) = bitDepthAndFormatCode (exportFormat);
@@ -655,6 +650,7 @@ inline void Writer::Close()
 inline Writer::~Writer()
 {
     // Try to close the file if the user has not already.
+    // (User can call Close() manually to surface errors.)
     if (file)
     {
         try
@@ -663,8 +659,8 @@ inline Writer::~Writer()
         }
         catch (...)
         {
-            // Emit no exceptions.
-            // Perhaps error logging could be added.
+            // Emit no exceptions to prevent the possibility of a fatal throw during stack unwinding.
+            // (Perhaps error logging could be added.)
         }
     }
 }

@@ -9,10 +9,10 @@
 #include "FileInfo.hpp"
 #include "ChunkInfo.hpp"
 #include "private/int24.hpp"
+#include "private/File.hpp"
 
 #include <cstdio>
-#include <cstdint> 
-#include <memory>
+#include <cstdint>
 #include <string>
 #include <vector>
 
@@ -79,7 +79,7 @@ public:
 
 private:
 
-    std::unique_ptr<std::FILE, decltype(&std::fclose)> file;
+    File file;
     FileInfo info;
 
     DataChunk dataChunk;

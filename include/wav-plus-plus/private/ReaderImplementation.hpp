@@ -16,14 +16,8 @@ namespace wav
 {
 
 inline Reader::Reader (std::string const & filepath, uint32_t suggestedBufferSizeKB)
-:file (std::fopen (filepath.c_str(), "rb"), std::fclose)
+:file (fileForReading (filepath))
 {
-    // Check if file opened successfully
-    if (!file)
-    {
-        throw ReadError ("Failed to open file: " + filepath);
-    }
-
     // Parse file header
     ChunkInfo chunkInfo {file.get()};
     info.ExtractFrom (chunkInfo);

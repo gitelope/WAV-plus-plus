@@ -4,6 +4,7 @@
 #include <wav-plus-plus/Writer.hpp>
 
 #include <iostream>
+#include <memory>
 #include <random>
 
 int main ()

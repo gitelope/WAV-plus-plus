@@ -5,10 +5,10 @@
 #define wavplusplus_tests_reading_helper_functions_hpp
 
 #include "../../include/wav-plus-plus/Formats.hpp"
+#include "../../include/wav-plus-plus/private/File.hpp"
 
 #include <cstdint>
 #include <cstdio>
-#include <memory>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -16,12 +16,7 @@
 // Write byte vector to a file.
 inline void writeFile (std::string const & filepath, std::vector<uint8_t> const & bytes)
 {
-    auto out = std::unique_ptr<std::FILE, decltype(&std::fclose)> (std::fopen (filepath.c_str(), "wb"), &std::fclose);
-
-    if (!out)
-    {
-        throw std::runtime_error ("Failed to open file for writing: " + filepath);
-    }
+    auto out = wav::fileForWriting (filepath);
 
     if (std::fwrite (bytes.data(), 1, bytes.size(), out.get()) != bytes.size())
     {
