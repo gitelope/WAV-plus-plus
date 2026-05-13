@@ -87,7 +87,7 @@ int main ()
         const auto bufferSize {2};
         std::vector<float> buffer (bufferSize);
 
-        auto samplesRemaining = reader.samples();
+        size_t samplesRemaining = reader.samples();
         while (samplesRemaining > 0)
         {
             const auto samplesRead = reader.read (buffer);
@@ -102,7 +102,7 @@ int main ()
         const auto bufferSize {2};
         float * buffer = new float [bufferSize];
 
-        auto samplesRemaining {reader.samples()};
+        size_t samplesRemaining {reader.samples()};
         while (samplesRemaining > 0)
         {
             const auto samplesRead = reader.read (buffer, bufferSize);
@@ -120,7 +120,7 @@ int main ()
         const auto bufferSizeInFrames {2};
         std::vector<float> buffer (bufferSizeInFrames * reader.channels());
 
-        auto framesRemaining = reader.frames();
+        size_t framesRemaining = reader.frames();
         while (framesRemaining > 0)
         {
             const auto framesRead = reader.readFrames (buffer);
