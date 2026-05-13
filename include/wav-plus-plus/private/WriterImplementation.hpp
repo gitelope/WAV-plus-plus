@@ -621,7 +621,7 @@ inline void Writer::SetMaximumDataChunkSize (uint16_t blockAlign)
     // contains a whole number of blocks, a.k.a. frames, we get
     // Dmax_blockAligned = floor (Dmax / blockAlign) * blockAlign
     // (Integer division gives us the floor for free.)
-    maxDataChunkSize = ((4'294'967'274 - fmtChunkSize) / blockAlign) * blockAlign;
+    maxDataChunkSize = ((4'294'967'274u - fmtChunkSize) / blockAlign) * blockAlign;
 }
 
 inline void Writer::Close()
