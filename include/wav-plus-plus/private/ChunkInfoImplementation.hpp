@@ -235,7 +235,7 @@ inline void ChunkInfo::ReadFormatChunk (std::FILE * in)
         format.cbSize = uint16_le (in);
         if (format.cbSize != format.size - FormatChunkSize::WAVEFORMATEX)
         {
-            throw ReadError ("Invalid cbSize: " + std::to_string (format.cbSize));
+            throw ReadError ("Invalid cbSize: " + std::to_string (static_cast<unsigned int> (format.cbSize)));
         }
     }
 
