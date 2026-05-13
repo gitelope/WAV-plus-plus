@@ -44,7 +44,7 @@ int main ()
 
         std::vector<float> buffer (2);
 
-        auto samplesRemaining {10};
+        size_t samplesRemaining {10};
 
         // write a series of buffers of noise to the file
         while (samplesRemaining)
@@ -61,7 +61,7 @@ int main ()
         const auto size {2};
         float * buffer = new float[size];
 
-        auto samplesRemaining {8};
+        size_t samplesRemaining {8};
 
         // write a series of buffers of noise to the file
         while (samplesRemaining)
@@ -80,7 +80,7 @@ int main ()
         const auto sizeInFrames {1};
         float * buffer = new float [sizeInFrames * channels];
 
-        auto framesRemaining {4};
+        size_t framesRemaining {4};
 
         // write a series of buffers of noise to the file
         while (framesRemaining)
