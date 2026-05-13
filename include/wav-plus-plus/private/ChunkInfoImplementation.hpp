@@ -40,7 +40,7 @@ inline std::string ChunkInfo::summary() const
         case FormatCode::LinearPCM:
             isLinear = true;
             bitDepth = format.bitsPerSample;
-            containerSize = 8 * format.blockAlign / format.channels;
+            containerSize = static_cast<uint16_t> (8 * format.blockAlign / format.channels);
             break;
         case FormatCode::FloatPCM:
             isLinear = false; // must be floating-point

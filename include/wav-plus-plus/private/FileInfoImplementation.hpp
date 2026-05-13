@@ -51,17 +51,17 @@ inline void FileInfo::ExtractFrom (ChunkInfo const & chunkInfo)
     switch (chunkInfo.format.size)
     {
         case FormatChunkSize::WAVEFORMAT:
-            containerSizeInBits = 8 * chunkInfo.format.blockAlign / channels;
+            containerSizeInBits = static_cast<uint16_t> (8 * chunkInfo.format.blockAlign / channels);
             bitDepth = containerSizeInBits;
             break;
 
         case FormatChunkSize::PCMWAVEFORMAT:
-            containerSizeInBits = 8 * chunkInfo.format.blockAlign / channels;
+            containerSizeInBits = static_cast<uint16_t> (8 * chunkInfo.format.blockAlign / channels);
             bitDepth = chunkInfo.format.bitsPerSample;
             break;
 
         case FormatChunkSize::WAVEFORMATEX:
-            containerSizeInBits = 8 * chunkInfo.format.blockAlign / channels;
+            containerSizeInBits = static_cast<uint16_t> (8 * chunkInfo.format.blockAlign / channels);
             bitDepth = chunkInfo.format.bitsPerSample;
             break;
 
