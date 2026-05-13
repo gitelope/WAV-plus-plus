@@ -78,7 +78,7 @@ size_t Reader::read (T * destination, size_t samplesRequested)
         }
     }
 
-    dataPosition += samplesToRead * bytesPerSample;
+    dataPosition += static_cast<uint32_t> (samplesToRead * bytesPerSample);
 
     return samplesToRead;
 }
@@ -409,7 +409,7 @@ size_t Reader::read (T ** const destinations, size_t numChannels, size_t framesR
         }
     }
 
-    dataPosition += framesToRead * channels() * bytesPerSample;
+    dataPosition += static_cast<uint32_t> (framesToRead * channels() * bytesPerSample);
     return framesToRead;
 }
 
