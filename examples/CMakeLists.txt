@@ -11,8 +11,11 @@ foreach (name IN ITEMS read write inspect) # <-- add new examples here
     )
 endforeach ()
 
-# read example shows a couple ways to extract metadata but does not make further use
-# of the variables so we disable the unused but set variable warning.
-if (NOT MSVC)
+# Turn off some noisy unused variable warnings for examples.
+if (MSVC)
+    target_compile_options (read PRIVATE /wd4101 /wd4189)
+    target_compile_options (write PRIVATE /wd4101)
+    target_compile_options (inspect PRIVATE /wd4101)
+else ()
     target_compile_options (read PRIVATE -Wno-unused-variable)
 endif ()
