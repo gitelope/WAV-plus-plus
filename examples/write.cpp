@@ -3,16 +3,17 @@
 
 #include <wav-plus-plus/Writer.hpp>
 
+#include <cstdint>
 #include <iostream>
 #include <memory>
 #include <random>
 
 int main ()
 {
-    const auto filepath   {"out.wav"};
-    const auto sampleRate {48000};
-    const auto encoding   {wav::ExportFormat::FloatPCM_32};
-    const auto channels   {2};
+    const auto     filepath   {"out.wav"};
+    const uint32_t sampleRate {48000};
+    const auto     encoding   {wav::ExportFormat::FloatPCM_32};
+    const uint16_t channels   {2};
 
     // random number generator
     std::mt19937 generator {std::random_device{}()};
