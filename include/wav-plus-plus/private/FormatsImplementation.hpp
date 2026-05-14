@@ -22,12 +22,12 @@ constexpr std::pair <uint16_t, uint16_t> bitDepthAndFormatCode (ExportFormat ef)
 {
     switch (ef)
     {
-        case ExportFormat::LinearPCM_8:  return {8,  FormatCode::LinearPCM};
-        case ExportFormat::LinearPCM_16: return {16, FormatCode::LinearPCM};
-        case ExportFormat::LinearPCM_24: return {24, FormatCode::LinearPCM};
-        case ExportFormat::LinearPCM_32: return {32, FormatCode::LinearPCM};
-        case ExportFormat::FloatPCM_32:  return {32, FormatCode::FloatPCM};
-        case ExportFormat::FloatPCM_64:  return {64, FormatCode::FloatPCM};
+        case ExportFormat::LinearPCM_8:  return {std::uint16_t{8},  FormatCode::LinearPCM};
+        case ExportFormat::LinearPCM_16: return {std::uint16_t{16}, FormatCode::LinearPCM};
+        case ExportFormat::LinearPCM_24: return {std::uint16_t{24}, FormatCode::LinearPCM};
+        case ExportFormat::LinearPCM_32: return {std::uint16_t{32}, FormatCode::LinearPCM};
+        case ExportFormat::FloatPCM_32:  return {std::uint16_t{32}, FormatCode::FloatPCM};
+        case ExportFormat::FloatPCM_64:  return {std::uint16_t{64}, FormatCode::FloatPCM};
     }
 }
 
