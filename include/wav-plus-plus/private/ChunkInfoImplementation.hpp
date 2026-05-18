@@ -18,7 +18,7 @@
 namespace wav
 {
 
-inline ChunkInfo::ChunkInfo (std::string const & filepath)
+inline ChunkInfo::ChunkInfo (std::filesystem::path const & filepath)
 {
     auto in = fileForReading (filepath);
     ReadFile (in.get());

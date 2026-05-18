@@ -15,7 +15,7 @@
 namespace wav
 {
 
-inline Reader::Reader (std::string const & filepath, uint32_t suggestedBufferSizeKB)
+inline Reader::Reader (std::filesystem::path const & filepath, uint32_t suggestedBufferSizeKB)
 :file (fileForReading (filepath))
 {
     // Parse file header

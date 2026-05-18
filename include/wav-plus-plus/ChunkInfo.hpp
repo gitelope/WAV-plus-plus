@@ -86,8 +86,8 @@ class ChunkInfo
 {
 public:
 
-    ChunkInfo (std::string const & filepath); // opens (and closes) file
-    ChunkInfo (std::FILE * in);                    // construct from open file
+    ChunkInfo (std::filesystem::path const & filepath); // opens (and closes) file
+    ChunkInfo (std::FILE * in);                         // construct from open file
 
     std::string summary() const;
 

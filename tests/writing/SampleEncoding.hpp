@@ -21,7 +21,7 @@ void TestSampleEncoding (TestLog & log)
     const std::vector<double> out_double
     {-1., -0.875, -0.75, -0.625, -0.5, -0.25, 0., 0.25, 0.5, 0.625, 0.75, 0.875, 1.};
 
-    const auto RunTest = [&log, &filename]
+    const auto RunTest = [&log, &filename, sampleRate, channels]
     <typename T> (wav::ExportFormat encoding,
                   std::vector<T> const & source,
                   std::vector<uint8_t> const & expected,

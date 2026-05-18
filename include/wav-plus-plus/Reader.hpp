@@ -13,7 +13,7 @@
 
 #include <cstdio>
 #include <cstdint>
-#include <string>
+#include <filesystem>
 #include <vector>
 
 namespace wav
@@ -25,7 +25,7 @@ class Reader
 public:
 
     // May throw wav::ReadError.
-    explicit Reader (std::string const & filepath, uint32_t suggestedBufferSizeKB = 32);
+    explicit Reader (std::filesystem::path const & filePath, uint32_t suggestedBufferSizeKB = 32);
 
     // INTERLEAVED READING //////////////////////////////
 

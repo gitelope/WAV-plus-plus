@@ -1,11 +1,13 @@
-
 # WAV++
-A header-only, dependency-free C++20 library for reading and writing WAV files.
+
+A header-only, dependency-free, C++20 library for reading and writing WAV files.
 
 ## Installation
+
 ```bash
 git clone https://github.com/gitelope/WAV-plus-plus.git
 ```
+
 Add the `include/` subdirectory to your header search paths.
 
 ## Reading a WAV
@@ -23,12 +25,14 @@ Mono, stereo, and multichannel layouts.
 ```cpp
 #include <wav-plus-plus/Reader.hpp>
 
-const auto filepath {"in.wav"};
+const std::filesystem::path filepath {"in.wav"};
 wav::Reader reader {filepath};
 ```
+
 ### File Metadata
 
 Information for allocating a buffer, reading, and playback:
+
 ```cpp
 const auto channels    {reader.channels()};
 const auto frames      {reader.frames()};
@@ -38,6 +42,7 @@ const auto channelMask {reader.channelMask()};
 ```
 
 Additional file encoding information:
+
 ```cpp
 const auto bitDepth            {reader.bitDepth()};
 const auto containerSizeInBits {reader.containerSizeInBits()};
@@ -46,6 +51,7 @@ const auto isFloatPCM          {reader.isFloatPCM()};
 ```
 
 Alternatively, you can get all the metadata packaged in a single `wav::FileInfo` object:
+
 ```cpp
 const auto fileInfo            {reader.getInfo()};
 
@@ -65,6 +71,7 @@ You can log or display a short summary of `FileInfo` with the stream insertion o
 ```cpp
 std::cout << reader.getInfo() << std::endl;
 ```
+
 ```
 WAVE 24-bit linear PCM / 48 kHz / stereo / 0.1 ms / 5 frames / 30 bytes of audio
 ```
@@ -91,18 +98,21 @@ size_t read (std::vector<T> &);
 ```
 
 The pointer + size overload works with any contiguous-storage container that provides a pointer to its first element:
+
 ```cpp
 const auto samplesRead = reader.read (array, samplesRequested);
 const auto samplesRead = reader.read (container.ptrToFirstElement(), samplesRequested);
 ```
 
 The remaining two are convenience overloads for use with `std::vector`:
+
 ```cpp
 const auto samplesRead = reader.read (std_vector, samplesRequested);
 const auto samplesRead = reader.read (std_vector);
 ```
 
-To be clear, you can use the pointer + size overload with `std::vector`&mdash;it's just a little more verbose:
+To be clear, you can use the pointer + size overload with `std::vector`—it's just a little more verbose:
+
 ```cpp
 const auto samplesRead = reader.read (std_vector.data(), samplesRequested);
 const auto samplesRead = reader.read (std_vector.data(), std_vector.size());
@@ -128,10 +138,12 @@ They function the same way as their `read` counterparts except they take the num
 ### Deinterleaved Reading
 
 To separate the interleaved audio into channels, pass an array of pointers to destinations (`T**`) for each channel's audio, along with desired channel and frame counts.
+
 ```cpp
 template <FloatOrDouble T>
 size_t read (T ** const destinations, size_t channelsRequested, size_t framesRequested);
 ```
+
 Following are some examples of the many possible use cases and approaches.
 
 Reading a fixed number of channels into named vectors:
@@ -234,6 +246,7 @@ wav::ExportFormat::LinearPCM_32
 wav::ExportFormat::FloatPCM_32
 wav::ExportFormat::FloatPCM_64
 ```
+
 Mono, stereo, and multichannel layouts are supported.
 
 `WAVEFORMATEX` is used (18-byte `fmt` chunk) for mono and stereo 8-bit and 16-bit LPCM files without a channel mask.
@@ -245,7 +258,7 @@ Mono, stereo, and multichannel layouts are supported.
 ```cpp
 #include <wav-plus-plus/Writer.hpp>
 
-const auto filepath   {"out.wav"};
+const std::filesystem::path filepath {"out.wav"};
 const auto encoding   {wav::ExportFormat::LinearPCM_24};
 const auto sampleRate {48000};
 const auto channels   {2};
@@ -270,29 +283,22 @@ const auto numChannels {std::popcount (channelMask)};
 wav::Writer writer {filepath, encoding, sampleRate, numChannels, channelMask};
 ```
 
-There are 18 defined positions:<br><br>
-`FrontLeft`<br>
-`FrontRight`<br>
-`FrontCenter`<br>
-`LowFrequency`<br>
-`BackLeft`<br>
-`BackRight`<br>
-`FrontLeftOfCenter`<br>
-`FrontRightOfCenter`<br>
-`BackCenter`<br>
-`SideLeft`<br>
-`SideRight`<br>
-`TopCenter`<br>
-`TopFrontLeft`<br>
-`TopFrontCenter`<br>
-`TopFrontRight`<br>
-`TopBackLeft`<br>
-`TopBackCenter`<br>
-`TopBackRight`<br>
+There are 18 defined speaker positions. Listed in order of their position in the mask:
+
+`FrontLeft`, `FrontRight`, `FrontCenter`,
+`LowFrequency`,
+`BackLeft`, `BackRight`,
+`FrontLeftOfCenter`, `FrontRightOfCenter`,
+`BackCenter`,
+`SideLeft`, `SideRight`,
+`TopCenter`,
+`TopFrontLeft`, `TopFrontCenter`, `TopFrontRight`,
+`TopBackLeft`, `TopBackCenter`, `TopBackRight`
 
 When no speaker positions are specified but there are three or more channels, `WAVEFORMATEXTENSIBLE` is still used but the channel mask is set to `0`.
 
 A few common speaker configurations have been defined for convenience:
+
 ```cpp
 wav::SpeakerConfiguration::Unassigned
 wav::SpeakerConfiguration::Stereo
@@ -300,6 +306,7 @@ wav::SpeakerConfiguration::Quadraphonic
 wav::SpeakerConfiguration::Five_Point_One
 wav::SpeakerConfiguration::Seven_Point_One
 ```
+
 ```cpp
 constexpr auto channelMask {SpeakerConfiguration::Five_Point_One};
 wav::Writer writer {filepath, encoding, sampleRate, numChannels, channelMask};
@@ -325,6 +332,7 @@ size_t Writer::write (std::vector<T> const &);
 ```
 
 The pointer + size overload works with any contiguous-storage container that provides a pointer to its first element:
+
 ```cpp
 const auto samplesWritten = writer.write (array, samplesToWrite);
 const auto samplesWritten = writer.write (container.ptrToFirstElement(), samplesToWrite);
@@ -337,7 +345,8 @@ const auto samplesWritten = writer.write (std_vector, samplesToWrite);
 const auto samplesWritten = writer.write (std_vector);
 ```
 
-To be clear, you can use the pointer + size overload with `std::vector`&mdash;it's just a little more verbose:
+To be clear, you can use the pointer + size overload with `std::vector`—it's just a little more verbose:
+
 ```cpp
 const auto samplesWritten = writer.write (std_vector.data(), samplesToWrite);
 const auto samplesWritten = writer.write (std_vector.data(), std_vector.size());
@@ -379,11 +388,11 @@ To inspect the non-data information in a WAV, use a `wav::ChunkInfo`:
 ```cpp
 #include <wav-plus-plus/ChunkInfo.hpp>
 
-const auto filepath {"in.wav"};
-
-wav::ChunkInfo info {filename};
+const std::filesystem::path filepath {"in.wav"};
+wav::ChunkInfo info {filepath};
 std::cout << info << std::endl;
 ```
+
 ```
 chunks present
 --------------
@@ -419,13 +428,17 @@ id: data
 chunk size: 1536000
 [DATA]
 ```
+
 For a short metadata summary:
+
 ```cpp
 std::cout << info.summary() << std::endl;
 ```
+
 ```
 WAVE 32-bit float PCM / 48 kHz / stereo / 4.0 seconds / 192000 frames / 1.5 MB of audio
 ```
 
 ## License
+
 WAV++ is licensed under the MIT License. See [LICENSE](LICENSE) for details.

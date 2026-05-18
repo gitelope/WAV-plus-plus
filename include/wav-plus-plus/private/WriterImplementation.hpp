@@ -17,7 +17,7 @@
 namespace wav
 {
 
-inline Writer::Writer (std::string const & filepath,
+inline Writer::Writer (std::filesystem::path const & filepath,
                        ExportFormat exportFormat,
                        uint32_t sampleRate,
                        uint16_t channels_,

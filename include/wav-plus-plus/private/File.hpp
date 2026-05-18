@@ -9,7 +9,6 @@
 #include <cstdio>
 #include <filesystem>
 #include <memory>
-#include <string>
 
 // RAII for raw std::FILE pointers:
 // - wav::File, an alias for std::unique_ptr (with a custom deleter),
@@ -34,23 +33,27 @@ inline constexpr auto FileCloser = [](std::FILE * f) noexcept { std::fclose(f); 
 
 using File = std::unique_ptr<std::FILE, decltype(FileCloser)>;
 
-inline File fileForReading (std::string const & filepath)
+inline File fileForReading (std::filesystem::path const & filepath)
 {
-    if (! std::filesystem::is_regular_file (filepath))
-    {
-        throw ReadError ("File does not exist: " + filepath);
-    }
+#if defined(_WIN32)
+    static_assert (std::is_same_v<std::filesystem::path::value_type, wchar_t>, "Expected wchar_t paths on Windows");
+    File f (::_wfopen (filepath.c_str(), L"rb"));
+#else
     File f (std::fopen (filepath.c_str(), "rb"));
-    if (! f)
-        throw ReadError ("Failed to open file for reading: " + filepath);
+#endif
+    if (!f) throw ReadError ("Failed to open file for reading.");
     return f;
 }
 
-inline File fileForWriting (std::string const & filepath)
+inline File fileForWriting (std::filesystem::path const & filepath)
 {
+#if defined(_WIN32)
+    static_assert (std::is_same_v<std::filesystem::path::value_type, wchar_t>, "Expected wchar_t paths on Windows");
+    File f (::_wfopen (filepath.c_str(), L"wb"));
+#else
     File f (std::fopen (filepath.c_str(), "wb"));
-    if (! f)
-        throw WriteError ("Failed to open file for writing: " + filepath);
+#endif
+    if (!f) throw WriteError ("Failed to open file for writing.");
     return f;
 }
 

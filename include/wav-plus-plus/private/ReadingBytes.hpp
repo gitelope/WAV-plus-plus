@@ -46,7 +46,7 @@ float       float32_le        (std::vector<std::byte> const &, size_t & pos); //
 float       float32_le        (std::FILE *);
 double      float64_le        (std::vector<std::byte> const &, size_t & pos); // 8 bytes -> 64-bit double
 
-std::vector<std::byte> ReadBytes (std::string const & filePath);
+std::vector<std::byte> ReadBytes (std::filesystem::path const & filePath);
 void PrintBytesAsHex (std::vector<std::byte> const & bytes);
 
 
@@ -248,7 +248,7 @@ inline double float64_le (std::vector<std::byte> const & bytes, size_t & pos)
     return std::bit_cast<double> (integer);
 }
 
-inline std::vector<std::byte> ReadBytes (std::string const & filepath)
+inline std::vector<std::byte> ReadBytes (std::filesystem::path const & filepath)
 {
     auto in = fileForReading (filepath);
 

@@ -10,7 +10,7 @@
 #include "private/File.hpp"
 
 #include <cstdio>
-#include <string>
+#include <filesystem>
 #include <vector>
 
 namespace wav
@@ -21,7 +21,7 @@ class Writer
 
 public:
 
-    Writer (std::string const & filepath,
+    Writer (std::filesystem::path const & filepath,
             ExportFormat exportFormat,
             uint32_t sampleRate,
             uint16_t channels,
