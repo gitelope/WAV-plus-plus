@@ -37,11 +37,13 @@ inline File fileForReading (std::filesystem::path const & filepath)
 {
 #if defined(_WIN32)
     static_assert (std::is_same_v<std::filesystem::path::value_type, wchar_t>, "Expected wchar_t paths on Windows");
-    File f (::_wfopen (filepath.c_str(), L"rb"));
+    std::FILE * raw = nullptr;
+    ::_wfopen_s (&raw, filepath.c_str(), L"rb");
+    File f (raw);
 #else
     File f (std::fopen (filepath.c_str(), "rb"));
 #endif
-    if (!f) throw ReadError ("Failed to open file for reading.");
+    if (f == nullptr) throw ReadError ("Failed to open file for reading.");
     return f;
 }
 
@@ -49,11 +51,13 @@ inline File fileForWriting (std::filesystem::path const & filepath)
 {
 #if defined(_WIN32)
     static_assert (std::is_same_v<std::filesystem::path::value_type, wchar_t>, "Expected wchar_t paths on Windows");
-    File f (::_wfopen (filepath.c_str(), L"wb"));
+    std::FILE * raw = nullptr;
+    ::_wfopen_s (&raw, filepath.c_str(), L"wb");
+    File f (raw);
 #else
     File f (std::fopen (filepath.c_str(), "wb"));
 #endif
-    if (!f) throw WriteError ("Failed to open file for writing.");
+    if (f == nullptr) throw WriteError ("Failed to open file for writing.");
     return f;
 }
 
