@@ -44,7 +44,7 @@ inline constexpr uint16_t Extensible = 0xFFFE;
 
 constexpr bool isValidFormatCode (uint16_t formatCode);
 
-constexpr std::pair <uint16_t, uint16_t> bitDepthAndFormatCode (ExportFormat ef) noexcept;
+constexpr std::pair <uint16_t, uint16_t> bitDepthAndFormatCode (ExportFormat ef);
 
 namespace FormatChunkSize
 {
