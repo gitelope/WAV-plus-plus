@@ -318,7 +318,7 @@ std::string headerTestLabel (wav::ExportFormat encoding, uint16_t channels, uint
     const auto bytesPerSample {bitDepth / 8U};
 
     std::string label {exportFormatShortPrefix (encoding)};
-    label += ", " + std::to_string (channels) + "ch";
+    label += ", " + std::to_string (static_cast<unsigned> (channels)) + "ch";
     if (channels >= 3 || bitDepth > 16) label += ", WAVEFORMATEXTENSIBLE";
     else label += ", WAVEFORMATEX";
     if ((frames * channels * bytesPerSample) % 2) label += " (padded)";
