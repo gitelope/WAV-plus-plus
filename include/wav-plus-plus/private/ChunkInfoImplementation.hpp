@@ -176,6 +176,13 @@ inline void ChunkInfo::ReadFormatChunk (std::FILE * in)
     format.byteRate = uint32_le (in);
     format.blockAlign = uint16_le (in);
 
+    if (format.channels == 0)
+        throw ReadError ("Parsing error: channels must not be zero.");
+    if (format.blockAlign == 0)
+        throw ReadError ("Parsing error: block align must not be zero.");
+    if (format.sampleRate == 0)
+        throw ReadError ("Parsing error: sample rate must not be zero.");
+
     // This field is found in PCMWAVEFORMAT, WAVEFORMATEX, and WAVEFORMATEXTENSIBLE:
     if (format.size == FormatChunkSize::PCMWAVEFORMAT      ||
         format.size == FormatChunkSize::WAVEFORMATEX       ||
