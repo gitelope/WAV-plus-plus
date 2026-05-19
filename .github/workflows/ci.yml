@@ -4,7 +4,7 @@ on:
   push:
     branches: ["main", "develop"]
   pull_request:
-  workflow_dispatch:
+    branches: ["main", "develop"]
 
 jobs:
   build-and-test:
@@ -16,22 +16,22 @@ jobs:
       matrix:
         include:
           - name: linux-gcc
-            os: ubuntu-24.04
+            os: ubuntu-latest
             cc: gcc
             cxx: g++
 
           - name: linux-clang
-            os: ubuntu-24.04
+            os: ubuntu-latest
             cc: clang
             cxx: clang++
 
           - name: macos-apple-clang
-            os: macos-15
+            os: macos-latest
             cc: clang
             cxx: clang++
 
           - name: windows-msvc
-            os: windows-2022
+            os: windows-latest
 
     steps:
       - uses: actions/checkout@v5
