@@ -183,17 +183,22 @@ inline void ChunkInfo::ReadFormatChunk (std::FILE * in)
     {
         throw ReadError (std::format ("Format not supported: 0x{:04X}", format.code));
     }
-    format.channels = uint16_le (in);
-    format.sampleRate = uint32_le (in);
-    format.byteRate = uint32_le (in);
-    format.blockAlign = uint16_le (in);
 
+    format.channels = uint16_le (in);
     if (format.channels == 0)
-        throw ReadError ("Parsing error: channels must not be zero.");
-    if (format.blockAlign == 0)
-        throw ReadError ("Parsing error: block align must not be zero.");
+        throw ReadError ("Invalid value: channels must not be zero.");
+    if (format.channels > maxChannels)
+        throw ReadError ("Invalid value: channels must not be greater than " + std::to_string (maxChannels) + ".");
+
+    format.sampleRate = uint32_le (in);
     if (format.sampleRate == 0)
-        throw ReadError ("Parsing error: sample rate must not be zero.");
+        throw ReadError ("Invalid value: sample rate must not be zero.");
+
+    format.byteRate = uint32_le (in);
+
+    format.blockAlign = uint16_le (in);
+    if (format.blockAlign == 0)
+        throw ReadError ("Invalid value: block align must not be zero.");
 
     // This field is found in PCMWAVEFORMAT, WAVEFORMATEX, and WAVEFORMATEXTENSIBLE:
     if (format.size == FormatChunkSize::PCMWAVEFORMAT      ||
@@ -328,7 +333,11 @@ inline void ChunkInfo::ReadPeakChunk (std::FILE * in)
     if (peak.size < 8) throw ReadError ("Invalid value: PEAK chunk size must be at least 8.");
     // peak.size = 8 (version + timestamp) + 8 * N (N peak entries, each 8 bytes).
     if ((peak.size - 8) % 8 != 0) throw ReadError ("Invalid value: PEAK chunk size (minus 8) does not reflect a whole number of peaks.");
-    peak.peaks.resize ((peak.size - 8)/8);
+
+    const auto numPeaks {(peak.size - 8)/8};
+    if (numPeaks > maxChannels)
+        throw ReadError ("PEAK chunk peak count exceeds the supported channel maximum of " + std::to_string (maxChannels) + ".");
+    peak.peaks.resize (numPeaks);
 
     for (auto & p : peak.peaks)
     {

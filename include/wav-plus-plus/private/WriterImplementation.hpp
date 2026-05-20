@@ -27,6 +27,11 @@ inline Writer::Writer (std::filesystem::path const & filepath,
 ,channels (channels_)
 ,channelMask (channelMask_)
 {
+    if (channels > maxChannels)
+    {
+        throw WriteError ("Channel count exceeds the supported maximum of " + std::to_string (maxChannels) + ".");
+    }
+
     if (channelMask & ~SpeakerPosition::ValidBits)
     {
         throw WriteError ("Channel mask contains undefined speaker position bits.");

@@ -152,6 +152,11 @@ static_assert (Seven_Point_One == 0x063F);
 template <typename T>
 concept FloatOrDouble = std::same_as <T,float> || std::same_as <T,double>;
 
+// Maximum channel count WAV++ accepts when reading or writing.
+// Less than the maximum of 65535 imposed by the use of unsigned 16-bit
+// for channels in the fmt chunk.
+inline constexpr uint16_t maxChannels {1024};
+
 } // namespace wav
 
 #include "private/FormatsImplementation.hpp"
