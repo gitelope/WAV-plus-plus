@@ -27,6 +27,15 @@ inline Writer::Writer (std::filesystem::path const & filepath,
 ,channels (channels_)
 ,channelMask (channelMask_)
 {
+    if (sampleRate == 0)
+    {
+        throw WriteError ("Sample rate must be greater than zero.");
+    }
+
+    if (channels == 0)
+    {
+        throw WriteError ("Channel count must be greater than zero.");
+    }
     if (channels > maxChannels)
     {
         throw WriteError ("Channel count exceeds the supported maximum of " + std::to_string (maxChannels) + ".");
@@ -35,6 +44,11 @@ inline Writer::Writer (std::filesystem::path const & filepath,
     if (channelMask & ~SpeakerPosition::ValidBits)
     {
         throw WriteError ("Channel mask contains undefined speaker position bits.");
+    }
+
+    if (bufferSizeInKB == 0)
+    {
+        throw WriteError ("Write buffer size must be greater than zero.");
     }
 
     std::tie (this->bitsPerSample, this->formatCode) = bitDepthAndFormatCode (exportFormat);
