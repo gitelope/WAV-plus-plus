@@ -289,18 +289,22 @@ inline void ChunkInfo::ReadFormatChunk (std::FILE * in)
 
 inline void ChunkInfo::ReadFactChunk (std::FILE * in)
 {
-    fact.present = true;
+    if (fact.present) throw ReadError ("Invalid format: File contains more than one fact chunk.");
+
     fact.size = uint32_le (in);
     if (fact.size != 4)
     {
         throw ReadError ("fact chunk size (" + std::to_string(fact.size) + ") should be 4.");
     }
     fact.fileSize = uint32_le (in);
+
+    fact.present = true;
 }
 
 inline void ChunkInfo::ReadPeakChunk (std::FILE * in)
 {
-    peak.present = true;
+    if (peak.present) throw ReadError ("Invalid format: File contains more than one PEAK chunk.");
+
     peak.size = uint32_le (in);
     peak.version = uint32_le (in);
     peak.timestamp = uint32_le (in);
@@ -310,6 +314,8 @@ inline void ChunkInfo::ReadPeakChunk (std::FILE * in)
         p.value = float32_le (in);
         p.positionInFrames = uint32_le (in);
     }
+
+    peak.present = true;
 }
 
 inline void ChunkInfo::ReadDataChunkSizeAndSkipSamples (std::FILE * in)
