@@ -91,6 +91,7 @@ inline void ChunkInfo::ReadFile (std::FILE * in)
         else if (chunkID == fact.id)   ReadFactChunk         (in);
         else if (chunkID == peak.id)   ReadPeakChunk         (in);
         else if (chunkID == data.id)   ReadDataChunkSizeAndSkipSamples (in);
+        else if (chunkID == riff.id)   throw ReadError ("Invalid format: File contains more than one RIFF chunk.");
         else
         {
             // Skip rest of chunk (including any padding byte).
