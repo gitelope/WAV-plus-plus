@@ -38,7 +38,7 @@ inline Writer::Writer (std::filesystem::path const & filepath,
     }
     if (channels > maxChannels)
     {
-        throw WriteError ("Channel count exceeds the supported maximum of " + std::to_string (maxChannels) + ".");
+        throw WriteError ("Channel count exceeds the supported maximum of " + std::to_string (static_cast<unsigned> (maxChannels)) + ".");
     }
 
     if (channelMask & ~SpeakerPosition::ValidBits)

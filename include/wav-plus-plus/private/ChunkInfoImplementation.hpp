@@ -188,7 +188,7 @@ inline void ChunkInfo::ReadFormatChunk (std::FILE * in)
     if (format.channels == 0)
         throw ReadError ("Invalid value: channels must not be zero.");
     if (format.channels > maxChannels)
-        throw ReadError ("Invalid value: channels must not be greater than " + std::to_string (maxChannels) + ".");
+        throw ReadError ("Invalid value: channels must not be greater than " + std::to_string (static_cast<unsigned> (maxChannels)) + ".");
 
     format.sampleRate = uint32_le (in);
     if (format.sampleRate == 0)
@@ -336,7 +336,7 @@ inline void ChunkInfo::ReadPeakChunk (std::FILE * in)
 
     const auto numPeaks {(peak.size - 8)/8};
     if (numPeaks > maxChannels)
-        throw ReadError ("PEAK chunk peak count exceeds the supported channel maximum of " + std::to_string (maxChannels) + ".");
+        throw ReadError ("PEAK chunk peak count exceeds the supported channel maximum of " + std::to_string (static_cast<unsigned> (maxChannels)) + ".");
     peak.peaks.resize (numPeaks);
 
     for (auto & p : peak.peaks)
