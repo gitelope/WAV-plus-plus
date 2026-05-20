@@ -122,7 +122,8 @@ private:
     void RegisterChunk (std::string const & id, [[maybe_unused]] std::fpos_t position);
     void RegisterSkippedChunk (std::string const & id, [[maybe_unused]] std::fpos_t position);
 
-    bool fmtChunkHasBeenRead {false};
+    bool fmtChunkEncountered {false};
+    bool dataChunkEncountered {false};
 };
 
 std::ostream & operator<< (std::ostream &, ChunkInfo const &);
