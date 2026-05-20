@@ -157,6 +157,8 @@ inline void ChunkInfo::ReadRiffChunk (std::FILE * in)
 
 inline void ChunkInfo::ReadFormatChunk (std::FILE * in)
 {
+    if (fmtChunkHasBeenRead) throw ReadError ("Invalid format: File contains more than one fmt chunk.");
+
     // These fields are found in formats WAVEFORMAT, PCMWAVEFORMAT, WAVEFORMATEX, and WAVEFORMATEXTENSIBLE:
     //
     // no need to read ID since it has already been read and has the expected value
@@ -282,6 +284,7 @@ inline void ChunkInfo::ReadFormatChunk (std::FILE * in)
         std::fseek (in, 1, SEEK_CUR);
         if (std::ferror (in)) throw ReadError ("Failed to skip format chunk padding.");
     }
+    fmtChunkHasBeenRead = true;
 }
 
 inline void ChunkInfo::ReadFactChunk (std::FILE * in)
@@ -311,6 +314,7 @@ inline void ChunkInfo::ReadPeakChunk (std::FILE * in)
 
 inline void ChunkInfo::ReadDataChunkSizeAndSkipSamples (std::FILE * in)
 {
+    if (!fmtChunkHasBeenRead) throw ReadError ("Invalid format: data chunk reached before format chunk.");
     // No need to read id since it has already been read and has the expected value.
     data.size = uint32_le (in);
     if (data.size % format.blockAlign != 0)

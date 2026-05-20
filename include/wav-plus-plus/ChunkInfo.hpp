@@ -79,11 +79,20 @@ struct PeakChunk
     bool present {false};
 };
 
+/// Reads in all the info from RIFF, fmt, data (except for the samples),
+/// fact (optional), and PEAK (optional) chunks. The presence of other
+/// chunks is recorded, but their contents are not read.
+
+// WAV format notes:
+//
+// The whole file is a single RIFF chunk; fmt, data, fact, PEAK, and any
+// other chunks (e.g. JUNK) are subchunks within it.
+//
+// The fmt chunk must precede the data chunk. The data chunk need not be last.
+//
+// Each subchunk's payload is padded to an even byte boundary; the pad
+// byte is not counted in the subchunk's size field.
 class ChunkInfo
-/// All the info from RIFF, fmt, data, fact and PEAK chunks except for the samples.
-/// (Essentially a header parser with the qualification that a WAV file need not be
-/// constructed with the data chunk after all the others with the sample data at the
-/// very end of the file and all the other information before them.)
 {
 public:
 
@@ -112,6 +121,8 @@ private:
 
     void RegisterChunk (std::string const & id, [[maybe_unused]] std::fpos_t position);
     void RegisterSkippedChunk (std::string const & id, [[maybe_unused]] std::fpos_t position);
+
+    bool fmtChunkHasBeenRead {false};
 };
 
 std::ostream & operator<< (std::ostream &, ChunkInfo const &);
