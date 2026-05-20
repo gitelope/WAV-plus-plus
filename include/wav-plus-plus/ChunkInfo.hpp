@@ -122,6 +122,8 @@ private:
     void RegisterChunk (std::string const & id, [[maybe_unused]] std::fpos_t position);
     void RegisterSkippedChunk (std::string const & id, [[maybe_unused]] std::fpos_t position);
 
+    void ValidateAfterParsing();
+
     bool fmtChunkEncountered {false};
     bool dataChunkEncountered {false};
 };

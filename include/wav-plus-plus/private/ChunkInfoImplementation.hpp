@@ -109,6 +109,7 @@ inline void ChunkInfo::ReadFile (std::FILE * in)
             SkipChunk (in, size);
         }
     }
+    ValidateAfterParsing();
 }
 
 /// Carefully handles skipping to the end of chunks
@@ -142,6 +143,14 @@ inline int peek (std::FILE * in)
         std::ungetc (c, in); // Put the character back
     }
     return c;
+}
+
+inline void ChunkInfo::ValidateAfterParsing()
+{
+    if (!fmtChunkEncountered)  throw ReadError ("Invalid format: missing fmt chunk.");
+    if (!dataChunkEncountered) throw ReadError ("Invalid format: missing data chunk.");
+    if (peak.present && peak.peaks.size() != format.channels)
+        throw ReadError ("Invalid format: PEAK chunk peak count does not match number of channels.");
 }
 
 inline void ChunkInfo::ReadRiffChunk (std::FILE * in)
@@ -308,7 +317,18 @@ inline void ChunkInfo::ReadPeakChunk (std::FILE * in)
     peak.size = uint32_le (in);
     peak.version = uint32_le (in);
     peak.timestamp = uint32_le (in);
+
+    // expected PEAK chunk contents after the size field:
+    // 8-byte header (version, timestamp),
+    // N * 8-byte peak entries (32-bit float value + uint32 position)
+    //
+    // Validate the minimum and the 8-byte alignment to prevent
+    // unsigned underflow and partial-entry parsing:
+    if (peak.size < 8) throw ReadError ("Invalid value: PEAK chunk size must be at least 8.");
+    // peak.size = 8 (version + timestamp) + 8 * N (N peak entries, each 8 bytes).
+    if ((peak.size - 8) % 8 != 0) throw ReadError ("Invalid value: PEAK chunk size (minus 8) does not reflect a whole number of peaks.");
     peak.peaks.resize ((peak.size - 8)/8);
+
     for (auto & p : peak.peaks)
     {
         p.value = float32_le (in);
