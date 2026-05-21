@@ -148,10 +148,18 @@ inline int peek (std::FILE * in)
 
 inline void ChunkInfo::ValidateAfterParsing()
 {
-    if (!fmtChunkEncountered)  throw ReadError ("Invalid format: missing fmt chunk.");
-    if (!dataChunkEncountered) throw ReadError ("Invalid format: missing data chunk.");
+    if (!fmtChunkEncountered)
+    {
+        throw ReadError ("Invalid format: missing fmt chunk.");
+    }
+    if (!dataChunkEncountered)
+    {
+        throw ReadError ("Invalid format: missing data chunk.");
+    }
     if (peak.present && peak.peaks.size() != format.channels)
+    {
         throw ReadError ("Invalid format: PEAK chunk peak count does not match number of channels.");
+    }
 }
 
 inline void ChunkInfo::ReadRiffChunk (std::FILE * in)
@@ -186,19 +194,27 @@ inline void ChunkInfo::ReadFormatChunk (std::FILE * in)
 
     format.channels = uint16_le (in);
     if (format.channels == 0)
+    {
         throw ReadError ("Invalid value: channels must not be zero.");
+    }
     if (format.channels > maxChannels)
+    {
         throw ReadError ("Invalid value: channels must not be greater than " + std::to_string (static_cast<unsigned> (maxChannels)) + ".");
+    }
 
     format.sampleRate = uint32_le (in);
     if (format.sampleRate == 0)
+    {
         throw ReadError ("Invalid value: sample rate must not be zero.");
+    }
 
     format.byteRate = uint32_le (in);
 
     format.blockAlign = uint16_le (in);
     if (format.blockAlign == 0)
+    {
         throw ReadError ("Invalid value: block align must not be zero.");
+    }
 
     // This field is found in PCMWAVEFORMAT, WAVEFORMATEX, and WAVEFORMATEXTENSIBLE:
     if (format.size == FormatChunkSize::PCMWAVEFORMAT      ||
@@ -206,6 +222,10 @@ inline void ChunkInfo::ReadFormatChunk (std::FILE * in)
         format.size == FormatChunkSize::WAVEFORMATEXTENSIBLE)
     {
         format.bitsPerSample = uint16_le (in);
+        if (format.bitsPerSample == 0 || format.bitsPerSample > 64)
+        {
+            throw ReadError ("Invalid value: bits per sample must be greater than 0 and less than or equal to 64.");
+        }
 
         if (format.code == FormatCode::Extensible)
         {
@@ -267,6 +287,10 @@ inline void ChunkInfo::ReadFormatChunk (std::FILE * in)
     if (format.size == FormatChunkSize::WAVEFORMATEXTENSIBLE)
     {
         format.validBitsPerSample = uint16_le (in);
+        if (format.validBitsPerSample == 0 || format.validBitsPerSample > 64)
+        {
+            throw ReadError ("Invalid value: valid bits per sample must be greater than 0 and less than or equal to 64.");
+        }
         format.channelMask = uint32_le (in);
         format.subFormat = guid (in);
 

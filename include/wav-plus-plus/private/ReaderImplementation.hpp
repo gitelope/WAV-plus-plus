@@ -752,7 +752,10 @@ inline void Reader::InitializeBuffer (uint32_t suggestedBufferSizeKB)
 // value into a normalized float or double through division.
 inline double Reader::normalization (uint16_t bitDepth)
 {
-    assert (bitDepth >= 1 && bitDepth <= 64);
+    if (bitDepth == 0 || bitDepth > 64)
+    {
+        throw ReadError ("Invalid value: bit depth must be greater than 0 and less than or equal to 64.");
+    }
     return static_cast<double> (uint64_t{1} << (bitDepth - 1));
 }
 
