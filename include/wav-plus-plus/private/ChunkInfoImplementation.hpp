@@ -10,6 +10,7 @@
 #include <algorithm>
 #include <array>
 #include <cassert>
+#include <cstdio>
 #include <format>
 #include <limits>
 #include <string_view>
@@ -113,27 +114,22 @@ inline void ChunkInfo::ReadFile (std::FILE * in)
     ValidateAfterParsing();
 }
 
-/// Carefully handles skipping to the end of chunks
-/// in case long is only 32-bit
-/// (or size is unsigned 32-bit max).
 inline void SkipChunk (std::FILE * file, uint32_t size)
 {
-    int64_t skipAmount {size};
-    // Add padding byte if odd.
-    // Avoids adding directly to size parameter
-    // in case it equals the maximum unsigned 32-bit value.
-    skipAmount += (skipAmount % 2);
-    constexpr int64_t maxSeek {std::numeric_limits<long>::max()};
+    int64_t skipAmount {static_cast<int64_t> (size) + (size % 2)}; // padding byte if odd
 
-    while (skipAmount)
+#if defined(_WIN32)
+    if (::_fseeki64 (file, skipAmount, SEEK_CUR) != 0)
     {
-        const int64_t seekAmount {std::min (skipAmount, maxSeek)};
-        if (std::fseek (file, static_cast<long> (seekAmount), SEEK_CUR) != 0)
-        {
-            throw ReadError ("Failed to skip chunk.");
-        }
-        skipAmount -= seekAmount;
+        throw ReadError ("Failed to skip chunk.");
     }
+#else
+    static_assert (sizeof (long) >= 8, "std::fseek takes long and 64-bit long required for seeking.");
+    if (std::fseek (file, skipAmount, SEEK_CUR) != 0)
+    {
+        throw ReadError ("Failed to skip chunk.");
+    }
+#endif
 }
 
 inline int peek (std::FILE * in)
