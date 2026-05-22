@@ -5,6 +5,7 @@
 #define wavplusplus_WriterImplementation_hpp
 
 #include "Byteswap.hpp"
+#include "FileOffset.hpp"
 #include "QuantizationConstants.hpp"
 
 #include <algorithm>
@@ -544,7 +545,7 @@ inline void Writer::WriteHeader (uint32_t sampleRate)
     // RIFF header
     WriteToHeader (file.get(), "RIFF");
     // Record position of RIFF chunk size so it can be updated later:
-    riffChunkSizePosition = std::ftell (file.get());
+    riffChunkSizePosition = tell (file.get());
     if (riffChunkSizePosition == -1) throw WriteError ("Failed to get RIFF chunk size position.");
     // Write RIFF chunk size placeholder:
     WriteToHeader (file.get(), static_cast<uint32_t> (0));
@@ -579,7 +580,7 @@ inline void Writer::WriteHeader (uint32_t sampleRate)
     // data chunk header
     WriteToHeader (file.get(), "data");
     // Record position of data chunk size so it can be updated later:
-    dataChunkSizePosition = std::ftell (file.get());
+    dataChunkSizePosition = tell (file.get());
     if (dataChunkSizePosition == -1) throw WriteError ("Failed to get data chunk size position.");
     // Write data chunk size placeholder:
     WriteToHeader (file.get(), static_cast<uint32_t> (0)); // Will be updated in UpdateHeader()
@@ -693,7 +694,7 @@ inline void Writer::UpdateHeader (uint32_t dataChunkSize)
     if (!file) return;
 
     // Update data chunk size. (Padding does not go into the count.)
-    if (std::fseek (file.get(), dataChunkSizePosition, SEEK_SET) != 0)
+    if (seek (file.get(), dataChunkSizePosition, SEEK_SET) != 0)
     {
         throw WriteError ("Failed to reposition to data chunk size.");
     }
@@ -703,7 +704,7 @@ inline void Writer::UpdateHeader (uint32_t dataChunkSize)
     // See SetMaximumDataChunkSize() comments for derivation of:
     // R = (20 + F) + D + (D % 2)
     const uint32_t riffChunkSize {(20 + fmtChunkSize) + dataChunkSize + (dataChunkSize % 2)};
-    if (std::fseek (file.get(), riffChunkSizePosition, SEEK_SET) != 0)
+    if (seek (file.get(), riffChunkSizePosition, SEEK_SET) != 0)
     {
         throw WriteError ("Failed to reposition to RIFF chunk size");
     }

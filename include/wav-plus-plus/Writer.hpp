@@ -9,7 +9,7 @@
 #include "private/int24.hpp"
 #include "private/File.hpp"
 
-#include <cstdio>
+#include <cstdint>
 #include <filesystem>
 #include <vector>
 
@@ -86,8 +86,8 @@ private:
 
     // Header field positions set by WriteHeader()
     // to be used later to replace placeholders.
-    long riffChunkSizePosition {-1};
-    long dataChunkSizePosition {-1};
+    int64_t riffChunkSizePosition {-1};
+    int64_t dataChunkSizePosition {-1};
 
     // Internal buffers for different output encodings.
     std::vector<uint8_t> bufferLPCMU8;

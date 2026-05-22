@@ -6,6 +6,7 @@
 
 #include "ReadingBytes.hpp"
 #include "AudioSummary.hpp"
+#include "FileOffset.hpp"
 
 #include <algorithm>
 #include <array>
@@ -79,18 +80,18 @@ inline void ChunkInfo::ReadFile (std::FILE * in)
     const auto firstChunkID {fourCharacterCode (in)};
     if (firstChunkID != riff.id) throw ReadError ("RIFF chunk ID not found.");
     ReadRiffChunk (in);
-    RegisterChunk (firstChunkID, std::fpos_t{});
+    RegisterChunk (firstChunkID, 0);
 
     while (peek (in) != EOF)
     {
-        std::fpos_t chunkStart;
-        std::fgetpos (in, &chunkStart);
+        const auto chunkStart {tell (in)};
+        if (chunkStart == -1) throw ReadError ("Failed to get chunk position.");
         const auto chunkID {fourCharacterCode (in)};
         RegisterChunk (chunkID, chunkStart);
 
-        if      (chunkID == format.id) ReadFormatChunk       (in);
-        else if (chunkID == fact.id)   ReadFactChunk         (in);
-        else if (chunkID == peak.id)   ReadPeakChunk         (in);
+        if      (chunkID == format.id) ReadFormatChunk                 (in);
+        else if (chunkID == fact.id)   ReadFactChunk                   (in);
+        else if (chunkID == peak.id)   ReadPeakChunk                   (in);
         else if (chunkID == data.id)   ReadDataChunkSizeAndSkipSamples (in);
         else if (chunkID == riff.id)   throw ReadError ("Invalid format: File contains more than one RIFF chunk.");
         else
@@ -117,19 +118,10 @@ inline void ChunkInfo::ReadFile (std::FILE * in)
 inline void SkipChunk (std::FILE * file, uint32_t size)
 {
     int64_t skipAmount {static_cast<int64_t> (size) + (size % 2)}; // padding byte if odd
-
-#if defined(_WIN32)
-    if (::_fseeki64 (file, skipAmount, SEEK_CUR) != 0)
+    if (seek (file, skipAmount, SEEK_CUR) != 0)
     {
         throw ReadError ("Failed to skip chunk.");
     }
-#else
-    static_assert (sizeof (long) >= 8, "std::fseek takes long and 64-bit long required for seeking.");
-    if (std::fseek (file, skipAmount, SEEK_CUR) != 0)
-    {
-        throw ReadError ("Failed to skip chunk.");
-    }
-#endif
 }
 
 inline int peek (std::FILE * in)
@@ -316,8 +308,7 @@ inline void ChunkInfo::ReadFormatChunk (std::FILE * in)
     // we must skip the last padding byte.
     if (format.size % 2)
     {
-        std::fseek (in, 1, SEEK_CUR);
-        if (std::ferror (in)) throw ReadError ("Failed to skip format chunk padding.");
+        if (seek (in, 1, SEEK_CUR) != 0) throw ReadError ("Failed to skip format chunk padding.");
     }
     fmtChunkEncountered = true;
 }
@@ -380,10 +371,8 @@ inline void ChunkInfo::ReadDataChunkSizeAndSkipSamples (std::FILE * in)
         throw ReadError ("Size of data chunk is not divisible by block_align.");
     }
 
-    if (std::fgetpos (in, &data.offset) != 0)
-    {
-        throw ReadError ("Failed to get current file position for data chunk.");
-    }
+    data.offset = tell (in);
+    if (data.offset == -1) throw ReadError ("Failed to get current file position for data chunk.");
 
     // SkipChunk() detects and carefully skips potential padding byte.
     // (Best not to add it in ahead of time since that could result in overflow.)
@@ -397,31 +386,14 @@ inline void ChunkInfo::ReadDataChunkSizeAndSkipSamples (std::FILE * in)
     dataChunkEncountered = true;
 }
 
-// Will append chunk id (and position if fpos_t is convertible to string).
-// Position is templated so that it can be determined if std::fpos_t is convertible to string.
-template <typename T>
-inline void AppendChunkInfo (std::vector<std::string> & chunkInfo,
-                             std::string const & id,
-                             T /*std::fpos_t is expected*/ const & position)
+inline void ChunkInfo::RegisterChunk (std::string const & id, std::int64_t position)
 {
-    if constexpr (requires { std::to_string (position); })
-    {
-        chunkInfo.emplace_back (id + " " + std::to_string (position));
-    }
-    else
-    {
-        chunkInfo.emplace_back (id);
-    }
+    chunksEncountered.emplace_back (id + " " + std::to_string (position));
 }
 
-inline void ChunkInfo::RegisterChunk (std::string const & id, std::fpos_t position)
+inline void ChunkInfo::RegisterSkippedChunk (std::string const & id, std::int64_t position)
 {
-    AppendChunkInfo (chunksEncountered, id, position);
-}
-
-inline void ChunkInfo::RegisterSkippedChunk (std::string const & id, std::fpos_t position)
-{
-    AppendChunkInfo (chunksSkipped, id, position);
+    chunksSkipped.emplace_back (id + " " + std::to_string (position));
 }
 
 inline std::ostream & operator<< (std::ostream & os, ChunkInfo const & info)

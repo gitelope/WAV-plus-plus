@@ -87,6 +87,7 @@
 		C416D40F2FB3A67C00C2E249 /* CMakeLists.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = CMakeLists.txt; sourceTree = "<group>"; };
 		C416D4102FB3A6B300C2E249 /* CMakeLists.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = CMakeLists.txt; sourceTree = "<group>"; };
 		C416D4112FB3B30F00C2E249 /* File.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = File.hpp; sourceTree = "<group>"; };
+		C416D4122FBFBD4100C2E249 /* FileOffset.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = FileOffset.hpp; sourceTree = "<group>"; };
 		C46085F02F8EC53B007F0361 /* HeaderParsing.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = HeaderParsing.hpp; sourceTree = "<group>"; };
 		C46085F12F8EC5DB007F0361 /* SampleDecoding.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = SampleDecoding.hpp; sourceTree = "<group>"; };
 		C46085F42F903EB5007F0361 /* header_parsing_helper_functions.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = header_parsing_helper_functions.hpp; sourceTree = "<group>"; };
@@ -285,6 +286,7 @@
 				C4E4D40C2F9AA6150059CA2F /* Byteswap.hpp */,
 				C470C0272F6A058B00F3A7D1 /* AudioSummary.hpp */,
 				C416D4112FB3B30F00C2E249 /* File.hpp */,
+				C416D4122FBFBD4100C2E249 /* FileOffset.hpp */,
 			);
 			path = private;
 			sourceTree = "<group>";

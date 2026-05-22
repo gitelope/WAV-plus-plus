@@ -11,7 +11,6 @@
 #include "private/int24.hpp"
 #include "private/File.hpp"
 
-#include <cstdio>
 #include <cstdint>
 #include <filesystem>
 #include <vector>
