@@ -1,6 +1,12 @@
 # WAV++
 
-A header-only, dependency-free, C++20 library for reading and writing WAV files.
+[![CI](https://github.com/gitelope/WAV-plus-plus/actions/workflows/ci.yml/badge.svg)](https://github.com/gitelope/WAV-plus-plus/actions/workflows/ci.yml)
+
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
+![Platforms](https://img.shields.io/badge/platforms-Linux%20%7C%20macOS%20%7C%20Windows-blue)
+![Language](https://img.shields.io/badge/language-C%2B%2B20-blue)
+
+A header-only, dependency-free, C++ library for reading and writing WAV files.
 
 ## Installation
 
