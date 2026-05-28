@@ -62,6 +62,7 @@ else ()
         -Wformat-nonliteral
         -Wreorder
         -Wsign-compare
+        -Wredundant-move
     )
     if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
         list (APPEND wav_plus_plus_warning_flags
@@ -69,6 +70,9 @@ else ()
             -Wimplicit-int-conversion
             -Wimplicit-int-float-conversion
             -Wmissing-braces # very noisy in gcc
+            -Wcomma
+            -Wrange-loop-analysis
+            -Wconditional-uninitialized
         )
     endif ()
 endif ()
