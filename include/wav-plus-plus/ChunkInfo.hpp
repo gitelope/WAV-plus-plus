@@ -128,6 +128,8 @@ private:
 
     bool fmtChunkEncountered {false};
     bool dataChunkEncountered {false};
+
+    std::int64_t actualFileSize {0};
 };
 
 std::ostream & operator<< (std::ostream &, ChunkInfo const &);

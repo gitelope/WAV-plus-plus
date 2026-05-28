@@ -77,6 +77,8 @@ void SkipChunk (std::FILE *, uint32_t);
 
 inline void ChunkInfo::ReadFile (std::FILE * in)
 {
+    actualFileSize = fileSize (in);
+
     const auto firstChunkID {fourCharacterCode (in)};
     if (firstChunkID != riff.id) throw ReadError ("RIFF chunk ID not found.");
     ReadRiffChunk (in);
@@ -373,6 +375,12 @@ inline void ChunkInfo::ReadDataChunkSizeAndSkipSamples (std::FILE * in)
 
     data.offset = tell (in);
     if (data.offset == -1) throw ReadError ("Failed to get current file position for data chunk.");
+
+    if (data.offset + data.size > actualFileSize)
+    {
+        throw ReadError (std::format ("declared data chunk size ({}) exceeds bytes remaining in the file ({}).",
+            data.size, actualFileSize - data.offset));
+    }
 
     // SkipChunk() detects and carefully skips potential padding byte.
     // (Best not to add it in ahead of time since that could result in overflow.)
