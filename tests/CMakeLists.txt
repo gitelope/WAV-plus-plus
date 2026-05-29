@@ -8,14 +8,20 @@ set (wav_plus_plus_test_headers
     helper_functions.hpp
 
     reading/ReadingTests.hpp
-    reading/decoding/SampleDecoding.hpp
-    reading/headers/HeaderParsing.hpp
-    reading/headers/PCMWAVEFORMAT.hpp
-    reading/headers/WAVEFORMAT.hpp
-    reading/headers/WAVEFORMATEX.hpp
-    reading/headers/WAVEFORMATEXTENSIBLE.hpp
-    reading/headers/header_parsing_helper_functions.hpp
     reading/reading_helper_functions.hpp
+    
+    reading/headers/HeaderParsing.hpp
+    reading/headers/header_parsing_helper_functions.hpp
+
+    reading/headers/formats/Formats.hpp
+    reading/headers/formats/PCMWAVEFORMAT.hpp
+    reading/headers/formats/WAVEFORMAT.hpp
+    reading/headers/formats/WAVEFORMATEX.hpp
+    reading/headers/formats/WAVEFORMATEXTENSIBLE.hpp
+
+    reading/headers/rejection/Rejection.hpp
+
+    reading/decoding/SampleDecoding.hpp
 
     utilities/Byteswap.hpp
     utilities/UtilitiesTests.hpp
