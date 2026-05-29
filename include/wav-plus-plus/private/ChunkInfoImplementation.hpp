@@ -370,7 +370,7 @@ inline void ChunkInfo::ReadDataChunkSizeAndSkipSamples (std::FILE * in)
     data.size = uint32_le (in);
     if (data.size % format.blockAlign != 0)
     {
-        throw ReadError ("Size of data chunk is not divisible by block_align.");
+        throw ReadError ("Inconsistent value: size of data chunk is not divisible by block align.");
     }
 
     data.offset = tell (in);
@@ -378,7 +378,7 @@ inline void ChunkInfo::ReadDataChunkSizeAndSkipSamples (std::FILE * in)
 
     if (data.offset + data.size > actualFileSize)
     {
-        throw ReadError (std::format ("declared data chunk size ({}) exceeds bytes remaining in the file ({}).",
+        throw ReadError (std::format ("Inconsistent value: declared data chunk size ({}) exceeds bytes remaining in the file ({}).",
             data.size, actualFileSize - data.offset));
     }
 

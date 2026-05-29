@@ -89,8 +89,9 @@ inline void TestPCMWAVEFORMAT (TestLog & log)
 //   data chunk    (8 + dataSize bytes)
 //   padding byte  (if dataSize is odd)
 //
-inline std::vector<uint8_t> buildPCMWAVEFORMAT (uint16_t formatCode, uint16_t validBitDepth, uint16_t containerSizeInBits,
-                                                uint16_t channels, uint32_t sampleRate, uint32_t frames)
+inline std::vector<uint8_t> buildPCMWAVEFORMAT (uint16_t formatCode, uint16_t validBitDepth,
+                                                uint16_t containerSizeInBits, uint16_t channels,
+                                                uint32_t sampleRate, uint32_t frames)
 {
     constexpr uint32_t formatChunkSize {wav::FormatChunkSize::PCMWAVEFORMAT};
 
