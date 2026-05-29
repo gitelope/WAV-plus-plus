@@ -38,11 +38,21 @@ inline void WrongRIFFSubformat (TestLog & log)
     bytes[8] = 'S'; bytes[9] = 'A'; bytes[10] = 'V'; bytes[11] = 'E'; // SAVE
     TestForReadError (bytes, log, "Header Rejection - RIFF chunk, wrong subformat (not WAVE)");
 }
+inline void MultipleRIFFChunks (TestLog & log)
+{
+    auto bytes = buildPCMWAVEFORMAT (wav::FormatCode::LinearPCM, 8, 8, 1, 44100, 8);
+    bytes.push_back ('R');
+    bytes.push_back ('I');
+    bytes.push_back ('F');
+    bytes.push_back ('F');
+    TestForReadError (bytes, log, "Header Rejection - RIFF chunk, multiple RIFF chunks");
+}
 
 inline void RunRiffChunkTests (TestLog & log)
 {
     FirstFourBytesNotRIFF (log);
     WrongRIFFSubformat (log);
+    MultipleRIFFChunks (log);
 }
 
 // FORMAT CHUNK TESTS ///////////////////////////////////////
@@ -96,6 +106,21 @@ inline void InvalidFormatSize (TestLog & log)
     overwriteUint32LE (badSize, chunkOffset ("fmt ", bytes) + 4, bytes);
     TestForReadError (bytes, log, "Header Rejection - fmt chunk, invalid format size");
 }
+inline void MultipleFormatChunks (TestLog & log)
+{
+    // Append "fmt " but don't bump RIFF size to reflect its contribution to the file size:
+    auto bytes = buildPCMWAVEFORMAT (wav::FormatCode::LinearPCM, 8, 8, 1, 44100, 8);
+    bytes.push_back ('f');
+    bytes.push_back ('m');
+    bytes.push_back ('t');
+    bytes.push_back (' ');
+    TestForReadError (bytes, log, "Header Rejection - fmt chunk, multiple fmt chunks (2nd \"fmt \" chunk not reflected in RIFF chunk size)");
+
+    // Adjust RIFF size to account for the "fmt " appended to the end of the file:
+    overwriteUint32LE (static_cast<uint32_t> (bytes.size() - 8), 4, bytes);
+    TestForReadError (bytes, log, "Header Rejection - fmt chunk, multiple fmt chunks (2nd \"fmt \" chunk reflected in RIFF chunk size)");
+}
+
 inline void RunFormatChunkTests (TestLog & log)
 {
     BitsPerSampleZero (log);
@@ -106,6 +131,7 @@ inline void RunFormatChunkTests (TestLog & log)
     BlockAlignZero (log);
     UnsupportedFormatCode (log);
     InvalidFormatSize (log);
+    MultipleFormatChunks (log);
 }
 
 // DATA CHUNK TESTS ///////////////////////////////////////
@@ -127,11 +153,26 @@ inline void DataChunkSizeNotDivisibleByBlockAlign (TestLog & log)
     overwriteUint32LE (16, chunkOffset ("data", bytes) + 4, bytes);
     TestForReadError (bytes, log, "Header Rejection - data chunk, size not divisible by block align");
 }
+inline void MultipleDataChunks (TestLog & log)
+{
+    // Append "data" but don't bump RIFF size to reflect its contribution to the file size:
+    auto bytes = buildPCMWAVEFORMAT (wav::FormatCode::LinearPCM, 8, 8, 1, 44100, 8);
+    bytes.push_back ('d');
+    bytes.push_back ('a');
+    bytes.push_back ('t');
+    bytes.push_back ('a');
+    TestForReadError (bytes, log, "Header Rejection - data chunk, multiple data chunks (2nd \"data\" chunk not reflected in RIFF chunk size)");
+
+    // Adjust RIFF size to account for the "data" appended to the end of the file:
+    overwriteUint32LE (static_cast<uint32_t> (bytes.size() - 8), 4, bytes);
+    TestForReadError (bytes, log, "Header Rejection - data chunk, multiple data chunks (2nd \"data\" chunk reflected in RIFF chunk size)");
+}
 
 inline void RunDataChunkTests (TestLog & log)
 {
     OverlargeDataChunkSize (log);
     DataChunkSizeNotDivisibleByBlockAlign (log);
+    MultipleDataChunks (log);
 }
 
 // HELPER FUNCTIONS ///////////////////////////////////////
