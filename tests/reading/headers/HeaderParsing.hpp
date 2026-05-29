@@ -1,8 +1,8 @@
 // WAV++ (c) 2025-2026 David Adams
 // SPDX-License-Identifier: MIT
 
-#ifndef wavplusplus_tests_ReadingHeaders_Tests_hpp
-#define wavplusplus_tests_ReadingHeaders_Tests_hpp
+#ifndef wavplusplus_tests_HeaderParsing_hpp
+#define wavplusplus_tests_HeaderParsing_hpp
 
 #include "header_parsing_helper_functions.hpp"
 #include "../../../include/wav-plus-plus/Reader.hpp"
@@ -10,17 +10,13 @@
 #include <cassert>
 #include <format>
 
-#include "WAVEFORMAT.hpp"
-#include "PCMWAVEFORMAT.hpp"
-#include "WAVEFORMATEX.hpp"
-#include "WAVEFORMATEXTENSIBLE.hpp"
+#include "formats/Formats.hpp"
+#include "rejection/Rejection.hpp"
 
 void TestHeaderParsing (TestLog & log)
 {
-    TestWAVEFORMAT           (log);
-    TestPCMWAVEFORMAT        (log);
-    TestWAVEFORMATEX         (log);
-    TestWAVEFORMATEXTENSIBLE (log);
+    TestFormats   (log);
+    TestRejection (log);
 }
 
 #endif
