@@ -9,12 +9,14 @@
 void RunRiffChunkTests   (TestLog &);
 void RunFormatChunkTests (TestLog &);
 void RunDataChunkTests   (TestLog &);
+void RunFactChunkTests   (TestLog &);
 
 inline void TestRejection (TestLog & log)
 {
     RunRiffChunkTests   (log);
     RunFormatChunkTests (log);
     RunDataChunkTests   (log);
+    RunFactChunkTests   (log);
 }
 
 ///////////////////////////////////////////////////////////
@@ -41,10 +43,7 @@ inline void WrongRIFFSubformat (TestLog & log)
 inline void MultipleRIFFChunks (TestLog & log)
 {
     auto bytes = buildPCMWAVEFORMAT (wav::FormatCode::LinearPCM, 8, 8, 1, 44100, 8);
-    bytes.push_back ('R');
-    bytes.push_back ('I');
-    bytes.push_back ('F');
-    bytes.push_back ('F');
+    push_fourCC (bytes, "RIFF");
     TestForReadError (bytes, log, "Header Rejection - RIFF chunk, multiple RIFF chunks");
 }
 
@@ -110,10 +109,7 @@ inline void MultipleFormatChunks (TestLog & log)
 {
     // Append "fmt " but don't bump RIFF size to reflect its contribution to the file size:
     auto bytes = buildPCMWAVEFORMAT (wav::FormatCode::LinearPCM, 8, 8, 1, 44100, 8);
-    bytes.push_back ('f');
-    bytes.push_back ('m');
-    bytes.push_back ('t');
-    bytes.push_back (' ');
+    push_fourCC (bytes, "fmt ");
     TestForReadError (bytes, log, "Header Rejection - fmt chunk, multiple fmt chunks (2nd \"fmt \" chunk not reflected in RIFF chunk size)");
 
     // Adjust RIFF size to account for the "fmt " appended to the end of the file:
@@ -157,10 +153,7 @@ inline void MultipleDataChunks (TestLog & log)
 {
     // Append "data" but don't bump RIFF size to reflect its contribution to the file size:
     auto bytes = buildPCMWAVEFORMAT (wav::FormatCode::LinearPCM, 8, 8, 1, 44100, 8);
-    bytes.push_back ('d');
-    bytes.push_back ('a');
-    bytes.push_back ('t');
-    bytes.push_back ('a');
+    push_fourCC (bytes, "data");
     TestForReadError (bytes, log, "Header Rejection - data chunk, multiple data chunks (2nd \"data\" chunk not reflected in RIFF chunk size)");
 
     // Adjust RIFF size to account for the "data" appended to the end of the file:
@@ -173,6 +166,31 @@ inline void RunDataChunkTests (TestLog & log)
     OverlargeDataChunkSize (log);
     DataChunkSizeNotDivisibleByBlockAlign (log);
     MultipleDataChunks (log);
+}
+
+// FACT CHUNK TESTS ///////////////////////////////////////
+inline void MultipleFactChunks (TestLog & log)
+{
+    // Extra "fact" added but not reflected in RIFF chunk size:
+    constexpr uint32_t frames {8};
+    // Construct RIFF, fmt, and data chunks:
+    auto bytes = buildPCMWAVEFORMAT (wav::FormatCode::LinearPCM, 8, 8, 1, 44100, frames);
+    // Add first fact chunk:
+    push_fact_chunk (bytes, frames);
+    // Update RIFF chunk size to reflect first fact chunk:
+    overwriteUint32LE (bytes, 4, static_cast<uint32_t> (bytes.size() - 8));
+    // Append second "fact" but don't update RIFF chunk size:
+    push_fourCC (bytes, "fact");
+    TestForReadError (bytes, log, "Header Rejection - fact chunk, multiple fact chunks (2nd \"fact\" chunk not reflected in RIFF chunk size)");
+
+    // Update RIFF chunk size to reflect second fact chunk:
+    overwriteUint32LE (bytes, 4, static_cast<uint32_t> (bytes.size() - 8));
+    TestForReadError (bytes, log, "Header Rejection - fact chunk, multiple fact chunks (2nd \"fact\" chunk reflected in RIFF chunk size)");
+}
+
+inline void RunFactChunkTests (TestLog & log)
+{
+    MultipleFactChunks (log);
 }
 
 // HELPER FUNCTIONS ///////////////////////////////////////

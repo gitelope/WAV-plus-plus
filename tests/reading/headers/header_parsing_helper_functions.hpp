@@ -50,6 +50,13 @@ inline void push_fmt_header (std::vector<uint8_t> & v, uint32_t formatChunkSize)
     push_uint32_le (v, formatChunkSize);
 }
 
+inline void push_fact_chunk (std::vector<uint8_t> & v, uint32_t sampleLength)
+{
+    push_fourCC    (v, "fact");
+    push_uint32_le (v, 4);
+    push_uint32_le (v, sampleLength);
+}
+
 inline void push_WAVEFORMAT_fmt (std::vector<uint8_t> & v, uint16_t formatCode,
                                  uint16_t channels, uint32_t sampleRate,
                                  uint32_t byteRate, uint16_t blockAlign)
