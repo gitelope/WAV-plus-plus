@@ -7,8 +7,11 @@
 #include "../../include/wav-plus-plus/Formats.hpp"
 #include "../../include/wav-plus-plus/private/File.hpp"
 
+#include <bit>
+#include <climits>
 #include <cstdint>
 #include <cstdio>
+#include <limits>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -38,6 +41,15 @@ inline void push_uint32_le (std::vector<uint8_t> & v, uint32_t value)
     v.push_back (static_cast<uint8_t> (value >> 8 ));
     v.push_back (static_cast<uint8_t> (value >> 16));
     v.push_back (static_cast<uint8_t> (value >> 24));
+}
+
+// Append a 32-bit float to a byte vector.
+inline void push_float32_le (std::vector<uint8_t> & v, float value)
+{
+    static_assert (std::numeric_limits<float>::is_iec559);
+    static_assert (sizeof (float) == 4);
+    static_assert (CHAR_BIT == 8);
+    push_uint32_le (v, std::bit_cast<uint32_t> (value));
 }
 
 // Append a 4-character string to a byte vector.

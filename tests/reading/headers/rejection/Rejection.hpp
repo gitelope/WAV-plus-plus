@@ -10,6 +10,7 @@ void RunRiffChunkTests   (TestLog &);
 void RunFormatChunkTests (TestLog &);
 void RunDataChunkTests   (TestLog &);
 void RunFactChunkTests   (TestLog &);
+void RunPeakChunkTests   (TestLog &);
 
 inline void TestRejection (TestLog & log)
 {
@@ -17,6 +18,7 @@ inline void TestRejection (TestLog & log)
     RunFormatChunkTests (log);
     RunDataChunkTests   (log);
     RunFactChunkTests   (log);
+    RunPeakChunkTests   (log);
 }
 
 ///////////////////////////////////////////////////////////
@@ -191,6 +193,38 @@ inline void MultipleFactChunks (TestLog & log)
 inline void RunFactChunkTests (TestLog & log)
 {
     MultipleFactChunks (log);
+}
+
+// PEAK CHUNK TESTS ///////////////////////////////////////
+inline void MultiplePeakChunks (TestLog & log)
+{
+    // Extra "PEAK" added but not reflected in RIFF chunk size:
+    constexpr uint32_t frames {8};
+    constexpr uint16_t channels {2};
+    // Construct RIFF, fmt, and data chunks:
+    auto bytes = buildPCMWAVEFORMAT (wav::FormatCode::LinearPCM, 8, 8, channels, 44100, frames);
+    // Add first PEAK chunk:
+    const std::vector<wav::Peak> peaks
+    {
+        {0,0}, // peak of 0 at frame 0 for channel 0
+        {0,0}  // peak of 0 at frame 0 for channel 1
+    };
+    const uint32_t timestamp {0}; // seconds elapsed since Jan 1, 1970
+    push_peak_chunk (bytes, peaks, timestamp);
+    // Update RIFF chunk size to reflect first PEAK chunk:
+    overwriteUint32LE (bytes, 4, static_cast<uint32_t> (bytes.size() - 8));
+    // Append second "PEAK" but don't update RIFF chunk size:
+    push_fourCC (bytes, "PEAK");
+    TestForReadError (bytes, log, "Header Rejection - PEAK chunk, multiple PEAK chunks (2nd \"PEAK\" chunk not reflected in RIFF chunk size)");
+
+    // Update RIFF chunk size to reflect second PEAK chunk:
+    overwriteUint32LE (bytes, 4, static_cast<uint32_t> (bytes.size() - 8));
+    TestForReadError (bytes, log, "Header Rejection - PEAK chunk, multiple PEAK chunks (2nd \"PEAK\" chunk reflected in RIFF chunk size)");
+}
+
+inline void RunPeakChunkTests (TestLog & log)
+{
+    MultiplePeakChunks (log);
 }
 
 // HELPER FUNCTIONS ///////////////////////////////////////
