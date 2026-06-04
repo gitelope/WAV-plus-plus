@@ -17,7 +17,7 @@
 #include <vector>
 
 // Write byte vector to a file.
-inline void writeFile (std::string const & filepath, std::vector<uint8_t> const & bytes)
+inline void WriteBytesToFile (std::string const & filepath, std::vector<uint8_t> const & bytes)
 {
     auto out = wav::fileForWriting (filepath);
 
@@ -28,20 +28,20 @@ inline void writeFile (std::string const & filepath, std::vector<uint8_t> const 
 }
 
 // Append a little-endian uint16 to byte vector.
-inline void push_uint16_le (std::vector<uint8_t> & v, uint16_t value)
+inline void PushUint16LE (std::vector<uint8_t> & v, uint16_t value)
 {
     v.push_back (static_cast<uint8_t> (value     ));
     v.push_back (static_cast<uint8_t> (value >> 8));
 }
 
-inline void overwriteUint16LE (std::vector<uint8_t> & v, size_t index, uint16_t value)
+inline void OverwriteUint16LE (std::vector<uint8_t> & v, size_t index, uint16_t value)
 {
     v[index]     = static_cast<uint8_t> (value     );
     v[index + 1] = static_cast<uint8_t> (value >> 8);
 }
 
 // Append a little-endian uint32 to byte vector.
-inline void push_uint32_le (std::vector<uint8_t> & v, uint32_t value)
+inline void PushUint32LE (std::vector<uint8_t> & v, uint32_t value)
 {
     v.push_back (static_cast<uint8_t> (value      ));
     v.push_back (static_cast<uint8_t> (value >> 8 ));
@@ -49,7 +49,7 @@ inline void push_uint32_le (std::vector<uint8_t> & v, uint32_t value)
     v.push_back (static_cast<uint8_t> (value >> 24));
 }
 
-inline void overwriteUint32LE (std::vector<uint8_t> & v, size_t index, uint32_t value)
+inline void OverwriteUint32LE (std::vector<uint8_t> & v, size_t index, uint32_t value)
 {
     v[index]     = static_cast<uint8_t> (value      );
     v[index + 1] = static_cast<uint8_t> (value >>  8);
@@ -58,16 +58,16 @@ inline void overwriteUint32LE (std::vector<uint8_t> & v, size_t index, uint32_t 
 }
 
 // Append a 32-bit float to a byte vector.
-inline void push_float32_le (std::vector<uint8_t> & v, float value)
+inline void PushFloat32LE (std::vector<uint8_t> & v, float value)
 {
     static_assert (std::numeric_limits<float>::is_iec559);
     static_assert (sizeof (float) == 4);
     static_assert (CHAR_BIT == 8);
-    push_uint32_le (v, std::bit_cast<uint32_t> (value));
+    PushUint32LE (v, std::bit_cast<uint32_t> (value));
 }
 
 // Append a 4-character string to a byte vector.
-inline void push_fourCC (std::vector<uint8_t> & v, const char * fourCC)
+inline void PushFourCC (std::vector<uint8_t> & v, const char * fourCC)
 {
     v.push_back (static_cast<uint8_t> (fourCC[0]));
     v.push_back (static_cast<uint8_t> (fourCC[1]));
@@ -75,16 +75,16 @@ inline void push_fourCC (std::vector<uint8_t> & v, const char * fourCC)
     v.push_back (static_cast<uint8_t> (fourCC[3]));
 }
 
-inline void push_GUID (std::vector<uint8_t> & v, wav::GUID const & guid)
+inline void PushGUID (std::vector<uint8_t> & v, wav::GUID const & guid)
 {
     // GUID layout:
     // data1 (uint32)
     // data2 (uint16)
     // data3 (uint16)
     // data4 (8 byte array)
-    push_uint32_le (v, guid.data1);
-    push_uint16_le (v, guid.data2);
-    push_uint16_le (v, guid.data3);
+    PushUint32LE (v, guid.data1);
+    PushUint16LE (v, guid.data2);
+    PushUint16LE (v, guid.data3);
     for (uint8_t byte : guid.data4)
     {
         v.push_back (byte);

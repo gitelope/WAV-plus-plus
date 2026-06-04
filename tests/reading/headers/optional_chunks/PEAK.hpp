@@ -27,11 +27,11 @@ inline void TestPeak (TestLog & log)
         {peakR, peakPositionR}
     };
     const uint32_t timestamp {17}; // seconds elapsed since Jan 1, 1970
-    push_peak_chunk (bytes, peaks, timestamp);
+    PushPeakChunk (bytes, peaks, timestamp);
     // Update RIFF chunk size to reflect PEAK chunk size:
-    overwriteUint32LE (bytes, 4, static_cast<uint32_t> (bytes.size() - 8));
+    OverwriteUint32LE (bytes, 4, static_cast<uint32_t> (bytes.size() - 8));
 
-    writeFile (filename, bytes);
+    WriteBytesToFile (filename, bytes);
 
     constexpr uint32_t expectedSize {8 + 8 * channels}; // 4 bytes for version, 4 bytes for timestamp, 8 bytes per peak
     constexpr uint32_t expectedVersion {1}; // version 1 is the only supported version

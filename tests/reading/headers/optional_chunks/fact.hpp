@@ -16,11 +16,11 @@ inline void TestFact (TestLog & log)
     auto bytes = buildPCMWAVEFORMAT (formatCode, bitDepth, bitDepth, channels, 48000, frames);
 
     // Add fact chunk:
-    push_fact_chunk (bytes, frames);
+    PushFactChunk (bytes, frames);
     // Update RIFF chunk size to reflect fact chunk size:
-    overwriteUint32LE (bytes, 4, static_cast<uint32_t> (bytes.size() - 8));
+    OverwriteUint32LE (bytes, 4, static_cast<uint32_t> (bytes.size() - 8));
 
-    writeFile (filename, bytes);
+    WriteBytesToFile (filename, bytes);
 
     std::string failures;
     try

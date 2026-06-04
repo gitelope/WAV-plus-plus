@@ -98,7 +98,7 @@ void TestSampleDecoding (TestLog & log)
     };
     for (auto & testCase : testCases)
     {
-        writeFile (filename, buildWAVEFORMATEX (testCase.encoding, channels, sampleRate, testCase.data));
+        WriteBytesToFile (filename, buildWAVEFORMATEX (testCase.encoding, channels, sampleRate, testCase.data));
         {
             // read into float
             // (first convert expected from double to float)
@@ -146,18 +146,18 @@ inline std::vector<uint8_t> buildWAVEFORMATEX (wav::ExportFormat encoding, uint1
     std::vector<uint8_t> wav;
 
     // RIFF
-    push_riff_header (wav, formatChunkSize, dataChunkSize);
+    PushRiffHeader (wav, formatChunkSize, dataChunkSize);
 
     // fmt
-    push_fmt_header        (wav, formatChunkSize);
-    push_WAVEFORMAT_fmt    (wav, formatCode, channels, sampleRate, byteRate, blockAlign); // 14 bytes
-    push_PCMWAVEFORMAT_fmt (wav, bitDepth);                                               //  2 bytes
-    push_WAVEFORMATEX_fmt  (wav, cbSize);                                                 //  2 bytes
+    PushFmtHeader        (wav, formatChunkSize);
+    Push_WAVEFORMAT_Fmt    (wav, formatCode, channels, sampleRate, byteRate, blockAlign); // 14 bytes
+    Push_PCMWAVEFORMAT_Fmt (wav, bitDepth);                                               //  2 bytes
+    Push_WAVEFORMATEX_Fmt  (wav, cbSize);                                                 //  2 bytes
                                                                                           // --------
                                                                                           // 18 bytes
 
     // data
-    push_data_chunk (wav, data);
+    PushDataChunk (wav, data);
 
     return wav;
 }

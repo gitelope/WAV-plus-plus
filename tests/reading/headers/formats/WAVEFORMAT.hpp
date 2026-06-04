@@ -32,7 +32,7 @@ inline void TestWAVEFORMAT (TestLog & log)
             const bool isFloatPCM  {formatCode == wav::FormatCode::FloatPCM};
 
             const auto bytes = buildWAVEFORMAT (formatCode, bitDepth, channels, sampleRate, frames);
-            writeFile (filename, bytes);
+            WriteBytesToFile (filename, bytes);
 
             std::string failures;
 
@@ -88,14 +88,14 @@ inline std::vector<uint8_t> buildWAVEFORMAT (uint16_t formatCode, uint16_t bitDe
     std::vector<uint8_t> wav;
 
     // RIFF
-    push_riff_header (wav, formatChunkSize, dataChunkSize);
+    PushRiffHeader (wav, formatChunkSize, dataChunkSize);
 
     // fmt
-    push_fmt_header        (wav, formatChunkSize);
-    push_WAVEFORMAT_fmt    (wav, formatCode, channels, sampleRate, byteRate, blockAlign); // 14 bytes
+    PushFmtHeader        (wav, formatChunkSize);
+    Push_WAVEFORMAT_Fmt    (wav, formatCode, channels, sampleRate, byteRate, blockAlign); // 14 bytes
 
     // data
-    push_silent_data_chunk (wav, dataChunkSize);
+    PushSilentDataChunk (wav, dataChunkSize);
 
     return wav;
 }

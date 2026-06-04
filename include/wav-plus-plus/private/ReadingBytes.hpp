@@ -46,7 +46,7 @@ float       float32_le        (std::vector<std::byte> const &, size_t & pos); //
 float       float32_le        (std::FILE *);
 double      float64_le        (std::vector<std::byte> const &, size_t & pos); // 8 bytes -> 64-bit double
 
-std::vector<std::byte> ReadBytes (std::filesystem::path const & filePath);
+std::vector<std::byte> bytesFromFile (std::filesystem::path const & filePath);
 void PrintBytesAsHex (std::vector<std::byte> const & bytes);
 
 
@@ -76,7 +76,7 @@ inline GUID guid (std::FILE * in)
 
 // Helper for functions that read directly from a std::FILE *.
 template <size_t N>
-void read (std::FILE * in, std::array<uint8_t,N> & buffer)
+void Read (std::FILE * in, std::array<uint8_t,N> & buffer)
 {
     if (std::fread (buffer.data(), 1, buffer.size(), in) != buffer.size())
     {
@@ -106,7 +106,7 @@ inline uint8_t uint8 (std::FILE * in)
 inline uint16_t uint16_le (std::FILE * in)
 {
     std::array<uint8_t, 2> buffer {};
-    read (in, buffer);
+    Read (in, buffer);
     return static_cast<uint16_t>
     (
         static_cast<uint16_t> (buffer [0])    |
@@ -117,7 +117,7 @@ inline uint16_t uint16_le (std::FILE * in)
 inline uint32_t uint32_le (std::FILE * in)
 {
     std::array<uint8_t, 4> buffer{};
-    read (in, buffer);
+    Read (in, buffer);
     return
     static_cast<uint32_t> (buffer[0])       |
     static_cast<uint32_t> (buffer[1]) << 8  |
@@ -216,7 +216,7 @@ inline float float32_le (std::vector<std::byte> const & bytes, size_t & pos)
 inline float float32_le (std::FILE * in)
 {
     std::array<uint8_t, 4> buffer{};
-    read (in, buffer);
+    Read (in, buffer);
 
     const auto integer =
     static_cast<uint32_t> (buffer[0])       |
@@ -248,7 +248,7 @@ inline double float64_le (std::vector<std::byte> const & bytes, size_t & pos)
     return std::bit_cast<double> (integer);
 }
 
-inline std::vector<std::byte> ReadBytes (std::filesystem::path const & filepath)
+inline std::vector<std::byte> bytesFromFile (std::filesystem::path const & filepath)
 {
     auto in = fileForReading (filepath);
 
