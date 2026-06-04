@@ -42,11 +42,11 @@ inline void TestPeak (TestLog & log)
     {
         wav::ChunkInfo info {filename};
 
-        Compare (info.peak.present              == true,                 "PEAK chunk not detected",      failures);
-        Compare (info.peak.size                 == expectedSize,         "unexpected peak.size",         failures);
-        Compare (info.peak.version              == expectedVersion,      "unexpected peak.version",      failures);
-        Compare (info.peak.timestamp            == expectedTimestamp,    "unexpected peak.timestamp",    failures);
-        Compare (info.peak.peaks.size()         == peaks.size(),         "unexpected peak count",        failures);
+        Compare (info.peak.present      == true,              "PEAK chunk not detected",   failures);
+        Compare (info.peak.size         == expectedSize,      "unexpected peak.size",      failures);
+        Compare (info.peak.version      == expectedVersion,   "unexpected peak.version",   failures);
+        Compare (info.peak.timestamp    == expectedTimestamp, "unexpected peak.timestamp", failures);
+        Compare (info.peak.peaks.size() == peaks.size(),      "unexpected peak count",     failures);
         for (size_t i = 0; i < peaks.size(); ++i)
         {
             Compare (info.peak.peaks[i].value == peaks[i].value,
