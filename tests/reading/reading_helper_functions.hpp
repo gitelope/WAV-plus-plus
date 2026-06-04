@@ -34,6 +34,12 @@ inline void push_uint16_le (std::vector<uint8_t> & v, uint16_t value)
     v.push_back (static_cast<uint8_t> (value >> 8));
 }
 
+inline void overwriteUint16LE (std::vector<uint8_t> & v, size_t index, uint16_t value)
+{
+    v[index]     = static_cast<uint8_t> (value     );
+    v[index + 1] = static_cast<uint8_t> (value >> 8);
+}
+
 // Append a little-endian uint32 to byte vector.
 inline void push_uint32_le (std::vector<uint8_t> & v, uint32_t value)
 {
@@ -41,6 +47,14 @@ inline void push_uint32_le (std::vector<uint8_t> & v, uint32_t value)
     v.push_back (static_cast<uint8_t> (value >> 8 ));
     v.push_back (static_cast<uint8_t> (value >> 16));
     v.push_back (static_cast<uint8_t> (value >> 24));
+}
+
+inline void overwriteUint32LE (std::vector<uint8_t> & v, size_t index, uint32_t value)
+{
+    v[index]     = static_cast<uint8_t> (value      );
+    v[index + 1] = static_cast<uint8_t> (value >>  8);
+    v[index + 2] = static_cast<uint8_t> (value >> 16);
+    v[index + 3] = static_cast<uint8_t> (value >> 24);
 }
 
 // Append a 32-bit float to a byte vector.

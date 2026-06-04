@@ -74,6 +74,16 @@ inline void push_peak_chunk (std::vector<uint8_t> & v, std::vector<wav::Peak> co
     }
 }
 
+inline size_t chunkOffset (const char id[4], std::vector<uint8_t> const & bytes)
+{
+    for (size_t i = 0; i < bytes.size(); ++i)
+    {
+        if (bytes[i] == id[0] && bytes[i+1] == id[1] && bytes[i+2] == id[2] && bytes[i+3] == id[3])
+            return i;
+    }
+    throw std::runtime_error (std::format ("Didn't find chunk: {}", id));
+}
+
 inline void push_WAVEFORMAT_fmt (std::vector<uint8_t> & v, uint16_t formatCode,
                                  uint16_t channels, uint32_t sampleRate,
                                  uint32_t byteRate, uint16_t blockAlign)

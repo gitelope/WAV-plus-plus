@@ -11,12 +11,14 @@
 #include <format>
 
 #include "formats/Formats.hpp"
+#include "optional_chunks/OptionalChunks.hpp"
 #include "rejection/Rejection.hpp"
 
 void TestHeaderParsing (TestLog & log)
 {
-    TestFormats   (log);
-    TestRejection (log);
+    TestFormats        (log);
+    TestOptionalChunks (log);
+    TestRejection      (log);
 }
 
 #endif

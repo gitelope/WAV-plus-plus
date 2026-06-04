@@ -24,10 +24,7 @@ inline void TestRejection (TestLog & log)
 ///////////////////////////////////////////////////////////
 
 // HELPER FUNCTIONS ///////////////////////////////////////
-inline void overwriteUint16LE (std::vector<uint8_t> &, size_t, uint16_t);
-inline void overwriteUint32LE (std::vector<uint8_t> &, size_t, uint32_t);
 void TestForReadError (std::vector<uint8_t> const &, TestLog &, std::string const &);
-size_t chunkOffset (const char[4], std::vector<uint8_t> const &);
 
 // RIFF CHUNK TESTS ///////////////////////////////////////
 inline void FirstFourBytesNotRIFF (TestLog & log)
@@ -228,20 +225,6 @@ inline void RunPeakChunkTests (TestLog & log)
 }
 
 // HELPER FUNCTIONS ///////////////////////////////////////
-inline void overwriteUint16LE (std::vector<uint8_t> & v, size_t index, uint16_t value)
-{
-    v[index]     = static_cast<uint8_t> (value     );
-    v[index + 1] = static_cast<uint8_t> (value >> 8);
-}
-
-inline void overwriteUint32LE (std::vector<uint8_t> & v, size_t index, uint32_t value)
-{
-    v[index]     = static_cast<uint8_t> (value      );
-    v[index + 1] = static_cast<uint8_t> (value >>  8);
-    v[index + 2] = static_cast<uint8_t> (value >> 16);
-    v[index + 3] = static_cast<uint8_t> (value >> 24);
-}
-
 inline void TestForReadError (std::vector<uint8_t> const & bytes, TestLog & log, std::string const & label)
 {
     const auto filename {"test_rejection.wav"};
@@ -261,16 +244,6 @@ inline void TestForReadError (std::vector<uint8_t> const & bytes, TestLog & log,
     log.Record (threwReadError, std::format ("{} - \"{}\"", label, errorMessage));
 
     std::remove (filename);
-}
-
-inline size_t chunkOffset (const char id[4], std::vector<uint8_t> const & bytes)
-{
-    for (size_t i = 0; i < bytes.size(); ++i)
-    {
-        if (bytes[i] == id[0] && bytes[i+1] == id[1] && bytes[i+2] == id[2] && bytes[i+3] == id[3])
-            return i;
-    }
-    throw std::runtime_error (std::format ("Didn't find chunk: {}", id));
 }
 
 #endif

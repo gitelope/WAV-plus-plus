@@ -88,6 +88,9 @@
 		C416D4102FB3A6B300C2E249 /* CMakeLists.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = CMakeLists.txt; sourceTree = "<group>"; };
 		C416D4112FB3B30F00C2E249 /* File.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = File.hpp; sourceTree = "<group>"; };
 		C416D4122FBFBD4100C2E249 /* FileOffset.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = FileOffset.hpp; sourceTree = "<group>"; };
+		C4280E432FD0D70300A4A7BC /* OptionalChunks.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = OptionalChunks.hpp; sourceTree = "<group>"; };
+		C4280E442FD0D89A00A4A7BC /* fact.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = fact.hpp; sourceTree = "<group>"; };
+		C4280E452FD0D8AB00A4A7BC /* PEAK.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = PEAK.hpp; sourceTree = "<group>"; };
 		C46085F02F8EC53B007F0361 /* HeaderParsing.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = HeaderParsing.hpp; sourceTree = "<group>"; };
 		C46085F12F8EC5DB007F0361 /* SampleDecoding.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = SampleDecoding.hpp; sourceTree = "<group>"; };
 		C46085F42F903EB5007F0361 /* header_parsing_helper_functions.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = header_parsing_helper_functions.hpp; sourceTree = "<group>"; };
@@ -216,12 +219,23 @@
 			path = include;
 			sourceTree = "<group>";
 		};
+		C4280E422FD0D6E000A4A7BC /* optional_chunks */ = {
+			isa = PBXGroup;
+			children = (
+				C4280E432FD0D70300A4A7BC /* OptionalChunks.hpp */,
+				C4280E442FD0D89A00A4A7BC /* fact.hpp */,
+				C4280E452FD0D8AB00A4A7BC /* PEAK.hpp */,
+			);
+			path = optional_chunks;
+			sourceTree = "<group>";
+		};
 		C46085F92F9046E6007F0361 /* headers */ = {
 			isa = PBXGroup;
 			children = (
 				C46085F02F8EC53B007F0361 /* HeaderParsing.hpp */,
 				C46085F42F903EB5007F0361 /* header_parsing_helper_functions.hpp */,
 				C498069A2FC9295A005415C0 /* formats */,
+				C4280E422FD0D6E000A4A7BC /* optional_chunks */,
 				C498069C2FC92BEB005415C0 /* rejection */,
 			);
 			path = headers;
