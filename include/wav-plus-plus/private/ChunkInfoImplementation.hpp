@@ -92,7 +92,7 @@ inline void ChunkInfo::ReadFile (std::FILE * in)
         RegisterChunk (chunkID, chunkStart);
 
         if      (chunkID == format.id) ReadFormatChunk                 (in);
-        else if (chunkID == fact.id)   ReadFactChunk                   (in);
+        else if (chunkID == fact.id)   ReadFactChunk                   (in, chunkStart);
         else if (chunkID == peak.id)   ReadPeakChunk                   (in);
         else if (chunkID == data.id)   ReadDataChunkSizeAndSkipSamples (in);
         else if (chunkID == riff.id)   throw ReadError ("Invalid format: File contains more than one RIFF chunk.");
@@ -315,17 +315,22 @@ inline void ChunkInfo::ReadFormatChunk (std::FILE * in)
     fmtChunkEncountered = true;
 }
 
-inline void ChunkInfo::ReadFactChunk (std::FILE * in)
+inline void ChunkInfo::ReadFactChunk (std::FILE * in, std::int64_t chunkStart)
 {
     if (fact.present) throw ReadError ("Invalid format: File contains more than one fact chunk.");
 
-    fact.size = uint32_le (in);
-    if (fact.size != 4)
-    {
-        throw ReadError ("fact chunk size (" + std::to_string(fact.size) + ") should be 4.");
-    }
-    fact.fileSize = uint32_le (in);
+    const auto size = uint32_le (in);
 
+    if (size != 4)
+    {
+        // Since fact is an optional chunk, skip instead of throwing.
+        RegisterSkippedChunk (fact.id, chunkStart);
+        SkipChunk (in, size);
+        return;
+    }
+
+    fact.size = size;
+    fact.fileSize = uint32_le (in);
     fact.present = true;
 }
 

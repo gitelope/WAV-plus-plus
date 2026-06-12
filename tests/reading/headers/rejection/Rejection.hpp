@@ -168,6 +168,33 @@ inline void RunDataChunkTests (TestLog & log)
 }
 
 // FACT CHUNK TESTS ///////////////////////////////////////
+inline void FactChunkSizeNotFour (TestLog & log)
+{
+    const auto filename {"test_fact_size_not_four.wav"};
+    constexpr uint32_t frames {8};
+    auto bytes = buildPCMWAVEFORMAT (wav::FormatCode::FloatPCM, 32, 32, 2, 48000, frames);
+    PushFactChunk (bytes, frames);
+    // overwrite the fact size field, replacing 4 with 5
+    OverwriteUint32LE (bytes, chunkOffset ("fact", bytes) + 4, 5);
+    // update the RIFF chunk size to reflect the fact chunk size
+    OverwriteUint32LE (bytes, 4, static_cast<uint32_t> (bytes.size() - 8));
+    WriteBytesToFile (filename, bytes);
+
+    std::string failures;
+    try
+    {
+        wav::ChunkInfo info {filename};
+        Compare (info.fact.present == false, "fact.present should be false after skipping", failures);
+    }
+    catch (wav::ReadError const & e)
+    {
+        failures = std::string {"wav::ReadError - "} + e.what();
+    }
+    const auto suffix {failures.empty() ? "" : ", failures: " + failures};
+    log.Record (failures.empty(), std::format ("Header Rejection - fact chunk, fact with bad size is skipped{}", suffix));
+
+    std::remove (filename);
+}
 inline void MultipleFactChunks (TestLog & log)
 {
     // Extra "fact" added but not reflected in RIFF chunk size:
@@ -189,7 +216,8 @@ inline void MultipleFactChunks (TestLog & log)
 
 inline void RunFactChunkTests (TestLog & log)
 {
-    MultipleFactChunks (log);
+    FactChunkSizeNotFour (log);
+    MultipleFactChunks   (log);
 }
 
 // PEAK CHUNK TESTS ///////////////////////////////////////
