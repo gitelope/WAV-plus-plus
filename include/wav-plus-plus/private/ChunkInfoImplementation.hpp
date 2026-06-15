@@ -93,7 +93,7 @@ inline void ChunkInfo::ReadFile (std::FILE * in)
 
         if      (chunkID == format.id) ReadFormatChunk                 (in);
         else if (chunkID == fact.id)   ReadFactChunk                   (in, chunkStart);
-        else if (chunkID == peak.id)   ReadPeakChunk                   (in);
+        else if (chunkID == peak.id)   ReadPeakChunk                   (in, chunkStart);
         else if (chunkID == data.id)   ReadDataChunkSizeAndSkipSamples (in);
         else if (chunkID == riff.id)   throw ReadError ("Invalid format: File contains more than one RIFF chunk.");
         else
@@ -145,10 +145,6 @@ inline void ChunkInfo::ValidateAfterParsing()
     if (!dataChunkEncountered)
     {
         throw ReadError ("Invalid format: missing data chunk.");
-    }
-    if (peak.present && peak.peaks.size() != format.channels)
-    {
-        throw ReadError ("Invalid format: PEAK chunk peak count does not match number of channels.");
     }
 }
 
@@ -320,7 +316,6 @@ inline void ChunkInfo::ReadFactChunk (std::FILE * in, std::int64_t chunkStart)
     if (fact.present) throw ReadError ("Invalid format: File contains more than one fact chunk.");
 
     const auto size = uint32_le (in);
-
     if (size != 4)
     {
         // Since fact is an optional chunk, skip instead of throwing.
@@ -328,42 +323,69 @@ inline void ChunkInfo::ReadFactChunk (std::FILE * in, std::int64_t chunkStart)
         SkipChunk (in, size);
         return;
     }
-
     fact.size = size;
+
     fact.fileSize = uint32_le (in);
     fact.present = true;
 }
 
-inline void ChunkInfo::ReadPeakChunk (std::FILE * in)
+inline void ChunkInfo::ReadPeakChunk (std::FILE * in, std::int64_t chunkStart)
 {
-    if (peak.present) throw ReadError ("Invalid format: File contains more than one PEAK chunk.");
+    // Soft fail (skip chunk):
+    //     PEAK size is not 4 + 4 * 8 * channels
+
+    // Hard fails (throw exception):
+    //     PEAK before fmt
+    //     more than one PEAK
+    //     size that implies overruning EOF
+
+    if (peakChunkEncountered) throw ReadError ("Invalid format: File contains more than one PEAK chunk.");
+    peakChunkEncountered = true;
+
+    if (!fmtChunkEncountered) throw ReadError ("Invalid format: PEAK chunk comes before fmt chunk.");
 
     peak.size = uint32_le (in);
+
+    // make sure size doesn't imply chunk overruns EOF
+    const auto bodyStart = tell (in);
+    if (bodyStart == -1)
+    {
+        throw ReadError ("Failed to get current file position before parsing PEAK chunk body.");
+    }
+    const auto bytesRemaining {actualFileSize - bodyStart};
+    if (peak.size > bytesRemaining)
+    {
+        throw ReadError (std::format ("Inconsistent value: declared PEAK chunk size ({}) exceeds bytes remaining in the file ({}).", peak.size, bytesRemaining));
+    }
+
+    // Make sure size matches expectations given number of channels and fixed-size fields.
+    // expected size = 4 bytes (version) + 4 bytes (timestamp) + 8 bytes per peak (one per channel).
+    if (peak.size != 4u + 4u + 8u * format.channels)
+    {
+        RegisterSkippedChunk (peak.id, chunkStart);
+        SkipChunk (in, peak.size);
+        return;
+    }
+
     peak.version = uint32_le (in);
+    if (peak.version != 1)
+    {
+        RegisterSkippedChunk (peak.id, chunkStart);
+        SkipChunk (in, peak.size - 4 /* size of version field */);
+        return;
+    }
+
     peak.timestamp = uint32_le (in);
 
-    // expected PEAK chunk contents after the size field:
-    // 8-byte header (version, timestamp),
-    // N * 8-byte peak entries (32-bit float value + uint32 position)
-    //
-    // Validate the minimum and the 8-byte alignment to prevent
-    // unsigned underflow and partial-entry parsing:
-    if (peak.size < 8) throw ReadError ("Invalid value: PEAK chunk size must be at least 8.");
-    // peak.size = 8 (version + timestamp) + 8 * N (N peak entries, each 8 bytes).
-    if ((peak.size - 8) % 8 != 0) throw ReadError ("Invalid value: PEAK chunk size (minus 8) does not reflect a whole number of peaks.");
-
-    const auto numPeaks {(peak.size - 8)/8};
-    if (numPeaks > maxChannels)
-        throw ReadError ("PEAK chunk peak count exceeds the supported channel maximum of " + std::to_string (static_cast<unsigned> (maxChannels)) + ".");
+    const auto numPeaks {(peak.size - 8u) / 8u};
     peak.peaks.resize (numPeaks);
-
     for (auto & p : peak.peaks)
     {
         p.value = float32_le (in);
         p.positionInFrames = uint32_le (in);
     }
 
-    peak.present = true;
+    peak.present = true; // present and parsed successfully
 }
 
 inline void ChunkInfo::ReadDataChunkSizeAndSkipSamples (std::FILE * in)
@@ -372,19 +394,22 @@ inline void ChunkInfo::ReadDataChunkSizeAndSkipSamples (std::FILE * in)
     if (dataChunkEncountered) throw ReadError ("Invalid format: File contains more than one data chunk.");
 
     // No need to read id since it has already been read and has the expected value.
+
     data.size = uint32_le (in);
+
     if (data.size % format.blockAlign != 0)
     {
         throw ReadError ("Inconsistent value: size of data chunk is not divisible by block align.");
     }
 
+    // make sure size doesn't imply chunk overuns EOF
     data.offset = tell (in);
     if (data.offset == -1) throw ReadError ("Failed to get current file position for data chunk.");
-
-    if (data.offset + data.size > actualFileSize)
+    const auto bytesRemaining {actualFileSize - data.offset};
+    if (data.size > bytesRemaining)
     {
         throw ReadError (std::format ("Inconsistent value: declared data chunk size ({}) exceeds bytes remaining in the file ({}).",
-            data.size, actualFileSize - data.offset));
+            data.size, bytesRemaining));
     }
 
     // SkipChunk() detects and carefully skips potential padding byte.

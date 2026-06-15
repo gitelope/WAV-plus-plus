@@ -78,7 +78,7 @@ struct PeakChunk
     uint32_t version {0};
     uint32_t timestamp {0};
     std::vector<Peak> peaks;
-    bool present {false};
+    bool present {false}; // false: either not present or not valid
 };
 
 /// Reads in all the info from RIFF, fmt, data (except for the samples),
@@ -118,16 +118,17 @@ private:
     void ReadRiffChunk         (std::FILE * in);
     void ReadFormatChunk       (std::FILE * in);
     void ReadFactChunk         (std::FILE * in, std::int64_t chunkStart);
-    void ReadPeakChunk         (std::FILE * in);
+    void ReadPeakChunk         (std::FILE * in, std::int64_t chunkStart);
     void ReadDataChunkSizeAndSkipSamples (std::FILE * in);
 
-    void RegisterChunk (std::string const & id, std::int64_t position);
+    void RegisterChunk        (std::string const & id, std::int64_t position);
     void RegisterSkippedChunk (std::string const & id, std::int64_t position);
 
     void ValidateAfterParsing();
 
     bool fmtChunkEncountered {false};
     bool dataChunkEncountered {false};
+    bool peakChunkEncountered {false};
 
     std::int64_t actualFileSize {0};
 };
