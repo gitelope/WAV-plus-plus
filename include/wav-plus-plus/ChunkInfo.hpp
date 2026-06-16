@@ -62,7 +62,7 @@ struct FactChunk
     std::string id {"fact"};
     uint32_t size {0};
     uint32_t fileSize {0};
-    bool present {false}; // false if not present or size != 4
+    bool present {false};
 };
 
 struct Peak
@@ -78,7 +78,7 @@ struct PeakChunk
     uint32_t version {0};
     uint32_t timestamp {0};
     std::vector<Peak> peaks;
-    bool present {false}; // false: either not present or not valid
+    bool present {false};
 };
 
 /// Reads in all the info from RIFF, fmt, data (except for the samples),
@@ -114,11 +114,11 @@ public:
 
 private:
 
-    void ReadFile              (std::FILE * in);
-    void ReadRiffChunk         (std::FILE * in);
-    void ReadFormatChunk       (std::FILE * in);
-    void ReadFactChunk         (std::FILE * in, std::int64_t chunkStart);
-    void ReadPeakChunk         (std::FILE * in, std::int64_t chunkStart);
+    void ReadFile                        (std::FILE * in);
+    void ReadRiffChunk                   (std::FILE * in);
+    void ReadFormatChunk                 (std::FILE * in);
+    void ReadFactChunk                   (std::FILE * in);
+    void ReadPeakChunk                   (std::FILE * in);
     void ReadDataChunkSizeAndSkipSamples (std::FILE * in);
 
     void RegisterChunk        (std::string const & id, std::int64_t position);
@@ -126,7 +126,7 @@ private:
 
     void ValidateAfterParsing();
 
-    bool fmtChunkEncountered {false};
+    bool fmtChunkEncountered  {false};
     bool dataChunkEncountered {false};
     bool factChunkEncountered {false};
     bool peakChunkEncountered {false};
