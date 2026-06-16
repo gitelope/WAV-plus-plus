@@ -128,6 +128,7 @@ private:
 
     bool fmtChunkEncountered {false};
     bool dataChunkEncountered {false};
+    bool factChunkEncountered {false};
     bool peakChunkEncountered {false};
 
     std::int64_t actualFileSize {0};

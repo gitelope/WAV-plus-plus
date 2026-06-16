@@ -197,27 +197,55 @@ inline void FactChunkSizeNotFour (TestLog & log)
 }
 inline void MultipleFactChunks (TestLog & log)
 {
-    // Extra "fact" added but not reflected in RIFF chunk size:
     constexpr uint32_t frames {8};
-    // Construct RIFF, fmt, and data chunks:
-    auto bytes = buildPCMWAVEFORMAT (wav::FormatCode::LinearPCM, 8, 8, 1, 44100, frames);
-    // Add first fact chunk:
-    PushFactChunk (bytes, frames);
-    // Update RIFF chunk size to reflect first fact chunk:
-    OverwriteUint32LE (bytes, 4, static_cast<uint32_t> (bytes.size() - 8));
-    // Append second "fact" but don't update RIFF chunk size:
-    PushFourCC (bytes, "fact");
-    TestForReadError (bytes, log, "Header Rejection - fact chunk, multiple fact chunks (2nd \"fact\" chunk not reflected in RIFF chunk size)");
+    constexpr uint16_t bitDepth {8};
+    constexpr uint16_t containerSize {bitDepth};
+    constexpr uint16_t channels {1};
+    constexpr uint32_t sampleRate {44100};
 
-    // Update RIFF chunk size to reflect second fact chunk:
-    OverwriteUint32LE (bytes, 4, static_cast<uint32_t> (bytes.size() - 8));
-    TestForReadError (bytes, log, "Header Rejection - fact chunk, multiple fact chunks (2nd \"fact\" chunk reflected in RIFF chunk size)");
+    // first fact chunk is well-formed
+    {
+        // Extra "fact" added but not reflected in RIFF chunk size:
+        // Construct RIFF, fmt, and data chunks:
+        auto bytes = buildPCMWAVEFORMAT (wav::FormatCode::LinearPCM, bitDepth, containerSize, channels, sampleRate, frames);
+        // First fact chunk:
+        PushFactChunk (bytes, frames);
+        // Update RIFF chunk size to reflect first fact chunk:
+        OverwriteUint32LE (bytes, 4, static_cast<uint32_t> (bytes.size() - 8));
+        // Append second "fact" but don't update RIFF chunk size:
+        PushFourCC (bytes, "fact"); // Just the ID, but should be enough to trigger the exception.
+        TestForReadError (bytes, log, "Header Rejection - fact chunk, multiple fact chunks (2nd \"fact\" chunk not reflected in RIFF chunk size)");
+
+        // Update RIFF chunk size to reflect second fact chunk and test again:
+        OverwriteUint32LE (bytes, 4, static_cast<uint32_t> (bytes.size() - 8));
+        TestForReadError (bytes, log, "Header Rejection - fact chunk, multiple fact chunks (2nd \"fact\" chunk reflected in RIFF chunk size)");
+    }
+
+    // first fact chunk is malformed
+    {
+        auto bytes = buildPCMWAVEFORMAT (wav::FormatCode::LinearPCM, bitDepth, containerSize, channels, sampleRate, frames);
+        // First fact chunk:
+        PushFactChunk (bytes, frames);
+        // First fact claims size is 5 though it should be 4.
+        // (Should be skipped but marked as encountered with ChunkInfo::factChunkEncountered set to true.)
+        OverwriteUint32LE (bytes, chunkOffset ("fact", bytes) + 4, 5);
+        // Update RIFF chunk size to reflect first fact chunk:
+        OverwriteUint32LE (bytes, 4, static_cast<uint32_t> (bytes.size() - 8));
+        // Append second "fact" but don't update RIFF chunk size:
+        PushFourCC (bytes, "fact");
+        TestForReadError (bytes, log,
+                          "Header Rejection - fact chunk, multiple fact chunks (first is malformed and 2nd \"fact\" not reflected in RIFF chunk size)");
+
+        // Update RIFF chunk size to reflect second fact chunk and test again:
+        OverwriteUint32LE (bytes, 4, static_cast<uint32_t> (bytes.size() - 8));
+        TestForReadError (bytes, log, "Header Rejection - fact chunk, multiple fact chunks (first is malformed and 2nd \"fact\" reflected in RIFF chunk size)");
+    }
 }
 
 inline void RunFactChunkTests (TestLog & log)
 {
     FactChunkSizeNotFour (log);
-    MultipleFactChunks   (log);
+    MultipleFactChunks (log);
 }
 
 // PEAK CHUNK TESTS ///////////////////////////////////////

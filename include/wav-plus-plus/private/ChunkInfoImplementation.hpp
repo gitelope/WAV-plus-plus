@@ -313,7 +313,8 @@ inline void ChunkInfo::ReadFormatChunk (std::FILE * in)
 
 inline void ChunkInfo::ReadFactChunk (std::FILE * in, std::int64_t chunkStart)
 {
-    if (fact.present) throw ReadError ("Invalid format: File contains more than one fact chunk.");
+    if (factChunkEncountered) throw ReadError ("Invalid format: File contains more than one fact chunk.");
+    factChunkEncountered = true;
 
     const auto size = uint32_le (in);
     if (size != 4)
