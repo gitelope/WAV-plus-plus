@@ -396,6 +396,21 @@ inline void PeakChunkVersionUnsupported (TestLog & log)
 
     std::remove (filename);
 }
+inline void PeakChunkSizeTooSmallForVersion (TestLog & log)
+{
+    constexpr uint16_t channels {2};
+
+    auto bytes = buildPCMWAVEFORMAT (wav::FormatCode::FloatPCM, 32, 32, channels, 48000, 8);
+
+    const auto peakChunkStart {bytes.size()};
+    std::vector<wav::Peak> peaks;
+    for (auto n = channels; n > 0; --n) peaks.push_back ({0.f, 0u});
+    PushPeakChunk (bytes, peaks, 0);
+    OverwriteUint32LE (bytes, peakChunkStart + 4, 2); // version field needs 4 bytes in chunk body
+    UpdateRIFFChunkSize (bytes);
+
+    TestForReadError (bytes, log, "Header Rejection - PEAK chunk, size too small for version field");
+}
 
 inline void RunPeakChunkTests (TestLog & log)
 {
@@ -404,6 +419,7 @@ inline void RunPeakChunkTests (TestLog & log)
     PeakChunkSizeMismatchesChannels (log);
     PeakChunkVersionUnsupported (log);
     MultiplePeakChunks (log);
+    PeakChunkSizeTooSmallForVersion (log);
 }
 
 // HELPER FUNCTIONS ///////////////////////////////////////
