@@ -201,6 +201,10 @@ inline void ChunkInfo::ReadFormatChunk (std::FILE * in)
     {
         throw ReadError ("Invalid value: block align must not be zero.");
     }
+    if (format.blockAlign % format.channels != 0)
+    {
+        throw ReadError ("Invalid value: block align must be divisible by channels.");
+    }
 
     // This field is found in PCMWAVEFORMAT, WAVEFORMATEX, and WAVEFORMATEXTENSIBLE:
     if (format.size == FormatChunkSize::PCMWAVEFORMAT      ||
@@ -218,8 +222,8 @@ inline void ChunkInfo::ReadFormatChunk (std::FILE * in)
             // Since WAVEFORMATEXTENSIBLE has bitsPerSample AND validBitsPerSample,
             // it makes good sense even for a permissive parser to enforce the following:
             //
-            //     1. bits_per_sample must be a multiple of 8
-            //     2. bits_per_sample = 8 * block_align / channels
+            //     1. bitsPerSample must be a multiple of 8
+            //     2. bitsPerSample = 8 * blockAlign / channels
             //
             // We will check that float extensible bitsPerSample is 32 or 64 later after we read subFormat.
             //
@@ -236,8 +240,8 @@ inline void ChunkInfo::ReadFormatChunk (std::FILE * in)
         {
             // Assuming for reasonably well-formed float PCM WAVs (of format PCMWAVEFORMAT and WAVEFORMATEX):
             //
-            //     1. bits_per_sample will equal either 32 or 64
-            //     2. bits_per_sample = 8 * block_align / channels
+            //     1. bitsPerSample will equal either 32 or 64
+            //     2. bitsPerSample = 8 * blockAlign / channels
             //
             if (format.bitsPerSample != 32 && format.bitsPerSample != 64)
             {
@@ -306,12 +310,12 @@ inline void ChunkInfo::ReadFormatChunk (std::FILE * in)
         }
     }
 
-    const int container_size = 8 * format.blockAlign / format.channels;
+    const int containerSize = 8 * format.blockAlign / format.channels;
     if ((format.code == FormatCode::LinearPCM ||
          (format.code == FormatCode::Extensible && format.subFormat == ExtensibleFormat::LinearPCM))
-        && container_size != 8 && container_size != 16 && container_size != 24 && container_size != 32)
+        && containerSize != 8 && containerSize != 16 && containerSize != 24 && containerSize != 32)
     {
-        throw ReadError (std::format ("Unsupported linear PCM container size: {}", container_size));
+        throw ReadError (std::format ("Unsupported linear PCM container size: {}", containerSize));
     }
     // In the future, if this code is used to read format chunks of odd-byte-length,
     // we must skip the last padding byte.
