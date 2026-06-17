@@ -25,6 +25,7 @@ inline void TestRejection (TestLog & log)
 
 // HELPER FUNCTIONS ///////////////////////////////////////
 void TestForReadError (std::vector<uint8_t> const &, TestLog &, std::string const &);
+void UpdateRIFFChunkSize (std::vector<uint8_t> &);
 
 // RIFF CHUNK TESTS ///////////////////////////////////////
 inline void FirstFourBytesNotRIFF (TestLog & log)
@@ -106,14 +107,12 @@ inline void InvalidFormatSize (TestLog & log)
 }
 inline void MultipleFormatChunks (TestLog & log)
 {
-    // Append "fmt " but don't bump RIFF size to reflect its contribution to the file size:
     auto bytes = buildPCMWAVEFORMAT (wav::FormatCode::LinearPCM, 8, 8, 1, 44100, 8);
-    PushFourCC (bytes, "fmt ");
-    TestForReadError (bytes, log, "Header Rejection - fmt chunk, multiple fmt chunks (2nd not reflected in RIFF size)");
 
-    // Adjust RIFF size to account for the "fmt " appended to the end of the file:
-    OverwriteUint32LE (bytes, 4, static_cast<uint32_t> (bytes.size() - 8));
-    TestForReadError (bytes, log, "Header Rejection - fmt chunk, multiple fmt chunks (2nd reflected in RIFF size)");
+    PushFourCC (bytes, "fmt ");
+    UpdateRIFFChunkSize (bytes);
+
+    TestForReadError (bytes, log, "Header Rejection - fmt chunk, multiple fmt chunks");
 }
 
 inline void RunFormatChunkTests (TestLog & log)
@@ -150,14 +149,10 @@ inline void DataChunkSizeNotDivisibleByBlockAlign (TestLog & log)
 }
 inline void MultipleDataChunks (TestLog & log)
 {
-    // Append "data" but don't bump RIFF size to reflect its contribution to the file size:
     auto bytes = buildPCMWAVEFORMAT (wav::FormatCode::LinearPCM, 8, 8, 1, 44100, 8);
     PushFourCC (bytes, "data");
-    TestForReadError (bytes, log, "Header Rejection - data chunk, multiple data chunks (2nd not reflected in RIFF size)");
-
-    // Adjust RIFF size to account for the "data" appended to the end of the file:
-    OverwriteUint32LE (bytes, 4, static_cast<uint32_t> (bytes.size() - 8));
-    TestForReadError (bytes, log, "Header Rejection - data chunk, multiple data chunks (2nd reflected in RIFF size)");
+    UpdateRIFFChunkSize (bytes);
+    TestForReadError (bytes, log, "Header Rejection - data chunk, multiple data chunks");
 }
 
 inline void RunDataChunkTests (TestLog & log)
@@ -172,35 +167,23 @@ inline void FactChunkSizeNotFour (TestLog & log)
 {
     constexpr uint32_t frames {8};
     auto bytes = buildPCMWAVEFORMAT (wav::FormatCode::FloatPCM, 32, 32, 2, 48000, frames);
+    const auto factChunkStart {bytes.size()};
     PushFactChunk (bytes, frames);
     // Rewrite fact chunk size to invalid value of 5.
-    OverwriteUint32LE (bytes, chunkOffset ("fact", bytes) + 4, 5);
-    // Update RIFF chunk size
-    OverwriteUint32LE (bytes, 4, static_cast<uint32_t> (bytes.size() - 8));
+    OverwriteUint32LE (bytes, factChunkStart + 4, 5);
+    UpdateRIFFChunkSize (bytes);
     TestForReadError (bytes, log, "Header Rejection - fact chunk, size not 4");
 }
 inline void MultipleFactChunks (TestLog & log)
 {
     constexpr uint32_t frames {8};
-    constexpr uint16_t bitDepth {8};
-    constexpr uint16_t containerSize {bitDepth};
-    constexpr uint16_t channels {1};
-    constexpr uint32_t sampleRate {44100};
-
-    // Extra "fact" added but not reflected in RIFF chunk size:
-    // Construct RIFF, fmt, and data chunks:
-    auto bytes = buildPCMWAVEFORMAT (wav::FormatCode::LinearPCM, bitDepth, containerSize, channels, sampleRate, frames);
+    auto bytes = buildPCMWAVEFORMAT (wav::FormatCode::LinearPCM, 8, 8, 1, 44100, frames);
     // First fact chunk:
     PushFactChunk (bytes, frames);
-    // Update RIFF chunk size to reflect first fact chunk:
-    OverwriteUint32LE (bytes, 4, static_cast<uint32_t> (bytes.size() - 8));
-    // Append second "fact" but don't update RIFF chunk size:
-    PushFourCC (bytes, "fact"); // Just the ID, but should be enough to trigger the exception.
-    TestForReadError (bytes, log, "Header Rejection - fact chunk, multiple fact chunks (2nd not reflected in RIFF size)");
-
-    // Update RIFF chunk size to reflect second fact chunk and test again:
-    OverwriteUint32LE (bytes, 4, static_cast<uint32_t> (bytes.size() - 8));
-    TestForReadError (bytes, log, "Header Rejection - fact chunk, multiple fact chunks (2nd reflected in RIFF size)");
+    // Append second "fact". Just the ID should be enough to trigger the exception:
+    PushFourCC (bytes, "fact");
+    UpdateRIFFChunkSize (bytes);
+    TestForReadError (bytes, log, "Header Rejection - fact chunk, multiple fact chunks");
 }
 
 inline void RunFactChunkTests (TestLog & log)
@@ -228,15 +211,9 @@ inline void MultiplePeakChunks (TestLog & log)
     {
         auto bytes = buildPCMWAVEFORMAT (wav::FormatCode::LinearPCM, 8, 8, channels, 44100, frames);
         PushPeakChunk (bytes, peaks, timestamp);
-        // Update RIFF chunk size to account for 1st PEAK chunk:
-        OverwriteUint32LE (bytes, 4, static_cast<uint32_t> (bytes.size() - 8));
-        // Push 2nd PEAK chunk but don't update RIFF chunk size:
         PushPeakChunk (bytes, peaks, timestamp);
-        TestForReadError (bytes, log, "Header Rejection - PEAK chunk, multiple PEAK chunks (2nd not reflected in RIFF size)");
-
-        // Update RIFF chunk size to account for 2nd chunk:
-        OverwriteUint32LE (bytes, 4, static_cast<uint32_t> (bytes.size() - 8));
-        TestForReadError (bytes, log, "Header Rejection - PEAK chunk, multiple PEAK chunks (2nd reflected in RIFF size)");
+        UpdateRIFFChunkSize (bytes);
+        TestForReadError (bytes, log, "Header Rejection - PEAK chunk, multiple PEAK chunks");
     }
 
     // First PEAK is version 2 (skipped); ReadError still thrown when 2nd PEAK chunk encountered
@@ -244,17 +221,10 @@ inline void MultiplePeakChunks (TestLog & log)
         auto bytes = buildPCMWAVEFORMAT (wav::FormatCode::LinearPCM, 8, 8, channels, 44100, frames);
         const auto peakChunkStart {bytes.size()};
         PushPeakChunk (bytes, peaks, timestamp);
-        // Update RIFF chunk size to account for 1st PEAK chunk:
-        OverwriteUint32LE (bytes, 4, static_cast<uint32_t> (bytes.size() - 8));
-        // Set version to 2.
-        OverwriteUint32LE (bytes, peakChunkStart + 8, 2);
-        // Push 2nd PEAK chunk but don't update RIFF chunk size:
+        OverwriteUint32LE (bytes, peakChunkStart + 8, 2); // Set version to 2.
         PushPeakChunk (bytes, peaks, timestamp);
-        TestForReadError (bytes, log, "Header Rejection - PEAK chunk, multiple PEAK chunks (first skipped, 2nd not reflected in RIFF size)");
-
-        // Update RIFF chunk size to account for 2nd chunk:
-        OverwriteUint32LE (bytes, 4, static_cast<uint32_t> (bytes.size() - 8));
-        TestForReadError (bytes, log, "Header Rejection - PEAK chunk, multiple PEAK chunks (first skipped, 2nd reflected in RIFF size)");
+        UpdateRIFFChunkSize (bytes);
+        TestForReadError (bytes, log, "Header Rejection - PEAK chunk, multiple PEAK chunks (1st skipped due to unsupported version; 2nd throws ReadError)");
     }
 }
 inline void PeakChunkBeforeFmt (TestLog & log)
@@ -271,8 +241,7 @@ inline void PeakChunkBeforeFmt (TestLog & log)
     PushPeakChunk (peakChunk, peaks, 0);
     // RIFF id, chunk size, and "WAVE" occupy the first 12 bytes:
     bytes.insert (bytes.begin() + 12, peakChunk.begin(), peakChunk.end());
-    // Update RIFF chunk size
-    OverwriteUint32LE (bytes, 4, static_cast<uint32_t> (bytes.size() - 8));
+    UpdateRIFFChunkSize (bytes);
 
     TestForReadError (bytes, log, "Header Rejection - PEAK chunk, PEAK comes before fmt");
 }
@@ -282,17 +251,15 @@ inline void OverlargePeakChunkSize (TestLog & log)
 
     auto bytes = buildPCMWAVEFORMAT (wav::FormatCode::FloatPCM, 32, 32, channels, 48000, 8);
 
+    const auto peakChunkStart {bytes.size()};
     std::vector<wav::Peak> peaks;
     for (auto n = channels; n > 0; --n) peaks.push_back ({0.f, 0u});
-
     PushPeakChunk (bytes, peaks, 0);
-    // Update RIFF chunk size
-    OverwriteUint32LE (bytes, 4, static_cast<uint32_t> (bytes.size() - 8));
-
     // version (4 bytes), timestamp (4 bytes), 8 bytes per peak (one peak per channel)
     constexpr uint32_t actualPeakSize {4u + 4u + 8u * channels};
-    // overwrite PEAK chunk size with size + 1
-    OverwriteUint32LE (bytes, chunkOffset ("PEAK", bytes) + 4, actualPeakSize + 1);
+    // Overwrite PEAK chunk size with size + 1.
+    OverwriteUint32LE (bytes, peakChunkStart + 4, actualPeakSize + 1);
+    UpdateRIFFChunkSize (bytes);
 
     TestForReadError (bytes, log, "Header Rejection - PEAK chunk, purported size extends past actual EOF");
 }
@@ -302,8 +269,7 @@ inline void PeakChunkSizeMismatchesChannels (TestLog & log)
     // WAV has 2 channels but PEAK chunk size is not 8 + 8 * 2 = 24; it is 16.
     const std::vector<wav::Peak> peaks {{0.f, 0u}};
     PushPeakChunk (bytes, peaks, 0);
-    // Update RIFF chunk size.
-    OverwriteUint32LE (bytes, 4, static_cast<uint32_t> (bytes.size() - 8));
+    UpdateRIFFChunkSize (bytes);
 
     TestForReadError (bytes, log, "Header Rejection - PEAK chunk, size mismatches channels");
 }
@@ -317,14 +283,12 @@ inline void PeakChunkVersionUnsupported (TestLog & log)
     auto bytes = buildPCMWAVEFORMAT (wav::FormatCode::FloatPCM, 32, 32, channels, 48000, 8);
 
     const auto peakChunkStart {bytes.size()};
-
     std::vector<wav::Peak> peaks;
     for (auto n = channels; n > 0; --n) peaks.push_back ({0.f, 0u});
     PushPeakChunk (bytes, peaks, 0);
-    // Update RIFF chunk size.
-    OverwriteUint32LE (bytes, 4, static_cast<uint32_t> (bytes.size() - 8));
     // Set version to 2.
     OverwriteUint32LE (bytes, peakChunkStart + 8, 2);
+    UpdateRIFFChunkSize (bytes);
 
     WriteBytesToFile (filename, bytes);
 
@@ -388,6 +352,11 @@ inline void TestForReadError (std::vector<uint8_t> const & bytes, TestLog & log,
     log.Record (threwReadError, std::format ("{} - \"{}\"", label, errorMessage));
 
     std::remove (filename);
+}
+
+inline void UpdateRIFFChunkSize (std::vector<uint8_t> & bytes)
+{
+    OverwriteUint32LE (bytes, 4, static_cast<uint32_t> (bytes.size() - 8));
 }
 
 #endif
