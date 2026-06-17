@@ -212,29 +212,50 @@ inline void RunFactChunkTests (TestLog & log)
 // PEAK CHUNK TESTS ///////////////////////////////////////
 inline void MultiplePeakChunks (TestLog & log)
 {
-    // Extra "PEAK" added but not reflected in RIFF chunk size:
     constexpr uint32_t frames {8};
     constexpr uint16_t channels {2};
-    // Construct RIFF, fmt, and data chunks:
-    auto bytes = buildPCMWAVEFORMAT (wav::FormatCode::LinearPCM, 8, 8, channels, 44100, frames);
-    // Add first PEAK chunk:
+
     const std::vector<wav::Peak> peaks
     {
         {0,0}, // peak of 0 at frame 0 for channel 0
         {0,0}  // peak of 0 at frame 0 for channel 1
     };
     assert (peaks.size() == channels);
-    const uint32_t timestamp {0}; // seconds elapsed since Jan 1, 1970
-    PushPeakChunk (bytes, peaks, timestamp);
-    // Update RIFF chunk size to reflect first PEAK chunk:
-    OverwriteUint32LE (bytes, 4, static_cast<uint32_t> (bytes.size() - 8));
-    // Append second "PEAK" but don't update RIFF chunk size:
-    PushFourCC (bytes, "PEAK");
-    TestForReadError (bytes, log, "Header Rejection - PEAK chunk, multiple PEAK chunks (2nd not reflected in RIFF size)");
 
-    // Update RIFF chunk size to reflect second PEAK chunk:
-    OverwriteUint32LE (bytes, 4, static_cast<uint32_t> (bytes.size() - 8));
-    TestForReadError (bytes, log, "Header Rejection - PEAK chunk, multiple PEAK chunks (2nd reflected in RIFF size)");
+    const uint32_t timestamp {0};
+
+    // First PEAK is well-formed version 1
+    {
+        auto bytes = buildPCMWAVEFORMAT (wav::FormatCode::LinearPCM, 8, 8, channels, 44100, frames);
+        PushPeakChunk (bytes, peaks, timestamp);
+        // Update RIFF chunk size to account for 1st PEAK chunk:
+        OverwriteUint32LE (bytes, 4, static_cast<uint32_t> (bytes.size() - 8));
+        // Push 2nd PEAK chunk but don't update RIFF chunk size:
+        PushPeakChunk (bytes, peaks, timestamp);
+        TestForReadError (bytes, log, "Header Rejection - PEAK chunk, multiple PEAK chunks (2nd not reflected in RIFF size)");
+
+        // Update RIFF chunk size to account for 2nd chunk:
+        OverwriteUint32LE (bytes, 4, static_cast<uint32_t> (bytes.size() - 8));
+        TestForReadError (bytes, log, "Header Rejection - PEAK chunk, multiple PEAK chunks (2nd reflected in RIFF size)");
+    }
+
+    // First PEAK is version 2 (skipped); ReadError still thrown when 2nd PEAK chunk encountered
+    {
+        auto bytes = buildPCMWAVEFORMAT (wav::FormatCode::LinearPCM, 8, 8, channels, 44100, frames);
+        const auto peakChunkStart {bytes.size()};
+        PushPeakChunk (bytes, peaks, timestamp);
+        // Update RIFF chunk size to account for 1st PEAK chunk:
+        OverwriteUint32LE (bytes, 4, static_cast<uint32_t> (bytes.size() - 8));
+        // Set version to 2.
+        OverwriteUint32LE (bytes, peakChunkStart + 8, 2);
+        // Push 2nd PEAK chunk but don't update RIFF chunk size:
+        PushPeakChunk (bytes, peaks, timestamp);
+        TestForReadError (bytes, log, "Header Rejection - PEAK chunk, multiple PEAK chunks (first skipped, 2nd not reflected in RIFF size)");
+
+        // Update RIFF chunk size to account for 2nd chunk:
+        OverwriteUint32LE (bytes, 4, static_cast<uint32_t> (bytes.size() - 8));
+        TestForReadError (bytes, log, "Header Rejection - PEAK chunk, multiple PEAK chunks (first skipped, 2nd reflected in RIFF size)");
+    }
 }
 inline void PeakChunkBeforeFmt (TestLog & log)
 {
@@ -286,20 +307,56 @@ inline void PeakChunkSizeMismatchesChannels (TestLog & log)
 
     TestForReadError (bytes, log, "Header Rejection - PEAK chunk, size mismatches channels");
 }
-inline void PeakChunkVersionNotOne (TestLog & log)
+inline void PeakChunkVersionUnsupported (TestLog & log)
 {
+    // Since PEAK is optional, we can skip any chunk that isn't version 1 instead of throwing.
+
+    const auto filename {"test_peak_version_unsupported.wav"};
     constexpr uint16_t channels {2};
+
     auto bytes = buildPCMWAVEFORMAT (wav::FormatCode::FloatPCM, 32, 32, channels, 48000, 8);
+
+    const auto peakChunkStart {bytes.size()};
 
     std::vector<wav::Peak> peaks;
     for (auto n = channels; n > 0; --n) peaks.push_back ({0.f, 0u});
     PushPeakChunk (bytes, peaks, 0);
     // Update RIFF chunk size.
     OverwriteUint32LE (bytes, 4, static_cast<uint32_t> (bytes.size() - 8));
-    // Set PEAK chunk version to 2.
-    OverwriteUint32LE (bytes, chunkOffset ("PEAK", bytes) + 8, 2);
+    // Set version to 2.
+    OverwriteUint32LE (bytes, peakChunkStart + 8, 2);
 
-    TestForReadError (bytes, log, "Header Rejection - PEAK chunk, version not 1");
+    WriteBytesToFile (filename, bytes);
+
+    std::string failures;
+    try
+    {
+        wav::ChunkInfo info {filename};
+
+        Compare (info.peak.present == false, "peak.present should be false when version != 1", failures);
+
+        // Check that "PEAK <chunkStart>" appears in chunksSkipped.
+        const auto expected {std::format ("PEAK {}", peakChunkStart)};
+        bool listedAsSkipped {false};
+        for (auto const & str : info.chunksSkipped)
+        {
+            if (str == expected)
+            {
+                listedAsSkipped = true;
+                break;
+            }
+        }
+        Compare (listedAsSkipped, "PEAK should appear in chunksSkipped", failures);
+    }
+    catch (wav::ReadError const & e)
+    {
+        failures = std::string {"unexpected wav::ReadError - "} + e.what();
+    }
+    const auto suffix {failures.empty() ? "" : ", failures: " + failures};
+
+    log.Record (failures.empty(), std::format ("Skip Chunk - PEAK, version not 1{}", suffix));
+
+    std::remove (filename);
 }
 
 inline void RunPeakChunkTests (TestLog & log)
@@ -307,7 +364,7 @@ inline void RunPeakChunkTests (TestLog & log)
     PeakChunkBeforeFmt (log);
     OverlargePeakChunkSize (log);
     PeakChunkSizeMismatchesChannels (log);
-    PeakChunkVersionNotOne (log);
+    PeakChunkVersionUnsupported (log);
     MultiplePeakChunks (log);
 }
 

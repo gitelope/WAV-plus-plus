@@ -93,7 +93,7 @@ inline void ChunkInfo::ReadFile (std::FILE * in)
 
         if      (chunkID == format.id) ReadFormatChunk                 (in);
         else if (chunkID == fact.id)   ReadFactChunk                   (in);
-        else if (chunkID == peak.id)   ReadPeakChunk                   (in);
+        else if (chunkID == peak.id)   ReadPeakChunk                   (in, chunkStart);
         else if (chunkID == data.id)   ReadDataChunkSizeAndSkipSamples (in);
         else if (chunkID == riff.id)   throw ReadError ("Invalid format: File contains more than one RIFF chunk.");
         else
@@ -324,13 +324,16 @@ inline void ChunkInfo::ReadFactChunk (std::FILE * in)
     fact.present = true;
 }
 
-inline void ChunkInfo::ReadPeakChunk (std::FILE * in)
+inline void ChunkInfo::ReadPeakChunk (std::FILE * in, std::int64_t chunkStart)
 {
     // Throws ReadError when:
-    //     PEAK before fmt
     //     more than one PEAK
+    //     PEAK before fmt
     //     declared size exceeds bytes remaining in file
-    //     size does not match 4 + 4 + 8 * channels
+    //     declared size is less than 4
+    //     version is 1 and declared size does not match 4 + 4 + 8 * channels
+    //
+    // Skips remaining chunk body when:
     //     version is not 1
 
     if (peakChunkEncountered) throw ReadError ("Invalid format: File contains more than one PEAK chunk.");
@@ -352,16 +355,25 @@ inline void ChunkInfo::ReadPeakChunk (std::FILE * in)
         throw ReadError (std::format ("Inconsistent value: declared PEAK chunk size ({}) exceeds bytes remaining in the file ({}).", peak.size, bytesRemaining));
     }
 
-    // Make sure size matches expectations given number of channels and fixed-size fields.
+    if (peak.size < 4u) throw ReadError ("Invalid value: PEAK chunk size is too small to contain a version field.");
+
+    peak.version = uint32_le (in);
+
+    // Skip any PEAK chunks that aren't v1:
+    if (peak.version != 1)
+    {
+        RegisterSkippedChunk (peak.id, chunkStart);
+        SkipChunk (in, peak.size - 4u);
+        return;
+    }
+
+    // Make sure size matches version 1 expectations given number of channels:
     // expected size = 4 bytes (version) + 4 bytes (timestamp) + 8 bytes per peak (one per channel).
     const uint32_t expectedChunkSize {4u + 4u + 8u * format.channels};
-    if (peak.size != 4u + 4u + 8u * format.channels)
+    if (peak.size != expectedChunkSize)
     {
         throw ReadError (std::format ("Invalid value: PEAK chunk size ({}) does not match channel count. Expected: 8 bytes + 8 bytes per channel * {} channels = {} bytes", peak.size, format.channels, expectedChunkSize));
     }
-
-    peak.version = uint32_le (in);
-    if (peak.version != 1) throw ReadError ("Invalid value: PEAK chunk version must be 1.");
 
     peak.timestamp = uint32_le (in);
 

@@ -75,10 +75,10 @@ struct PeakChunk
 {
     std::string id {"PEAK"};
     uint32_t size {0};
-    uint32_t version {0};
+    uint32_t version {0}; // only version 1 is parsed
     uint32_t timestamp {0};
     std::vector<Peak> peaks;
-    bool present {false};
+    bool present {false}; // false if no version-1 PEAK chunk is successfully parsed
 };
 
 /// Reads in all the info from RIFF, fmt, data (except for the samples),
@@ -118,7 +118,7 @@ private:
     void ReadRiffChunk                   (std::FILE * in);
     void ReadFormatChunk                 (std::FILE * in);
     void ReadFactChunk                   (std::FILE * in);
-    void ReadPeakChunk                   (std::FILE * in);
+    void ReadPeakChunk                   (std::FILE * in, std::int64_t chunkStart);
     void ReadDataChunkSizeAndSkipSamples (std::FILE * in);
 
     void RegisterChunk        (std::string const & id, std::int64_t position);
