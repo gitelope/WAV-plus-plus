@@ -146,6 +146,16 @@ inline void MultipleFormatChunks (TestLog & log)
 
     TestForReadError (bytes, log, "Header Rejection - fmt chunk, multiple fmt chunks");
 }
+inline void MissingFmt (TestLog & log)
+{
+    // As of 2026.06.17, adding a data chunk would trip a no fmt before data error,
+    // so we skip the data chunk, too.
+    std::vector<uint8_t> bytes;
+    PushFourCC (bytes, "RIFF");
+    PushUint32LE (bytes, 4); // "WAVE" only
+    PushFourCC (bytes, "WAVE");
+    TestForReadError (bytes, log, "Header Rejection - missing fmt chunk");
+}
 
 inline void RunFormatChunkTests (TestLog & log)
 {
@@ -158,6 +168,7 @@ inline void RunFormatChunkTests (TestLog & log)
     UnsupportedFormatCode (log);
     InvalidFormatSize (log);
     MultipleFormatChunks (log);
+    MissingFmt (log);
 }
 
 // DATA CHUNK TESTS ///////////////////////////////////////
@@ -195,12 +206,36 @@ inline void MultipleDataChunks (TestLog & log)
 
     TestForReadError (bytes, log, "Header Rejection - data chunk, multiple data chunks");
 }
+inline void MissingData (TestLog & log)
+{
+    constexpr auto formatChunkSize {wav::FormatChunkSize::PCMWAVEFORMAT};
+    constexpr auto formatCode {wav::FormatCode::LinearPCM};
+    constexpr uint16_t channels {1};
+    constexpr uint32_t sampleRate {44100};
+    constexpr uint16_t blockAlign {1};
+    constexpr uint32_t byteRate {sampleRate * blockAlign};
+
+    std::vector<uint8_t> bytes;
+
+    // RIFF chunk header
+    PushFourCC    (bytes, "RIFF");
+    PushUint32LE  (bytes, 4u + (4u + 4u + formatChunkSize)); // "WAVE" + ("fmt " + fmtChunkSize + fmt chunk body)
+    PushFourCC    (bytes, "WAVE");
+
+    // fmt chunk (PCMWAVEFORMAT)
+    PushFmtHeader          (bytes, formatChunkSize);
+    Push_WAVEFORMAT_Fmt    (bytes, formatCode, channels, sampleRate, byteRate, blockAlign);
+    Push_PCMWAVEFORMAT_Fmt (bytes, 8);
+
+    TestForReadError (bytes, log, "Header Rejection - data chunk, missing data chunk");
+}
 
 inline void RunDataChunkTests (TestLog & log)
 {
     OverlargeDataChunkSize (log);
     DataChunkSizeNotDivisibleByBlockAlign (log);
     MultipleDataChunks (log);
+    MissingData (log);
 }
 
 // FACT CHUNK TESTS ///////////////////////////////////////
