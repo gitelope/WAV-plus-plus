@@ -42,8 +42,26 @@ inline void WrongRIFFSubformat (TestLog & log)
 }
 inline void MultipleRIFFChunks (TestLog & log)
 {
+    // *** Test will fail if ReadFile becomes bounded by RIFF chunk size (instead of EOF). ***
+    //
+    // Duplicates RIFF chunk, but doesn't update the first RIFF chunk size so
+    // 2nd RIFF chunk would never be seen in that case.
+    //
+    // A couple options if that happens:
+    // a) Remove test.
+    // b) Update first RIFF chunk size with UpdateRIFFChunkSize (bytes) to
+    //    effectively embed the 2nd chunk in the first.
+    // c) Replace whole 2nd RIFF chunk with the four-character code "RIFF" and
+    //    update the first RIFF chunk size so only the 4CC is embedded/duplicated.
+    //
+    // It's probably also not a bad idea to add a separate test elsewhere that
+    // nothing after RIFF boundary is read so maybe append a second fmt chunk, don't
+    // update RIFF chunk size, and check that no duplicate-fmt-chunk ReadError is
+    // thrown.
+
     auto bytes = buildPCMWAVEFORMAT (wav::FormatCode::LinearPCM, 8, 8, 1, 44100, 8);
-    PushFourCC (bytes, "RIFF");
+    const auto duplicate {bytes};
+    bytes.insert (bytes.end(), duplicate.begin(), duplicate.end());
     TestForReadError (bytes, log, "Header Rejection - RIFF chunk, multiple RIFF chunks");
 }
 
@@ -107,9 +125,23 @@ inline void InvalidFormatSize (TestLog & log)
 }
 inline void MultipleFormatChunks (TestLog & log)
 {
-    auto bytes = buildPCMWAVEFORMAT (wav::FormatCode::LinearPCM, 8, 8, 1, 44100, 8);
+    const auto formatCode {wav::FormatCode::LinearPCM};
+    const uint16_t bitDepth {8};
+    const uint16_t containerSize {8};
+    const uint16_t channels {1};
+    const uint32_t frames {8};
+    const uint32_t sampleRate {44100};
 
-    PushFourCC (bytes, "fmt ");
+    const uint16_t blockAlign {channels * (containerSize / 8u)};
+    const uint32_t byteRate {blockAlign * sampleRate};
+
+    auto bytes = buildPCMWAVEFORMAT (formatCode, bitDepth, containerSize, channels, sampleRate, frames);
+
+    // 2nd fmt chunk
+    PushFmtHeader          (bytes, wav::FormatChunkSize::PCMWAVEFORMAT);
+    Push_WAVEFORMAT_Fmt    (bytes, formatCode, channels, sampleRate, byteRate, blockAlign);
+    Push_PCMWAVEFORMAT_Fmt (bytes, bitDepth);
+
     UpdateRIFFChunkSize (bytes);
 
     TestForReadError (bytes, log, "Header Rejection - fmt chunk, multiple fmt chunks");
@@ -149,9 +181,18 @@ inline void DataChunkSizeNotDivisibleByBlockAlign (TestLog & log)
 }
 inline void MultipleDataChunks (TestLog & log)
 {
-    auto bytes = buildPCMWAVEFORMAT (wav::FormatCode::LinearPCM, 8, 8, 1, 44100, 8);
-    PushFourCC (bytes, "data");
+    constexpr uint16_t bitDepth {8};
+    constexpr uint16_t containerSize {bitDepth};
+    constexpr uint16_t channels {1};
+    constexpr uint32_t frames {8};
+
+    auto bytes = buildPCMWAVEFORMAT (wav::FormatCode::LinearPCM, bitDepth, containerSize, channels, 44100, frames);
+
+    // 2nd data chunk
+    const uint32_t dataChunkSize {frames * channels * (containerSize / 8u)};
+    PushSilentDataChunk (bytes, dataChunkSize);
     UpdateRIFFChunkSize (bytes);
+
     TestForReadError (bytes, log, "Header Rejection - data chunk, multiple data chunks");
 }
 
@@ -178,10 +219,8 @@ inline void MultipleFactChunks (TestLog & log)
 {
     constexpr uint32_t frames {8};
     auto bytes = buildPCMWAVEFORMAT (wav::FormatCode::LinearPCM, 8, 8, 1, 44100, frames);
-    // First fact chunk:
     PushFactChunk (bytes, frames);
-    // Append second "fact". Just the ID should be enough to trigger the exception:
-    PushFourCC (bytes, "fact");
+    PushFactChunk (bytes, frames);
     UpdateRIFFChunkSize (bytes);
     TestForReadError (bytes, log, "Header Rejection - fact chunk, multiple fact chunks");
 }

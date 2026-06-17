@@ -106,7 +106,7 @@ inline std::vector<uint8_t> buildPCMWAVEFORMAT (uint16_t formatCode, uint16_t va
     PushRiffHeader (wav, formatChunkSize, dataChunkSize);
 
     // fmt
-    PushFmtHeader        (wav, formatChunkSize);
+    PushFmtHeader          (wav, formatChunkSize);
     Push_WAVEFORMAT_Fmt    (wav, formatCode, channels, sampleRate, byteRate, blockAlign); // 14 bytes
     Push_PCMWAVEFORMAT_Fmt (wav, validBitDepth);                                          //  2 bytes
                                                                                           // --------
