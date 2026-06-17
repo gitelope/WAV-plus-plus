@@ -213,12 +213,16 @@ inline void ChunkInfo::ReadFormatChunk (std::FILE * in)
             throw ReadError ("Invalid value: bits per sample must be greater than 0 and less than or equal to 64.");
         }
 
-        if (format.code == FormatCode::Extensible)
+        if (format.code == FormatCode::Extensible) // float and integer extensible
         {
-            // Since WAVEFORMATEXTENSIBLE has bits_per_sample AND valid_bits_per_sample,
-            // it makes good sense even for a permissive parser to enforce the following.
+            // Since WAVEFORMATEXTENSIBLE has bitsPerSample AND validBitsPerSample,
+            // it makes good sense even for a permissive parser to enforce the following:
+            //
             //     1. bits_per_sample must be a multiple of 8
             //     2. bits_per_sample = 8 * block_align / channels
+            //
+            // We will check that float extensible bitsPerSample is 32 or 64 later after we read subFormat.
+            //
             if (format.bitsPerSample % 8 != 0)
             {
                 throw ReadError ("For WAVEFORMATEXTENSIBLE, bits per sample must be a multiple of 8.");
@@ -228,11 +232,13 @@ inline void ChunkInfo::ReadFormatChunk (std::FILE * in)
                 throw ReadError ("For WAVEFORMATEXTENSIBLE, bits per sample must equal 8 * blockAlign / channels.");
             }
         }
-        else if (format.code == FormatCode::FloatPCM)
+        else if (format.code == FormatCode::FloatPCM) // PCMWAVEFORMAT and WAVEFORMATEX floats
         {
-            // Assuming for reasonably well-formed float PCM WAVs (of format PCMFORMAT and WAVEFORMATEX):
+            // Assuming for reasonably well-formed float PCM WAVs (of format PCMWAVEFORMAT and WAVEFORMATEX):
+            //
             //     1. bits_per_sample will equal either 32 or 64
             //     2. bits_per_sample = 8 * block_align / channels
+            //
             if (format.bitsPerSample != 32 && format.bitsPerSample != 64)
             {
                 throw ReadError ("For float PCM, bits per sample must be 32 or 64.");
@@ -243,18 +249,23 @@ inline void ChunkInfo::ReadFormatChunk (std::FILE * in)
             }
         }
 
-        if ((format.code == FormatCode::Extensible || format.code == FormatCode::FloatPCM)
-            && format.bitsPerSample != 8 * format.blockAlign / format.channels)
-        {
-            throw ReadError ("bits_per_sample should equal 8 * block_align / channels for this format.");
-            // This doesn't apply to LINEAR_PCM in order to support non-standard usage in which
-            // meaningful bit depth is lower than container size and yet the WAV is not of the
-            // format WAVEFORMATEXTENSIBLE.
-            // In this scenario, bits_per_sample is made to equal the number of significant bits
-            // and is less than 8 * format.blockAlign / format.channels, the container size. For
-            // linear and float PCM, (stored in PCMWAVEFORMAT, WAVEFORMATEX, and
-            // WAVEFORMATEXTENSIBLE) these are equal in standard usage.
-        }
+        // Note that WAV++ does not require
+        // format.bitsPerSample = 8 * format.blockAlign / channels
+        // for PCMWAVEFORMAT LPCM and WAVEFORMATEX LPCM in order to support
+        // common non-standard usage in which a lower bit depth is packed into
+        // a larger container.
+        //
+        // In this scenario, bitsPerSample is interpreted as the number of significant
+        // (or "valid") bits and is less than 8 * format.blockAlign / format.channels,
+        // which is, as usual, the container size. (For integer and float PCM stored in
+        // PCMWAVEFORMAT, WAVEFORMATEX, and WAVEFORMATEXTENSIBLE these are expected to
+        // be equal in standard usage.)
+        //
+        // The standard way of accomplishing bit packing is to use WAVEFORMATEXTENSIBLE's
+        // additional validBitsPerSample as the actual bit depth and bitsPerSample as the
+        // container size. Note that the non-standard bit-packing method described above
+        // treats bitsPerSample not as the container size but as the effective bit depth,
+        // flipping the role it plays.
     }
 
     // This field is found in WAVEFORMATEX and WAVEFORMATEXTENSIBLE:
