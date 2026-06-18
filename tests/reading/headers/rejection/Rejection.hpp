@@ -219,6 +219,29 @@ inline void BlockAlignNotDivisibleByChannels (TestLog & log)
     OverwriteUint16LE (bytes, chunkOffset ("fmt ", bytes) + 10, 3);
     TestForReadError (bytes, log, "Header Rejection - fmt chunk, block align not divisible by channels");
 }
+inline void UnsupportedLPCMContainerSize (TestLog & log)
+{
+    constexpr uint16_t bitDepth {64};
+    constexpr uint16_t containerSize {bitDepth};
+    {
+        const auto bytes = buildWAVEFORMAT (wav::FormatCode::LinearPCM, bitDepth, 2, 48000, 8);
+        TestForReadError (bytes, log, "Header Rejection - fmt chunk, unsupported LPCM container size, WAVEFORMAT");
+    }
+    {
+        const auto bytes = buildPCMWAVEFORMAT (wav::FormatCode::LinearPCM, bitDepth, containerSize, 2, 48000, 8);
+        TestForReadError (bytes, log, "Header Rejection - fmt chunk, unsupported LPCM container size, PCMWAVEFORMAT");
+    }
+    {
+        const auto bytes = buildWAVEFORMATEX (wav::FormatCode::LinearPCM, bitDepth, containerSize, 2, 48000, 8);
+        TestForReadError (bytes, log, "Header Rejection - fmt chunk, unsupported LPCM container size, WAVEFORMATEX");
+    }
+    {
+        const auto bytes = buildWAVEFORMATEXTENSIBLE (wav::ExtensibleFormat::LinearPCM,
+                                                      bitDepth, containerSize, 2, 48000, 8,
+                                                      wav::SpeakerConfiguration::Stereo);
+        TestForReadError (bytes, log, "Header Rejection - fmt chunk, unsupported LPCM container size, WAVEFORMATEXTENSIBLE");
+    }
+}
 inline void ExtensibleBitsPerSampleNotMultipleOfEight (TestLog & log)
 {
     constexpr uint16_t validBitsPerSample {20};
@@ -250,6 +273,7 @@ inline void RunFormatChunkTests (TestLog & log)
     FloatPCMUnsupportedBitsPerSample (log);
     BitsPerSampleChannelsAndBlockAlignMismatch (log);
     BlockAlignNotDivisibleByChannels (log);
+    UnsupportedLPCMContainerSize (log);
     ExtensibleBitsPerSampleNotMultipleOfEight (log);
 }
 
