@@ -219,6 +219,17 @@ inline void BlockAlignNotDivisibleByChannels (TestLog & log)
     OverwriteUint16LE (bytes, chunkOffset ("fmt ", bytes) + 10, 3);
     TestForReadError (bytes, log, "Header Rejection - fmt chunk, block align not divisible by channels");
 }
+inline void ExtensibleBitsPerSampleNotMultipleOfEight (TestLog & log)
+{
+    constexpr uint16_t validBitsPerSample {20};
+    constexpr uint16_t bitsPerSample {24};
+    auto bytes = buildWAVEFORMATEXTENSIBLE (wav::ExtensibleFormat::LinearPCM,
+                                            validBitsPerSample, bitsPerSample,
+                                            2, 48000, 8, wav::SpeakerConfiguration::Stereo);
+    // overwrite bitsPerSample to 28
+    OverwriteUint16LE (bytes, chunkOffset ("fmt ", bytes) + 22, 28);
+    TestForReadError (bytes, log, "Header Rejection - fmt chunk, WAVEFORMATEXTENSIBLE, bitsPerSample not multiple of 8");
+}
 
 inline void RunFormatChunkTests (TestLog & log)
 {
@@ -235,6 +246,7 @@ inline void RunFormatChunkTests (TestLog & log)
     FloatPCMUnsupportedBitsPerSample (log);
     BitsPerSampleChannelsAndBlockAlignMismatch (log);
     BlockAlignNotDivisibleByChannels (log);
+    ExtensibleBitsPerSampleNotMultipleOfEight (log);
 }
 
 // DATA CHUNK TESTS ///////////////////////////////////////////////////////////////
