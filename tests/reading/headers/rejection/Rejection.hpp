@@ -154,9 +154,56 @@ inline void MissingFmt (TestLog & log)
     PushFourCC (bytes, "RIFF");
     PushUint32LE (bytes, 4); // "WAVE" only
     PushFourCC (bytes, "WAVE");
-    TestForReadError (bytes, log, "Header Rejection - missing fmt chunk");
+    TestForReadError (bytes, log, "Header Rejection - fmt chunk, missing fmt chunk");
 }
+inline void FloatPCMUnsupportedBitsPerSample (TestLog & log)
+{
+    // bitsPerSample should be 32 or 64 for float
+    constexpr uint16_t bitsPerSample {48};
+    {
+        const auto bytes = buildPCMWAVEFORMAT (wav::FormatCode::FloatPCM, bitsPerSample, bitsPerSample, 1, 48000, 8);
+        TestForReadError (bytes, log, "Header Rejection - fmt chunk, float PCM, unsupported bits per sample, PCMWAVEFORMAT");
+    }
+    {
+        const auto bytes = buildWAVEFORMATEX (wav::FormatCode::FloatPCM, bitsPerSample, bitsPerSample, 1, 48000, 8);
+        TestForReadError (bytes, log, "Header Rejection - fmt chunk, float PCM, unsupported bits per sample, WAVEFORMATEX");
+    }
+    {
+        const auto bytes = buildWAVEFORMATEXTENSIBLE (wav::ExtensibleFormat::FloatPCM, bitsPerSample, bitsPerSample, 2, 48000, 8, wav::SpeakerConfiguration::Stereo);
+        TestForReadError (bytes, log, "Header Rejection - fmt chunk, float PCM, unsupported bits per sample, WAVEFORMATEXTENSIBLE");
+    }
+}
+inline void BitsPerSampleChannelsAndBlockAlignMismatch (TestLog & log)
+{
+    // PCMWAVEFORMAT float
+    // WAVEFORMATEX float
+    // WAVEFORMATEXTENSIBLE float and integer
+    // expected: bitsPerSample = 8 * blockAlign / channels
 
+    constexpr uint16_t channels {2};
+    {
+        auto bytes = buildPCMWAVEFORMAT (wav::FormatCode::FloatPCM, 32, 32, channels, 48000, 8);
+        OverwriteUint16LE (bytes, chunkOffset ("fmt ", bytes) + 20, 16); // correct is 8
+        TestForReadError (bytes, log, "Header Rejection - fmt chunk, bitsPerSample/channels/blockAlign mismatch, PCMWAVEFORMAT float PCM");
+    }
+    {
+        auto bytes = buildWAVEFORMATEX (wav::FormatCode::FloatPCM, 32, 32, channels, 48000, 8);
+        OverwriteUint16LE (bytes, chunkOffset ("fmt ", bytes) + 20, 16); // correct is 8
+        TestForReadError (bytes, log, "Header Rejection - fmt chunk, bitsPerSample/channels/blockAlign mismatch, WAVEFORMATEX float PCM");
+    }
+
+    const auto channelMask {wav::SpeakerConfiguration::Stereo};
+    {
+        auto bytes = buildWAVEFORMATEXTENSIBLE (wav::ExtensibleFormat::LinearPCM, 16, 16, channels, 44100, 8, channelMask);
+        OverwriteUint16LE (bytes, chunkOffset ("fmt ", bytes) + 20, 8); // correct is 4
+        TestForReadError (bytes, log, "Header Rejection - fmt chunk, bitsPerSample/channels/blockAlign mismatch, WAVEFORMATEXTENSIBLE, linear PCM");
+    }
+    {
+        auto bytes = buildWAVEFORMATEXTENSIBLE (wav::ExtensibleFormat::FloatPCM, 32, 32, channels, 48000, 8, channelMask);
+        OverwriteUint16LE (bytes, chunkOffset ("fmt ", bytes) + 20, 16); // correct is 8
+        TestForReadError (bytes, log, "Header Rejection - fmt chunk, bitsPerSample/channels/blockAlign mismatch, WAVEFORMATEXTENSIBLE, float PCM");
+    }
+}
 inline void RunFormatChunkTests (TestLog & log)
 {
     BitsPerSampleZero (log);
@@ -169,6 +216,8 @@ inline void RunFormatChunkTests (TestLog & log)
     InvalidFormatSize (log);
     MultipleFormatChunks (log);
     MissingFmt (log);
+    FloatPCMUnsupportedBitsPerSample (log);
+    BitsPerSampleChannelsAndBlockAlignMismatch (log);
 }
 
 // DATA CHUNK TESTS ///////////////////////////////////////
