@@ -17,15 +17,15 @@ inline uint32_t riffChunkSize (uint32_t formatChunkSize, uint32_t dataChunkSize)
 inline void PushRiffHeader (std::vector<uint8_t> & v, uint32_t formatChunkSize, uint32_t dataChunkSize)
 {
     // RIFF header
-    PushFourCC    (v, "RIFF");
+    PushFourCC   (v, "RIFF");
     PushUint32LE (v, riffChunkSize (formatChunkSize, dataChunkSize));
-    PushFourCC    (v, "WAVE");
+    PushFourCC   (v, "WAVE");
 }
 
 inline void PushSilentDataChunk (std::vector<uint8_t> & v, uint32_t dataChunkSize)
 {
     // header
-    PushFourCC    (v, "data");
+    PushFourCC   (v, "data");
     PushUint32LE (v, dataChunkSize);
 
     // silence
@@ -38,7 +38,7 @@ inline void PushSilentDataChunk (std::vector<uint8_t> & v, uint32_t dataChunkSiz
 inline void PushDataChunk (std::vector<uint8_t> & v, std::vector<uint8_t> const & data)
 {
     // header
-    PushFourCC    (v, "data");
+    PushFourCC   (v, "data");
     PushUint32LE (v, static_cast<uint32_t> (data.size()));
 
     v.insert (v.end(), data.cbegin(), data.cend());
@@ -47,13 +47,13 @@ inline void PushDataChunk (std::vector<uint8_t> & v, std::vector<uint8_t> const 
 
 inline void PushFmtHeader (std::vector<uint8_t> & v, uint32_t formatChunkSize)
 {
-    PushFourCC    (v, "fmt ");
+    PushFourCC   (v, "fmt ");
     PushUint32LE (v, formatChunkSize);
 }
 
 inline void PushFactChunk (std::vector<uint8_t> & v, uint32_t sampleLength)
 {
-    PushFourCC    (v, "fact");
+    PushFourCC   (v, "fact");
     PushUint32LE (v, 4);
     PushUint32LE (v, sampleLength);
 }
@@ -63,7 +63,7 @@ inline void PushPeakChunk (std::vector<uint8_t> & v, std::vector<wav::Peak> cons
     // chunk size: version (4 bytes) + timestamp (4 bytes) + peaks (8 bytes per peak)
     const auto chunkSize = 4u + 4u + static_cast<uint32_t> (peaks.size()) * 8u;
 
-    PushFourCC    (v, "PEAK");
+    PushFourCC   (v, "PEAK");
     PushUint32LE (v, chunkSize);
     PushUint32LE (v, 1);  // version
     PushUint32LE (v, timestamp); // seconds since Jan 1, 1970
@@ -109,7 +109,7 @@ inline void Push_WAVEFORMATEXTENSIBLE_Fmt (std::vector<uint8_t> & v, uint16_t va
 {
     PushUint16LE (v, validBitsPerSample);
     PushUint32LE (v, channelMask);
-    PushGUID      (v, subformat);
+    PushGUID     (v, subformat);
 }
 
 #endif
