@@ -223,10 +223,14 @@ inline void ExtensibleBitsPerSampleNotMultipleOfEight (TestLog & log)
 {
     constexpr uint16_t validBitsPerSample {20};
     constexpr uint16_t bitsPerSample {24};
-    auto bytes = buildWAVEFORMATEXTENSIBLE (wav::ExtensibleFormat::LinearPCM,
-                                            validBitsPerSample, bitsPerSample,
-                                            2, 48000, 8, wav::SpeakerConfiguration::Stereo);
-    // overwrite bitsPerSample to 28
+
+    // use LPCM since float PCM is further restricted to 32 and 64 bits
+    constexpr auto subFormat {wav::ExtensibleFormat::LinearPCM};
+
+    constexpr auto channelMask {wav::SpeakerConfiguration::Stereo};
+
+    auto bytes = buildWAVEFORMATEXTENSIBLE (subFormat, validBitsPerSample, bitsPerSample, 2, 48000, 8, channelMask);
+    // overwrite bitsPerSample with 28
     OverwriteUint16LE (bytes, chunkOffset ("fmt ", bytes) + 22, 28);
     TestForReadError (bytes, log, "Header Rejection - fmt chunk, WAVEFORMATEXTENSIBLE, bitsPerSample not multiple of 8");
 }
