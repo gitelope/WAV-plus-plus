@@ -21,13 +21,13 @@ inline void TestRejection (TestLog & log)
     RunPeakChunkTests   (log);
 }
 
-///////////////////////////////////////////////////////////
+// HELPER FUNCTIONS ///////////////////////////////////////////////////////////////
 
-// HELPER FUNCTIONS ///////////////////////////////////////
 void TestForReadError (std::vector<uint8_t> const &, TestLog &, std::string const &);
 void UpdateRIFFChunkSize (std::vector<uint8_t> &);
 
-// RIFF CHUNK TESTS ///////////////////////////////////////
+// RIFF CHUNK TESTS ///////////////////////////////////////////////////////////////
+
 inline void FirstFourBytesNotRIFF (TestLog & log)
 {
     auto bytes = buildPCMWAVEFORMAT (wav::FormatCode::LinearPCM, 8, 8, 1, 44100, 8);
@@ -72,7 +72,8 @@ inline void RunRiffChunkTests (TestLog & log)
     MultipleRIFFChunks (log);
 }
 
-// FORMAT CHUNK TESTS ///////////////////////////////////////
+// FORMAT CHUNK TESTS ///////////////////////////////////////////////////////////////
+
 inline void BitsPerSampleZero (TestLog & log)
 {
     auto bytes = buildPCMWAVEFORMAT (wav::FormatCode::LinearPCM, 8, 8, 1, 44100, 8);
@@ -158,7 +159,10 @@ inline void MissingFmt (TestLog & log)
 }
 inline void FloatPCMUnsupportedBitsPerSample (TestLog & log)
 {
-    // bitsPerSample should be 32 or 64 for float
+    // PCMWAVEFORMAT float
+    // WAVEFORMATEX float
+    // WAVEFORMATEXTENSIBLE float
+    // expected: bitsPerSample = 32 or 64
     constexpr uint16_t bitsPerSample {48};
     {
         const auto bytes = buildPCMWAVEFORMAT (wav::FormatCode::FloatPCM, bitsPerSample, bitsPerSample, 1, 48000, 8);
@@ -204,6 +208,18 @@ inline void BitsPerSampleChannelsAndBlockAlignMismatch (TestLog & log)
         TestForReadError (bytes, log, "Header Rejection - fmt chunk, bitsPerSample/channels/blockAlign mismatch, WAVEFORMATEXTENSIBLE, float PCM");
     }
 }
+inline void BlockAlignNotDivisibleByChannels (TestLog & log)
+{
+    constexpr uint16_t channels {2};
+    constexpr uint16_t bitDepth {32};
+    constexpr uint16_t containerSize {bitDepth};
+
+    auto bytes = buildPCMWAVEFORMAT (wav::FormatCode::LinearPCM, bitDepth, containerSize, channels, 48000, 8); // blockAlign is 2 * 32/8 = 8
+    // overwrite channels with 3
+    OverwriteUint16LE (bytes, chunkOffset ("fmt ", bytes) + 10, 3);
+    TestForReadError (bytes, log, "Header Rejection - fmt chunk, block align not divisible by channels");
+}
+
 inline void RunFormatChunkTests (TestLog & log)
 {
     BitsPerSampleZero (log);
@@ -218,9 +234,11 @@ inline void RunFormatChunkTests (TestLog & log)
     MissingFmt (log);
     FloatPCMUnsupportedBitsPerSample (log);
     BitsPerSampleChannelsAndBlockAlignMismatch (log);
+    BlockAlignNotDivisibleByChannels (log);
 }
 
-// DATA CHUNK TESTS ///////////////////////////////////////
+// DATA CHUNK TESTS ///////////////////////////////////////////////////////////////
+
 inline void OverlargeDataChunkSize (TestLog & log)
 {
     // Actual data chunk size:
@@ -287,7 +305,8 @@ inline void RunDataChunkTests (TestLog & log)
     MissingData (log);
 }
 
-// FACT CHUNK TESTS ///////////////////////////////////////
+// FACT CHUNK TESTS ///////////////////////////////////////////////////////////////
+
 inline void FactChunkSizeNotFour (TestLog & log)
 {
     constexpr uint32_t frames {8};
@@ -315,7 +334,8 @@ inline void RunFactChunkTests (TestLog & log)
     MultipleFactChunks (log);
 }
 
-// PEAK CHUNK TESTS ///////////////////////////////////////
+// PEAK CHUNK TESTS ///////////////////////////////////////////////////////////////
+
 inline void MultiplePeakChunks (TestLog & log)
 {
     constexpr uint32_t frames {8};
@@ -471,7 +491,8 @@ inline void RunPeakChunkTests (TestLog & log)
     PeakChunkSizeTooSmallForVersion (log);
 }
 
-// HELPER FUNCTIONS ///////////////////////////////////////
+// HELPER FUNCTIONS ///////////////////////////////////////////////////////////////
+
 inline void TestForReadError (std::vector<uint8_t> const & bytes, TestLog & log, std::string const & label)
 {
     const auto filename {"test_rejection.wav"};
