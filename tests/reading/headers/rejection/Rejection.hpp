@@ -336,6 +336,20 @@ inline void MissingData (TestLog & log)
 
     TestForReadError (bytes, log, "Header Rejection - data chunk, missing data chunk");
 }
+inline void DataChunkBeforeFormatChunk (TestLog & log)
+{
+    constexpr uint32_t frames {8};
+
+    auto bytes = buildPCMWAVEFORMAT (wav::FormatCode::LinearPCM, 8, 8, 1, 44100, frames);
+
+    const auto fmtChunkStart {chunkOffset ("fmt ", bytes)};
+    std::vector<uint8_t> dataChunk;
+    PushSilentDataChunk (dataChunk, frames); // pushing to dataChunk, not bytes
+    bytes.insert (bytes.begin() + static_cast<std::ptrdiff_t> (fmtChunkStart), dataChunk.begin(), dataChunk.end());
+    UpdateRIFFChunkSize (bytes);
+
+    TestForReadError (bytes, log, "Header Rejection - data chunk, data before fmt");
+}
 
 inline void RunDataChunkTests (TestLog & log)
 {
@@ -343,6 +357,7 @@ inline void RunDataChunkTests (TestLog & log)
     DataChunkSizeNotDivisibleByBlockAlign (log);
     MultipleDataChunks (log);
     MissingData (log);
+    DataChunkBeforeFormatChunk (log);
 }
 
 // FACT CHUNK TESTS ///////////////////////////////////////////////////////////////
