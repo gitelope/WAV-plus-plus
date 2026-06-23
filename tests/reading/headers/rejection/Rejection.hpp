@@ -23,7 +23,7 @@ inline void TestRejection (TestLog & log)
 
 // HELPER FUNCTIONS ///////////////////////////////////////////////////////////////
 
-void TestForReadError (std::vector<uint8_t> const &, TestLog &, std::string const &);
+void TestForReadError (std::vector<uint8_t> const &, TestLog &, std::string const &, std::optional<wav::ReadErrorCode> = std::nullopt);
 void UpdateRIFFChunkSize (std::vector<uint8_t> &);
 
 // RIFF CHUNK TESTS ///////////////////////////////////////////////////////////////
@@ -90,7 +90,7 @@ inline void ZeroChannels (TestLog & log)
 {
     constexpr uint16_t channels {0};
     const auto bytes = buildPCMWAVEFORMAT (wav::FormatCode::LinearPCM, 8, 8, channels, 44100, 8);
-    TestForReadError (bytes, log, "Header Rejection - fmt chunk, zero channels");
+    TestForReadError (bytes, log, "Header Rejection - fmt chunk, zero channels", wav::ReadErrorCode::ChannelsZero);
 }
 inline void ChannelsExceedMax (TestLog & log)
 {
@@ -548,23 +548,25 @@ inline void RunPeakChunkTests (TestLog & log)
 
 // HELPER FUNCTIONS ///////////////////////////////////////////////////////////////
 
-inline void TestForReadError (std::vector<uint8_t> const & bytes, TestLog & log, std::string const & label)
+inline void TestForReadError (std::vector<uint8_t> const & bytes,
+                              TestLog & log,
+                              std::string const & label,
+                              std::optional<wav::ReadErrorCode> expectedCode)
 {
     const auto filename {"test_rejection.wav"};
     WriteBytesToFile (filename, bytes);
 
-    bool threwReadError {false};
-    std::string errorMessage;
+    bool passes {false};
     try
     {
         wav::Reader reader {filename};
     }
     catch (wav::ReadError const & e)
     {
-        threwReadError = true;
-        errorMessage = e.what();
+        if (expectedCode.has_value() && e.code() == *expectedCode) passes = true;
     }
-    log.Record (threwReadError, std::format ("{} - \"{}\"", label, errorMessage));
+
+    log.Record (passes, label);
 
     std::remove (filename);
 }

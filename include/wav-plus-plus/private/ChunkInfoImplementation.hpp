@@ -181,7 +181,7 @@ inline void ChunkInfo::ReadFormatChunk (std::FILE * in)
     format.channels = uint16_le (in);
     if (format.channels == 0)
     {
-        throw ReadError ("Invalid value: channels must not be zero.");
+        throw ReadError (ReadErrorCode::ChannelsZero, "Invalid value: channels must not be zero.");
     }
     if (format.channels > maxChannels)
     {
