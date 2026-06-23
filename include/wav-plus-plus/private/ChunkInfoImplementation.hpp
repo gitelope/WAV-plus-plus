@@ -185,13 +185,13 @@ inline void ChunkInfo::ReadFormatChunk (std::FILE * in)
     }
     if (format.channels > maxChannels)
     {
-        throw ReadError ("Invalid value: channels must not be greater than " + std::to_string (static_cast<unsigned> (maxChannels)) + ".");
+        throw ReadError (ReadErrorCode::ChannelsExceedMax, "Invalid value: channels must not be greater than " + std::to_string (static_cast<unsigned> (maxChannels)) + ".");
     }
 
     format.sampleRate = uint32_le (in);
     if (format.sampleRate == 0)
     {
-        throw ReadError ("Invalid value: sample rate must not be zero.");
+        throw ReadError (ReadErrorCode::SampleRateZero, "Invalid value: sample rate must not be zero.");
     }
 
     format.byteRate = uint32_le (in);
@@ -199,11 +199,11 @@ inline void ChunkInfo::ReadFormatChunk (std::FILE * in)
     format.blockAlign = uint16_le (in);
     if (format.blockAlign == 0)
     {
-        throw ReadError ("Invalid value: block align must not be zero.");
+        throw ReadError (ReadErrorCode::BlockAlignZero, "Invalid value: block align must not be zero.");
     }
     if (format.blockAlign % format.channels != 0)
     {
-        throw ReadError ("Invalid value: block align must be divisible by channels.");
+        throw ReadError (ReadErrorCode::BlockAlignNotDivisibleByChannels, "Invalid value: block align must be divisible by channels.");
     }
 
     // This field is found in PCMWAVEFORMAT, WAVEFORMATEX, and WAVEFORMATEXTENSIBLE:

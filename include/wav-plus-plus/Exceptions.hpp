@@ -16,7 +16,7 @@ namespace wav
 
 enum class ReadErrorCategory
 {
-    MigrationCategory,
+    MigrationCategoryToBeRemoved,
     FileOpenFailure,
     IOFailure,
     InvalidFile,
@@ -27,16 +27,24 @@ enum class ReadErrorCategory
 
 enum class ReadErrorCode
 {
-    MigrationCode,
+    MigrationCodeToBeRemoved,
     ChannelsZero,
+    ChannelsExceedMax,
+    SampleRateZero,
+    BlockAlignZero,
+    BlockAlignNotDivisibleByChannels,
 };
 
 constexpr ReadErrorCategory categoryFor (ReadErrorCode code)
 {
     switch (code)
     {
-        case ReadErrorCode::ChannelsZero: return ReadErrorCategory::InvalidFile; break;
-        default: return ReadErrorCategory::MigrationCategory;
+        case ReadErrorCode::ChannelsZero:                     return ReadErrorCategory::InvalidFile; break;
+        case ReadErrorCode::ChannelsExceedMax:                return ReadErrorCategory::UnsupportedFormat; break;
+        case ReadErrorCode::SampleRateZero:                   return ReadErrorCategory::InvalidFile; break;
+        case ReadErrorCode::BlockAlignZero:                   return ReadErrorCategory::InvalidFile; break;
+        case ReadErrorCode::BlockAlignNotDivisibleByChannels: return ReadErrorCategory::InvalidFile; break;
+        default: return ReadErrorCategory::MigrationCategoryToBeRemoved;
     }
 }
 
@@ -50,7 +58,7 @@ public:
     {}
 
     explicit ReadError (std::string const & message)
-    :std::runtime_error (message), code_ (ReadErrorCode::MigrationCode)
+    :std::runtime_error (message), code_ (ReadErrorCode::MigrationCodeToBeRemoved)
     {}
 
     ReadErrorCategory category() const {return categoryFor (code_);}

@@ -97,19 +97,19 @@ inline void ChannelsExceedMax (TestLog & log)
     constexpr uint16_t channels {wav::maxChannels + 1};
     constexpr uint32_t frames {channels};
     const auto bytes = buildPCMWAVEFORMAT (wav::FormatCode::LinearPCM, 8, 8, channels, 44100, frames);
-    TestForReadError (bytes, log, "Header Rejection - fmt chunk, channels exceed WAV++ maximum");
+    TestForReadError (bytes, log, "Header Rejection - fmt chunk, channels exceed WAV++ maximum", wav::ReadErrorCode::ChannelsExceedMax);
 }
 inline void SampleRateZero (TestLog & log)
 {
     constexpr uint32_t sampleRate {0};
     const auto bytes = buildPCMWAVEFORMAT (wav::FormatCode::LinearPCM, 8, 8, 1, sampleRate, 8);
-    TestForReadError (bytes, log, "Header Rejection - fmt chunk, sample rate zero");
+    TestForReadError (bytes, log, "Header Rejection - fmt chunk, sample rate zero", wav::ReadErrorCode::SampleRateZero);
 }
 inline void BlockAlignZero (TestLog & log)
 {
     auto bytes = buildPCMWAVEFORMAT (wav::FormatCode::LinearPCM, 8, 8, 1, 44100, 8);
     OverwriteUint16LE (bytes, chunkOffset ("fmt ", bytes) + 20, 0);
-    TestForReadError (bytes, log, "Header Rejection - fmt chunk, block align zero");
+    TestForReadError (bytes, log, "Header Rejection - fmt chunk, block align zero", wav::ReadErrorCode::BlockAlignZero);
 }
 inline void UnsupportedFormatCode (TestLog & log)
 {
@@ -217,7 +217,7 @@ inline void BlockAlignNotDivisibleByChannels (TestLog & log)
     auto bytes = buildPCMWAVEFORMAT (wav::FormatCode::LinearPCM, bitDepth, containerSize, channels, 48000, 8); // blockAlign is 2 * 32/8 = 8
     // overwrite channels with 3
     OverwriteUint16LE (bytes, chunkOffset ("fmt ", bytes) + 10, 3);
-    TestForReadError (bytes, log, "Header Rejection - fmt chunk, block align not divisible by channels");
+    TestForReadError (bytes, log, "Header Rejection - fmt chunk, block align not divisible by channels", wav::ReadErrorCode::BlockAlignNotDivisibleByChannels);
 }
 inline void UnsupportedLPCMContainerSize (TestLog & log)
 {
