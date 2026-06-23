@@ -161,7 +161,7 @@ inline void ChunkInfo::ReadRiffChunk (std::FILE * in)
 
 inline void ChunkInfo::ReadFormatChunk (std::FILE * in)
 {
-    if (fmtChunkEncountered) throw ReadError ("Invalid format: File contains more than one fmt chunk.");
+    if (fmtChunkEncountered) throw ReadError (ReadErrorCode::MultipleFmtChunks, "Invalid format: File contains more than one fmt chunk.");
 
     // These fields are found in formats WAVEFORMAT, PCMWAVEFORMAT, WAVEFORMATEX, and WAVEFORMATEXTENSIBLE:
     //

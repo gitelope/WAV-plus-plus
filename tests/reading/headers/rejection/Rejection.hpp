@@ -145,7 +145,7 @@ inline void MultipleFormatChunks (TestLog & log)
 
     UpdateRIFFChunkSize (bytes);
 
-    TestForReadError (bytes, log, "Header Rejection - fmt chunk, multiple fmt chunks");
+    TestForReadError (bytes, log, "Header Rejection - fmt chunk, multiple fmt chunks", wav::ReadErrorCode::MultipleFmtChunks);
 }
 inline void MissingFmt (TestLog & log)
 {

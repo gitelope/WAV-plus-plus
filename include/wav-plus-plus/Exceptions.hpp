@@ -16,34 +16,40 @@ namespace wav
 
 enum class ReadErrorCategory
 {
-    MigrationCategoryToBeRemoved,
     FileOpenFailure,
     IOFailure,
     InvalidFile,
     UnsupportedFormat,
     InvalidArgument,
-    InternalError
+    InternalError,
+
+    MigrationCategoryToBeRemoved,
 };
 
 enum class ReadErrorCode
 {
-    MigrationCodeToBeRemoved,
-    ChannelsZero,
-    ChannelsExceedMax,
-    SampleRateZero,
-    BlockAlignZero,
     BlockAlignNotDivisibleByChannels,
+    BlockAlignZero,
+    ChannelsExceedMax,
+    ChannelsZero,
+    MultipleFmtChunks,
+    SampleRateZero,
+
+    MigrationCodeToBeRemoved,
 };
 
 constexpr ReadErrorCategory categoryFor (ReadErrorCode code)
 {
     switch (code)
     {
-        case ReadErrorCode::ChannelsZero:                     return ReadErrorCategory::InvalidFile; break;
         case ReadErrorCode::ChannelsExceedMax:                return ReadErrorCategory::UnsupportedFormat; break;
-        case ReadErrorCode::SampleRateZero:                   return ReadErrorCategory::InvalidFile; break;
-        case ReadErrorCode::BlockAlignZero:                   return ReadErrorCategory::InvalidFile; break;
+
         case ReadErrorCode::BlockAlignNotDivisibleByChannels: return ReadErrorCategory::InvalidFile; break;
+        case ReadErrorCode::BlockAlignZero:                   return ReadErrorCategory::InvalidFile; break;
+        case ReadErrorCode::ChannelsZero:                     return ReadErrorCategory::InvalidFile; break;
+        case ReadErrorCode::MultipleFmtChunks:                return ReadErrorCategory::InvalidFile; break;
+        case ReadErrorCode::SampleRateZero:                   return ReadErrorCategory::InvalidFile; break;
+
         default: return ReadErrorCategory::MigrationCategoryToBeRemoved;
     }
 }
