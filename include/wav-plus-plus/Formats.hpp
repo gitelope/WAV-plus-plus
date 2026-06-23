@@ -42,7 +42,7 @@ inline constexpr uint16_t FloatPCM   = 0x0003;
 inline constexpr uint16_t Extensible = 0xFFFE;
 }
 
-constexpr bool isValidFormatCode (uint16_t formatCode);
+constexpr bool isSupportedFormatCode (uint16_t formatCode);
 
 constexpr std::pair <uint16_t, uint16_t> bitDepthAndFormatCode (ExportFormat ef);
 
@@ -54,7 +54,7 @@ inline constexpr uint32_t WAVEFORMATEX         = 18; // 14+2+2    (adds cbSize)
 inline constexpr uint32_t WAVEFORMATEXTENSIBLE = 40; // 14+2+2+22 (adds validBitsPerSample, channel bit mask, and sub-format GUID)
 }
 
-constexpr bool isValidFormatChunkSize (uint32_t chunkSize);
+constexpr bool isSupportedFormatChunkSize (uint32_t chunkSize);
 
 struct GUID // for WAVEFORMATEXTENSIBLE
 {

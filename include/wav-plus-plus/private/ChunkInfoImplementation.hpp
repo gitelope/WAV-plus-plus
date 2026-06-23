@@ -161,21 +161,25 @@ inline void ChunkInfo::ReadRiffChunk (std::FILE * in)
 
 inline void ChunkInfo::ReadFormatChunk (std::FILE * in)
 {
-    if (fmtChunkEncountered) throw ReadError (ReadErrorCode::MultipleFmtChunks, "Invalid format: File contains more than one fmt chunk.");
+    if (fmtChunkEncountered)
+    {
+        throw ReadError (ReadErrorCode::MultipleFmtChunks, "Invalid format: File contains more than one fmt chunk.");
+    }
 
     // These fields are found in formats WAVEFORMAT, PCMWAVEFORMAT, WAVEFORMATEX, and WAVEFORMATEXTENSIBLE:
     //
     // no need to read ID since it has already been read and has the expected value
     //
     format.size = uint32_le (in);
-    if (! isValidFormatChunkSize (format.size))
+    if (! isSupportedFormatChunkSize (format.size))
     {
-        throw ReadError ("fmt chunk size (" + std::to_string (format.size) + ") is unsupported.");
+        throw ReadError (ReadErrorCode::UnsupportedFmtChunkSize, "fmt chunk size (" + std::to_string (format.size) + ") is unsupported.");
     }
+
     format.code = uint16_le (in);
-    if (! isValidFormatCode (format.code))
+    if (! isSupportedFormatCode (format.code))
     {
-        throw ReadError (std::format ("Format not supported: 0x{:04X}", format.code));
+        throw ReadError (ReadErrorCode::UnsupportedFormatCode, std::format ("Format not supported: 0x{:04X}", format.code));
     }
 
     format.channels = uint16_le (in);

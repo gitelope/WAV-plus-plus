@@ -115,14 +115,14 @@ inline void UnsupportedFormatCode (TestLog & log)
 {
     const uint16_t unsupportedFormatCode {0xBADD};
     auto bytes = buildPCMWAVEFORMAT (unsupportedFormatCode, 8, 8, 1, 44100, 8);
-    TestForReadError (bytes, log, "Header Rejection - fmt chunk, unsupported format code");
+    TestForReadError (bytes, log, "Header Rejection - fmt chunk, unsupported format code", wav::ReadErrorCode::UnsupportedFormatCode);
 }
 inline void InvalidFormatSize (TestLog & log)
 {
     const uint32_t badSize {0xBADDBADD};
     auto bytes = buildPCMWAVEFORMAT (wav::FormatCode::LinearPCM, 8, 8, 1, 44100, 8);
     OverwriteUint32LE (bytes, chunkOffset ("fmt ", bytes) + 4, badSize);
-    TestForReadError (bytes, log, "Header Rejection - fmt chunk, invalid format size");
+    TestForReadError (bytes, log, "Header Rejection - fmt chunk, unsupported format chunk size", wav::ReadErrorCode::UnsupportedFmtChunkSize);
 }
 inline void MultipleFormatChunks (TestLog & log)
 {

@@ -12,7 +12,7 @@
 namespace wav
 {
 
-constexpr bool isValidFormatCode (uint16_t formatCode)
+constexpr bool isSupportedFormatCode (uint16_t formatCode)
 {
     return
     formatCode == FormatCode::LinearPCM||
@@ -34,7 +34,7 @@ constexpr std::pair <uint16_t, uint16_t> bitDepthAndFormatCode (ExportFormat ef)
     }
 }
 
-constexpr bool isValidFormatChunkSize (uint32_t chunkSize)
+constexpr bool isSupportedFormatChunkSize (uint32_t chunkSize)
 {
     return
     chunkSize == FormatChunkSize::WAVEFORMAT         ||
