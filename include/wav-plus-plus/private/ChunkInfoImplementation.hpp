@@ -237,11 +237,11 @@ inline void ChunkInfo::ReadFormatChunk (std::FILE * in)
             //
             if (format.bitsPerSample % 8 != 0)
             {
-                throw ReadError ("For WAVEFORMATEXTENSIBLE, bits per sample must be a multiple of 8.");
+                throw ReadError (ReadErrorCode::ExtensibleBitsPerSampleNotMultipleOf8, "For WAVEFORMATEXTENSIBLE, bits per sample must be a multiple of 8.");
             }
             if (format.bitsPerSample != 8 * format.blockAlign / format.channels)
             {
-                throw ReadError ("For WAVEFORMATEXTENSIBLE, bits per sample must equal 8 * blockAlign / channels.");
+                throw ReadError (ReadErrorCode::ExtensibleBitsPerSampleChannelsBlockAlignMismatch, "For WAVEFORMATEXTENSIBLE, bits per sample must equal 8 * blockAlign / channels.");
             }
         }
         else if (format.code == FormatCode::FloatPCM) // PCMWAVEFORMAT and WAVEFORMATEX floats
@@ -257,7 +257,7 @@ inline void ChunkInfo::ReadFormatChunk (std::FILE * in)
             }
             if (format.bitsPerSample != 8 * format.blockAlign / format.channels)
             {
-                throw ReadError ("For float PCM, bits per sample must equal 8 * blockAlign / channels.");
+                throw ReadError (ReadErrorCode::FloatBitsPerSampleChannelsBlockAlignMismatch, "For float PCM, bits per sample must equal 8 * blockAlign / channels.");
             }
         }
 

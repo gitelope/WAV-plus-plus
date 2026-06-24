@@ -34,6 +34,9 @@ enum class ReadErrorCode
     BitsPerSampleZero,
     ChannelsExceedMax,
     ChannelsZero,
+    ExtensibleBitsPerSampleChannelsBlockAlignMismatch,
+    ExtensibleBitsPerSampleNotMultipleOf8,
+    FloatBitsPerSampleChannelsBlockAlignMismatch,
     UnsupportedFormatCode,
     MultipleFmtChunks,
     SampleRateZero,
@@ -46,17 +49,20 @@ constexpr ReadErrorCategory categoryFor (ReadErrorCode code)
 {
     switch (code)
     {
+        case ReadErrorCode::BitsPerSampleZero:                                 return ReadErrorCategory::InvalidFile; break;
+        case ReadErrorCode::BlockAlignNotDivisibleByChannels:                  return ReadErrorCategory::InvalidFile; break;
+        case ReadErrorCode::BlockAlignZero:                                    return ReadErrorCategory::InvalidFile; break;
+        case ReadErrorCode::ChannelsZero:                                      return ReadErrorCategory::InvalidFile; break;
+        case ReadErrorCode::ExtensibleBitsPerSampleChannelsBlockAlignMismatch: return ReadErrorCategory::InvalidFile; break;
+        case ReadErrorCode::ExtensibleBitsPerSampleNotMultipleOf8:             return ReadErrorCategory::InvalidFile; break;
+        case ReadErrorCode::FloatBitsPerSampleChannelsBlockAlignMismatch:      return ReadErrorCategory::InvalidFile; break;
+        case ReadErrorCode::MultipleFmtChunks:                                 return ReadErrorCategory::InvalidFile; break;
+        case ReadErrorCode::SampleRateZero:                                    return ReadErrorCategory::InvalidFile; break;
+
         case ReadErrorCode::BitsPerSampleExceedsSupportedMax: return ReadErrorCategory::UnsupportedFormat; break;
         case ReadErrorCode::ChannelsExceedMax:                return ReadErrorCategory::UnsupportedFormat; break;
         case ReadErrorCode::UnsupportedFormatCode:            return ReadErrorCategory::UnsupportedFormat; break;
         case ReadErrorCode::UnsupportedFmtChunkSize:          return ReadErrorCategory::UnsupportedFormat; break;
-
-        case ReadErrorCode::BitsPerSampleZero:                return ReadErrorCategory::InvalidFile; break;
-        case ReadErrorCode::BlockAlignNotDivisibleByChannels: return ReadErrorCategory::InvalidFile; break;
-        case ReadErrorCode::BlockAlignZero:                   return ReadErrorCategory::InvalidFile; break;
-        case ReadErrorCode::ChannelsZero:                     return ReadErrorCategory::InvalidFile; break;
-        case ReadErrorCode::MultipleFmtChunks:                return ReadErrorCategory::InvalidFile; break;
-        case ReadErrorCode::SampleRateZero:                   return ReadErrorCategory::InvalidFile; break;
 
         default: return ReadErrorCategory::MigrationCategoryToBeRemoved;
     }
