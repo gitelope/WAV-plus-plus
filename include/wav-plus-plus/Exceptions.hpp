@@ -37,10 +37,10 @@ enum class ReadErrorCode
     ExtensibleBitsPerSampleChannelsBlockAlignMismatch,
     ExtensibleBitsPerSampleNotMultipleOf8,
     FloatBitsPerSampleChannelsBlockAlignMismatch,
-    UnsupportedFormatCode,
     MultipleFmtChunks,
     SampleRateZero,
     UnsupportedFmtChunkSize,
+    UnsupportedFormatCode,
 
     MigrationCodeToBeRemoved,
 };
@@ -61,8 +61,8 @@ constexpr ReadErrorCategory categoryFor (ReadErrorCode code)
 
         case ReadErrorCode::BitsPerSampleExceedsSupportedMax: return ReadErrorCategory::UnsupportedFormat; break;
         case ReadErrorCode::ChannelsExceedMax:                return ReadErrorCategory::UnsupportedFormat; break;
-        case ReadErrorCode::UnsupportedFormatCode:            return ReadErrorCategory::UnsupportedFormat; break;
         case ReadErrorCode::UnsupportedFmtChunkSize:          return ReadErrorCategory::UnsupportedFormat; break;
+        case ReadErrorCode::UnsupportedFormatCode:            return ReadErrorCategory::UnsupportedFormat; break;
 
         default: return ReadErrorCategory::MigrationCategoryToBeRemoved;
     }
