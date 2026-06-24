@@ -124,6 +124,7 @@ private:
     void RegisterChunk        (std::string const & id, std::int64_t position);
     void RegisterSkippedChunk (std::string const & id, std::int64_t position);
 
+    void ValidateFormatChunk();
     void ValidateAfterParsing();
 
     bool fmtChunkEncountered  {false};
