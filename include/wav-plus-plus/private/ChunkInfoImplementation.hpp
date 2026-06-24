@@ -350,6 +350,17 @@ inline void ChunkInfo::ValidateFormatChunk()
     {
         throw ReadError (std::format ("Unsupported linear PCM container size: {}", containerSize));
     }
+
+    // Non-standard bit packing supported in PCMWAVEFORMAT and WAVEFORMATEX LPCM
+    // bitsPerSample is interpreted as effective (or "valid") bit depth
+    // containerSize is derived from blockAlign and channels
+    // The former must be <= the latter:
+    if (format.code == FormatCode::LinearPCM
+        && (format.size == FormatChunkSize::PCMWAVEFORMAT || format.size == FormatChunkSize::WAVEFORMATEX)
+        && format.bitsPerSample > containerSize)
+    {
+        throw ReadError (std::format ("Inconsistent values: bitsPerSample ({}) > containerSize ({})", format.bitsPerSample, containerSize));
+    }
 }
 
 inline void ChunkInfo::ReadFactChunk (std::FILE * in)
