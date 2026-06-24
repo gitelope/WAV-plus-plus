@@ -30,6 +30,8 @@ enum class ReadErrorCode
 {
     BlockAlignNotDivisibleByChannels,
     BlockAlignZero,
+    BitsPerSampleExceedsSupportedMax,
+    BitsPerSampleZero,
     ChannelsExceedMax,
     ChannelsZero,
     UnsupportedFormatCode,
@@ -44,10 +46,12 @@ constexpr ReadErrorCategory categoryFor (ReadErrorCode code)
 {
     switch (code)
     {
+        case ReadErrorCode::BitsPerSampleExceedsSupportedMax: return ReadErrorCategory::UnsupportedFormat; break;
         case ReadErrorCode::ChannelsExceedMax:                return ReadErrorCategory::UnsupportedFormat; break;
-        case ReadErrorCode::UnsupportedFormatCode:          return ReadErrorCategory::UnsupportedFormat; break;
+        case ReadErrorCode::UnsupportedFormatCode:            return ReadErrorCategory::UnsupportedFormat; break;
         case ReadErrorCode::UnsupportedFmtChunkSize:          return ReadErrorCategory::UnsupportedFormat; break;
 
+        case ReadErrorCode::BitsPerSampleZero:                return ReadErrorCategory::InvalidFile; break;
         case ReadErrorCode::BlockAlignNotDivisibleByChannels: return ReadErrorCategory::InvalidFile; break;
         case ReadErrorCode::BlockAlignZero:                   return ReadErrorCategory::InvalidFile; break;
         case ReadErrorCode::ChannelsZero:                     return ReadErrorCategory::InvalidFile; break;

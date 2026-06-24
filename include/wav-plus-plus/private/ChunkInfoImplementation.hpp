@@ -216,9 +216,13 @@ inline void ChunkInfo::ReadFormatChunk (std::FILE * in)
         format.size == FormatChunkSize::WAVEFORMATEXTENSIBLE)
     {
         format.bitsPerSample = uint16_le (in);
-        if (format.bitsPerSample == 0 || format.bitsPerSample > 64)
+        if (format.bitsPerSample == 0)
         {
-            throw ReadError ("Invalid value: bits per sample must be greater than 0 and less than or equal to 64.");
+            throw ReadError (ReadErrorCode::BitsPerSampleZero, "Invalid value: bits per sample must be greater than 0.");
+        }
+        if (format.bitsPerSample > 64)
+        {
+            throw ReadError (ReadErrorCode::BitsPerSampleExceedsSupportedMax, "Invalid value: bits per sample must be less than or equal to 64.");
         }
 
         if (format.code == FormatCode::Extensible) // float and integer extensible

@@ -78,13 +78,14 @@ inline void BitsPerSampleZero (TestLog & log)
 {
     auto bytes = buildPCMWAVEFORMAT (wav::FormatCode::LinearPCM, 8, 8, 1, 44100, 8);
     OverwriteUint16LE (bytes, chunkOffset ("fmt ", bytes) + 22, 0);
-    TestForReadError (bytes, log, "Header Rejection - fmt chunk, bits per sample zero");
+    TestForReadError (bytes, log, "Header Rejection - fmt chunk, bits per sample zero", wav::ReadErrorCode::BitsPerSampleZero);
 }
 inline void BitsPerSampleOver64 (TestLog & log)
 {
+    constexpr uint16_t bitDepth {128};
     auto bytes = buildPCMWAVEFORMAT (wav::FormatCode::LinearPCM, 8, 8, 1, 44100, 8);
-    OverwriteUint16LE (bytes, chunkOffset ("fmt ", bytes) + 22, 65);
-    TestForReadError (bytes, log, "Header Rejection - fmt chunk, bits per sample exceeds max");
+    OverwriteUint16LE (bytes, chunkOffset ("fmt ", bytes) + 22, bitDepth);
+    TestForReadError (bytes, log, "Header Rejection - fmt chunk, bits per sample exceeds max", wav::ReadErrorCode::BitsPerSampleExceedsSupportedMax);
 }
 inline void ZeroChannels (TestLog & log)
 {
