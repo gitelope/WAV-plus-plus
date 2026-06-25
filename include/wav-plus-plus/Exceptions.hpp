@@ -36,6 +36,7 @@ enum class ReadErrorCode
     ChannelsExceedMax,
     ChannelsZero,
     ExtensibleBitsPerSampleChannelsBlockAlignMismatch,
+    ExtensibleFmtSizeCodeMismatch,
     FloatBitsPerSampleChannelsBlockAlignMismatch,
     MultipleFmtChunks,
     SampleRateZero,
@@ -55,6 +56,7 @@ constexpr ReadErrorCategory categoryFor (ReadErrorCode code)
         case ReadErrorCode::BlockAlignZero:                                    return ReadErrorCategory::InvalidFile; break;
         case ReadErrorCode::ChannelsZero:                                      return ReadErrorCategory::InvalidFile; break;
         case ReadErrorCode::ExtensibleBitsPerSampleChannelsBlockAlignMismatch: return ReadErrorCategory::InvalidFile; break;
+        case ReadErrorCode::ExtensibleFmtSizeCodeMismatch:                     return ReadErrorCategory::InvalidFile; break;
         case ReadErrorCode::FloatBitsPerSampleChannelsBlockAlignMismatch:      return ReadErrorCategory::InvalidFile; break;
         case ReadErrorCode::MultipleFmtChunks:                                 return ReadErrorCategory::InvalidFile; break;
         case ReadErrorCode::SampleRateZero:                                    return ReadErrorCategory::InvalidFile; break;

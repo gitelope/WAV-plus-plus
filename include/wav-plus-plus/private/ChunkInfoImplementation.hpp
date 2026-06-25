@@ -255,12 +255,12 @@ inline void ChunkInfo::ValidateFormatChunkAndComputeBitDepthAndContainerSize()
         }
         else
         {
-            throw ReadError ("WAVEFORMATEXTENSIBLE fmt chunk size (40) requires format code 0xFFFE.");
+            throw ReadError (ReadErrorCode::ExtensibleFmtSizeCodeMismatch, "Inconsistent values: WAVEFORMATEXTENSIBLE fmt chunk size (40) requires format code 0xFFFE.");
         }
     }
     else if (format.code == FormatCode::Extensible)
     {
-        throw ReadError ("Format code 0xFFFE requires 40-byte WAVEFORMATEXTENSIBLE fmt chunk size.");
+        throw ReadError (ReadErrorCode::ExtensibleFmtSizeCodeMismatch, "Inconsistent values: Format code 0xFFFE requires 40-byte WAVEFORMATEXTENSIBLE fmt chunk size.");
     }
 
     if (format.channels == 0)
