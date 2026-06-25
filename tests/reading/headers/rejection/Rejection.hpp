@@ -132,10 +132,22 @@ inline void InvalidCbSize (TestLog & log)
     }
     // WAVEFORMATEXTENSIBLE: cbSize must be 22 (format chunk size 40).
     {
-        auto bytes = buildWAVEFORMATEXTENSIBLE (wav::ExtensibleFormat::LinearPCM, 24, 24, 2, 48000, 8, wav::SpeakerConfiguration::Stereo);
+        auto bytes = buildWAVEFORMATEXTENSIBLE (wav::ExtensibleFormat::LinearPCM,
+                                                24, 24, 2, 48000, 8,
+                                                wav::SpeakerConfiguration::Stereo);
         OverwriteUint16LE (bytes, chunkOffset ("fmt ", bytes) + 24, 0);
         TestForReadError (bytes, log, "Header Rejection - fmt chunk, invalid cbSize, WAVEFORMATEXTENSIBLE", wav::ReadErrorCode::InvalidCbSize);
     }
+}
+inline void ExtensibleSubformatNotSupported (TestLog & log)
+{
+    auto bytes = buildWAVEFORMATEXTENSIBLE (wav::ExtensibleFormat::LinearPCM,
+                                            16, 16, 2, 44100, 8,
+                                            wav::SpeakerConfiguration::Stereo);
+    // subFormat GUID starts 32 bytes after "fmt " (after validBits + channelMask).
+    OverwriteUint32LE (bytes, chunkOffset ("fmt ", bytes) + 32, 0xBADDC0DE);
+    TestForReadError (bytes, log, "Header Rejection - fmt chunk, extensible subformat not supported",
+                      wav::ReadErrorCode::ExtensibleSubformatNotSupported);
 }
 inline void ExtensibleFormatSizeCodeMismatch (TestLog & log)
 {
@@ -307,6 +319,7 @@ inline void RunFormatChunkTests (TestLog & log)
     UnsupportedFormatCode (log);
     ExtensibleFormatSizeCodeMismatch (log);
     InvalidCbSize (log);
+    ExtensibleSubformatNotSupported (log);
     InvalidFormatSize (log);
     MultipleFormatChunks (log);
     MissingFmt (log);

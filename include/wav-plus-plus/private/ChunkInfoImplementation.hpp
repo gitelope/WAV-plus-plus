@@ -308,7 +308,7 @@ inline void ChunkInfo::ValidateFormatChunkAndComputeBitDepthAndContainerSize()
 
         if (format.subFormat != ExtensibleFormat::LinearPCM && format.subFormat != ExtensibleFormat::FloatPCM)
         {
-            throw ReadError ("Extensible subformat not supported: " + format.subFormat.str());
+            throw ReadError (ReadErrorCode::ExtensibleSubformatNotSupported, "Extensible subformat not supported: " + format.subFormat.str());
         }
     }
     isLinear = format.code == FormatCode::LinearPCM || (isExtensible && format.subFormat == ExtensibleFormat::LinearPCM);
