@@ -297,7 +297,7 @@ inline void ChunkInfo::ValidateFormatChunkAndComputeBitDepthAndContainerSize()
     {
         if (format.cbSize != format.size - FormatChunkSize::WAVEFORMATEX)
         {
-            throw ReadError ("Invalid cbSize: " + std::to_string (static_cast<unsigned int> (format.cbSize)));
+            throw ReadError (ReadErrorCode::InvalidCbSize, "Invalid cbSize: " + std::to_string (static_cast<unsigned int> (format.cbSize)));
         }
     }
 
