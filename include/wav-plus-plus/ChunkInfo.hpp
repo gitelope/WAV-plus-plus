@@ -109,6 +109,20 @@ public:
     FactChunk fact;
     PeakChunk peak;
 
+    // Derived values
+    //
+    // Bit depth is used to nomalize LPCM. For float it is
+    // equal to container size, so redundant. For WAVEFORMAT,
+    // it is always equal to container size.
+    uint16_t bitDepth {0};
+    // Container size is the number of bits used to store each
+    // sample in the WAV. Corresponds to a whole number of bytes.
+    // Used to segement data from data chunk into individual samples.
+    uint16_t containerSize {0};
+    bool isLinear {false};
+    bool isFloat {false};
+    bool isExtensible {false};
+
     std::vector<std::string> chunksEncountered;
     std::vector<std::string> chunksSkipped;
 
@@ -124,8 +138,10 @@ private:
     void RegisterChunk        (std::string const & id, std::int64_t position);
     void RegisterSkippedChunk (std::string const & id, std::int64_t position);
 
-    void ValidateFormatChunk();
+    void ValidateFormatChunkAndComputeBitDepthAndContainerSize();
     void ValidateAfterParsing();
+
+    void DeriveBitDepthAndContainerSize();
 
     bool fmtChunkEncountered  {false};
     bool dataChunkEncountered {false};

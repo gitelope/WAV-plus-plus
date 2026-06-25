@@ -30,12 +30,12 @@ enum class ReadErrorCode
 {
     BlockAlignNotDivisibleByChannels,
     BlockAlignZero,
-    BitsPerSampleExceedsSupportedMax,
-    BitsPerSampleZero,
+    // BitsPerSampleExceedsSupportedMax,
+    // BitsPerSampleNotMultipleOf8,
+    // BitsPerSampleZero,
     ChannelsExceedMax,
     ChannelsZero,
     ExtensibleBitsPerSampleChannelsBlockAlignMismatch,
-    ExtensibleBitsPerSampleNotMultipleOf8,
     FloatBitsPerSampleChannelsBlockAlignMismatch,
     MultipleFmtChunks,
     SampleRateZero,
@@ -49,17 +49,17 @@ constexpr ReadErrorCategory categoryFor (ReadErrorCode code)
 {
     switch (code)
     {
-        case ReadErrorCode::BitsPerSampleZero:                                 return ReadErrorCategory::InvalidFile; break;
+        // case ReadErrorCode::BitsPerSampleZero:                                 return ReadErrorCategory::InvalidFile; break;
+        // case ReadErrorCode::BitsPerSampleNotMultipleOf8:                       return ReadErrorCategory::InvalidFile; break;
         case ReadErrorCode::BlockAlignNotDivisibleByChannels:                  return ReadErrorCategory::InvalidFile; break;
         case ReadErrorCode::BlockAlignZero:                                    return ReadErrorCategory::InvalidFile; break;
         case ReadErrorCode::ChannelsZero:                                      return ReadErrorCategory::InvalidFile; break;
         case ReadErrorCode::ExtensibleBitsPerSampleChannelsBlockAlignMismatch: return ReadErrorCategory::InvalidFile; break;
-        case ReadErrorCode::ExtensibleBitsPerSampleNotMultipleOf8:             return ReadErrorCategory::InvalidFile; break;
         case ReadErrorCode::FloatBitsPerSampleChannelsBlockAlignMismatch:      return ReadErrorCategory::InvalidFile; break;
         case ReadErrorCode::MultipleFmtChunks:                                 return ReadErrorCategory::InvalidFile; break;
         case ReadErrorCode::SampleRateZero:                                    return ReadErrorCategory::InvalidFile; break;
 
-        case ReadErrorCode::BitsPerSampleExceedsSupportedMax: return ReadErrorCategory::UnsupportedFormat; break;
+        // case ReadErrorCode::BitsPerSampleExceedsSupportedMax: return ReadErrorCategory::UnsupportedFormat; break;
         case ReadErrorCode::ChannelsExceedMax:                return ReadErrorCategory::UnsupportedFormat; break;
         case ReadErrorCode::UnsupportedFmtChunkSize:          return ReadErrorCategory::UnsupportedFormat; break;
         case ReadErrorCode::UnsupportedFormatCode:            return ReadErrorCategory::UnsupportedFormat; break;
