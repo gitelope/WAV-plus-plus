@@ -240,6 +240,13 @@ inline void ChunkInfo::ValidateFormatChunk()
         throw ReadError (ReadErrorCode::BlockAlignNotDivisibleByChannels, "Invalid value: block align must be divisible by channels.");
     }
 
+    const auto containerSize {8u * format.blockAlign / format.channels};
+    // For all four formats, both linear and float PCM:
+    if (containerSize % 8 != 0)
+    {
+        throw ReadError ("Sample container size is not a multiple of 8.");
+    }
+
     // PCMWAVEFORMAT, WAVEFORMATEX, and WAVEFORMATEXTENSIBLE
     if (format.size == FormatChunkSize::PCMWAVEFORMAT      ||
         format.size == FormatChunkSize::WAVEFORMATEX       ||
@@ -267,7 +274,7 @@ inline void ChunkInfo::ValidateFormatChunk()
             {
                 throw ReadError (ReadErrorCode::ExtensibleBitsPerSampleNotMultipleOf8, "For WAVEFORMATEXTENSIBLE, bits per sample must be a multiple of 8.");
             }
-            if (format.bitsPerSample != 8 * format.blockAlign / format.channels)
+            if (format.bitsPerSample != containerSize)
             {
                 throw ReadError (ReadErrorCode::ExtensibleBitsPerSampleChannelsBlockAlignMismatch, "For WAVEFORMATEXTENSIBLE, bits per sample must equal 8 * blockAlign / channels.");
             }
@@ -283,7 +290,7 @@ inline void ChunkInfo::ValidateFormatChunk()
             {
                 throw ReadError ("For float PCM, bits per sample must be 32 or 64.");
             }
-            if (format.bitsPerSample != 8 * format.blockAlign / format.channels)
+            if (format.bitsPerSample != containerSize)
             {
                 throw ReadError (ReadErrorCode::FloatBitsPerSampleChannelsBlockAlignMismatch, "For float PCM, bits per sample must equal 8 * blockAlign / channels.");
             }
@@ -338,8 +345,6 @@ inline void ChunkInfo::ValidateFormatChunk()
             throw ReadError ("For float PCM, bits per sample must be 32 or 64.");
         }
     }
-
-    const auto containerSize {8u * format.blockAlign / format.channels};
 
     if ((format.code == FormatCode::LinearPCM ||
          (format.code == FormatCode::Extensible && format.subFormat == ExtensibleFormat::LinearPCM))

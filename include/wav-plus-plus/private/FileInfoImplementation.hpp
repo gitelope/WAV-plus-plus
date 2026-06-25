@@ -41,35 +41,35 @@ inline void FileInfo::ExtractFrom (ChunkInfo const & chunkInfo)
     // container size in order to correctly parse both WAV files following the
     // standard and WAV files encoded using the non-standard packing method.
     //
-    // format                 container size               sample size
+    // format                 sample size                  container size
     //
     // WAVEFORMAT             8 * blockAlign / channels    8 * blockAlign / channels
-    // PCMWAVEFORMAT          8 * blockAlign / channels    bitsPerSample
-    // WAVEFORMATEX           8 * blockAlign / channels    bitsPerSample
-    // WAVEFORMATEXTENSIBLE   bitsPerSample                validBitsPerSample
+    // PCMWAVEFORMAT          bitsPerSample                8 * blockAlign / channels
+    // WAVEFORMATEX           bitsPerSample                8 * blockAlign / channels
+    // WAVEFORMATEXTENSIBLE   validBitsPerSample           8 * blockAlign / channels
+    //
+    // For WAVEFORMATEXTENSIBLE, 8 * blockAlign / channels should equal bitsPerSample.
+
+    containerSizeInBits = 8u * chunkInfo.format.blockAlign / channels;
 
     switch (chunkInfo.format.size)
     {
         case FormatChunkSize::WAVEFORMAT:
-            containerSizeInBits = static_cast<uint16_t> (8 * chunkInfo.format.blockAlign / channels);
             bitDepth = containerSizeInBits;
             break;
 
         case FormatChunkSize::PCMWAVEFORMAT:
-            containerSizeInBits = static_cast<uint16_t> (8 * chunkInfo.format.blockAlign / channels);
             bitDepth = chunkInfo.format.bitsPerSample;
             break;
 
         case FormatChunkSize::WAVEFORMATEX:
-            containerSizeInBits = static_cast<uint16_t> (8 * chunkInfo.format.blockAlign / channels);
             bitDepth = chunkInfo.format.bitsPerSample;
             break;
 
         case FormatChunkSize::WAVEFORMATEXTENSIBLE:
-            containerSizeInBits = chunkInfo.format.bitsPerSample;
+            assert (chunkInfo.format.bitsPerSample == containerSizeInBits);
             bitDepth = chunkInfo.format.validBitsPerSample;
             channelMask = chunkInfo.format.channelMask;
-            // Note: FWIW containerSizeInBits should also be equal to 8 * chunkInfo.format.blockAlign / channels.
             break;
 
         default: assert (false); // should have been caught earlier
