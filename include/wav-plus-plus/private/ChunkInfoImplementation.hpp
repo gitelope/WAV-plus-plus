@@ -332,10 +332,6 @@ inline void ChunkInfo::ValidateFormatChunk()
         {
             throw ReadError ("Extensible subformat not supported: " + format.subFormat.str());
         }
-        if (format.validBitsPerSample > format.bitsPerSample)
-        {
-            throw ReadError ("Valid bits per sample (in WAVEFORMATEXTENSIBLE) must not be greater than bits per sample.");
-        }
         if (format.subFormat == ExtensibleFormat::FloatPCM
             && format.bitsPerSample != 32 && format.bitsPerSample != 64)
         {
@@ -344,6 +340,7 @@ inline void ChunkInfo::ValidateFormatChunk()
     }
 
     const auto containerSize {8u * format.blockAlign / format.channels};
+
     if ((format.code == FormatCode::LinearPCM ||
          (format.code == FormatCode::Extensible && format.subFormat == ExtensibleFormat::LinearPCM))
         && containerSize != 8u && containerSize != 16u && containerSize != 24u && containerSize != 32u)
@@ -351,7 +348,16 @@ inline void ChunkInfo::ValidateFormatChunk()
         throw ReadError (std::format ("Unsupported linear PCM container size: {}", containerSize));
     }
 
-    // Non-standard bit packing supported in PCMWAVEFORMAT and WAVEFORMATEX LPCM
+    // When bit-packing (standard or non-standard) is used with LPCM,
+    // check that effective bit depth <= container size:
+    //
+    // Standard bit-packing using WAVEFORMATEXTENSIBLE
+    // validBitsPerSample must be <= bitsPerSample:
+    if (format.size == FormatChunkSize::WAVEFORMATEXTENSIBLE && format.validBitsPerSample > format.bitsPerSample)
+    {
+        throw ReadError (std::format ("Inconsistent values: WAVEFORMATEXTENSIBLE's validBitsPerSample ({}) > bitsPerSample ({}).", format.validBitsPerSample, format.bitsPerSample));
+    }
+    // Non-standard bit packing supported in PCMWAVEFORMAT and WAVEFORMATEX
     // bitsPerSample is interpreted as effective (or "valid") bit depth
     // containerSize is derived from blockAlign and channels
     // The former must be <= the latter:
