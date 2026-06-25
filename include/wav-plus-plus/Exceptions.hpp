@@ -44,6 +44,12 @@ enum class ReadErrorCode
     SampleRateZero,
     UnsupportedFmtChunkSize,
     UnsupportedFormatCode,
+    UnsupportedLPCMContainerSize,
+
+    // InternalError should never be thrown if program is working correctly.
+    // Kind of like an assert for release builds. Can be caught and logged
+    // instead of crashing.
+    InternalError,
 
     MigrationCodeToBeRemoved,
 };
@@ -52,23 +58,26 @@ constexpr ReadErrorCategory categoryFor (ReadErrorCode code)
 {
     switch (code)
     {
-        // case ReadErrorCode::BitsPerSampleZero:                                 return ReadErrorCategory::InvalidFile; break;
-        // case ReadErrorCode::BitsPerSampleNotMultipleOf8:                       return ReadErrorCategory::InvalidFile; break;
-        case ReadErrorCode::BlockAlignNotDivisibleByChannels:                  return ReadErrorCategory::InvalidFile; break;
-        case ReadErrorCode::BlockAlignZero:                                    return ReadErrorCategory::InvalidFile; break;
-        case ReadErrorCode::ChannelsZero:                                      return ReadErrorCategory::InvalidFile; break;
-        case ReadErrorCode::ExtensibleBitsPerSampleChannelsBlockAlignMismatch: return ReadErrorCategory::InvalidFile; break;
-        case ReadErrorCode::ExtensibleFmtSizeCodeMismatch:                     return ReadErrorCategory::InvalidFile; break;
-        case ReadErrorCode::FloatBitsPerSampleChannelsBlockAlignMismatch:      return ReadErrorCategory::InvalidFile; break;
-        case ReadErrorCode::InvalidCbSize:                                     return ReadErrorCategory::InvalidFile; break;
-        case ReadErrorCode::MultipleFmtChunks:                                 return ReadErrorCategory::InvalidFile; break;
-        case ReadErrorCode::SampleRateZero:                                    return ReadErrorCategory::InvalidFile; break;
+        // case ReadErrorCode::BitsPerSampleZero:                                 return ReadErrorCategory::InvalidFile;
+        // case ReadErrorCode::BitsPerSampleNotMultipleOf8:                       return ReadErrorCategory::InvalidFile;
+        case ReadErrorCode::BlockAlignNotDivisibleByChannels:                  return ReadErrorCategory::InvalidFile;
+        case ReadErrorCode::BlockAlignZero:                                    return ReadErrorCategory::InvalidFile;
+        case ReadErrorCode::ChannelsZero:                                      return ReadErrorCategory::InvalidFile;
+        case ReadErrorCode::ExtensibleBitsPerSampleChannelsBlockAlignMismatch: return ReadErrorCategory::InvalidFile;
+        case ReadErrorCode::ExtensibleFmtSizeCodeMismatch:                     return ReadErrorCategory::InvalidFile;
+        case ReadErrorCode::FloatBitsPerSampleChannelsBlockAlignMismatch:      return ReadErrorCategory::InvalidFile;
+        case ReadErrorCode::InvalidCbSize:                                     return ReadErrorCategory::InvalidFile;
+        case ReadErrorCode::MultipleFmtChunks:                                 return ReadErrorCategory::InvalidFile;
+        case ReadErrorCode::SampleRateZero:                                    return ReadErrorCategory::InvalidFile;
 
-        // case ReadErrorCode::BitsPerSampleExceedsSupportedMax: return ReadErrorCategory::UnsupportedFormat; break;
-        case ReadErrorCode::ChannelsExceedMax:                return ReadErrorCategory::UnsupportedFormat; break;
-        case ReadErrorCode::ExtensibleSubformatNotSupported:  return ReadErrorCategory::UnsupportedFormat; break;
-        case ReadErrorCode::UnsupportedFmtChunkSize:          return ReadErrorCategory::UnsupportedFormat; break;
-        case ReadErrorCode::UnsupportedFormatCode:            return ReadErrorCategory::UnsupportedFormat; break;
+        // case ReadErrorCode::BitsPerSampleExceedsSupportedMax: return ReadErrorCategory::UnsupportedFormat;
+        case ReadErrorCode::ChannelsExceedMax:                return ReadErrorCategory::UnsupportedFormat;
+        case ReadErrorCode::ExtensibleSubformatNotSupported:  return ReadErrorCategory::UnsupportedFormat;
+        case ReadErrorCode::UnsupportedFmtChunkSize:          return ReadErrorCategory::UnsupportedFormat;
+        case ReadErrorCode::UnsupportedFormatCode:            return ReadErrorCategory::UnsupportedFormat;
+        case ReadErrorCode::UnsupportedLPCMContainerSize:     return ReadErrorCategory::UnsupportedFormat;
+
+        case ReadErrorCode::InternalError: return ReadErrorCategory::InternalError;
 
         default: return ReadErrorCategory::MigrationCategoryToBeRemoved;
     }

@@ -322,7 +322,7 @@ inline void ChunkInfo::ValidateFormatChunkAndComputeBitDepthAndContainerSize()
     // container size checks
     if (isLinear && containerSize != 8u && containerSize != 16u && containerSize != 24u && containerSize != 32u)
     {
-        throw ReadError (std::format ("Unsupported linear PCM container size: {}", containerSize));
+        throw ReadError (ReadErrorCode::UnsupportedLPCMContainerSize, std::format ("Unsupported linear PCM container size: {}", containerSize));
     }
     if (isFloat && containerSize != 32 && containerSize != 64)
     {

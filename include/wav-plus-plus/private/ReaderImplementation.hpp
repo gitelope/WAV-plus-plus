@@ -52,7 +52,11 @@ size_t Reader::read (T * destination, size_t samplesRequested)
             case 16: ReadLPCM16 (destination, samplesToRead); break;
             case 24: ReadLPCM24 (destination, samplesToRead); break;
             case 32: ReadLPCM32 (destination, samplesToRead); break;
-            default: throw ReadError ("Unsupported LPCM container size: " + std::to_string (containerSizeInBits()));
+            default:
+            {
+                assert (false);
+                throw ReadError (ReadErrorCode::InternalError, "Internal error (should have been caught earlier): unsupported LPCM container size: " + std::to_string (containerSizeInBits()));
+            }
         }
     }
     else if (isFloatPCM())
@@ -395,7 +399,11 @@ size_t Reader::read (T ** const destinations, size_t numChannels, size_t framesR
             case 16: ReadLPCM16 (destinations, numChannels, framesToRead); break;
             case 24: ReadLPCM24 (destinations, numChannels, framesToRead); break;
             case 32: ReadLPCM32 (destinations, numChannels, framesToRead); break;
-            default: throw ReadError ("Unsupported LPCM container size: " + std::to_string (containerSizeInBits()));
+            default:
+            {
+                assert (false);
+                throw ReadError (ReadErrorCode::InternalError, "Internal error (should have been caught earlier): unsupported LPCM container size: " + std::to_string (containerSizeInBits()));
+            }
         }
     }
     else if (isFloatPCM())
