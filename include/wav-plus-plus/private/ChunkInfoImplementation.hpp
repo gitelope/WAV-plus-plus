@@ -33,42 +33,12 @@ inline ChunkInfo::ChunkInfo (std::FILE * in)
 
 inline std::string ChunkInfo::summary() const
 {
-    bool isLinear_;
-    uint16_t bitDepth_;
-    uint16_t containerSize_;
+    if (isLinear == isFloat) throw ReadError ("Internal error (should have been caught earlier): file should either be float or linear PCM.");
 
-    switch (format.code)
-    {
-        case FormatCode::LinearPCM:
-            isLinear_ = true;
-            bitDepth_ = format.bitsPerSample;
-            containerSize_ = static_cast<uint16_t> (8 * format.blockAlign / format.channels);
-            break;
-        case FormatCode::FloatPCM:
-            isLinear_ = false; // must be floating-point
-            bitDepth_ = format.bitsPerSample;
-            containerSize_ = bitDepth_;
-            assert (containerSize_ == 8 * format.blockAlign / format.channels);
-            break;
-        case FormatCode::Extensible:
-            if (format.subFormat == ExtensibleFormat::LinearPCM) isLinear_ = true;
-            else
-            {
-                assert (format.subFormat == ExtensibleFormat::FloatPCM);
-                isLinear_ = false;
-            }
-            bitDepth_ = format.validBitsPerSample;
-            containerSize_ = format.bitsPerSample;
-            break;
-        default:
-            assert (false); // should have been caught earlier
-            throw ReadError (std::format ("Format not supported: 0x{:04X}. This should have been caught during decoding. Audio may be corrupted.", format.code));
-    }
+    const auto frames {data.size / format.blockAlign};
+    const bool isPadded {containerSize > bitDepth};
 
-    const auto frames = data.size / format.blockAlign;
-    const bool isPadded = (containerSize_ > bitDepth_);
-
-    return audioSummary (isLinear_, bitDepth_, containerSize_, format.sampleRate,
+    return audioSummary (isLinear, bitDepth, containerSize, format.sampleRate,
                          format.channels, frames, data.size, isPadded);
 }
 
@@ -213,7 +183,7 @@ inline void ChunkInfo::ReadFormatChunk (std::FILE * in)
     fmtChunkEncountered = true;
 }
 
-inline void ChunkInfo::DeriveBitDepthAndContainerSize ()
+inline void ChunkInfo::DeriveBitDepthAndContainerSize()
 {
     // SAMPLE SIZE AND SAMPLE CONTAINER SIZE
     //
@@ -285,11 +255,13 @@ inline void ChunkInfo::ValidateFormatChunkAndComputeBitDepthAndContainerSize()
         }
         else
         {
-            throw ReadError ("WAVEFORMATEXTENSIBLE: fmt chunk size is 40 but format code is not 0xFFFE");
+            throw ReadError ("WAVEFORMATEXTENSIBLE fmt chunk size (40) requires format code 0xFFFE.");
         }
     }
-    isLinear = format.code == FormatCode::LinearPCM || (isExtensible && format.subFormat == ExtensibleFormat::LinearPCM);
-    isFloat = format.code == FormatCode::FloatPCM || (isExtensible && format.subFormat == ExtensibleFormat::FloatPCM);
+    else if (format.code == FormatCode::Extensible)
+    {
+        throw ReadError ("Format code 0xFFFE requires 40-byte WAVEFORMATEXTENSIBLE fmt chunk size.");
+    }
 
     if (format.channels == 0)
     {
@@ -333,11 +305,15 @@ inline void ChunkInfo::ValidateFormatChunkAndComputeBitDepthAndContainerSize()
     if (isExtensible)
     {
         // Validate channel mask? What's the max?
+
         if (format.subFormat != ExtensibleFormat::LinearPCM && format.subFormat != ExtensibleFormat::FloatPCM)
         {
             throw ReadError ("Extensible subformat not supported: " + format.subFormat.str());
         }
     }
+    isLinear = format.code == FormatCode::LinearPCM || (isExtensible && format.subFormat == ExtensibleFormat::LinearPCM);
+    isFloat = format.code == FormatCode::FloatPCM || (isExtensible && format.subFormat == ExtensibleFormat::FloatPCM);
+    assert (isLinear != isFloat); // exactly one should be set
 
     // Derive bit depth and container size using format chunk size/format
     // and WAV++'s permissive LPCM bit-packing rules.
