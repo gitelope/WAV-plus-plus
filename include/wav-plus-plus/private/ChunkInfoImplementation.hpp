@@ -326,7 +326,8 @@ inline void ChunkInfo::ValidateFormatChunkAndComputeBitDepthAndContainerSize()
     }
     if (isFloat && containerSize != 32 && containerSize != 64)
     {
-        throw ReadError ("For float PCM, bits per sample must be 32 or 64.");
+        throw ReadError (ReadErrorCode::UnsupportedFloatContainerSize,
+                         std::format ("Unsupported float PCM sample width: {}", containerSize));
     }
     if (isExtensible && format.bitsPerSample != containerSize)
     {

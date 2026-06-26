@@ -205,7 +205,7 @@ inline void MissingFmt (TestLog & log)
     PushFourCC (bytes, "WAVE");
     TestForReadError (bytes, log, "Header Rejection - fmt chunk, missing fmt chunk");
 }
-inline void FloatPCMUnsupportedBitsPerSample (TestLog & log)
+inline void UnsupportedFloatSampleWidth (TestLog & log)
 {
     // PCMWAVEFORMAT float
     // WAVEFORMATEX float
@@ -213,16 +213,20 @@ inline void FloatPCMUnsupportedBitsPerSample (TestLog & log)
     // expected: bitsPerSample = 32 or 64
     constexpr uint16_t bitsPerSample {48};
     {
-        const auto bytes = buildPCMWAVEFORMAT (wav::FormatCode::FloatPCM, bitsPerSample, bitsPerSample, 1, 48000, 8);
-        TestForReadError (bytes, log, "Header Rejection - fmt chunk, float PCM, unsupported bits per sample, PCMWAVEFORMAT");
+        const auto bytes = buildPCMWAVEFORMAT (wav::FormatCode::FloatPCM,
+                                               bitsPerSample, bitsPerSample, 1, 48000, 8);
+        TestForReadError (bytes, log, "Header Rejection - fmt chunk, float PCM, unsupported bits per sample, PCMWAVEFORMAT", wav::ReadErrorCode::UnsupportedFloatContainerSize);
     }
     {
-        const auto bytes = buildWAVEFORMATEX (wav::FormatCode::FloatPCM, bitsPerSample, bitsPerSample, 1, 48000, 8);
-        TestForReadError (bytes, log, "Header Rejection - fmt chunk, float PCM, unsupported bits per sample, WAVEFORMATEX");
+        const auto bytes = buildWAVEFORMATEX (wav::FormatCode::FloatPCM,
+                                              bitsPerSample, bitsPerSample, 1, 48000, 8);
+        TestForReadError (bytes, log, "Header Rejection - fmt chunk, float PCM, unsupported bits per sample, WAVEFORMATEX", wav::ReadErrorCode::UnsupportedFloatContainerSize);
     }
     {
-        const auto bytes = buildWAVEFORMATEXTENSIBLE (wav::ExtensibleFormat::FloatPCM, bitsPerSample, bitsPerSample, 2, 48000, 8, wav::SpeakerConfiguration::Stereo);
-        TestForReadError (bytes, log, "Header Rejection - fmt chunk, float PCM, unsupported bits per sample, WAVEFORMATEXTENSIBLE");
+        const auto bytes = buildWAVEFORMATEXTENSIBLE (wav::ExtensibleFormat::FloatPCM,
+                                                      bitsPerSample, bitsPerSample, 2, 48000, 8,
+                                                      wav::SpeakerConfiguration::Stereo);
+        TestForReadError (bytes, log, "Header Rejection - fmt chunk, float PCM, unsupported bits per sample, WAVEFORMATEXTENSIBLE", wav::ReadErrorCode::UnsupportedFloatContainerSize);
     }
 }
 inline void BitsPerSampleChannelsAndBlockAlignMismatch (TestLog & log)
@@ -323,9 +327,9 @@ inline void RunFormatChunkTests (TestLog & log)
     InvalidFormatSize (log);
     MultipleFormatChunks (log);
     MissingFmt (log);
-    FloatPCMUnsupportedBitsPerSample (log);
     BitsPerSampleChannelsAndBlockAlignMismatch (log);
     BlockAlignNotDivisibleByChannels (log);
+    UnsupportedFloatSampleWidth (log);
     UnsupportedLPCMContainerSize (log);
     // ExtensibleBitsPerSampleNotMultipleOfEight (log);
 }

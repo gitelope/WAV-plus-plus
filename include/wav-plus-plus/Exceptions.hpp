@@ -42,6 +42,7 @@ enum class ReadErrorCode
     InvalidCbSize,
     MultipleFmtChunks,
     SampleRateZero,
+    UnsupportedFloatContainerSize,
     UnsupportedFmtChunkSize,
     UnsupportedFormatCode,
     UnsupportedLPCMContainerSize,
@@ -73,6 +74,7 @@ constexpr ReadErrorCategory categoryFor (ReadErrorCode code)
         // case ReadErrorCode::BitsPerSampleExceedsSupportedMax: return ReadErrorCategory::UnsupportedFormat;
         case ReadErrorCode::ChannelsExceedMax:                return ReadErrorCategory::UnsupportedFormat;
         case ReadErrorCode::ExtensibleSubformatNotSupported:  return ReadErrorCategory::UnsupportedFormat;
+        case ReadErrorCode::UnsupportedFloatContainerSize:    return ReadErrorCategory::UnsupportedFormat;
         case ReadErrorCode::UnsupportedFmtChunkSize:          return ReadErrorCategory::UnsupportedFormat;
         case ReadErrorCode::UnsupportedFormatCode:            return ReadErrorCategory::UnsupportedFormat;
         case ReadErrorCode::UnsupportedLPCMContainerSize:     return ReadErrorCategory::UnsupportedFormat;
