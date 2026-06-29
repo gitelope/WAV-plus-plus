@@ -490,7 +490,7 @@ inline void MultiplePeakChunks (TestLog & log)
         PushPeakChunk (bytes, peaks, timestamp);
         PushPeakChunk (bytes, peaks, timestamp);
         UpdateRIFFChunkSize (bytes);
-        TestForReadError (bytes, log, "Header Rejection - PEAK chunk, multiple PEAK chunks");
+        TestForReadError (bytes, log, "Header Rejection - PEAK chunk, multiple PEAK chunks", wav::ReadErrorCode::MultiplePeakChunks);
     }
 
     // First PEAK is version 2 (skipped); ReadError still thrown when 2nd PEAK chunk encountered
@@ -501,10 +501,10 @@ inline void MultiplePeakChunks (TestLog & log)
         OverwriteUint32LE (bytes, peakChunkStart + 8, 2); // Set version to 2.
         PushPeakChunk (bytes, peaks, timestamp);
         UpdateRIFFChunkSize (bytes);
-        TestForReadError (bytes, log, "Header Rejection - PEAK chunk, multiple PEAK chunks (1st skipped due to unsupported version; 2nd throws ReadError)");
+        TestForReadError (bytes, log, "Header Rejection - PEAK chunk, multiple PEAK chunks (1st skipped due to unsupported version; 2nd throws ReadError)", wav::ReadErrorCode::MultiplePeakChunks);
     }
 }
-inline void PeakChunkBeforeFmt (TestLog & log)
+inline void PeakChunkBeforeFmtChunk (TestLog & log)
 {
     constexpr uint16_t channels {2};
 
@@ -520,9 +520,9 @@ inline void PeakChunkBeforeFmt (TestLog & log)
     bytes.insert (bytes.begin() + 12, peakChunk.begin(), peakChunk.end());
     UpdateRIFFChunkSize (bytes);
 
-    TestForReadError (bytes, log, "Header Rejection - PEAK chunk, PEAK comes before fmt");
+    TestForReadError (bytes, log, "Header Rejection - PEAK chunk, PEAK comes before fmt", wav::ReadErrorCode::PeakChunkBeforeFmtChunk);
 }
-inline void OverlargePeakChunkSize (TestLog & log)
+inline void PeakChunkSizeExceedsFileSize (TestLog & log)
 {
     constexpr uint16_t channels {2};
 
@@ -538,7 +538,7 @@ inline void OverlargePeakChunkSize (TestLog & log)
     OverwriteUint32LE (bytes, peakChunkStart + 4, actualPeakSize + 1);
     UpdateRIFFChunkSize (bytes);
 
-    TestForReadError (bytes, log, "Header Rejection - PEAK chunk, purported size extends past actual EOF");
+    TestForReadError (bytes, log, "Header Rejection - PEAK chunk, purported size extends past actual EOF", wav::ReadErrorCode::PeakChunkSizeExceedsFileSize);
 }
 inline void PeakChunkSizeMismatchesChannels (TestLog & log)
 {
@@ -548,7 +548,7 @@ inline void PeakChunkSizeMismatchesChannels (TestLog & log)
     PushPeakChunk (bytes, peaks, 0);
     UpdateRIFFChunkSize (bytes);
 
-    TestForReadError (bytes, log, "Header Rejection - PEAK chunk, size mismatches channels");
+    TestForReadError (bytes, log, "Header Rejection - PEAK chunk, size mismatches channels", wav::ReadErrorCode::PeakChunkSizeMismatchesChannels);
 }
 inline void PeakChunkVersionUnsupported (TestLog & log)
 {
@@ -599,7 +599,7 @@ inline void PeakChunkVersionUnsupported (TestLog & log)
 
     std::remove (filename);
 }
-inline void PeakChunkSizeTooSmallForVersion (TestLog & log)
+inline void PeakChunkSizeTooSmallForVersionField (TestLog & log)
 {
     constexpr uint16_t channels {2};
 
@@ -612,17 +612,17 @@ inline void PeakChunkSizeTooSmallForVersion (TestLog & log)
     OverwriteUint32LE (bytes, peakChunkStart + 4, 2); // version field needs 4 bytes in chunk body
     UpdateRIFFChunkSize (bytes);
 
-    TestForReadError (bytes, log, "Header Rejection - PEAK chunk, size too small for version field");
+    TestForReadError (bytes, log, "Header Rejection - PEAK chunk, size too small for version field", wav::ReadErrorCode::PeakChunkSizeTooSmallForVersionField);
 }
 
 inline void RunPeakChunkTests (TestLog & log)
 {
-    PeakChunkBeforeFmt (log);
-    OverlargePeakChunkSize (log);
+    PeakChunkBeforeFmtChunk (log);
+    PeakChunkSizeExceedsFileSize (log);
     PeakChunkSizeMismatchesChannels (log);
     PeakChunkVersionUnsupported (log);
     MultiplePeakChunks (log);
-    PeakChunkSizeTooSmallForVersion (log);
+    PeakChunkSizeTooSmallForVersionField (log);
 }
 
 // HELPER FUNCTIONS ///////////////////////////////////////////////////////////////

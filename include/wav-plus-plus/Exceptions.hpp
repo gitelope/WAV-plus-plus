@@ -48,7 +48,12 @@ enum class ReadErrorCode
     MultipleDataChunks,
     MultipleFactChunks,
     MultipleFmtChunks,
+    MultiplePeakChunks,
     MultipleRiffChunks,
+    PeakChunkBeforeFmtChunk,
+    PeakChunkSizeMismatchesChannels,
+    PeakChunkSizeExceedsFileSize,
+    PeakChunkSizeTooSmallForVersionField,
     RiffIdNotFound,
     RiffSubformatNotWave,
     SampleRateEqualsZero,
@@ -87,7 +92,12 @@ constexpr ReadErrorCategory categoryFor (ReadErrorCode code)
         case ReadErrorCode::MultipleDataChunks:                                return ReadErrorCategory::InvalidFile;
         case ReadErrorCode::MultipleFactChunks:                                return ReadErrorCategory::InvalidFile;
         case ReadErrorCode::MultipleFmtChunks:                                 return ReadErrorCategory::InvalidFile;
+        case ReadErrorCode::MultiplePeakChunks:                                return ReadErrorCategory::InvalidFile;
         case ReadErrorCode::MultipleRiffChunks:                                return ReadErrorCategory::InvalidFile;
+        case ReadErrorCode::PeakChunkBeforeFmtChunk:                           return ReadErrorCategory::InvalidFile;
+        case ReadErrorCode::PeakChunkSizeMismatchesChannels:                   return ReadErrorCategory::InvalidFile;
+        case ReadErrorCode::PeakChunkSizeExceedsFileSize:                      return ReadErrorCategory::InvalidFile;
+        case ReadErrorCode::PeakChunkSizeTooSmallForVersionField:              return ReadErrorCategory::InvalidFile;
         case ReadErrorCode::RiffIdNotFound:                                    return ReadErrorCategory::InvalidFile;
         case ReadErrorCode::RiffSubformatNotWave:                              return ReadErrorCategory::InvalidFile;
         case ReadErrorCode::SampleRateEqualsZero:                              return ReadErrorCategory::InvalidFile;
