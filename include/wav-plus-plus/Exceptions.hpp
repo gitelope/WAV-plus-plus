@@ -39,12 +39,14 @@ enum class ReadErrorCode
     ExtensibleBitsPerSampleChannelsBlockAlignMismatch,
     ExtensibleFmtSizeCodeMismatch,
     ExtensibleSubformatNotSupported,
+    FactChunkSizeNotFour,
     FloatBitDepthNotEqualToContainerSize,
     InvalidCbSize,
     LinearBitDepthExceedsContainerSize,
     MissingDataChunk,
     MissingFmtChunk,
     MultipleDataChunks,
+    MultipleFactChunks,
     MultipleFmtChunks,
     MultipleRiffChunks,
     RiffIdNotFound,
@@ -76,12 +78,14 @@ constexpr ReadErrorCategory categoryFor (ReadErrorCode code)
         case ReadErrorCode::DataChunkSizeExceedsFileSize:                      return ReadErrorCategory::InvalidFile;
         case ReadErrorCode::ExtensibleBitsPerSampleChannelsBlockAlignMismatch: return ReadErrorCategory::InvalidFile;
         case ReadErrorCode::ExtensibleFmtSizeCodeMismatch:                     return ReadErrorCategory::InvalidFile;
+        case ReadErrorCode::FactChunkSizeNotFour:                              return ReadErrorCategory::InvalidFile;
         case ReadErrorCode::FloatBitDepthNotEqualToContainerSize:              return ReadErrorCategory::InvalidFile;
         case ReadErrorCode::InvalidCbSize:                                     return ReadErrorCategory::InvalidFile;
         case ReadErrorCode::LinearBitDepthExceedsContainerSize:                return ReadErrorCategory::InvalidFile;
         case ReadErrorCode::MissingDataChunk:                                  return ReadErrorCategory::InvalidFile;
         case ReadErrorCode::MissingFmtChunk:                                   return ReadErrorCategory::InvalidFile;
         case ReadErrorCode::MultipleDataChunks:                                return ReadErrorCategory::InvalidFile;
+        case ReadErrorCode::MultipleFactChunks:                                return ReadErrorCategory::InvalidFile;
         case ReadErrorCode::MultipleFmtChunks:                                 return ReadErrorCategory::InvalidFile;
         case ReadErrorCode::MultipleRiffChunks:                                return ReadErrorCategory::InvalidFile;
         case ReadErrorCode::RiffIdNotFound:                                    return ReadErrorCategory::InvalidFile;

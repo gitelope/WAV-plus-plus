@@ -450,7 +450,7 @@ inline void FactChunkSizeNotFour (TestLog & log)
     // Rewrite fact chunk size to invalid value of 5.
     OverwriteUint32LE (bytes, factChunkStart + 4, 5);
     UpdateRIFFChunkSize (bytes);
-    TestForReadError (bytes, log, "Header Rejection - fact chunk, size not 4");
+    TestForReadError (bytes, log, "Header Rejection - fact chunk, size not 4", wav::ReadErrorCode::FactChunkSizeNotFour);
 }
 inline void MultipleFactChunks (TestLog & log)
 {
@@ -459,7 +459,7 @@ inline void MultipleFactChunks (TestLog & log)
     PushFactChunk (bytes, frames);
     PushFactChunk (bytes, frames);
     UpdateRIFFChunkSize (bytes);
-    TestForReadError (bytes, log, "Header Rejection - fact chunk, multiple fact chunks");
+    TestForReadError (bytes, log, "Header Rejection - fact chunk, multiple fact chunks", wav::ReadErrorCode::MultipleFactChunks);
 }
 
 inline void RunFactChunkTests (TestLog & log)

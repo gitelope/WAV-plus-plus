@@ -354,11 +354,11 @@ inline void ChunkInfo::ValidateFormatChunkAndComputeBitDepthAndContainerSize()
 
 inline void ChunkInfo::ReadFactChunk (std::FILE * in)
 {
-    if (factChunkEncountered) throw ReadError ("Invalid format: File contains more than one fact chunk.");
+    if (factChunkEncountered) throw ReadError (ReadErrorCode::MultipleFactChunks, "Invalid format: File contains more than one fact chunk.");
     factChunkEncountered = true;
 
     const auto size = uint32_le (in);
-    if (size != 4) throw ReadError ("Invalid value: fact chunk size must be 4.");
+    if (size != 4) throw ReadError (ReadErrorCode::FactChunkSizeNotFour, "Invalid value: fact chunk size must be 4.");
     fact.size = size;
 
     fact.fileSize = uint32_le (in);
