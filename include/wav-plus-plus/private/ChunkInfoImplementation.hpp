@@ -341,7 +341,8 @@ inline void ChunkInfo::ValidateFormatChunkAndComputeBitDepthAndContainerSize()
     }
     if (isFloat && bitDepth != containerSize)
     {
-        throw ReadError (std::format ("Bit depth ({}) and container size ({}) should be equal for float audio.", bitDepth, containerSize));
+        throw ReadError (ReadErrorCode::FloatBitDepthNotEqualToContainerSize,
+                         std::format ("Bit depth ({}) and container size ({}) should be equal for float audio.", bitDepth, containerSize));
     }
     if (isLinear && bitDepth > containerSize)
     {

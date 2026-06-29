@@ -229,34 +229,44 @@ inline void UnsupportedFloatSampleWidth (TestLog & log)
         TestForReadError (bytes, log, "Header Rejection - fmt chunk, float PCM, unsupported bits per sample, WAVEFORMATEXTENSIBLE", wav::ReadErrorCode::UnsupportedFloatContainerSize);
     }
 }
-inline void BitsPerSampleChannelsAndBlockAlignMismatch (TestLog & log)
+inline void FloatBitDepthNotEqualToContainerSize (TestLog & log)
 {
-    // PCMWAVEFORMAT float
-    // WAVEFORMATEX float
+    constexpr uint16_t bitDepth {32};
+    constexpr uint16_t containerSize {64};
+
+    constexpr uint16_t channels {2};
+    constexpr uint32_t frames {8};
+    constexpr uint32_t sr {48000};
+    {
+        const auto bytes = buildPCMWAVEFORMAT (wav::FormatCode::FloatPCM, bitDepth, containerSize, channels, sr, frames);
+        TestForReadError (bytes, log, "Header Rejection - fmt chunk, float bit depth != container size, PCMWAVEFORMAT", wav::ReadErrorCode::FloatBitDepthNotEqualToContainerSize);
+    }
+    {
+        const auto bytes = buildWAVEFORMATEX (wav::FormatCode::FloatPCM, bitDepth, containerSize, channels, sr, frames);
+        TestForReadError (bytes, log, "Header Rejection - fmt chunk, float bit depth != container size, WAVEFORMATEX", wav::ReadErrorCode::FloatBitDepthNotEqualToContainerSize);
+    }
+    {
+        const auto bytes = buildWAVEFORMATEXTENSIBLE (wav::ExtensibleFormat::FloatPCM, bitDepth, containerSize, channels, sr, frames, wav::SpeakerConfiguration::Stereo);
+        TestForReadError (bytes, log, "Header Rejection - fmt chunk, float bit depth != container size, WAVEFORMATEXTENSIBLE", wav::ReadErrorCode::FloatBitDepthNotEqualToContainerSize);
+    }
+}
+inline void ExtensibleBitsPerSampleChannelsBlockAlignMismatch (TestLog & log)
+{
     // WAVEFORMATEXTENSIBLE float and integer
     // expected: bitsPerSample = 8 * blockAlign / channels
 
     constexpr uint16_t channels {2};
-    {
-        auto bytes = buildPCMWAVEFORMAT (wav::FormatCode::FloatPCM, 32, 32, channels, 48000, 8);
-        OverwriteUint16LE (bytes, chunkOffset ("fmt ", bytes) + 20, 16); // correct is 8
-        TestForReadError (bytes, log, "Header Rejection - fmt chunk, bitsPerSample/channels/blockAlign mismatch, PCMWAVEFORMAT float PCM", wav::ReadErrorCode::FloatBitsPerSampleChannelsBlockAlignMismatch);
-    }
-    {
-        auto bytes = buildWAVEFORMATEX (wav::FormatCode::FloatPCM, 32, 32, channels, 48000, 8);
-        OverwriteUint16LE (bytes, chunkOffset ("fmt ", bytes) + 20, 16); // correct is 8
-        TestForReadError (bytes, log, "Header Rejection - fmt chunk, bitsPerSample/channels/blockAlign mismatch, WAVEFORMATEX float PCM", wav::ReadErrorCode::FloatBitsPerSampleChannelsBlockAlignMismatch);
-    }
-
     const auto channelMask {wav::SpeakerConfiguration::Stereo};
     {
+        constexpr uint16_t blockAlign {8}; // should be 4
         auto bytes = buildWAVEFORMATEXTENSIBLE (wav::ExtensibleFormat::LinearPCM, 16, 16, channels, 44100, 8, channelMask);
-        OverwriteUint16LE (bytes, chunkOffset ("fmt ", bytes) + 20, 8); // correct is 4
+        OverwriteUint16LE (bytes, chunkOffset ("fmt ", bytes) + 20, blockAlign);
         TestForReadError (bytes, log, "Header Rejection - fmt chunk, bitsPerSample/channels/blockAlign mismatch, WAVEFORMATEXTENSIBLE, linear PCM", wav::ReadErrorCode::ExtensibleBitsPerSampleChannelsBlockAlignMismatch);
     }
     {
+        constexpr uint16_t blockAlign {16}; // should be 8
         auto bytes = buildWAVEFORMATEXTENSIBLE (wav::ExtensibleFormat::FloatPCM, 32, 32, channels, 48000, 8, channelMask);
-        OverwriteUint16LE (bytes, chunkOffset ("fmt ", bytes) + 20, 16); // correct is 8
+        OverwriteUint16LE (bytes, chunkOffset ("fmt ", bytes) + 20, blockAlign);
         TestForReadError (bytes, log, "Header Rejection - fmt chunk, bitsPerSample/channels/blockAlign mismatch, WAVEFORMATEXTENSIBLE, float PCM", wav::ReadErrorCode::ExtensibleBitsPerSampleChannelsBlockAlignMismatch);
     }
 }
@@ -324,10 +334,11 @@ inline void RunFormatChunkTests (TestLog & log)
     ExtensibleFormatSizeCodeMismatch (log);
     InvalidCbSize (log);
     ExtensibleSubformatNotSupported (log);
+    ExtensibleBitsPerSampleChannelsBlockAlignMismatch (log);
     InvalidFormatSize (log);
     MultipleFormatChunks (log);
     MissingFmt (log);
-    BitsPerSampleChannelsAndBlockAlignMismatch (log);
+    FloatBitDepthNotEqualToContainerSize (log);
     BlockAlignNotDivisibleByChannels (log);
     UnsupportedFloatSampleWidth (log);
     UnsupportedLPCMContainerSize (log);
