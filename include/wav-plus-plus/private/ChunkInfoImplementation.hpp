@@ -346,7 +346,8 @@ inline void ChunkInfo::ValidateFormatChunkAndComputeBitDepthAndContainerSize()
     }
     if (isLinear && bitDepth > containerSize)
     {
-        throw ReadError (std::format ("Bit depth ({}) must be <= container size ({}).", bitDepth, containerSize));
+        throw ReadError (ReadErrorCode::LinearBitDepthExceedsContainerSize,
+                         std::format ("Bit depth ({}) must be <= container size ({}).", bitDepth, containerSize));
     }
 }
 

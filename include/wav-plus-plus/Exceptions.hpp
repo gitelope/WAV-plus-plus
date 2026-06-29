@@ -38,6 +38,7 @@ enum class ReadErrorCode
     ExtensibleSubformatNotSupported,
     FloatBitDepthNotEqualToContainerSize,
     InvalidCbSize,
+    LinearBitDepthExceedsContainerSize,
     MultipleFmtChunks,
     SampleRateEqualsZero,
     UnsupportedFloatContainerSize,
@@ -65,6 +66,7 @@ constexpr ReadErrorCategory categoryFor (ReadErrorCode code)
         case ReadErrorCode::ExtensibleFmtSizeCodeMismatch:                     return ReadErrorCategory::InvalidFile;
         case ReadErrorCode::FloatBitDepthNotEqualToContainerSize:              return ReadErrorCategory::InvalidFile;
         case ReadErrorCode::InvalidCbSize:                                     return ReadErrorCategory::InvalidFile;
+        case ReadErrorCode::LinearBitDepthExceedsContainerSize:                return ReadErrorCategory::InvalidFile;
         case ReadErrorCode::MultipleFmtChunks:                                 return ReadErrorCategory::InvalidFile;
         case ReadErrorCode::SampleRateEqualsZero:                              return ReadErrorCategory::InvalidFile;
 

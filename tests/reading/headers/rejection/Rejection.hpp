@@ -313,6 +313,28 @@ inline void UnsupportedLPCMContainerSize (TestLog & log)
     }
 }
 
+inline void LinearBitDepthExceedsContainerSize (TestLog & log)
+{
+    constexpr uint16_t bitDepth {24};
+    constexpr uint16_t containerSize {16};
+
+    constexpr uint16_t channels {2};
+    constexpr uint32_t sr {48000};
+    constexpr uint32_t frames {8};
+    {
+        const auto bytes = buildPCMWAVEFORMAT (wav::FormatCode::LinearPCM, bitDepth, containerSize, channels, sr, frames);
+        TestForReadError (bytes, log, "Header Rejection - fmt chunk, linear bit depth exceeds container size, PCMWAVEFORMAT", wav::ReadErrorCode::LinearBitDepthExceedsContainerSize);
+    }
+    {
+        const auto bytes = buildWAVEFORMATEX (wav::FormatCode::LinearPCM, bitDepth, containerSize, channels, sr, frames);
+        TestForReadError (bytes, log, "Header Rejection - fmt chunk, linear bit depth exceeds container size, WAVEFORMATEX", wav::ReadErrorCode::LinearBitDepthExceedsContainerSize);
+    }
+    {
+        const auto bytes = buildWAVEFORMATEXTENSIBLE (wav::ExtensibleFormat::LinearPCM, bitDepth, containerSize, channels, sr, frames, wav::SpeakerConfiguration::Stereo);
+        TestForReadError (bytes, log, "Header Rejection - fmt chunk, linear bit depth exceeds container size, WAVEFORMATEXTENSIBLE", wav::ReadErrorCode::LinearBitDepthExceedsContainerSize);
+    }
+}
+
 inline void RunFormatChunkTests (TestLog & log)
 {
     BitDepthEqualsZero (log);
@@ -329,6 +351,7 @@ inline void RunFormatChunkTests (TestLog & log)
     MultipleFormatChunks (log);
     MissingFmt (log);
     FloatBitDepthNotEqualToContainerSize (log);
+    LinearBitDepthExceedsContainerSize (log);
     BlockAlignNotDivisibleByChannels (log);
     UnsupportedFloatSampleWidth (log);
     UnsupportedLPCMContainerSize (log);
