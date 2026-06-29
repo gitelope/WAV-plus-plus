@@ -33,6 +33,9 @@ enum class ReadErrorCode
     BitDepthEqualsZero,
     ChannelsExceedMax,
     ChannelsEqualsZero,
+    DataChunkBeforeFmtChunk,
+    DataChunkSizeNotDivisibleByBlockAlign,
+    DataChunkSizeExceedsFileSize,
     ExtensibleBitsPerSampleChannelsBlockAlignMismatch,
     ExtensibleFmtSizeCodeMismatch,
     ExtensibleSubformatNotSupported,
@@ -41,6 +44,7 @@ enum class ReadErrorCode
     LinearBitDepthExceedsContainerSize,
     MissingDataChunk,
     MissingFmtChunk,
+    MultipleDataChunks,
     MultipleFmtChunks,
     MultipleRiffChunks,
     RiffIdNotFound,
@@ -67,6 +71,9 @@ constexpr ReadErrorCategory categoryFor (ReadErrorCode code)
         case ReadErrorCode::BlockAlignNotDivisibleByChannels:                  return ReadErrorCategory::InvalidFile;
         case ReadErrorCode::BitDepthEqualsZero:                                return ReadErrorCategory::InvalidFile;
         case ReadErrorCode::ChannelsEqualsZero:                                return ReadErrorCategory::InvalidFile;
+        case ReadErrorCode::DataChunkBeforeFmtChunk:                           return ReadErrorCategory::InvalidFile;
+        case ReadErrorCode::DataChunkSizeNotDivisibleByBlockAlign:             return ReadErrorCategory::InvalidFile;
+        case ReadErrorCode::DataChunkSizeExceedsFileSize:                      return ReadErrorCategory::InvalidFile;
         case ReadErrorCode::ExtensibleBitsPerSampleChannelsBlockAlignMismatch: return ReadErrorCategory::InvalidFile;
         case ReadErrorCode::ExtensibleFmtSizeCodeMismatch:                     return ReadErrorCategory::InvalidFile;
         case ReadErrorCode::FloatBitDepthNotEqualToContainerSize:              return ReadErrorCategory::InvalidFile;
@@ -74,6 +81,7 @@ constexpr ReadErrorCategory categoryFor (ReadErrorCode code)
         case ReadErrorCode::LinearBitDepthExceedsContainerSize:                return ReadErrorCategory::InvalidFile;
         case ReadErrorCode::MissingDataChunk:                                  return ReadErrorCategory::InvalidFile;
         case ReadErrorCode::MissingFmtChunk:                                   return ReadErrorCategory::InvalidFile;
+        case ReadErrorCode::MultipleDataChunks:                                return ReadErrorCategory::InvalidFile;
         case ReadErrorCode::MultipleFmtChunks:                                 return ReadErrorCategory::InvalidFile;
         case ReadErrorCode::MultipleRiffChunks:                                return ReadErrorCategory::InvalidFile;
         case ReadErrorCode::RiffIdNotFound:                                    return ReadErrorCategory::InvalidFile;

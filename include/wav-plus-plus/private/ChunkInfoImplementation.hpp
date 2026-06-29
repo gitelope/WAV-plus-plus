@@ -431,8 +431,8 @@ inline void ChunkInfo::ReadPeakChunk (std::FILE * in, std::int64_t chunkStart)
 
 inline void ChunkInfo::ReadDataChunkSizeAndSkipSamples (std::FILE * in)
 {
-    if (!fmtChunkEncountered) throw ReadError ("Invalid format: data chunk reached before format chunk.");
-    if (dataChunkEncountered) throw ReadError ("Invalid format: File contains more than one data chunk.");
+    if (!fmtChunkEncountered) throw ReadError (ReadErrorCode::DataChunkBeforeFmtChunk, "Invalid format: data chunk reached before format chunk.");
+    if (dataChunkEncountered) throw ReadError (ReadErrorCode::MultipleDataChunks, "Invalid format: File contains more than one data chunk.");
 
     // No need to read id since it has already been read and has the expected value.
 
@@ -440,7 +440,8 @@ inline void ChunkInfo::ReadDataChunkSizeAndSkipSamples (std::FILE * in)
 
     if (data.size % format.blockAlign != 0)
     {
-        throw ReadError ("Inconsistent value: size of data chunk is not divisible by block align.");
+        throw ReadError (ReadErrorCode::DataChunkSizeNotDivisibleByBlockAlign,
+                         "Inconsistent value: size of data chunk is not divisible by block align.");
     }
 
     // make sure size doesn't imply chunk overuns EOF
@@ -449,8 +450,8 @@ inline void ChunkInfo::ReadDataChunkSizeAndSkipSamples (std::FILE * in)
     const auto bytesRemaining {actualFileSize - data.offset};
     if (data.size > bytesRemaining)
     {
-        throw ReadError (std::format ("Inconsistent value: declared data chunk size ({}) exceeds bytes remaining in the file ({}).",
-            data.size, bytesRemaining));
+        throw ReadError (ReadErrorCode::DataChunkSizeExceedsFileSize,
+                         std::format ("Inconsistent value: declared data chunk size ({}) exceeds bytes remaining in the file ({}).", data.size, bytesRemaining));
     }
 
     // SkipChunk() detects and carefully skips potential padding byte.

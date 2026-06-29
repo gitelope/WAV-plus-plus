@@ -358,7 +358,7 @@ inline void RunFormatChunkTests (TestLog & log)
 
 // DATA CHUNK TESTS ///////////////////////////////////////////////////////////////
 
-inline void OverlargeDataChunkSize (TestLog & log)
+inline void DataChunkSizeExceedsFileSize (TestLog & log)
 {
     // Actual data chunk size:
     // 1 byte per sample x 1 channel x 8 frames = 8 bytes
@@ -367,14 +367,14 @@ inline void OverlargeDataChunkSize (TestLog & log)
     constexpr uint32_t frames {8};
     auto bytes = buildPCMWAVEFORMAT (wav::FormatCode::LinearPCM, bitDepth, bitDepth, channels, 44100, frames);
     OverwriteUint32LE (bytes, chunkOffset ("data", bytes) + 4, frames + 1);
-    TestForReadError (bytes, log, "Header Rejection - data chunk, purported size extends past actual EOF");
+    TestForReadError (bytes, log, "Header Rejection - data chunk, purported size extends past actual EOF", wav::ReadErrorCode::DataChunkSizeExceedsFileSize);
 }
 inline void DataChunkSizeNotDivisibleByBlockAlign (TestLog & log)
 {
     // block align: 5 x 24 / 8 = 15 bytes
     auto bytes = buildPCMWAVEFORMAT (wav::FormatCode::LinearPCM, 24, 24, 5, 44100, 1);
     OverwriteUint32LE (bytes, chunkOffset ("data", bytes) + 4, 16);
-    TestForReadError (bytes, log, "Header Rejection - data chunk, size not divisible by block align");
+    TestForReadError (bytes, log, "Header Rejection - data chunk, size not divisible by block align", wav::ReadErrorCode::DataChunkSizeNotDivisibleByBlockAlign);
 }
 inline void MultipleDataChunks (TestLog & log)
 {
@@ -390,7 +390,7 @@ inline void MultipleDataChunks (TestLog & log)
     PushSilentDataChunk (bytes, dataChunkSize);
     UpdateRIFFChunkSize (bytes);
 
-    TestForReadError (bytes, log, "Header Rejection - data chunk, multiple data chunks");
+    TestForReadError (bytes, log, "Header Rejection - data chunk, multiple data chunks", wav::ReadErrorCode::MultipleDataChunks);
 }
 inline void MissingDataChunk (TestLog & log)
 {
@@ -415,7 +415,7 @@ inline void MissingDataChunk (TestLog & log)
 
     TestForReadError (bytes, log, "Header Rejection - data chunk, missing data chunk", wav::ReadErrorCode::MissingDataChunk);
 }
-inline void DataChunkBeforeFormatChunk (TestLog & log)
+inline void DataChunkBeforeFmtChunk (TestLog & log)
 {
     constexpr uint32_t frames {8};
 
@@ -427,16 +427,16 @@ inline void DataChunkBeforeFormatChunk (TestLog & log)
     bytes.insert (bytes.begin() + static_cast<std::ptrdiff_t> (fmtChunkStart), dataChunk.begin(), dataChunk.end());
     UpdateRIFFChunkSize (bytes);
 
-    TestForReadError (bytes, log, "Header Rejection - data chunk, data before fmt");
+    TestForReadError (bytes, log, "Header Rejection - data chunk, data before fmt", wav::ReadErrorCode::DataChunkBeforeFmtChunk);
 }
 
 inline void RunDataChunkTests (TestLog & log)
 {
-    OverlargeDataChunkSize (log);
+    DataChunkSizeExceedsFileSize (log);
     DataChunkSizeNotDivisibleByBlockAlign (log);
     MultipleDataChunks (log);
     MissingDataChunk (log);
-    DataChunkBeforeFormatChunk (log);
+    DataChunkBeforeFmtChunk (log);
 }
 
 // FACT CHUNK TESTS ///////////////////////////////////////////////////////////////
