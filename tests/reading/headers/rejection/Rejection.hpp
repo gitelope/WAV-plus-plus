@@ -157,7 +157,7 @@ inline void ExtensibleSubformatNotSupported (TestLog & log)
     TestForReadError (bytes, log, "Header Rejection - fmt chunk, extensible subformat not supported",
                       wav::ReadErrorCode::ExtensibleSubformatNotSupported);
 }
-inline void ExtensibleFormatSizeCodeMismatch (TestLog & log)
+inline void ExtensibleFmtSizeCodeMismatch (TestLog & log)
 {
     // fmt size 40 requires format code 0xFFFE (Extensible).
     {
@@ -173,14 +173,14 @@ inline void ExtensibleFormatSizeCodeMismatch (TestLog & log)
         TestForReadError (bytes, log, "Header Rejection - fmt chunk, extensible format code without 40-byte fmt chunk size", wav::ReadErrorCode::ExtensibleFmtSizeCodeMismatch);
     }
 }
-inline void InvalidFormatSize (TestLog & log)
+inline void UnsupportedFmtChunkSize (TestLog & log)
 {
     const uint32_t badSize {0xBADDBADD};
     auto bytes = buildPCMWAVEFORMAT (wav::FormatCode::LinearPCM, 8, 8, 1, 44100, 8);
     OverwriteUint32LE (bytes, chunkOffset ("fmt ", bytes) + 4, badSize);
     TestForReadError (bytes, log, "Header Rejection - fmt chunk, unsupported format chunk size", wav::ReadErrorCode::UnsupportedFmtChunkSize);
 }
-inline void MultipleFormatChunks (TestLog & log)
+inline void MultipleFmtChunks (TestLog & log)
 {
     const auto formatCode {wav::FormatCode::LinearPCM};
     const uint16_t bitDepth {8};
@@ -203,17 +203,16 @@ inline void MultipleFormatChunks (TestLog & log)
 
     TestForReadError (bytes, log, "Header Rejection - fmt chunk, multiple fmt chunks", wav::ReadErrorCode::MultipleFmtChunks);
 }
-inline void MissingFmt (TestLog & log)
+inline void MissingFmtChunk (TestLog & log)
 {
-    // As of 2026.06.17, adding a data chunk would trip a no fmt before data error,
-    // so we skip the data chunk, too.
+    // We skip the data chunk because it would trigger a data before fmt chunk error.
     std::vector<uint8_t> bytes;
     PushFourCC (bytes, "RIFF");
     PushUint32LE (bytes, 4); // "WAVE" only
     PushFourCC (bytes, "WAVE");
     TestForReadError (bytes, log, "Header Rejection - fmt chunk, missing fmt chunk", wav::ReadErrorCode::MissingFmtChunk);
 }
-inline void UnsupportedFloatSampleWidth (TestLog & log)
+inline void UnsupportedFloatContainerSize (TestLog & log)
 {
     // PCMWAVEFORMAT float
     // WAVEFORMATEX float
@@ -343,17 +342,17 @@ inline void RunFormatChunkTests (TestLog & log)
     SampleRateEqualsZero (log);
     BlockAlignEqualsZero (log);
     UnsupportedFormatCode (log);
-    ExtensibleFormatSizeCodeMismatch (log);
+    ExtensibleFmtSizeCodeMismatch (log);
     InvalidCbSize (log);
     ExtensibleSubformatNotSupported (log);
     ExtensibleBitsPerSampleChannelsBlockAlignMismatch (log);
-    InvalidFormatSize (log);
-    MultipleFormatChunks (log);
-    MissingFmt (log);
+    UnsupportedFmtChunkSize (log);
+    MultipleFmtChunks (log);
+    MissingFmtChunk (log);
     FloatBitDepthNotEqualToContainerSize (log);
     LinearBitDepthExceedsContainerSize (log);
     BlockAlignNotDivisibleByChannels (log);
-    UnsupportedFloatSampleWidth (log);
+    UnsupportedFloatContainerSize (log);
     UnsupportedLPCMContainerSize (log);
 }
 
@@ -393,7 +392,7 @@ inline void MultipleDataChunks (TestLog & log)
 
     TestForReadError (bytes, log, "Header Rejection - data chunk, multiple data chunks");
 }
-inline void MissingData (TestLog & log)
+inline void MissingDataChunk (TestLog & log)
 {
     constexpr auto formatChunkSize {wav::FormatChunkSize::PCMWAVEFORMAT};
     constexpr auto formatCode {wav::FormatCode::LinearPCM};
@@ -436,7 +435,7 @@ inline void RunDataChunkTests (TestLog & log)
     OverlargeDataChunkSize (log);
     DataChunkSizeNotDivisibleByBlockAlign (log);
     MultipleDataChunks (log);
-    MissingData (log);
+    MissingDataChunk (log);
     DataChunkBeforeFormatChunk (log);
 }
 
