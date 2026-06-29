@@ -99,11 +99,11 @@ inline void BitDepthEqualsZero (TestLog & log)
     // equals zero for that format and that check (BlockAlignZero) exists
     // and precedes this one in the fmt chunk validation.
 }
-inline void ZeroChannels (TestLog & log)
+inline void ChannelsEqualZero (TestLog & log)
 {
     constexpr uint16_t channels {0};
     const auto bytes = buildPCMWAVEFORMAT (wav::FormatCode::LinearPCM, 8, 8, channels, 44100, 8);
-    TestForReadError (bytes, log, "Header Rejection - fmt chunk, zero channels", wav::ReadErrorCode::ChannelsZero);
+    TestForReadError (bytes, log, "Header Rejection - fmt chunk, zero channels", wav::ReadErrorCode::ChannelsEqualZero);
 }
 inline void ChannelsExceedMax (TestLog & log)
 {
@@ -316,7 +316,7 @@ inline void UnsupportedLPCMContainerSize (TestLog & log)
 inline void RunFormatChunkTests (TestLog & log)
 {
     BitDepthEqualsZero (log);
-    ZeroChannels (log);
+    ChannelsEqualZero (log);
     ChannelsExceedMax (log);
     SampleRateZero (log);
     BlockAlignZero (log);

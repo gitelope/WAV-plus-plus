@@ -265,7 +265,7 @@ inline void ChunkInfo::ValidateFormatChunkAndComputeBitDepthAndContainerSize()
 
     if (format.channels == 0)
     {
-        throw ReadError (ReadErrorCode::ChannelsZero, "Invalid value: channels must not be zero.");
+        throw ReadError (ReadErrorCode::ChannelsEqualZero, "Invalid value: channels must not be zero.");
     }
     if (format.channels > maxChannels)
     {

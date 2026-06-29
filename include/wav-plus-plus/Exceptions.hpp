@@ -35,7 +35,7 @@ enum class ReadErrorCode
     // BitsPerSampleNotMultipleOf8,
     // BitsPerSampleZero,
     ChannelsExceedMax,
-    ChannelsZero,
+    ChannelsEqualZero,
     ExtensibleBitsPerSampleChannelsBlockAlignMismatch,
     ExtensibleFmtSizeCodeMismatch,
     ExtensibleSubformatNotSupported,
@@ -65,7 +65,7 @@ constexpr ReadErrorCategory categoryFor (ReadErrorCode code)
         case ReadErrorCode::BlockAlignNotDivisibleByChannels:                  return ReadErrorCategory::InvalidFile;
         case ReadErrorCode::BlockAlignZero:                                    return ReadErrorCategory::InvalidFile;
         case ReadErrorCode::BitDepthEqualsZero:                                return ReadErrorCategory::InvalidFile;
-        case ReadErrorCode::ChannelsZero:                                      return ReadErrorCategory::InvalidFile;
+        case ReadErrorCode::ChannelsEqualZero:                                 return ReadErrorCategory::InvalidFile;
         case ReadErrorCode::ExtensibleBitsPerSampleChannelsBlockAlignMismatch: return ReadErrorCategory::InvalidFile;
         case ReadErrorCode::ExtensibleFmtSizeCodeMismatch:                     return ReadErrorCategory::InvalidFile;
         case ReadErrorCode::FloatBitDepthNotEqualToContainerSize:              return ReadErrorCategory::InvalidFile;
