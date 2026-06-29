@@ -31,9 +31,6 @@ enum class ReadErrorCode
     BlockAlignEqualsZero,
     BlockAlignNotDivisibleByChannels,
     BitDepthEqualsZero,
-    // BitsPerSampleExceedsSupportedMax,
-    // BitsPerSampleNotMultipleOf8,
-    // BitsPerSampleZero,
     ChannelsExceedMax,
     ChannelsEqualsZero,
     ExtensibleBitsPerSampleChannelsBlockAlignMismatch,
@@ -60,8 +57,6 @@ constexpr ReadErrorCategory categoryFor (ReadErrorCode code)
 {
     switch (code)
     {
-        // case ReadErrorCode::BitsPerSampleZero:                                 return ReadErrorCategory::InvalidFile;
-        // case ReadErrorCode::BitsPerSampleNotMultipleOf8:                       return ReadErrorCategory::InvalidFile;
         case ReadErrorCode::BlockAlignEqualsZero:                              return ReadErrorCategory::InvalidFile;
         case ReadErrorCode::BlockAlignNotDivisibleByChannels:                  return ReadErrorCategory::InvalidFile;
         case ReadErrorCode::BitDepthEqualsZero:                                return ReadErrorCategory::InvalidFile;
@@ -73,7 +68,6 @@ constexpr ReadErrorCategory categoryFor (ReadErrorCode code)
         case ReadErrorCode::MultipleFmtChunks:                                 return ReadErrorCategory::InvalidFile;
         case ReadErrorCode::SampleRateEqualsZero:                              return ReadErrorCategory::InvalidFile;
 
-        // case ReadErrorCode::BitsPerSampleExceedsSupportedMax: return ReadErrorCategory::UnsupportedFormat;
         case ReadErrorCode::ChannelsExceedMax:                return ReadErrorCategory::UnsupportedFormat;
         case ReadErrorCode::ExtensibleSubformatNotSupported:  return ReadErrorCategory::UnsupportedFormat;
         case ReadErrorCode::UnsupportedFloatContainerSize:    return ReadErrorCategory::UnsupportedFormat;
