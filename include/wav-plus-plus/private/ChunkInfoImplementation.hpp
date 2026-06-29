@@ -337,7 +337,7 @@ inline void ChunkInfo::ValidateFormatChunkAndComputeBitDepthAndContainerSize()
     // bit depth checks
     if (bitDepth == 0)
     {
-        throw ReadError ("bit depth must be greater than 0.");
+        throw ReadError (ReadErrorCode::BitDepthEqualsZero, "bit depth must be greater than 0.");
     }
     if (isFloat && bitDepth != containerSize)
     {

@@ -30,6 +30,7 @@ enum class ReadErrorCode
 {
     BlockAlignNotDivisibleByChannels,
     BlockAlignZero,
+    BitDepthEqualsZero,
     // BitsPerSampleExceedsSupportedMax,
     // BitsPerSampleNotMultipleOf8,
     // BitsPerSampleZero,
@@ -63,6 +64,7 @@ constexpr ReadErrorCategory categoryFor (ReadErrorCode code)
         // case ReadErrorCode::BitsPerSampleNotMultipleOf8:                       return ReadErrorCategory::InvalidFile;
         case ReadErrorCode::BlockAlignNotDivisibleByChannels:                  return ReadErrorCategory::InvalidFile;
         case ReadErrorCode::BlockAlignZero:                                    return ReadErrorCategory::InvalidFile;
+        case ReadErrorCode::BitDepthEqualsZero:                                return ReadErrorCategory::InvalidFile;
         case ReadErrorCode::ChannelsZero:                                      return ReadErrorCategory::InvalidFile;
         case ReadErrorCode::ExtensibleBitsPerSampleChannelsBlockAlignMismatch: return ReadErrorCategory::InvalidFile;
         case ReadErrorCode::ExtensibleFmtSizeCodeMismatch:                     return ReadErrorCategory::InvalidFile;

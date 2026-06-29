@@ -74,23 +74,31 @@ inline void RunRiffChunkTests (TestLog & log)
 
 // FORMAT CHUNK TESTS ///////////////////////////////////////////////////////////////
 
-/*
-inline void BitsPerSampleZero (TestLog & log)
+inline void BitDepthEqualsZero (TestLog & log)
 {
-    auto bytes = buildPCMWAVEFORMAT (wav::FormatCode::LinearPCM, 8, 8, 1, 44100, 8);
-    OverwriteUint16LE (bytes, chunkOffset ("fmt ", bytes) + 22, 0);
-    TestForReadError (bytes, log, "Header Rejection - fmt chunk, bits per sample zero", wav::ReadErrorCode::BitsPerSampleZero);
+    constexpr uint16_t bitDepth {0};
+    constexpr uint16_t containerSize {24};
+
+    constexpr uint16_t channels {2};
+    constexpr uint32_t sr {48000};
+    constexpr uint32_t frames {8};
+    {
+        const auto bytes = buildPCMWAVEFORMAT (wav::FormatCode::LinearPCM, bitDepth, containerSize, channels, sr, frames);
+        TestForReadError (bytes, log, "Header Rejection - fmt chunk, bit depth zero, PCMWAVEFORMAT", wav::ReadErrorCode::BitDepthEqualsZero);
+    }
+    {
+        const auto bytes = buildWAVEFORMATEX (wav::FormatCode::LinearPCM, bitDepth, containerSize, channels, sr, frames);
+        TestForReadError (bytes, log, "Header Rejection - fmt chunk, bit depth zero, WAVEFORMATEX", wav::ReadErrorCode::BitDepthEqualsZero);
+    }
+    {
+        const auto bytes = buildWAVEFORMATEXTENSIBLE (wav::ExtensibleFormat::LinearPCM, bitDepth, containerSize, channels, sr, frames, wav::SpeakerConfiguration::Stereo);
+        TestForReadError (bytes, log, "Header Rejection - fmt chunk, bit depth zero, WAVEFORMATEXTENSIBLE", wav::ReadErrorCode::BitDepthEqualsZero);
+    }
+
+    // No need to test WAVEFORMAT since bitDepth = 0 implies blockAlign
+    // equals zero for that format and that check (BlockAlignZero) exists
+    // and precedes this one in the fmt chunk validation.
 }
- */
-/*
-inline void BitsPerSampleOver64 (TestLog & log)
-{
-    constexpr uint16_t bitDepth {128};
-    auto bytes = buildPCMWAVEFORMAT (wav::FormatCode::LinearPCM, 8, 8, 1, 44100, 8);
-    OverwriteUint16LE (bytes, chunkOffset ("fmt ", bytes) + 22, bitDepth);
-    TestForReadError (bytes, log, "Header Rejection - fmt chunk, bits per sample exceeds max", wav::ReadErrorCode::BitsPerSampleExceedsSupportedMax);
-}
- */
 inline void ZeroChannels (TestLog & log)
 {
     constexpr uint16_t channels {0};
@@ -304,28 +312,10 @@ inline void UnsupportedLPCMContainerSize (TestLog & log)
         TestForReadError (bytes, log, "Header Rejection - fmt chunk, unsupported LPCM container size, WAVEFORMATEXTENSIBLE", wav::ReadErrorCode::UnsupportedLPCMContainerSize);
     }
 }
-/*
-inline void ExtensibleBitsPerSampleNotMultipleOfEight (TestLog & log)
-{
-    constexpr uint16_t validBitsPerSample {20};
-    constexpr uint16_t bitsPerSample {24};
-
-    // use LPCM since float PCM is further restricted to 32 and 64 bits
-    constexpr auto subFormat {wav::ExtensibleFormat::LinearPCM};
-
-    constexpr auto channelMask {wav::SpeakerConfiguration::Stereo};
-
-    auto bytes = buildWAVEFORMATEXTENSIBLE (subFormat, validBitsPerSample, bitsPerSample, 2, 48000, 8, channelMask);
-    // overwrite bitsPerSample with 28
-    OverwriteUint16LE (bytes, chunkOffset ("fmt ", bytes) + 22, 28);
-    TestForReadError (bytes, log, "Header Rejection - fmt chunk, WAVEFORMATEXTENSIBLE, bitsPerSample not multiple of 8", wav::ReadErrorCode::ExtensibleBitsPerSampleNotMultipleOf8);
-}
- */
 
 inline void RunFormatChunkTests (TestLog & log)
 {
-    // BitsPerSampleZero (log);
-    // BitsPerSampleOver64 (log);
+    BitDepthEqualsZero (log);
     ZeroChannels (log);
     ChannelsExceedMax (log);
     SampleRateZero (log);
@@ -342,7 +332,6 @@ inline void RunFormatChunkTests (TestLog & log)
     BlockAlignNotDivisibleByChannels (log);
     UnsupportedFloatSampleWidth (log);
     UnsupportedLPCMContainerSize (log);
-    // ExtensibleBitsPerSampleNotMultipleOfEight (log);
 }
 
 // DATA CHUNK TESTS ///////////////////////////////////////////////////////////////
