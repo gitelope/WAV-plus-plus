@@ -211,7 +211,7 @@ inline void MissingFmt (TestLog & log)
     PushFourCC (bytes, "RIFF");
     PushUint32LE (bytes, 4); // "WAVE" only
     PushFourCC (bytes, "WAVE");
-    TestForReadError (bytes, log, "Header Rejection - fmt chunk, missing fmt chunk");
+    TestForReadError (bytes, log, "Header Rejection - fmt chunk, missing fmt chunk", wav::ReadErrorCode::MissingFmtChunk);
 }
 inline void UnsupportedFloatSampleWidth (TestLog & log)
 {
@@ -414,7 +414,7 @@ inline void MissingData (TestLog & log)
     Push_WAVEFORMAT_Fmt    (bytes, formatCode, channels, sampleRate, byteRate, blockAlign);
     Push_PCMWAVEFORMAT_Fmt (bytes, 8);
 
-    TestForReadError (bytes, log, "Header Rejection - data chunk, missing data chunk");
+    TestForReadError (bytes, log, "Header Rejection - data chunk, missing data chunk", wav::ReadErrorCode::MissingDataChunk);
 }
 inline void DataChunkBeforeFormatChunk (TestLog & log)
 {

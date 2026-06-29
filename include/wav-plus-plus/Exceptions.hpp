@@ -39,6 +39,8 @@ enum class ReadErrorCode
     FloatBitDepthNotEqualToContainerSize,
     InvalidCbSize,
     LinearBitDepthExceedsContainerSize,
+    MissingDataChunk,
+    MissingFmtChunk,
     MultipleFmtChunks,
     MultipleRiffChunks,
     RiffIdNotFound,
@@ -70,6 +72,8 @@ constexpr ReadErrorCategory categoryFor (ReadErrorCode code)
         case ReadErrorCode::FloatBitDepthNotEqualToContainerSize:              return ReadErrorCategory::InvalidFile;
         case ReadErrorCode::InvalidCbSize:                                     return ReadErrorCategory::InvalidFile;
         case ReadErrorCode::LinearBitDepthExceedsContainerSize:                return ReadErrorCategory::InvalidFile;
+        case ReadErrorCode::MissingDataChunk:                                  return ReadErrorCategory::InvalidFile;
+        case ReadErrorCode::MissingFmtChunk:                                   return ReadErrorCategory::InvalidFile;
         case ReadErrorCode::MultipleFmtChunks:                                 return ReadErrorCategory::InvalidFile;
         case ReadErrorCode::MultipleRiffChunks:                                return ReadErrorCategory::InvalidFile;
         case ReadErrorCode::RiffIdNotFound:                                    return ReadErrorCategory::InvalidFile;

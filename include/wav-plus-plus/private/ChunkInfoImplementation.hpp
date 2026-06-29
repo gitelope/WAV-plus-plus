@@ -110,11 +110,11 @@ inline void ChunkInfo::ValidateAfterParsing()
 {
     if (!fmtChunkEncountered)
     {
-        throw ReadError ("Invalid format: missing fmt chunk.");
+        throw ReadError (ReadErrorCode::MissingFmtChunk, "Invalid format: missing fmt chunk.");
     }
     if (!dataChunkEncountered)
     {
-        throw ReadError ("Invalid format: missing data chunk.");
+        throw ReadError (ReadErrorCode::MissingDataChunk, "Invalid format: missing data chunk.");
     }
 }
 
