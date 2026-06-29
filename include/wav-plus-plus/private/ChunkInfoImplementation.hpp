@@ -50,7 +50,7 @@ inline void ChunkInfo::ReadFile (std::FILE * in)
     actualFileSize = fileSize (in);
 
     const auto firstChunkID {fourCharacterCode (in)};
-    if (firstChunkID != riff.id) throw ReadError ("RIFF chunk ID not found.");
+    if (firstChunkID != riff.id) throw ReadError (ReadErrorCode::RiffIdNotFound, "RIFF chunk ID not found.");
     ReadRiffChunk (in);
     RegisterChunk (firstChunkID, 0);
 
@@ -65,7 +65,7 @@ inline void ChunkInfo::ReadFile (std::FILE * in)
         else if (chunkID == fact.id)   ReadFactChunk                   (in);
         else if (chunkID == peak.id)   ReadPeakChunk                   (in, chunkStart);
         else if (chunkID == data.id)   ReadDataChunkSizeAndSkipSamples (in);
-        else if (chunkID == riff.id)   throw ReadError ("Invalid format: File contains more than one RIFF chunk.");
+        else if (chunkID == riff.id)   throw ReadError (ReadErrorCode::MultipleRiffChunks, "Invalid format: File contains more than one RIFF chunk.");
         else
         {
             // Skip rest of chunk (including any padding byte).
@@ -125,7 +125,8 @@ inline void ChunkInfo::ReadRiffChunk (std::FILE * in)
     riff.size = uint32_le (in);
     if (fourCharacterCode (in) != riff.format)
     {
-        throw ReadError ("The format in the RIFF chunk should be \"" + riff.format + "\".");
+        throw ReadError (ReadErrorCode::RiffSubformatNotWave,
+                         "The format in the RIFF chunk should be \"" + riff.format + "\".");
     }
 }
 

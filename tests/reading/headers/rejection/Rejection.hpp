@@ -28,19 +28,19 @@ void UpdateRIFFChunkSize (std::vector<uint8_t> &);
 
 // RIFF CHUNK TESTS ///////////////////////////////////////////////////////////////
 
-inline void FirstFourBytesNotRIFF (TestLog & log)
+inline void RiffIdNotFound (TestLog & log)
 {
     auto bytes = buildPCMWAVEFORMAT (wav::FormatCode::LinearPCM, 8, 8, 1, 44100, 8);
     bytes[0] = 'J'; bytes[1] = 'I'; bytes[2] = 'F'; bytes[3] = 'F'; // JIFF
-    TestForReadError (bytes, log, "Header Rejection - RIFF chunk, first four bytes not RIFF");
+    TestForReadError (bytes, log, "Header Rejection - RIFF chunk, first four bytes not RIFF", wav::ReadErrorCode::RiffIdNotFound);
 }
-inline void WrongRIFFSubformat (TestLog & log)
+inline void RiffSubformatNotWave (TestLog & log)
 {
     auto bytes = buildPCMWAVEFORMAT (wav::FormatCode::LinearPCM, 8, 8, 1, 44100, 8);
     bytes[8] = 'S'; bytes[9] = 'A'; bytes[10] = 'V'; bytes[11] = 'E'; // SAVE
-    TestForReadError (bytes, log, "Header Rejection - RIFF chunk, subformat not WAVE");
+    TestForReadError (bytes, log, "Header Rejection - RIFF chunk, subformat not WAVE", wav::ReadErrorCode::RiffSubformatNotWave);
 }
-inline void MultipleRIFFChunks (TestLog & log)
+inline void MultipleRiffChunks (TestLog & log)
 {
     // *** Test will fail if ReadFile becomes bounded by RIFF chunk size (instead of EOF). ***
     //
@@ -62,14 +62,14 @@ inline void MultipleRIFFChunks (TestLog & log)
     auto bytes = buildPCMWAVEFORMAT (wav::FormatCode::LinearPCM, 8, 8, 1, 44100, 8);
     const auto duplicate {bytes};
     bytes.insert (bytes.end(), duplicate.begin(), duplicate.end());
-    TestForReadError (bytes, log, "Header Rejection - RIFF chunk, multiple RIFF chunks");
+    TestForReadError (bytes, log, "Header Rejection - RIFF chunk, multiple RIFF chunks", wav::ReadErrorCode::MultipleRiffChunks);
 }
 
 inline void RunRiffChunkTests (TestLog & log)
 {
-    FirstFourBytesNotRIFF (log);
-    WrongRIFFSubformat (log);
-    MultipleRIFFChunks (log);
+    RiffIdNotFound (log);
+    RiffSubformatNotWave (log);
+    MultipleRiffChunks (log);
 }
 
 // FORMAT CHUNK TESTS ///////////////////////////////////////////////////////////////
