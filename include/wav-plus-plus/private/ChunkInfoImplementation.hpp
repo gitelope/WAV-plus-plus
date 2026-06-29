@@ -273,11 +273,11 @@ inline void ChunkInfo::ValidateFormatChunkAndComputeBitDepthAndContainerSize()
     }
     if (format.sampleRate == 0)
     {
-        throw ReadError (ReadErrorCode::SampleRateZero, "Invalid value: sample rate must not be zero.");
+        throw ReadError (ReadErrorCode::SampleRateEqualsZero, "Invalid value: sample rate must not be zero.");
     }
     if (format.blockAlign == 0)
     {
-        throw ReadError (ReadErrorCode::BlockAlignZero, "Invalid value: block align must not be zero.");
+        throw ReadError (ReadErrorCode::BlockAlignEqualsZero, "Invalid value: block align must not be zero.");
     }
     if (format.blockAlign % format.channels != 0)
     {

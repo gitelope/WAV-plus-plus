@@ -96,7 +96,7 @@ inline void BitDepthEqualsZero (TestLog & log)
     }
 
     // No need to test WAVEFORMAT since bitDepth = 0 implies blockAlign
-    // equals zero for that format and that check (BlockAlignZero) exists
+    // equals zero for that format and that check (BlockAlignEqualsZero) exists
     // and precedes this one in the fmt chunk validation.
 }
 inline void ChannelsEqualsZero (TestLog & log)
@@ -112,17 +112,17 @@ inline void ChannelsExceedMax (TestLog & log)
     const auto bytes = buildPCMWAVEFORMAT (wav::FormatCode::LinearPCM, 8, 8, channels, 44100, frames);
     TestForReadError (bytes, log, "Header Rejection - fmt chunk, channels exceed WAV++ maximum", wav::ReadErrorCode::ChannelsExceedMax);
 }
-inline void SampleRateZero (TestLog & log)
+inline void SampleRateEqualsZero (TestLog & log)
 {
     constexpr uint32_t sampleRate {0};
     const auto bytes = buildPCMWAVEFORMAT (wav::FormatCode::LinearPCM, 8, 8, 1, sampleRate, 8);
-    TestForReadError (bytes, log, "Header Rejection - fmt chunk, sample rate zero", wav::ReadErrorCode::SampleRateZero);
+    TestForReadError (bytes, log, "Header Rejection - fmt chunk, sample rate zero", wav::ReadErrorCode::SampleRateEqualsZero);
 }
-inline void BlockAlignZero (TestLog & log)
+inline void BlockAlignEqualsZero (TestLog & log)
 {
     auto bytes = buildPCMWAVEFORMAT (wav::FormatCode::LinearPCM, 8, 8, 1, 44100, 8);
     OverwriteUint16LE (bytes, chunkOffset ("fmt ", bytes) + 20, 0);
-    TestForReadError (bytes, log, "Header Rejection - fmt chunk, block align zero", wav::ReadErrorCode::BlockAlignZero);
+    TestForReadError (bytes, log, "Header Rejection - fmt chunk, block align zero", wav::ReadErrorCode::BlockAlignEqualsZero);
 }
 inline void UnsupportedFormatCode (TestLog & log)
 {
@@ -318,8 +318,8 @@ inline void RunFormatChunkTests (TestLog & log)
     BitDepthEqualsZero (log);
     ChannelsEqualsZero (log);
     ChannelsExceedMax (log);
-    SampleRateZero (log);
-    BlockAlignZero (log);
+    SampleRateEqualsZero (log);
+    BlockAlignEqualsZero (log);
     UnsupportedFormatCode (log);
     ExtensibleFormatSizeCodeMismatch (log);
     InvalidCbSize (log);

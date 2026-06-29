@@ -28,8 +28,8 @@ enum class ReadErrorCategory
 
 enum class ReadErrorCode
 {
+    BlockAlignEqualsZero,
     BlockAlignNotDivisibleByChannels,
-    BlockAlignZero,
     BitDepthEqualsZero,
     // BitsPerSampleExceedsSupportedMax,
     // BitsPerSampleNotMultipleOf8,
@@ -42,7 +42,7 @@ enum class ReadErrorCode
     FloatBitDepthNotEqualToContainerSize,
     InvalidCbSize,
     MultipleFmtChunks,
-    SampleRateZero,
+    SampleRateEqualsZero,
     UnsupportedFloatContainerSize,
     UnsupportedFmtChunkSize,
     UnsupportedFormatCode,
@@ -62,8 +62,8 @@ constexpr ReadErrorCategory categoryFor (ReadErrorCode code)
     {
         // case ReadErrorCode::BitsPerSampleZero:                                 return ReadErrorCategory::InvalidFile;
         // case ReadErrorCode::BitsPerSampleNotMultipleOf8:                       return ReadErrorCategory::InvalidFile;
+        case ReadErrorCode::BlockAlignEqualsZero:                              return ReadErrorCategory::InvalidFile;
         case ReadErrorCode::BlockAlignNotDivisibleByChannels:                  return ReadErrorCategory::InvalidFile;
-        case ReadErrorCode::BlockAlignZero:                                    return ReadErrorCategory::InvalidFile;
         case ReadErrorCode::BitDepthEqualsZero:                                return ReadErrorCategory::InvalidFile;
         case ReadErrorCode::ChannelsEqualsZero:                                return ReadErrorCategory::InvalidFile;
         case ReadErrorCode::ExtensibleBitsPerSampleChannelsBlockAlignMismatch: return ReadErrorCategory::InvalidFile;
@@ -71,7 +71,7 @@ constexpr ReadErrorCategory categoryFor (ReadErrorCode code)
         case ReadErrorCode::FloatBitDepthNotEqualToContainerSize:              return ReadErrorCategory::InvalidFile;
         case ReadErrorCode::InvalidCbSize:                                     return ReadErrorCategory::InvalidFile;
         case ReadErrorCode::MultipleFmtChunks:                                 return ReadErrorCategory::InvalidFile;
-        case ReadErrorCode::SampleRateZero:                                    return ReadErrorCategory::InvalidFile;
+        case ReadErrorCode::SampleRateEqualsZero:                              return ReadErrorCategory::InvalidFile;
 
         // case ReadErrorCode::BitsPerSampleExceedsSupportedMax: return ReadErrorCategory::UnsupportedFormat;
         case ReadErrorCode::ChannelsExceedMax:                return ReadErrorCategory::UnsupportedFormat;
