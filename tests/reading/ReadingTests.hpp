@@ -6,11 +6,13 @@
 
 #include "headers/HeaderParsing.hpp"
 #include "decoding/SampleDecoding.hpp"
+#include "invalid_argument/InvalidArgument.hpp"
 
 void TestReading (TestLog & log)
 {
     TestHeaderParsing (log);
     TestSampleDecoding (log);
+    TestInvalidArgument (log);
 }
 
 #endif

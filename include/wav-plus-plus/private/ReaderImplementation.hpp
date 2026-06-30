@@ -113,7 +113,8 @@ size_t Reader::read (std::vector<T> & destination, size_t samplesRequested)
 {
     if (samplesRequested > destination.size())
     {
-        throw ReadError ("samples requested > destination size");
+        throw ReadError (ReadErrorCode::SamplesRequestedExceedsDestinationSize,
+                         "samples requested > destination size");
     }
     return read (destination.data(), samplesRequested);
 }
@@ -129,7 +130,8 @@ size_t Reader::readFrames (std::vector<T> & destination)
 {
     if (destination.size() % channels() != 0)
     {
-        throw ReadError ("destination size in samples is not a whole number of frames");
+        throw ReadError (ReadErrorCode::DestinationFrameSizeIsFractional,
+                         "destination size is not a whole number of frames");
     }
     return read (destination, destination.size()) / channels();
 }
@@ -139,7 +141,8 @@ size_t Reader::readFrames (std::vector<T> & destination, size_t framesRequested)
 {
     if (framesRequested * channels() > destination.size())
     {
-        throw ReadError ("frames requested > destination size");
+        throw ReadError (ReadErrorCode::FramesRequestedExceedsDestinationSize,
+                         "frames requested > destination size");
     }
     return read (destination, framesRequested * channels()) / channels();
 }
@@ -396,7 +399,8 @@ size_t Reader::read (T ** const destinations, size_t numChannels, size_t framesR
     if (!file || framesRequested == 0 || numChannels == 0) return 0;
     if (numChannels > channels())
     {
-        throw ReadError ("Requested more channels than available.");
+        throw ReadError (ReadErrorCode::ChannelsRequestedExceedsChannelCount,
+                         "Requested more channels than available.");
     }
 
     const size_t bytesPerSample {containerSizeInBits() / 8U};
