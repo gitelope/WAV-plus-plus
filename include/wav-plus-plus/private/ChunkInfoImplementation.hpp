@@ -33,8 +33,12 @@ inline ChunkInfo::ChunkInfo (std::FILE * in)
 
 inline std::string ChunkInfo::summary() const
 {
-    if (isLinear == isFloat) throw ReadError (ReadErrorCode::InternalError,
-                                              "Internal error (should have been caught earlier): file should either be float or linear PCM.");
+    if (isLinear == isFloat)
+    {
+        assert (false);
+        throw ReadError (ReadErrorCode::InternalError,
+                         "Internal error (should have been caught earlier): file should either be float or linear PCM.");
+    }
 
     const auto frames {data.size / format.blockAlign};
     const bool isPadded {containerSize > bitDepth};
@@ -239,7 +243,11 @@ inline void ChunkInfo::DeriveBitDepthAndContainerSize()
     {
         bitDepth = format.validBitsPerSample;
     }
-    else assert (false);
+    else
+    {
+        assert (false);
+        throw ReadError (ReadErrorCode::InternalError, "Internal error (should have been caught earlier): Unsupported fmt chunk size.");
+    }
 }
 inline void ChunkInfo::ValidateFormatChunkAndComputeBitDepthAndContainerSize()
 {
@@ -315,7 +323,11 @@ inline void ChunkInfo::ValidateFormatChunkAndComputeBitDepthAndContainerSize()
     }
     isLinear = format.code == FormatCode::LinearPCM || (isExtensible && format.subFormat == ExtensibleFormat::LinearPCM);
     isFloat = format.code == FormatCode::FloatPCM || (isExtensible && format.subFormat == ExtensibleFormat::FloatPCM);
-    assert (isLinear != isFloat); // exactly one should be set
+    if (isLinear == isFloat) // exactly one should be set
+    {
+        assert (false);
+        throw ReadError (ReadErrorCode::InternalError, "Internal error (should have been caught earlier): file should either be float or linear PCM.");
+    }
 
     // Derive bit depth and container size using format chunk size/format
     // and WAV++'s permissive LPCM bit-packing rules.

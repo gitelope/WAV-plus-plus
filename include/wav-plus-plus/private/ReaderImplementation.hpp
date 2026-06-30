@@ -785,7 +785,8 @@ inline double Reader::normalization (uint16_t bitDepth)
 {
     if (bitDepth == 0 || bitDepth > 64)
     {
-        throw ReadError ("Invalid value: bit depth must be greater than 0 and less than or equal to 64.");
+        assert (false);
+        throw ReadError (ReadErrorCode::InternalError, "Internal error (should have been caught earlier): bit depth must be greater than 0 and less than or equal to 64.");
     }
     return static_cast<double> (uint64_t{1} << (bitDepth - 1));
 }
