@@ -33,7 +33,8 @@ inline ChunkInfo::ChunkInfo (std::FILE * in)
 
 inline std::string ChunkInfo::summary() const
 {
-    if (isLinear == isFloat) throw ReadError ("Internal error (should have been caught earlier): file should either be float or linear PCM.");
+    if (isLinear == isFloat) throw ReadError (ReadErrorCode::InternalError,
+                                              "Internal error (should have been caught earlier): file should either be float or linear PCM.");
 
     const auto frames {data.size / format.blockAlign};
     const bool isPadded {containerSize > bitDepth};
