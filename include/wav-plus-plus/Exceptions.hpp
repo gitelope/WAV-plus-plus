@@ -42,6 +42,7 @@ enum class ReadErrorCode
     ExtensibleFmtSizeCodeMismatch,
     ExtensibleSubformatNotSupported,
     FactChunkSizeNotFour,
+    FailedToOpenFileForReading,
     FloatBitDepthNotEqualToContainerSize,
     FramesRequestedExceedsDestinationSize,
     InvalidCbSize,
@@ -78,6 +79,8 @@ constexpr ReadErrorCategory categoryFor (ReadErrorCode code)
 {
     switch (code)
     {
+        case ReadErrorCode::FailedToOpenFileForReading: return ReadErrorCategory::FileOpenFailure;
+
         case ReadErrorCode::BlockAlignEqualsZero:                              return ReadErrorCategory::InvalidFile;
         case ReadErrorCode::BlockAlignNotDivisibleByChannels:                  return ReadErrorCategory::InvalidFile;
         case ReadErrorCode::BitDepthEqualsZero:                                return ReadErrorCategory::InvalidFile;
