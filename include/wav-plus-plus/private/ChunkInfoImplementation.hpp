@@ -62,7 +62,7 @@ inline void ChunkInfo::ReadFile (std::FILE * in)
     while (peek (in) != EOF)
     {
         const auto chunkStart {tell (in)};
-        if (chunkStart == -1) throw ReadError ("Failed to get chunk position.");
+        if (chunkStart == -1) throw ReadError (ReadErrorCode::FileTellFailed, "Failed to get chunk position.");
         const auto chunkID {fourCharacterCode (in)};
         RegisterChunk (chunkID, chunkStart);
 
@@ -97,7 +97,7 @@ inline void SkipChunk (std::FILE * file, uint32_t size)
     int64_t skipAmount {static_cast<int64_t> (size) + (size % 2)}; // padding byte if odd
     if (seek (file, skipAmount, SEEK_CUR) != 0)
     {
-        throw ReadError ("Failed to skip chunk.");
+        throw ReadError (ReadErrorCode::FileSeekFailed, "Failed to skip chunk.");
     }
 }
 
@@ -181,7 +181,7 @@ inline void ChunkInfo::ReadFormatChunk (std::FILE * in)
     // we must skip the last padding byte.
     if (format.size % 2)
     {
-        if (seek (in, 1, SEEK_CUR) != 0) throw ReadError ("Failed to skip format chunk padding.");
+        if (seek (in, 1, SEEK_CUR) != 0) throw ReadError (ReadErrorCode::FileSeekFailed, "Failed to skip format chunk padding.");
     }
 
     ValidateFormatChunkAndComputeBitDepthAndContainerSize();
@@ -401,7 +401,8 @@ inline void ChunkInfo::ReadPeakChunk (std::FILE * in, std::int64_t chunkStart)
     const auto bodyStart = tell (in);
     if (bodyStart == -1)
     {
-        throw ReadError ("Failed to get current file position before parsing PEAK chunk body.");
+        throw ReadError (ReadErrorCode::FileTellFailed,
+                         "Failed to get current file position before parsing PEAK chunk body.");
     }
     const auto bytesRemaining {actualFileSize - bodyStart};
     if (peak.size > bytesRemaining)
@@ -461,7 +462,7 @@ inline void ChunkInfo::ReadDataChunkSizeAndSkipSamples (std::FILE * in)
 
     // make sure size doesn't imply chunk overuns EOF
     data.offset = tell (in);
-    if (data.offset == -1) throw ReadError ("Failed to get current file position for data chunk.");
+    if (data.offset == -1) throw ReadError (ReadErrorCode::FileTellFailed, "Failed to get current file position for data chunk.");
     const auto bytesRemaining {actualFileSize - data.offset};
     if (data.size > bytesRemaining)
     {

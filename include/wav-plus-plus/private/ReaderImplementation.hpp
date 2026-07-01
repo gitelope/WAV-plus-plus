@@ -27,7 +27,7 @@ inline Reader::Reader (std::filesystem::path const & filepath, uint32_t suggeste
     // Position file at start of data
     if (seek (file.get(), dataChunk.offset, SEEK_SET) != 0)
     {
-        throw ReadError ("Failed to advance to data portion of data chunk.");
+        throw ReadError (ReadErrorCode::FileSeekFailed, "Failed to advance to data portion of data chunk.");
     }
 
     InitializeBuffer (suggestedBufferSizeKB);
