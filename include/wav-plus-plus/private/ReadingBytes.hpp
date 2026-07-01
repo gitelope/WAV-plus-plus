@@ -57,7 +57,7 @@ inline std::string fourCharacterCode (std::FILE * in)
 {
     std::string code (4, '\0');
     if (std::fread (code.data(), 1, 4, in) != 4)
-        throw ReadError ("Failed to read 4-character code from file.");
+        throw ReadError (ReadErrorCode::FileReadFailed, "Failed to read 4-character code from file.");
     return code;
 }
 
@@ -80,7 +80,7 @@ void Read (std::FILE * in, std::array<uint8_t,N> & buffer)
 {
     if (std::fread (buffer.data(), 1, buffer.size(), in) != buffer.size())
     {
-        throw ReadError (std::format ("Failed to read {} bytes from file.", N));
+        throw ReadError (ReadErrorCode::FileReadFailed, std::format ("Failed to read {} bytes from file.", N));
     }
 }
 
@@ -98,7 +98,7 @@ inline uint8_t uint8 (std::FILE * in)
     uint8_t result {0};
     if (std::fread (&result, 1, 1, in) != 1)
     {
-        throw ReadError ("Failed to read uint8_t from file.");
+        throw ReadError (ReadErrorCode::FileReadFailed, "Failed to read uint8_t from file.");
     }
     return result;
 }
@@ -257,7 +257,7 @@ inline std::vector<std::byte> bytesFromFile (std::filesystem::path const & filep
 
     if (std::fread (bytes.data(), 1, length, in.get()) != length)
     {
-        throw ReadError ("Failed to read file.");
+        throw ReadError (ReadErrorCode::FileReadFailed, "Failed to read file.");
     }
 
     return bytes;
