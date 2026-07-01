@@ -42,17 +42,20 @@ inline std::int64_t fileSize (std::FILE * f)
 {
     const auto currentPosition = tell (f);
     if (currentPosition == -1)
-        throw ReadError ("Failed to get current file position.");
+        throw ReadError (ReadErrorCode::FileTellFailed, "Failed to get current file position.");
 
     if (seek (f, 0, SEEK_END) != 0)
-        throw ReadError ("Failed to seek to end of file; file position is undefined.");
+        throw ReadError (ReadErrorCode::FileSeekFailed,
+                         "Failed to seek to end of file; file position is undefined.");
 
     const auto size = tell (f);
     if (size == -1)
-        throw ReadError ("Failed to get file size; file position is at end-of-file.");
+        throw ReadError (ReadErrorCode::FileTellFailed,
+                         "Failed to get file size; file position is at end-of-file.");
 
     if (seek (f, currentPosition, SEEK_SET) != 0)
-        throw ReadError ("Failed to restore file position; file position is undefined.");
+        throw ReadError (ReadErrorCode::FileSeekFailed,
+                         "Failed to restore file position; file position is undefined.");
 
     return size;
 }
