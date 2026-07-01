@@ -165,7 +165,7 @@ void Reader::ReadLPCMU8 (T * destination, size_t totalSamplesToRead)
 
         if (std::fread (buffer.data(), bytesPerSample, samplesToRead, file.get()) != samplesToRead)
         {
-            throw ReadError (ReadErrorCode::ReadBufferFromFileFailed, "Failed to read buffer from file.");
+            throw ReadError (ReadErrorCode::FileReadFailed, "Failed to read buffer from file.");
         }
 
         // Convert to destination type
@@ -196,7 +196,7 @@ void Reader::ReadLPCM16 (T * destination, size_t totalSamplesToRead)
 
         if (std::fread (buffer.data(), bytesPerSample, samplesToRead, file.get()) != samplesToRead)
         {
-            throw ReadError (ReadErrorCode::ReadBufferFromFileFailed, "Failed to read buffer from file.");
+            throw ReadError (ReadErrorCode::FileReadFailed, "Failed to read buffer from file.");
         }
 
         // Byteswap if needed
@@ -236,7 +236,7 @@ void Reader::ReadLPCM24 (T * destination, size_t totalSamplesToRead)
 
         if (std::fread (buffer.data(), bytesPerSample, samplesToRead, file.get()) != samplesToRead)
         {
-            throw ReadError (ReadErrorCode::ReadBufferFromFileFailed, "Failed to read buffer from file.");
+            throw ReadError (ReadErrorCode::FileReadFailed, "Failed to read buffer from file.");
         }
 
         // Byteswap if needed
@@ -276,7 +276,7 @@ void Reader::ReadLPCM32 (T * destination, size_t totalSamplesToRead)
 
         if (std::fread (buffer.data(), bytesPerSample, samplesToRead, file.get()) != samplesToRead)
         {
-            throw ReadError (ReadErrorCode::ReadBufferFromFileFailed, "Failed to read buffer from file.");
+            throw ReadError (ReadErrorCode::FileReadFailed, "Failed to read buffer from file.");
         }
 
         // Byteswap if needed
@@ -306,7 +306,7 @@ void Reader::ReadFloatPCMNoConversion (T * destination, size_t samplesToRead)
     // Read directly from file to destination.
     if (std::fread (destination, sizeof (T), samplesToRead, file.get()) != samplesToRead)
     {
-        throw ReadError (ReadErrorCode::ReadBufferFromFileFailed, "Failed to read buffer from file.");
+        throw ReadError (ReadErrorCode::FileReadFailed, "Failed to read buffer from file.");
     }
 
     // Byteswap if needed
@@ -333,7 +333,7 @@ inline void Reader::ReadFloatToDouble (double * destination, size_t totalSamples
 
         if (std::fread (buffer.data(), bytesPerSample, samplesToRead, file.get()) != samplesToRead)
         {
-            throw ReadError (ReadErrorCode::ReadBufferFromFileFailed, "Failed to read buffer from file.");
+            throw ReadError (ReadErrorCode::FileReadFailed, "Failed to read buffer from file.");
         }
 
         // Byteswap if needed
@@ -370,7 +370,7 @@ inline void Reader::ReadDoubleToFloat (float * destination, size_t totalSamplesT
 
         if (std::fread (buffer.data(), bytesPerSample, samplesToRead, file.get()) != samplesToRead)
         {
-            throw ReadError (ReadErrorCode::ReadBufferFromFileFailed, "Failed to read buffer from file.");
+            throw ReadError (ReadErrorCode::FileReadFailed, "Failed to read buffer from file.");
         }
 
         // Byteswap if needed
@@ -473,7 +473,7 @@ void Reader::ReadLPCMU8 (T ** const destinations, size_t channelsToRead, size_t 
 
         if (std::fread (buffer.data(), bytesPerSample, samplesThisChunk, file.get()) != samplesThisChunk)
         {
-            throw ReadError (ReadErrorCode::ReadBufferFromFileFailed, "Failed to read buffer from file.");
+            throw ReadError (ReadErrorCode::FileReadFailed, "Failed to read buffer from file.");
         }
 
         for (size_t frame = 0; frame < framesThisChunk; ++frame)
@@ -515,7 +515,7 @@ void Reader::ReadLPCM16 (T ** const destinations, size_t channelsToRead, size_t 
 
         if (std::fread (buffer.data(), bytesPerSample, samplesThisChunk, file.get()) != samplesThisChunk)
         {
-            throw ReadError (ReadErrorCode::ReadBufferFromFileFailed, "Failed to read buffer from file.");
+            throw ReadError (ReadErrorCode::FileReadFailed, "Failed to read buffer from file.");
         }
 
         if constexpr (std::endian::native == std::endian::big)
@@ -565,7 +565,7 @@ void Reader::ReadLPCM24 (T ** const destinations, size_t channelsToRead, size_t 
 
         if (std::fread (buffer.data(), bytesPerSample, samplesThisChunk, file.get()) != samplesThisChunk)
         {
-            throw ReadError (ReadErrorCode::ReadBufferFromFileFailed, "Failed to read buffer from file.");
+            throw ReadError (ReadErrorCode::FileReadFailed, "Failed to read buffer from file.");
         }
 
         if constexpr (std::endian::native == std::endian::big)
@@ -615,7 +615,7 @@ void Reader::ReadLPCM32 (T ** const destinations, size_t channelsToRead, size_t 
 
         if (std::fread (buffer.data(), bytesPerSample, samplesThisChunk, file.get()) != samplesThisChunk)
         {
-            throw ReadError (ReadErrorCode::ReadBufferFromFileFailed, "Failed to read buffer from file.");
+            throw ReadError (ReadErrorCode::FileReadFailed, "Failed to read buffer from file.");
         }
 
         if constexpr (std::endian::native == std::endian::big)
@@ -663,7 +663,7 @@ void Reader::ReadFloatPCM32 (T ** const destinations, size_t channelsToRead, siz
 
         if (std::fread (buffer.data(), bytesPerSample, samplesThisChunk, file.get()) != samplesThisChunk)
         {
-            throw ReadError (ReadErrorCode::ReadBufferFromFileFailed, "Failed to read buffer from file.");
+            throw ReadError (ReadErrorCode::FileReadFailed, "Failed to read buffer from file.");
         }
 
         // Byteswap if needed. (Consider doing after deinterleaving instead of before.)
@@ -714,7 +714,7 @@ void Reader::ReadFloatPCM64 (T ** const destinations, size_t channelsToRead, siz
 
         if (std::fread (buffer.data(), bytesPerSample, samplesThisChunk, file.get()) != samplesThisChunk)
         {
-            throw ReadError (ReadErrorCode::ReadBufferFromFileFailed, "Failed to read buffer from file.");
+            throw ReadError (ReadErrorCode::FileReadFailed, "Failed to read buffer from file.");
         }
 
         // Byteswap if needed. (Consider doing after deinterleaving instead of before.)
