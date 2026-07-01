@@ -60,6 +60,7 @@ enum class ReadErrorCode
     PeakChunkSizeMismatchesChannels,
     PeakChunkSizeExceedsFileSize,
     PeakChunkSizeTooSmallForVersionField,
+    ReadBufferFromFileFailed,
     RiffIdNotFound,
     RiffSubformatNotWave,
     SampleRateEqualsZero,
@@ -83,8 +84,9 @@ constexpr ReadErrorCategory categoryFor (ReadErrorCode code)
     {
         case ReadErrorCode::FailedToOpenFileForReading: return ReadErrorCategory::FileOpenFailure;
 
-        case ReadErrorCode::FileSeekFailed: return ReadErrorCategory::IOFailure;
-        case ReadErrorCode::FileTellFailed: return ReadErrorCategory::IOFailure;
+        case ReadErrorCode::FileSeekFailed:           return ReadErrorCategory::IOFailure;
+        case ReadErrorCode::FileTellFailed:           return ReadErrorCategory::IOFailure;
+        case ReadErrorCode::ReadBufferFromFileFailed: return ReadErrorCategory::IOFailure;
 
         case ReadErrorCode::BlockAlignEqualsZero:                              return ReadErrorCategory::InvalidFile;
         case ReadErrorCode::BlockAlignNotDivisibleByChannels:                  return ReadErrorCategory::InvalidFile;
