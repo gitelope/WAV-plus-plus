@@ -43,7 +43,7 @@ inline File fileForReading (std::filesystem::path const & filepath)
 #else
     File f (std::fopen (filepath.c_str(), "rb"));
 #endif
-    if (f == nullptr) throw ReadError ("Failed to open file for reading.");
+    if (f == nullptr) throw ReadError (ReadErrorCode::FailedToOpenFileForReading, "Failed to open file for reading.");
     return f;
 }
 

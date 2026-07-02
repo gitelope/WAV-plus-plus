@@ -23,24 +23,24 @@ inline void TestRejection (TestLog & log)
 
 // HELPER FUNCTIONS ///////////////////////////////////////////////////////////////
 
-void TestForReadError (std::vector<uint8_t> const &, TestLog &, std::string const &);
+void TestForReadError (std::vector<uint8_t> const &, TestLog &, std::string const &, std::optional<wav::ReadErrorCode> = std::nullopt);
 void UpdateRIFFChunkSize (std::vector<uint8_t> &);
 
 // RIFF CHUNK TESTS ///////////////////////////////////////////////////////////////
 
-inline void FirstFourBytesNotRIFF (TestLog & log)
+inline void RiffIdNotFound (TestLog & log)
 {
     auto bytes = buildPCMWAVEFORMAT (wav::FormatCode::LinearPCM, 8, 8, 1, 44100, 8);
     bytes[0] = 'J'; bytes[1] = 'I'; bytes[2] = 'F'; bytes[3] = 'F'; // JIFF
-    TestForReadError (bytes, log, "Header Rejection - RIFF chunk, first four bytes not RIFF");
+    TestForReadError (bytes, log, "Header Rejection - RIFF chunk, first four bytes not RIFF", wav::ReadErrorCode::RiffIdNotFound);
 }
-inline void WrongRIFFSubformat (TestLog & log)
+inline void RiffSubformatNotWave (TestLog & log)
 {
     auto bytes = buildPCMWAVEFORMAT (wav::FormatCode::LinearPCM, 8, 8, 1, 44100, 8);
     bytes[8] = 'S'; bytes[9] = 'A'; bytes[10] = 'V'; bytes[11] = 'E'; // SAVE
-    TestForReadError (bytes, log, "Header Rejection - RIFF chunk, subformat not WAVE");
+    TestForReadError (bytes, log, "Header Rejection - RIFF chunk, subformat not WAVE", wav::ReadErrorCode::RiffSubformatNotWave);
 }
-inline void MultipleRIFFChunks (TestLog & log)
+inline void MultipleRiffChunks (TestLog & log)
 {
     // *** Test will fail if ReadFile becomes bounded by RIFF chunk size (instead of EOF). ***
     //
@@ -62,69 +62,125 @@ inline void MultipleRIFFChunks (TestLog & log)
     auto bytes = buildPCMWAVEFORMAT (wav::FormatCode::LinearPCM, 8, 8, 1, 44100, 8);
     const auto duplicate {bytes};
     bytes.insert (bytes.end(), duplicate.begin(), duplicate.end());
-    TestForReadError (bytes, log, "Header Rejection - RIFF chunk, multiple RIFF chunks");
+    TestForReadError (bytes, log, "Header Rejection - RIFF chunk, multiple RIFF chunks", wav::ReadErrorCode::MultipleRiffChunks);
 }
 
 inline void RunRiffChunkTests (TestLog & log)
 {
-    FirstFourBytesNotRIFF (log);
-    WrongRIFFSubformat (log);
-    MultipleRIFFChunks (log);
+    RiffIdNotFound (log);
+    RiffSubformatNotWave (log);
+    MultipleRiffChunks (log);
 }
 
 // FORMAT CHUNK TESTS ///////////////////////////////////////////////////////////////
 
-inline void BitsPerSampleZero (TestLog & log)
+inline void BitDepthEqualsZero (TestLog & log)
 {
-    auto bytes = buildPCMWAVEFORMAT (wav::FormatCode::LinearPCM, 8, 8, 1, 44100, 8);
-    OverwriteUint16LE (bytes, chunkOffset ("fmt ", bytes) + 22, 0);
-    TestForReadError (bytes, log, "Header Rejection - fmt chunk, bits per sample zero");
+    constexpr uint16_t bitDepth {0};
+    constexpr uint16_t containerSize {24};
+
+    constexpr uint16_t channels {2};
+    constexpr uint32_t sr {48000};
+    constexpr uint32_t frames {8};
+    {
+        const auto bytes = buildPCMWAVEFORMAT (wav::FormatCode::LinearPCM, bitDepth, containerSize, channels, sr, frames);
+        TestForReadError (bytes, log, "Header Rejection - fmt chunk, bit depth zero, PCMWAVEFORMAT", wav::ReadErrorCode::BitDepthEqualsZero);
+    }
+    {
+        const auto bytes = buildWAVEFORMATEX (wav::FormatCode::LinearPCM, bitDepth, containerSize, channels, sr, frames);
+        TestForReadError (bytes, log, "Header Rejection - fmt chunk, bit depth zero, WAVEFORMATEX", wav::ReadErrorCode::BitDepthEqualsZero);
+    }
+    {
+        const auto bytes = buildWAVEFORMATEXTENSIBLE (wav::ExtensibleFormat::LinearPCM, bitDepth, containerSize, channels, sr, frames, wav::SpeakerConfiguration::Stereo);
+        TestForReadError (bytes, log, "Header Rejection - fmt chunk, bit depth zero, WAVEFORMATEXTENSIBLE", wav::ReadErrorCode::BitDepthEqualsZero);
+    }
+
+    // No need to test WAVEFORMAT since bitDepth = 0 implies blockAlign
+    // equals zero for that format and that check (BlockAlignEqualsZero) exists
+    // and precedes this one in the fmt chunk validation.
 }
-inline void BitsPerSampleOver64 (TestLog & log)
-{
-    auto bytes = buildPCMWAVEFORMAT (wav::FormatCode::LinearPCM, 8, 8, 1, 44100, 8);
-    OverwriteUint16LE (bytes, chunkOffset ("fmt ", bytes) + 22, 65);
-    TestForReadError (bytes, log, "Header Rejection - fmt chunk, bits per sample exceeds max");
-}
-inline void ZeroChannels (TestLog & log)
+inline void ChannelsEqualsZero (TestLog & log)
 {
     constexpr uint16_t channels {0};
     const auto bytes = buildPCMWAVEFORMAT (wav::FormatCode::LinearPCM, 8, 8, channels, 44100, 8);
-    TestForReadError (bytes, log, "Header Rejection - fmt chunk, zero channels");
+    TestForReadError (bytes, log, "Header Rejection - fmt chunk, zero channels", wav::ReadErrorCode::ChannelsEqualsZero);
 }
 inline void ChannelsExceedMax (TestLog & log)
 {
     constexpr uint16_t channels {wav::maxChannels + 1};
     constexpr uint32_t frames {channels};
     const auto bytes = buildPCMWAVEFORMAT (wav::FormatCode::LinearPCM, 8, 8, channels, 44100, frames);
-    TestForReadError (bytes, log, "Header Rejection - fmt chunk, channels exceed WAV++ maximum");
+    TestForReadError (bytes, log, "Header Rejection - fmt chunk, channels exceed WAV++ maximum", wav::ReadErrorCode::ChannelsExceedMax);
 }
-inline void SampleRateZero (TestLog & log)
+inline void SampleRateEqualsZero (TestLog & log)
 {
     constexpr uint32_t sampleRate {0};
     const auto bytes = buildPCMWAVEFORMAT (wav::FormatCode::LinearPCM, 8, 8, 1, sampleRate, 8);
-    TestForReadError (bytes, log, "Header Rejection - fmt chunk, sample rate zero");
+    TestForReadError (bytes, log, "Header Rejection - fmt chunk, sample rate zero", wav::ReadErrorCode::SampleRateEqualsZero);
 }
-inline void BlockAlignZero (TestLog & log)
+inline void BlockAlignEqualsZero (TestLog & log)
 {
     auto bytes = buildPCMWAVEFORMAT (wav::FormatCode::LinearPCM, 8, 8, 1, 44100, 8);
     OverwriteUint16LE (bytes, chunkOffset ("fmt ", bytes) + 20, 0);
-    TestForReadError (bytes, log, "Header Rejection - fmt chunk, block align zero");
+    TestForReadError (bytes, log, "Header Rejection - fmt chunk, block align zero", wav::ReadErrorCode::BlockAlignEqualsZero);
 }
 inline void UnsupportedFormatCode (TestLog & log)
 {
     const uint16_t unsupportedFormatCode {0xBADD};
     auto bytes = buildPCMWAVEFORMAT (unsupportedFormatCode, 8, 8, 1, 44100, 8);
-    TestForReadError (bytes, log, "Header Rejection - fmt chunk, unsupported format code");
+    TestForReadError (bytes, log, "Header Rejection - fmt chunk, unsupported format code", wav::ReadErrorCode::UnsupportedFormatCode);
 }
-inline void InvalidFormatSize (TestLog & log)
+inline void InvalidCbSize (TestLog & log)
+{
+    // WAVEFORMATEX: cbSize must be 0 (format chunk size 18).
+    {
+        auto bytes = buildWAVEFORMATEX (wav::FormatCode::LinearPCM, 24, 24, 2, 48000, 8);
+        OverwriteUint16LE (bytes, chunkOffset ("fmt ", bytes) + 24, 22);
+        TestForReadError (bytes, log, "Header Rejection - fmt chunk, invalid cbSize, WAVEFORMATEX", wav::ReadErrorCode::InvalidCbSize);
+    }
+    // WAVEFORMATEXTENSIBLE: cbSize must be 22 (format chunk size 40).
+    {
+        auto bytes = buildWAVEFORMATEXTENSIBLE (wav::ExtensibleFormat::LinearPCM,
+                                                24, 24, 2, 48000, 8,
+                                                wav::SpeakerConfiguration::Stereo);
+        OverwriteUint16LE (bytes, chunkOffset ("fmt ", bytes) + 24, 0);
+        TestForReadError (bytes, log, "Header Rejection - fmt chunk, invalid cbSize, WAVEFORMATEXTENSIBLE", wav::ReadErrorCode::InvalidCbSize);
+    }
+}
+inline void ExtensibleSubformatNotSupported (TestLog & log)
+{
+    auto bytes = buildWAVEFORMATEXTENSIBLE (wav::ExtensibleFormat::LinearPCM,
+                                            16, 16, 2, 44100, 8,
+                                            wav::SpeakerConfiguration::Stereo);
+    // subFormat GUID starts 32 bytes after "fmt " (after validBits + channelMask).
+    OverwriteUint32LE (bytes, chunkOffset ("fmt ", bytes) + 32, 0xBADDC0DE);
+    TestForReadError (bytes, log, "Header Rejection - fmt chunk, extensible subformat not supported",
+                      wav::ReadErrorCode::ExtensibleSubformatNotSupported);
+}
+inline void ExtensibleFmtSizeCodeMismatch (TestLog & log)
+{
+    // fmt size 40 requires format code 0xFFFE (Extensible).
+    {
+        auto bytes = buildWAVEFORMATEXTENSIBLE (wav::ExtensibleFormat::LinearPCM, 24, 24, 2, 48000, 8, wav::SpeakerConfiguration::Stereo);
+        OverwriteUint16LE (bytes, chunkOffset ("fmt ", bytes) + 8, wav::FormatCode::LinearPCM);
+        TestForReadError (bytes, log, "Header Rejection - fmt chunk, 40-byte fmt chunk size but non-extensible format code", wav::ReadErrorCode::ExtensibleFmtSizeCodeMismatch);
+    }
+
+    // format code 0xFFFE requires fmt size 40.
+    {
+        auto bytes = buildWAVEFORMATEX (wav::FormatCode::LinearPCM, 24, 24, 2, 48000, 8);
+        OverwriteUint16LE (bytes, chunkOffset ("fmt ", bytes) + 8, wav::FormatCode::Extensible);
+        TestForReadError (bytes, log, "Header Rejection - fmt chunk, extensible format code without 40-byte fmt chunk size", wav::ReadErrorCode::ExtensibleFmtSizeCodeMismatch);
+    }
+}
+inline void UnsupportedFmtChunkSize (TestLog & log)
 {
     const uint32_t badSize {0xBADDBADD};
     auto bytes = buildPCMWAVEFORMAT (wav::FormatCode::LinearPCM, 8, 8, 1, 44100, 8);
     OverwriteUint32LE (bytes, chunkOffset ("fmt ", bytes) + 4, badSize);
-    TestForReadError (bytes, log, "Header Rejection - fmt chunk, invalid format size");
+    TestForReadError (bytes, log, "Header Rejection - fmt chunk, unsupported format chunk size", wav::ReadErrorCode::UnsupportedFmtChunkSize);
 }
-inline void MultipleFormatChunks (TestLog & log)
+inline void MultipleFmtChunks (TestLog & log)
 {
     const auto formatCode {wav::FormatCode::LinearPCM};
     const uint16_t bitDepth {8};
@@ -145,19 +201,18 @@ inline void MultipleFormatChunks (TestLog & log)
 
     UpdateRIFFChunkSize (bytes);
 
-    TestForReadError (bytes, log, "Header Rejection - fmt chunk, multiple fmt chunks");
+    TestForReadError (bytes, log, "Header Rejection - fmt chunk, multiple fmt chunks", wav::ReadErrorCode::MultipleFmtChunks);
 }
-inline void MissingFmt (TestLog & log)
+inline void MissingFmtChunk (TestLog & log)
 {
-    // As of 2026.06.17, adding a data chunk would trip a no fmt before data error,
-    // so we skip the data chunk, too.
+    // We skip the data chunk because it would trigger a data before fmt chunk error.
     std::vector<uint8_t> bytes;
     PushFourCC (bytes, "RIFF");
     PushUint32LE (bytes, 4); // "WAVE" only
     PushFourCC (bytes, "WAVE");
-    TestForReadError (bytes, log, "Header Rejection - fmt chunk, missing fmt chunk");
+    TestForReadError (bytes, log, "Header Rejection - fmt chunk, missing fmt chunk", wav::ReadErrorCode::MissingFmtChunk);
 }
-inline void FloatPCMUnsupportedBitsPerSample (TestLog & log)
+inline void UnsupportedFloatContainerSize (TestLog & log)
 {
     // PCMWAVEFORMAT float
     // WAVEFORMATEX float
@@ -165,47 +220,61 @@ inline void FloatPCMUnsupportedBitsPerSample (TestLog & log)
     // expected: bitsPerSample = 32 or 64
     constexpr uint16_t bitsPerSample {48};
     {
-        const auto bytes = buildPCMWAVEFORMAT (wav::FormatCode::FloatPCM, bitsPerSample, bitsPerSample, 1, 48000, 8);
-        TestForReadError (bytes, log, "Header Rejection - fmt chunk, float PCM, unsupported bits per sample, PCMWAVEFORMAT");
+        const auto bytes = buildPCMWAVEFORMAT (wav::FormatCode::FloatPCM,
+                                               bitsPerSample, bitsPerSample, 1, 48000, 8);
+        TestForReadError (bytes, log, "Header Rejection - fmt chunk, float PCM, unsupported bits per sample, PCMWAVEFORMAT", wav::ReadErrorCode::UnsupportedFloatContainerSize);
     }
     {
-        const auto bytes = buildWAVEFORMATEX (wav::FormatCode::FloatPCM, bitsPerSample, bitsPerSample, 1, 48000, 8);
-        TestForReadError (bytes, log, "Header Rejection - fmt chunk, float PCM, unsupported bits per sample, WAVEFORMATEX");
+        const auto bytes = buildWAVEFORMATEX (wav::FormatCode::FloatPCM,
+                                              bitsPerSample, bitsPerSample, 1, 48000, 8);
+        TestForReadError (bytes, log, "Header Rejection - fmt chunk, float PCM, unsupported bits per sample, WAVEFORMATEX", wav::ReadErrorCode::UnsupportedFloatContainerSize);
     }
     {
-        const auto bytes = buildWAVEFORMATEXTENSIBLE (wav::ExtensibleFormat::FloatPCM, bitsPerSample, bitsPerSample, 2, 48000, 8, wav::SpeakerConfiguration::Stereo);
-        TestForReadError (bytes, log, "Header Rejection - fmt chunk, float PCM, unsupported bits per sample, WAVEFORMATEXTENSIBLE");
+        const auto bytes = buildWAVEFORMATEXTENSIBLE (wav::ExtensibleFormat::FloatPCM,
+                                                      bitsPerSample, bitsPerSample, 2, 48000, 8,
+                                                      wav::SpeakerConfiguration::Stereo);
+        TestForReadError (bytes, log, "Header Rejection - fmt chunk, float PCM, unsupported bits per sample, WAVEFORMATEXTENSIBLE", wav::ReadErrorCode::UnsupportedFloatContainerSize);
     }
 }
-inline void BitsPerSampleChannelsAndBlockAlignMismatch (TestLog & log)
+inline void FloatBitDepthNotEqualToContainerSize (TestLog & log)
 {
-    // PCMWAVEFORMAT float
-    // WAVEFORMATEX float
+    constexpr uint16_t bitDepth {32};
+    constexpr uint16_t containerSize {64};
+
+    constexpr uint16_t channels {2};
+    constexpr uint32_t frames {8};
+    constexpr uint32_t sr {48000};
+    {
+        const auto bytes = buildPCMWAVEFORMAT (wav::FormatCode::FloatPCM, bitDepth, containerSize, channels, sr, frames);
+        TestForReadError (bytes, log, "Header Rejection - fmt chunk, float bit depth != container size, PCMWAVEFORMAT", wav::ReadErrorCode::FloatBitDepthNotEqualToContainerSize);
+    }
+    {
+        const auto bytes = buildWAVEFORMATEX (wav::FormatCode::FloatPCM, bitDepth, containerSize, channels, sr, frames);
+        TestForReadError (bytes, log, "Header Rejection - fmt chunk, float bit depth != container size, WAVEFORMATEX", wav::ReadErrorCode::FloatBitDepthNotEqualToContainerSize);
+    }
+    {
+        const auto bytes = buildWAVEFORMATEXTENSIBLE (wav::ExtensibleFormat::FloatPCM, bitDepth, containerSize, channels, sr, frames, wav::SpeakerConfiguration::Stereo);
+        TestForReadError (bytes, log, "Header Rejection - fmt chunk, float bit depth != container size, WAVEFORMATEXTENSIBLE", wav::ReadErrorCode::FloatBitDepthNotEqualToContainerSize);
+    }
+}
+inline void ExtensibleBitsPerSampleChannelsBlockAlignMismatch (TestLog & log)
+{
     // WAVEFORMATEXTENSIBLE float and integer
     // expected: bitsPerSample = 8 * blockAlign / channels
 
     constexpr uint16_t channels {2};
-    {
-        auto bytes = buildPCMWAVEFORMAT (wav::FormatCode::FloatPCM, 32, 32, channels, 48000, 8);
-        OverwriteUint16LE (bytes, chunkOffset ("fmt ", bytes) + 20, 16); // correct is 8
-        TestForReadError (bytes, log, "Header Rejection - fmt chunk, bitsPerSample/channels/blockAlign mismatch, PCMWAVEFORMAT float PCM");
-    }
-    {
-        auto bytes = buildWAVEFORMATEX (wav::FormatCode::FloatPCM, 32, 32, channels, 48000, 8);
-        OverwriteUint16LE (bytes, chunkOffset ("fmt ", bytes) + 20, 16); // correct is 8
-        TestForReadError (bytes, log, "Header Rejection - fmt chunk, bitsPerSample/channels/blockAlign mismatch, WAVEFORMATEX float PCM");
-    }
-
     const auto channelMask {wav::SpeakerConfiguration::Stereo};
     {
+        constexpr uint16_t blockAlign {8}; // should be 4
         auto bytes = buildWAVEFORMATEXTENSIBLE (wav::ExtensibleFormat::LinearPCM, 16, 16, channels, 44100, 8, channelMask);
-        OverwriteUint16LE (bytes, chunkOffset ("fmt ", bytes) + 20, 8); // correct is 4
-        TestForReadError (bytes, log, "Header Rejection - fmt chunk, bitsPerSample/channels/blockAlign mismatch, WAVEFORMATEXTENSIBLE, linear PCM");
+        OverwriteUint16LE (bytes, chunkOffset ("fmt ", bytes) + 20, blockAlign);
+        TestForReadError (bytes, log, "Header Rejection - fmt chunk, bitsPerSample/channels/blockAlign mismatch, WAVEFORMATEXTENSIBLE, linear PCM", wav::ReadErrorCode::ExtensibleBitsPerSampleChannelsBlockAlignMismatch);
     }
     {
+        constexpr uint16_t blockAlign {16}; // should be 8
         auto bytes = buildWAVEFORMATEXTENSIBLE (wav::ExtensibleFormat::FloatPCM, 32, 32, channels, 48000, 8, channelMask);
-        OverwriteUint16LE (bytes, chunkOffset ("fmt ", bytes) + 20, 16); // correct is 8
-        TestForReadError (bytes, log, "Header Rejection - fmt chunk, bitsPerSample/channels/blockAlign mismatch, WAVEFORMATEXTENSIBLE, float PCM");
+        OverwriteUint16LE (bytes, chunkOffset ("fmt ", bytes) + 20, blockAlign);
+        TestForReadError (bytes, log, "Header Rejection - fmt chunk, bitsPerSample/channels/blockAlign mismatch, WAVEFORMATEXTENSIBLE, float PCM", wav::ReadErrorCode::ExtensibleBitsPerSampleChannelsBlockAlignMismatch);
     }
 }
 inline void BlockAlignNotDivisibleByChannels (TestLog & log)
@@ -217,7 +286,7 @@ inline void BlockAlignNotDivisibleByChannels (TestLog & log)
     auto bytes = buildPCMWAVEFORMAT (wav::FormatCode::LinearPCM, bitDepth, containerSize, channels, 48000, 8); // blockAlign is 2 * 32/8 = 8
     // overwrite channels with 3
     OverwriteUint16LE (bytes, chunkOffset ("fmt ", bytes) + 10, 3);
-    TestForReadError (bytes, log, "Header Rejection - fmt chunk, block align not divisible by channels");
+    TestForReadError (bytes, log, "Header Rejection - fmt chunk, block align not divisible by channels", wav::ReadErrorCode::BlockAlignNotDivisibleByChannels);
 }
 inline void UnsupportedLPCMContainerSize (TestLog & log)
 {
@@ -225,61 +294,71 @@ inline void UnsupportedLPCMContainerSize (TestLog & log)
     constexpr uint16_t containerSize {bitDepth};
     {
         const auto bytes = buildWAVEFORMAT (wav::FormatCode::LinearPCM, bitDepth, 2, 48000, 8);
-        TestForReadError (bytes, log, "Header Rejection - fmt chunk, unsupported LPCM container size, WAVEFORMAT");
+        TestForReadError (bytes, log, "Header Rejection - fmt chunk, unsupported LPCM container size, WAVEFORMAT", wav::ReadErrorCode::UnsupportedLPCMContainerSize);
     }
     {
         const auto bytes = buildPCMWAVEFORMAT (wav::FormatCode::LinearPCM, bitDepth, containerSize, 2, 48000, 8);
-        TestForReadError (bytes, log, "Header Rejection - fmt chunk, unsupported LPCM container size, PCMWAVEFORMAT");
+        TestForReadError (bytes, log, "Header Rejection - fmt chunk, unsupported LPCM container size, PCMWAVEFORMAT", wav::ReadErrorCode::UnsupportedLPCMContainerSize);
     }
     {
         const auto bytes = buildWAVEFORMATEX (wav::FormatCode::LinearPCM, bitDepth, containerSize, 2, 48000, 8);
-        TestForReadError (bytes, log, "Header Rejection - fmt chunk, unsupported LPCM container size, WAVEFORMATEX");
+        TestForReadError (bytes, log, "Header Rejection - fmt chunk, unsupported LPCM container size, WAVEFORMATEX", wav::ReadErrorCode::UnsupportedLPCMContainerSize);
     }
     {
         const auto bytes = buildWAVEFORMATEXTENSIBLE (wav::ExtensibleFormat::LinearPCM,
                                                       bitDepth, containerSize, 2, 48000, 8,
                                                       wav::SpeakerConfiguration::Stereo);
-        TestForReadError (bytes, log, "Header Rejection - fmt chunk, unsupported LPCM container size, WAVEFORMATEXTENSIBLE");
+        TestForReadError (bytes, log, "Header Rejection - fmt chunk, unsupported LPCM container size, WAVEFORMATEXTENSIBLE", wav::ReadErrorCode::UnsupportedLPCMContainerSize);
     }
 }
-inline void ExtensibleBitsPerSampleNotMultipleOfEight (TestLog & log)
+
+inline void LinearBitDepthExceedsContainerSize (TestLog & log)
 {
-    constexpr uint16_t validBitsPerSample {20};
-    constexpr uint16_t bitsPerSample {24};
+    constexpr uint16_t bitDepth {24};
+    constexpr uint16_t containerSize {16};
 
-    // use LPCM since float PCM is further restricted to 32 and 64 bits
-    constexpr auto subFormat {wav::ExtensibleFormat::LinearPCM};
-
-    constexpr auto channelMask {wav::SpeakerConfiguration::Stereo};
-
-    auto bytes = buildWAVEFORMATEXTENSIBLE (subFormat, validBitsPerSample, bitsPerSample, 2, 48000, 8, channelMask);
-    // overwrite bitsPerSample with 28
-    OverwriteUint16LE (bytes, chunkOffset ("fmt ", bytes) + 22, 28);
-    TestForReadError (bytes, log, "Header Rejection - fmt chunk, WAVEFORMATEXTENSIBLE, bitsPerSample not multiple of 8");
+    constexpr uint16_t channels {2};
+    constexpr uint32_t sr {48000};
+    constexpr uint32_t frames {8};
+    {
+        const auto bytes = buildPCMWAVEFORMAT (wav::FormatCode::LinearPCM, bitDepth, containerSize, channels, sr, frames);
+        TestForReadError (bytes, log, "Header Rejection - fmt chunk, linear bit depth exceeds container size, PCMWAVEFORMAT", wav::ReadErrorCode::LinearBitDepthExceedsContainerSize);
+    }
+    {
+        const auto bytes = buildWAVEFORMATEX (wav::FormatCode::LinearPCM, bitDepth, containerSize, channels, sr, frames);
+        TestForReadError (bytes, log, "Header Rejection - fmt chunk, linear bit depth exceeds container size, WAVEFORMATEX", wav::ReadErrorCode::LinearBitDepthExceedsContainerSize);
+    }
+    {
+        const auto bytes = buildWAVEFORMATEXTENSIBLE (wav::ExtensibleFormat::LinearPCM, bitDepth, containerSize, channels, sr, frames, wav::SpeakerConfiguration::Stereo);
+        TestForReadError (bytes, log, "Header Rejection - fmt chunk, linear bit depth exceeds container size, WAVEFORMATEXTENSIBLE", wav::ReadErrorCode::LinearBitDepthExceedsContainerSize);
+    }
 }
 
 inline void RunFormatChunkTests (TestLog & log)
 {
-    BitsPerSampleZero (log);
-    BitsPerSampleOver64 (log);
-    ZeroChannels (log);
+    BitDepthEqualsZero (log);
+    ChannelsEqualsZero (log);
     ChannelsExceedMax (log);
-    SampleRateZero (log);
-    BlockAlignZero (log);
+    SampleRateEqualsZero (log);
+    BlockAlignEqualsZero (log);
     UnsupportedFormatCode (log);
-    InvalidFormatSize (log);
-    MultipleFormatChunks (log);
-    MissingFmt (log);
-    FloatPCMUnsupportedBitsPerSample (log);
-    BitsPerSampleChannelsAndBlockAlignMismatch (log);
+    ExtensibleFmtSizeCodeMismatch (log);
+    InvalidCbSize (log);
+    ExtensibleSubformatNotSupported (log);
+    ExtensibleBitsPerSampleChannelsBlockAlignMismatch (log);
+    UnsupportedFmtChunkSize (log);
+    MultipleFmtChunks (log);
+    MissingFmtChunk (log);
+    FloatBitDepthNotEqualToContainerSize (log);
+    LinearBitDepthExceedsContainerSize (log);
     BlockAlignNotDivisibleByChannels (log);
+    UnsupportedFloatContainerSize (log);
     UnsupportedLPCMContainerSize (log);
-    ExtensibleBitsPerSampleNotMultipleOfEight (log);
 }
 
 // DATA CHUNK TESTS ///////////////////////////////////////////////////////////////
 
-inline void OverlargeDataChunkSize (TestLog & log)
+inline void DataChunkSizeExceedsFileSize (TestLog & log)
 {
     // Actual data chunk size:
     // 1 byte per sample x 1 channel x 8 frames = 8 bytes
@@ -288,14 +367,14 @@ inline void OverlargeDataChunkSize (TestLog & log)
     constexpr uint32_t frames {8};
     auto bytes = buildPCMWAVEFORMAT (wav::FormatCode::LinearPCM, bitDepth, bitDepth, channels, 44100, frames);
     OverwriteUint32LE (bytes, chunkOffset ("data", bytes) + 4, frames + 1);
-    TestForReadError (bytes, log, "Header Rejection - data chunk, purported size extends past actual EOF");
+    TestForReadError (bytes, log, "Header Rejection - data chunk, purported size extends past actual EOF", wav::ReadErrorCode::DataChunkSizeExceedsFileSize);
 }
 inline void DataChunkSizeNotDivisibleByBlockAlign (TestLog & log)
 {
     // block align: 5 x 24 / 8 = 15 bytes
     auto bytes = buildPCMWAVEFORMAT (wav::FormatCode::LinearPCM, 24, 24, 5, 44100, 1);
     OverwriteUint32LE (bytes, chunkOffset ("data", bytes) + 4, 16);
-    TestForReadError (bytes, log, "Header Rejection - data chunk, size not divisible by block align");
+    TestForReadError (bytes, log, "Header Rejection - data chunk, size not divisible by block align", wav::ReadErrorCode::DataChunkSizeNotDivisibleByBlockAlign);
 }
 inline void MultipleDataChunks (TestLog & log)
 {
@@ -311,9 +390,9 @@ inline void MultipleDataChunks (TestLog & log)
     PushSilentDataChunk (bytes, dataChunkSize);
     UpdateRIFFChunkSize (bytes);
 
-    TestForReadError (bytes, log, "Header Rejection - data chunk, multiple data chunks");
+    TestForReadError (bytes, log, "Header Rejection - data chunk, multiple data chunks", wav::ReadErrorCode::MultipleDataChunks);
 }
-inline void MissingData (TestLog & log)
+inline void MissingDataChunk (TestLog & log)
 {
     constexpr auto formatChunkSize {wav::FormatChunkSize::PCMWAVEFORMAT};
     constexpr auto formatCode {wav::FormatCode::LinearPCM};
@@ -334,9 +413,9 @@ inline void MissingData (TestLog & log)
     Push_WAVEFORMAT_Fmt    (bytes, formatCode, channels, sampleRate, byteRate, blockAlign);
     Push_PCMWAVEFORMAT_Fmt (bytes, 8);
 
-    TestForReadError (bytes, log, "Header Rejection - data chunk, missing data chunk");
+    TestForReadError (bytes, log, "Header Rejection - data chunk, missing data chunk", wav::ReadErrorCode::MissingDataChunk);
 }
-inline void DataChunkBeforeFormatChunk (TestLog & log)
+inline void DataChunkBeforeFmtChunk (TestLog & log)
 {
     constexpr uint32_t frames {8};
 
@@ -348,16 +427,16 @@ inline void DataChunkBeforeFormatChunk (TestLog & log)
     bytes.insert (bytes.begin() + static_cast<std::ptrdiff_t> (fmtChunkStart), dataChunk.begin(), dataChunk.end());
     UpdateRIFFChunkSize (bytes);
 
-    TestForReadError (bytes, log, "Header Rejection - data chunk, data before fmt");
+    TestForReadError (bytes, log, "Header Rejection - data chunk, data before fmt", wav::ReadErrorCode::DataChunkBeforeFmtChunk);
 }
 
 inline void RunDataChunkTests (TestLog & log)
 {
-    OverlargeDataChunkSize (log);
+    DataChunkSizeExceedsFileSize (log);
     DataChunkSizeNotDivisibleByBlockAlign (log);
     MultipleDataChunks (log);
-    MissingData (log);
-    DataChunkBeforeFormatChunk (log);
+    MissingDataChunk (log);
+    DataChunkBeforeFmtChunk (log);
 }
 
 // FACT CHUNK TESTS ///////////////////////////////////////////////////////////////
@@ -371,7 +450,7 @@ inline void FactChunkSizeNotFour (TestLog & log)
     // Rewrite fact chunk size to invalid value of 5.
     OverwriteUint32LE (bytes, factChunkStart + 4, 5);
     UpdateRIFFChunkSize (bytes);
-    TestForReadError (bytes, log, "Header Rejection - fact chunk, size not 4");
+    TestForReadError (bytes, log, "Header Rejection - fact chunk, size not 4", wav::ReadErrorCode::FactChunkSizeNotFour);
 }
 inline void MultipleFactChunks (TestLog & log)
 {
@@ -380,7 +459,7 @@ inline void MultipleFactChunks (TestLog & log)
     PushFactChunk (bytes, frames);
     PushFactChunk (bytes, frames);
     UpdateRIFFChunkSize (bytes);
-    TestForReadError (bytes, log, "Header Rejection - fact chunk, multiple fact chunks");
+    TestForReadError (bytes, log, "Header Rejection - fact chunk, multiple fact chunks", wav::ReadErrorCode::MultipleFactChunks);
 }
 
 inline void RunFactChunkTests (TestLog & log)
@@ -411,7 +490,7 @@ inline void MultiplePeakChunks (TestLog & log)
         PushPeakChunk (bytes, peaks, timestamp);
         PushPeakChunk (bytes, peaks, timestamp);
         UpdateRIFFChunkSize (bytes);
-        TestForReadError (bytes, log, "Header Rejection - PEAK chunk, multiple PEAK chunks");
+        TestForReadError (bytes, log, "Header Rejection - PEAK chunk, multiple PEAK chunks", wav::ReadErrorCode::MultiplePeakChunks);
     }
 
     // First PEAK is version 2 (skipped); ReadError still thrown when 2nd PEAK chunk encountered
@@ -422,10 +501,10 @@ inline void MultiplePeakChunks (TestLog & log)
         OverwriteUint32LE (bytes, peakChunkStart + 8, 2); // Set version to 2.
         PushPeakChunk (bytes, peaks, timestamp);
         UpdateRIFFChunkSize (bytes);
-        TestForReadError (bytes, log, "Header Rejection - PEAK chunk, multiple PEAK chunks (1st skipped due to unsupported version; 2nd throws ReadError)");
+        TestForReadError (bytes, log, "Header Rejection - PEAK chunk, multiple PEAK chunks (1st skipped due to unsupported version; 2nd throws ReadError)", wav::ReadErrorCode::MultiplePeakChunks);
     }
 }
-inline void PeakChunkBeforeFmt (TestLog & log)
+inline void PeakChunkBeforeFmtChunk (TestLog & log)
 {
     constexpr uint16_t channels {2};
 
@@ -441,9 +520,9 @@ inline void PeakChunkBeforeFmt (TestLog & log)
     bytes.insert (bytes.begin() + 12, peakChunk.begin(), peakChunk.end());
     UpdateRIFFChunkSize (bytes);
 
-    TestForReadError (bytes, log, "Header Rejection - PEAK chunk, PEAK comes before fmt");
+    TestForReadError (bytes, log, "Header Rejection - PEAK chunk, PEAK comes before fmt", wav::ReadErrorCode::PeakChunkBeforeFmtChunk);
 }
-inline void OverlargePeakChunkSize (TestLog & log)
+inline void PeakChunkSizeExceedsFileSize (TestLog & log)
 {
     constexpr uint16_t channels {2};
 
@@ -459,7 +538,7 @@ inline void OverlargePeakChunkSize (TestLog & log)
     OverwriteUint32LE (bytes, peakChunkStart + 4, actualPeakSize + 1);
     UpdateRIFFChunkSize (bytes);
 
-    TestForReadError (bytes, log, "Header Rejection - PEAK chunk, purported size extends past actual EOF");
+    TestForReadError (bytes, log, "Header Rejection - PEAK chunk, purported size extends past actual EOF", wav::ReadErrorCode::PeakChunkSizeExceedsFileSize);
 }
 inline void PeakChunkSizeMismatchesChannels (TestLog & log)
 {
@@ -469,7 +548,7 @@ inline void PeakChunkSizeMismatchesChannels (TestLog & log)
     PushPeakChunk (bytes, peaks, 0);
     UpdateRIFFChunkSize (bytes);
 
-    TestForReadError (bytes, log, "Header Rejection - PEAK chunk, size mismatches channels");
+    TestForReadError (bytes, log, "Header Rejection - PEAK chunk, size mismatches channels", wav::ReadErrorCode::PeakChunkSizeMismatchesChannels);
 }
 inline void PeakChunkVersionUnsupported (TestLog & log)
 {
@@ -520,7 +599,7 @@ inline void PeakChunkVersionUnsupported (TestLog & log)
 
     std::remove (filename);
 }
-inline void PeakChunkSizeTooSmallForVersion (TestLog & log)
+inline void PeakChunkSizeTooSmallForVersionField (TestLog & log)
 {
     constexpr uint16_t channels {2};
 
@@ -533,27 +612,30 @@ inline void PeakChunkSizeTooSmallForVersion (TestLog & log)
     OverwriteUint32LE (bytes, peakChunkStart + 4, 2); // version field needs 4 bytes in chunk body
     UpdateRIFFChunkSize (bytes);
 
-    TestForReadError (bytes, log, "Header Rejection - PEAK chunk, size too small for version field");
+    TestForReadError (bytes, log, "Header Rejection - PEAK chunk, size too small for version field", wav::ReadErrorCode::PeakChunkSizeTooSmallForVersionField);
 }
 
 inline void RunPeakChunkTests (TestLog & log)
 {
-    PeakChunkBeforeFmt (log);
-    OverlargePeakChunkSize (log);
+    PeakChunkBeforeFmtChunk (log);
+    PeakChunkSizeExceedsFileSize (log);
     PeakChunkSizeMismatchesChannels (log);
     PeakChunkVersionUnsupported (log);
     MultiplePeakChunks (log);
-    PeakChunkSizeTooSmallForVersion (log);
+    PeakChunkSizeTooSmallForVersionField (log);
 }
 
 // HELPER FUNCTIONS ///////////////////////////////////////////////////////////////
 
-inline void TestForReadError (std::vector<uint8_t> const & bytes, TestLog & log, std::string const & label)
+inline void TestForReadError (std::vector<uint8_t> const & bytes,
+                              TestLog & log,
+                              std::string const & label,
+                              std::optional<wav::ReadErrorCode> expectedCode)
 {
     const auto filename {"test_rejection.wav"};
     WriteBytesToFile (filename, bytes);
 
-    bool threwReadError {false};
+    bool passes {false};
     std::string errorMessage;
     try
     {
@@ -561,10 +643,18 @@ inline void TestForReadError (std::vector<uint8_t> const & bytes, TestLog & log,
     }
     catch (wav::ReadError const & e)
     {
-        threwReadError = true;
-        errorMessage = e.what();
+        if (expectedCode.has_value() && e.code() == *expectedCode) passes = true;
+        else errorMessage = e.what();
     }
-    log.Record (threwReadError, std::format ("{} - \"{}\"", label, errorMessage));
+
+    if (passes)
+    {
+        log.Record (passes, label);
+    }
+    else
+    {
+        log.Record (passes, std::format ("{} - {}", label, errorMessage));
+    }
 
     std::remove (filename);
 }

@@ -33,40 +33,15 @@ inline ChunkInfo::ChunkInfo (std::FILE * in)
 
 inline std::string ChunkInfo::summary() const
 {
-    bool isLinear;
-    uint16_t bitDepth;
-    uint16_t containerSize;
-
-    switch (format.code)
+    if (isLinear == isFloat)
     {
-        case FormatCode::LinearPCM:
-            isLinear = true;
-            bitDepth = format.bitsPerSample;
-            containerSize = static_cast<uint16_t> (8 * format.blockAlign / format.channels);
-            break;
-        case FormatCode::FloatPCM:
-            isLinear = false; // must be floating-point
-            bitDepth = format.bitsPerSample;
-            containerSize = bitDepth;
-            assert (containerSize == 8 * format.blockAlign / format.channels);
-            break;
-        case FormatCode::Extensible:
-            if (format.subFormat == ExtensibleFormat::LinearPCM) isLinear = true;
-            else
-            {
-                assert (format.subFormat == ExtensibleFormat::FloatPCM);
-                isLinear = false;
-            }
-            bitDepth = format.validBitsPerSample;
-            containerSize = format.bitsPerSample;
-            break;
-        default:
-            assert (false); // should have been caught earlier
-            throw ReadError (std::format ("Format not supported: 0x{:04X}. This should have been caught during decoding. Audio may be corrupted.", format.code));
+        assert (false);
+        throw ReadError (ReadErrorCode::InternalError,
+                         "Internal error (should have been caught earlier): file should either be float or linear PCM.");
     }
 
-    const auto frames = data.size / format.blockAlign;
-    const bool isPadded = (containerSize > bitDepth);
+    const auto frames {data.size / format.blockAlign};
+    const bool isPadded {containerSize > bitDepth};
 
     return audioSummary (isLinear, bitDepth, containerSize, format.sampleRate,
                          format.channels, frames, data.size, isPadded);
@@ -80,14 +55,14 @@ inline void ChunkInfo::ReadFile (std::FILE * in)
     actualFileSize = fileSize (in);
 
     const auto firstChunkID {fourCharacterCode (in)};
-    if (firstChunkID != riff.id) throw ReadError ("RIFF chunk ID not found.");
+    if (firstChunkID != riff.id) throw ReadError (ReadErrorCode::RiffIdNotFound, "RIFF chunk ID not found.");
     ReadRiffChunk (in);
     RegisterChunk (firstChunkID, 0);
 
     while (peek (in) != EOF)
     {
         const auto chunkStart {tell (in)};
-        if (chunkStart == -1) throw ReadError ("Failed to get chunk position.");
+        if (chunkStart == -1) throw ReadError (ReadErrorCode::FileTellFailed, "Failed to get chunk position.");
         const auto chunkID {fourCharacterCode (in)};
         RegisterChunk (chunkID, chunkStart);
 
@@ -95,7 +70,7 @@ inline void ChunkInfo::ReadFile (std::FILE * in)
         else if (chunkID == fact.id)   ReadFactChunk                   (in);
         else if (chunkID == peak.id)   ReadPeakChunk                   (in, chunkStart);
         else if (chunkID == data.id)   ReadDataChunkSizeAndSkipSamples (in);
-        else if (chunkID == riff.id)   throw ReadError ("Invalid format: File contains more than one RIFF chunk.");
+        else if (chunkID == riff.id)   throw ReadError (ReadErrorCode::MultipleRiffChunks, "Invalid format: File contains more than one RIFF chunk.");
         else
         {
             // Skip rest of chunk (including any padding byte).
@@ -122,7 +97,7 @@ inline void SkipChunk (std::FILE * file, uint32_t size)
     int64_t skipAmount {static_cast<int64_t> (size) + (size % 2)}; // padding byte if odd
     if (seek (file, skipAmount, SEEK_CUR) != 0)
     {
-        throw ReadError ("Failed to skip chunk.");
+        throw ReadError (ReadErrorCode::FileSeekFailed, "Failed to skip chunk.");
     }
 }
 
@@ -140,11 +115,11 @@ inline void ChunkInfo::ValidateAfterParsing()
 {
     if (!fmtChunkEncountered)
     {
-        throw ReadError ("Invalid format: missing fmt chunk.");
+        throw ReadError (ReadErrorCode::MissingFmtChunk, "Invalid format: missing fmt chunk.");
     }
     if (!dataChunkEncountered)
     {
-        throw ReadError ("Invalid format: missing data chunk.");
+        throw ReadError (ReadErrorCode::MissingDataChunk, "Invalid format: missing data chunk.");
     }
 }
 
@@ -155,184 +130,248 @@ inline void ChunkInfo::ReadRiffChunk (std::FILE * in)
     riff.size = uint32_le (in);
     if (fourCharacterCode (in) != riff.format)
     {
-        throw ReadError ("The format in the RIFF chunk should be \"" + riff.format + "\".");
+        throw ReadError (ReadErrorCode::RiffSubformatNotWave,
+                         "The format in the RIFF chunk should be \"" + riff.format + "\".");
     }
 }
 
 inline void ChunkInfo::ReadFormatChunk (std::FILE * in)
 {
-    if (fmtChunkEncountered) throw ReadError ("Invalid format: File contains more than one fmt chunk.");
-
-    // These fields are found in formats WAVEFORMAT, PCMWAVEFORMAT, WAVEFORMATEX, and WAVEFORMATEXTENSIBLE:
-    //
-    // no need to read ID since it has already been read and has the expected value
-    //
-    format.size = uint32_le (in);
-    if (! isValidFormatChunkSize (format.size))
+    if (fmtChunkEncountered)
     {
-        throw ReadError ("fmt chunk size (" + std::to_string (format.size) + ") is unsupported.");
+        throw ReadError (ReadErrorCode::MultipleFmtChunks, "Invalid format: File contains more than one fmt chunk.");
+    }
+
+    // WAVEFORMAT, PCMWAVEFORMAT, WAVEFORMATEX, and WAVEFORMATEXTENSIBLE:
+    format.size = uint32_le (in);
+    if (! isSupportedFormatChunkSize (format.size))
+    {
+        throw ReadError (ReadErrorCode::UnsupportedFmtChunkSize, "fmt chunk size (" + std::to_string (format.size) + ") is unsupported.");
     }
     format.code = uint16_le (in);
-    if (! isValidFormatCode (format.code))
-    {
-        throw ReadError (std::format ("Format not supported: 0x{:04X}", format.code));
-    }
-
     format.channels = uint16_le (in);
-    if (format.channels == 0)
-    {
-        throw ReadError ("Invalid value: channels must not be zero.");
-    }
-    if (format.channels > maxChannels)
-    {
-        throw ReadError ("Invalid value: channels must not be greater than " + std::to_string (static_cast<unsigned> (maxChannels)) + ".");
-    }
-
     format.sampleRate = uint32_le (in);
-    if (format.sampleRate == 0)
-    {
-        throw ReadError ("Invalid value: sample rate must not be zero.");
-    }
-
     format.byteRate = uint32_le (in);
-
     format.blockAlign = uint16_le (in);
-    if (format.blockAlign == 0)
-    {
-        throw ReadError ("Invalid value: block align must not be zero.");
-    }
-    if (format.blockAlign % format.channels != 0)
-    {
-        throw ReadError ("Invalid value: block align must be divisible by channels.");
-    }
 
-    // This field is found in PCMWAVEFORMAT, WAVEFORMATEX, and WAVEFORMATEXTENSIBLE:
-    if (format.size == FormatChunkSize::PCMWAVEFORMAT      ||
-        format.size == FormatChunkSize::WAVEFORMATEX       ||
+    // PCMWAVEFORMAT, WAVEFORMATEX, and WAVEFORMATEXTENSIBLE:
+    if (format.size == FormatChunkSize::PCMWAVEFORMAT ||
+        format.size == FormatChunkSize::WAVEFORMATEX  ||
         format.size == FormatChunkSize::WAVEFORMATEXTENSIBLE)
     {
         format.bitsPerSample = uint16_le (in);
-        if (format.bitsPerSample == 0 || format.bitsPerSample > 64)
-        {
-            throw ReadError ("Invalid value: bits per sample must be greater than 0 and less than or equal to 64.");
-        }
-
-        if (format.code == FormatCode::Extensible) // float and integer extensible
-        {
-            // Since WAVEFORMATEXTENSIBLE has bitsPerSample AND validBitsPerSample,
-            // it makes good sense even for a permissive parser to enforce the following:
-            //
-            //     1. bitsPerSample must be a multiple of 8
-            //     2. bitsPerSample = 8 * blockAlign / channels
-            //
-            // We will check that float extensible bitsPerSample is 32 or 64 later after we read subFormat.
-            //
-            if (format.bitsPerSample % 8 != 0)
-            {
-                throw ReadError ("For WAVEFORMATEXTENSIBLE, bits per sample must be a multiple of 8.");
-            }
-            if (format.bitsPerSample != 8 * format.blockAlign / format.channels)
-            {
-                throw ReadError ("For WAVEFORMATEXTENSIBLE, bits per sample must equal 8 * blockAlign / channels.");
-            }
-        }
-        else if (format.code == FormatCode::FloatPCM) // PCMWAVEFORMAT and WAVEFORMATEX floats
-        {
-            // Assuming for reasonably well-formed float PCM WAVs (of format PCMWAVEFORMAT and WAVEFORMATEX):
-            //
-            //     1. bitsPerSample will equal either 32 or 64
-            //     2. bitsPerSample = 8 * blockAlign / channels
-            //
-            if (format.bitsPerSample != 32 && format.bitsPerSample != 64)
-            {
-                throw ReadError ("For float PCM, bits per sample must be 32 or 64.");
-            }
-            if (format.bitsPerSample != 8 * format.blockAlign / format.channels)
-            {
-                throw ReadError ("For float PCM, bits per sample must equal 8 * blockAlign / channels.");
-            }
-        }
-
-        // Note that WAV++ does not require
-        // format.bitsPerSample = 8 * format.blockAlign / channels
-        // for PCMWAVEFORMAT LPCM and WAVEFORMATEX LPCM in order to support
-        // common non-standard usage in which a lower bit depth is packed into
-        // a larger container.
-        //
-        // In this scenario, bitsPerSample is interpreted as the number of significant
-        // (or "valid") bits and is less than 8 * format.blockAlign / format.channels,
-        // which is, as usual, the container size. (For integer and float PCM stored in
-        // PCMWAVEFORMAT, WAVEFORMATEX, and WAVEFORMATEXTENSIBLE these are expected to
-        // be equal in standard usage.)
-        //
-        // The standard way of accomplishing bit packing is to use WAVEFORMATEXTENSIBLE's
-        // additional validBitsPerSample as the actual bit depth and bitsPerSample as the
-        // container size. Note that the non-standard bit-packing method described above
-        // treats bitsPerSample not as the container size but as the effective bit depth,
-        // flipping the role it plays.
     }
 
-    // This field is found in WAVEFORMATEX and WAVEFORMATEXTENSIBLE:
-    // WAVEFORMATEX should have a format chunk size of 18 and a cbSize value of 0 for linear and float PCM.
-    // WAVEFORMATEXTENSIBLE should have a format chunk size of 40 (18 + 22) and a cbSize of 22.
-    if (format.size == FormatChunkSize::WAVEFORMATEX || format.size == FormatChunkSize::WAVEFORMATEXTENSIBLE)
+    // WAVEFORMATEX and WAVEFORMATEXTENSIBLE:
+    if (format.size == FormatChunkSize::WAVEFORMATEX ||
+        format.size == FormatChunkSize::WAVEFORMATEXTENSIBLE)
     {
         format.cbSize = uint16_le (in);
-        if (format.cbSize != format.size - FormatChunkSize::WAVEFORMATEX)
-        {
-            throw ReadError ("Invalid cbSize: " + std::to_string (static_cast<unsigned int> (format.cbSize)));
-        }
     }
 
-    // These 3 fields are found in WAVEFORMATEXTENSIBLE:
+    // WAVEFORMATEXTENSIBLE:
     if (format.size == FormatChunkSize::WAVEFORMATEXTENSIBLE)
     {
         format.validBitsPerSample = uint16_le (in);
-        if (format.validBitsPerSample == 0 || format.validBitsPerSample > 64)
-        {
-            throw ReadError ("Invalid value: valid bits per sample must be greater than 0 and less than or equal to 64.");
-        }
         format.channelMask = uint32_le (in);
         format.subFormat = guid (in);
-
-        if (format.subFormat != ExtensibleFormat::LinearPCM && format.subFormat != ExtensibleFormat::FloatPCM)
-        {
-            throw ReadError ("Extensible subformat not supported: " + format.subFormat.str());
-        }
-        if (format.validBitsPerSample > format.bitsPerSample)
-        {
-            throw ReadError ("Valid bits per sample (in WAVEFORMATEXTENSIBLE) must not be greater than bits per sample.");
-        }
-        if (format.subFormat == ExtensibleFormat::FloatPCM
-            && format.bitsPerSample != 32 && format.bitsPerSample != 64)
-        {
-            throw ReadError ("For float PCM, bits per sample must be 32 or 64.");
-        }
     }
 
-    const int containerSize = 8 * format.blockAlign / format.channels;
-    if ((format.code == FormatCode::LinearPCM ||
-         (format.code == FormatCode::Extensible && format.subFormat == ExtensibleFormat::LinearPCM))
-        && containerSize != 8 && containerSize != 16 && containerSize != 24 && containerSize != 32)
-    {
-        throw ReadError (std::format ("Unsupported linear PCM container size: {}", containerSize));
-    }
     // In the future, if this code is used to read format chunks of odd-byte-length,
     // we must skip the last padding byte.
     if (format.size % 2)
     {
-        if (seek (in, 1, SEEK_CUR) != 0) throw ReadError ("Failed to skip format chunk padding.");
+        if (seek (in, 1, SEEK_CUR) != 0) throw ReadError (ReadErrorCode::FileSeekFailed, "Failed to skip format chunk padding.");
     }
+
+    ValidateFormatChunkAndComputeBitDepthAndContainerSize();
+
     fmtChunkEncountered = true;
+}
+
+inline void ChunkInfo::DeriveBitDepthAndContainerSize()
+{
+    // SAMPLE SIZE AND SAMPLE CONTAINER SIZE
+    //
+    // According to the non-formally defined WAV standard, WAVEFORMATEXTENSIBLE
+    // is the only format to be used to pack linear PCM samples into larger
+    // containers. bitsPerSample represents the container size while
+    // validBitsPerSample represents the number of meaningful bits, a.k.a the
+    // sample bit depth.
+    //
+    // While PCMWAVEFORMAT and WAVEFORMATEX contain bitsPerSample, they do not
+    // have a validBitsPerSample. However, due to the fact that bitsPerSample
+    // is redundant for linear PCM audio
+    // –it can be calculated as 8 * blockAlign / channels–
+    // it is possible to pack linear PCM samples into larger containers by
+    // interpreting bitsPerSample as the number of valid bits per sample and
+    // 8 * blockAlign / channels as the container size.
+    //
+    // (WAVEFORMAT, unlikely to be enountered, does not have a bitsPerSample and
+    // thus the container size and the number of valid bits are one and the same
+    // and calculated as 8 * blockAlign / channels.)
+    //
+    // The following scheme shows how WAV++ determines sample bit depth and sample
+    // container size in order to correctly parse both packed WAV files following
+    // the standard (uses WAVEFORMATEXTENSIBLE) and WAV files encoded using the
+    // non-standard (uses PCMWAVEFORMAT and WAVEFORMATEX) method.
+    //
+    // format                 sample size                  container size
+    //
+    // WAVEFORMAT             8 * blockAlign / channels    8 * blockAlign / channels
+    // PCMWAVEFORMAT          bitsPerSample                8 * blockAlign / channels
+    // WAVEFORMATEX           bitsPerSample                8 * blockAlign / channels
+    // WAVEFORMATEXTENSIBLE   validBitsPerSample           8 * blockAlign / channels (= bitsPerSample)
+    //
+    // For WAVEFORMATEXTENSIBLE, 8 * blockAlign / channels should equal bitsPerSample.
+
+    containerSize = static_cast<std::uint16_t> (8u * format.blockAlign / format.channels);
+
+    if (format.size == FormatChunkSize::WAVEFORMAT)
+    {
+        bitDepth = containerSize;
+    }
+    else if (format.size == FormatChunkSize::PCMWAVEFORMAT)
+    {
+        bitDepth = format.bitsPerSample;
+    }
+    else if (format.size == FormatChunkSize::WAVEFORMATEX)
+    {
+        bitDepth = format.bitsPerSample;
+    }
+    else if (isExtensible)
+    {
+        bitDepth = format.validBitsPerSample;
+    }
+    else
+    {
+        assert (false);
+        throw ReadError (ReadErrorCode::InternalError, "Internal error (should have been caught earlier): Unsupported fmt chunk size.");
+    }
+}
+inline void ChunkInfo::ValidateFormatChunkAndComputeBitDepthAndContainerSize()
+{
+    // WAVEFORMAT, PCMWAVEFORMAT, WAVEFORMATEX, and WAVEFORMATEXTENSIBLE
+
+    if (! isSupportedFormatCode (format.code))
+    {
+        throw ReadError (ReadErrorCode::UnsupportedFormatCode, std::format ("Format not supported: 0x{:04X}", format.code));
+    }
+    if (format.size == FormatChunkSize::WAVEFORMATEXTENSIBLE)
+    {
+        if (format.code == FormatCode::Extensible)
+        {
+            isExtensible = true;
+        }
+        else
+        {
+            throw ReadError (ReadErrorCode::ExtensibleFmtSizeCodeMismatch, "Inconsistent values: WAVEFORMATEXTENSIBLE fmt chunk size (40) requires format code 0xFFFE.");
+        }
+    }
+    else if (format.code == FormatCode::Extensible)
+    {
+        throw ReadError (ReadErrorCode::ExtensibleFmtSizeCodeMismatch, "Inconsistent values: Format code 0xFFFE requires 40-byte WAVEFORMATEXTENSIBLE fmt chunk size.");
+    }
+
+    if (format.channels == 0)
+    {
+        throw ReadError (ReadErrorCode::ChannelsEqualsZero, "Invalid value: channels must not be zero.");
+    }
+    if (format.channels > maxChannels)
+    {
+        throw ReadError (ReadErrorCode::ChannelsExceedMax, "Invalid value: channels must not be greater than " + std::to_string (static_cast<unsigned> (maxChannels)) + ".");
+    }
+    if (format.sampleRate == 0)
+    {
+        throw ReadError (ReadErrorCode::SampleRateEqualsZero, "Invalid value: sample rate must not be zero.");
+    }
+    if (format.blockAlign == 0)
+    {
+        throw ReadError (ReadErrorCode::BlockAlignEqualsZero, "Invalid value: block align must not be zero.");
+    }
+    if (format.blockAlign % format.channels != 0)
+    {
+        throw ReadError (ReadErrorCode::BlockAlignNotDivisibleByChannels, "Invalid value: block align must be divisible by channels.");
+    }
+
+    // PCMWAVEFORMAT, WAVEFORMATEX, and WAVEFORMATEXTENSIBLE
+    // Instead of validating bitsPerSample here, validate it indirectly
+    // later on as either bit depth (PCMWAVEFORMAT, WAVEFORMATEX) or
+    // container size later on (WAVEFORMATEXTENSIBLE) once those are derived.
+
+    // WAVEFORMATEX and WAVEFORMATEXTENSIBLE
+    // cbSize
+    // WAVEFORMATEX should have a format chunk size of 18 and a cbSize value of 0 for linear and float PCM.
+    // WAVEFORMATEXTENSIBLE should have a format chunk size of 40 (18 + 22) and a cbSize of 22.
+    if (format.size == FormatChunkSize::WAVEFORMATEX || isExtensible)
+    {
+        if (format.cbSize != format.size - FormatChunkSize::WAVEFORMATEX)
+        {
+            throw ReadError (ReadErrorCode::InvalidCbSize, "Invalid cbSize: " + std::to_string (static_cast<unsigned int> (format.cbSize)));
+        }
+    }
+
+    // WAVEFORMATEXTENSIBLE only
+    if (isExtensible)
+    {
+        // Validate channel mask? What's the max?
+
+        if (format.subFormat != ExtensibleFormat::LinearPCM && format.subFormat != ExtensibleFormat::FloatPCM)
+        {
+            throw ReadError (ReadErrorCode::ExtensibleSubformatNotSupported, "Extensible subformat not supported: " + format.subFormat.str());
+        }
+    }
+    isLinear = format.code == FormatCode::LinearPCM || (isExtensible && format.subFormat == ExtensibleFormat::LinearPCM);
+    isFloat = format.code == FormatCode::FloatPCM || (isExtensible && format.subFormat == ExtensibleFormat::FloatPCM);
+    if (isLinear == isFloat) // exactly one should be set
+    {
+        assert (false);
+        throw ReadError (ReadErrorCode::InternalError, "Internal error (should have been caught earlier): file should either be float or linear PCM.");
+    }
+
+    // Derive bit depth and container size using format chunk size/format
+    // and WAV++'s permissive LPCM bit-packing rules.
+    DeriveBitDepthAndContainerSize();
+
+    // container size checks
+    if (isLinear && containerSize != 8u && containerSize != 16u && containerSize != 24u && containerSize != 32u)
+    {
+        throw ReadError (ReadErrorCode::UnsupportedLPCMContainerSize, std::format ("Unsupported linear PCM container size: {}", containerSize));
+    }
+    if (isFloat && containerSize != 32 && containerSize != 64)
+    {
+        throw ReadError (ReadErrorCode::UnsupportedFloatContainerSize,
+                         std::format ("Unsupported float PCM sample width: {}", containerSize));
+    }
+    if (isExtensible && format.bitsPerSample != containerSize)
+    {
+        throw ReadError (ReadErrorCode::ExtensibleBitsPerSampleChannelsBlockAlignMismatch, "Extensible files should have a bitsPerSample equal to 8 * blockAlign / channels");
+    }
+
+    // bit depth checks
+    if (bitDepth == 0)
+    {
+        throw ReadError (ReadErrorCode::BitDepthEqualsZero, "bit depth must be greater than 0.");
+    }
+    if (isFloat && bitDepth != containerSize)
+    {
+        throw ReadError (ReadErrorCode::FloatBitDepthNotEqualToContainerSize,
+                         std::format ("Bit depth ({}) and container size ({}) should be equal for float audio.", bitDepth, containerSize));
+    }
+    if (isLinear && bitDepth > containerSize)
+    {
+        throw ReadError (ReadErrorCode::LinearBitDepthExceedsContainerSize,
+                         std::format ("Bit depth ({}) must be <= container size ({}).", bitDepth, containerSize));
+    }
 }
 
 inline void ChunkInfo::ReadFactChunk (std::FILE * in)
 {
-    if (factChunkEncountered) throw ReadError ("Invalid format: File contains more than one fact chunk.");
+    if (factChunkEncountered) throw ReadError (ReadErrorCode::MultipleFactChunks, "Invalid format: File contains more than one fact chunk.");
     factChunkEncountered = true;
 
     const auto size = uint32_le (in);
-    if (size != 4) throw ReadError ("Invalid value: fact chunk size must be 4.");
+    if (size != 4) throw ReadError (ReadErrorCode::FactChunkSizeNotFour, "Invalid value: fact chunk size must be 4.");
     fact.size = size;
 
     fact.fileSize = uint32_le (in);
@@ -351,10 +390,10 @@ inline void ChunkInfo::ReadPeakChunk (std::FILE * in, std::int64_t chunkStart)
     // Skips remaining chunk body when:
     //     version is not 1
 
-    if (peakChunkEncountered) throw ReadError ("Invalid format: File contains more than one PEAK chunk.");
+    if (peakChunkEncountered) throw ReadError (ReadErrorCode::MultiplePeakChunks, "Invalid format: File contains more than one PEAK chunk.");
     peakChunkEncountered = true;
 
-    if (!fmtChunkEncountered) throw ReadError ("Invalid format: PEAK chunk comes before fmt chunk.");
+    if (!fmtChunkEncountered) throw ReadError (ReadErrorCode::PeakChunkBeforeFmtChunk, "Invalid format: PEAK chunk comes before fmt chunk.");
 
     peak.size = uint32_le (in);
 
@@ -362,15 +401,17 @@ inline void ChunkInfo::ReadPeakChunk (std::FILE * in, std::int64_t chunkStart)
     const auto bodyStart = tell (in);
     if (bodyStart == -1)
     {
-        throw ReadError ("Failed to get current file position before parsing PEAK chunk body.");
+        throw ReadError (ReadErrorCode::FileTellFailed,
+                         "Failed to get current file position before parsing PEAK chunk body.");
     }
     const auto bytesRemaining {actualFileSize - bodyStart};
     if (peak.size > bytesRemaining)
     {
-        throw ReadError (std::format ("Inconsistent value: declared PEAK chunk size ({}) exceeds bytes remaining in the file ({}).", peak.size, bytesRemaining));
+        throw ReadError (ReadErrorCode::PeakChunkSizeExceedsFileSize,
+                         std::format ("Inconsistent value: declared PEAK chunk size ({}) exceeds bytes remaining in the file ({}).", peak.size, bytesRemaining));
     }
 
-    if (peak.size < 4u) throw ReadError ("Invalid value: PEAK chunk size is too small to contain a version field.");
+    if (peak.size < 4u) throw ReadError (ReadErrorCode::PeakChunkSizeTooSmallForVersionField, "Invalid value: PEAK chunk size is too small to contain a version field.");
 
     peak.version = uint32_le (in);
 
@@ -387,7 +428,8 @@ inline void ChunkInfo::ReadPeakChunk (std::FILE * in, std::int64_t chunkStart)
     const uint32_t expectedChunkSize {4u + 4u + 8u * format.channels};
     if (peak.size != expectedChunkSize)
     {
-        throw ReadError (std::format ("Invalid value: PEAK chunk size ({}) does not match channel count. Expected: 8 bytes + 8 bytes per channel * {} channels = {} bytes", peak.size, format.channels, expectedChunkSize));
+        throw ReadError (ReadErrorCode::PeakChunkSizeMismatchesChannels,
+                         std::format ("Invalid value: PEAK chunk size ({}) does not match channel count. Expected: 8 bytes + 8 bytes per channel * {} channels = {} bytes", peak.size, format.channels, expectedChunkSize));
     }
 
     peak.timestamp = uint32_le (in);
@@ -405,8 +447,8 @@ inline void ChunkInfo::ReadPeakChunk (std::FILE * in, std::int64_t chunkStart)
 
 inline void ChunkInfo::ReadDataChunkSizeAndSkipSamples (std::FILE * in)
 {
-    if (!fmtChunkEncountered) throw ReadError ("Invalid format: data chunk reached before format chunk.");
-    if (dataChunkEncountered) throw ReadError ("Invalid format: File contains more than one data chunk.");
+    if (!fmtChunkEncountered) throw ReadError (ReadErrorCode::DataChunkBeforeFmtChunk, "Invalid format: data chunk reached before format chunk.");
+    if (dataChunkEncountered) throw ReadError (ReadErrorCode::MultipleDataChunks, "Invalid format: File contains more than one data chunk.");
 
     // No need to read id since it has already been read and has the expected value.
 
@@ -414,17 +456,18 @@ inline void ChunkInfo::ReadDataChunkSizeAndSkipSamples (std::FILE * in)
 
     if (data.size % format.blockAlign != 0)
     {
-        throw ReadError ("Inconsistent value: size of data chunk is not divisible by block align.");
+        throw ReadError (ReadErrorCode::DataChunkSizeNotDivisibleByBlockAlign,
+                         "Inconsistent value: size of data chunk is not divisible by block align.");
     }
 
     // make sure size doesn't imply chunk overuns EOF
     data.offset = tell (in);
-    if (data.offset == -1) throw ReadError ("Failed to get current file position for data chunk.");
+    if (data.offset == -1) throw ReadError (ReadErrorCode::FileTellFailed, "Failed to get current file position for data chunk.");
     const auto bytesRemaining {actualFileSize - data.offset};
     if (data.size > bytesRemaining)
     {
-        throw ReadError (std::format ("Inconsistent value: declared data chunk size ({}) exceeds bytes remaining in the file ({}).",
-            data.size, bytesRemaining));
+        throw ReadError (ReadErrorCode::DataChunkSizeExceedsFileSize,
+                         std::format ("Inconsistent value: declared data chunk size ({}) exceeds bytes remaining in the file ({}).", data.size, bytesRemaining));
     }
 
     // SkipChunk() detects and carefully skips potential padding byte.

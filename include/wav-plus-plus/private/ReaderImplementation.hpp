@@ -27,7 +27,7 @@ inline Reader::Reader (std::filesystem::path const & filepath, uint32_t suggeste
     // Position file at start of data
     if (seek (file.get(), dataChunk.offset, SEEK_SET) != 0)
     {
-        throw ReadError ("Failed to advance to data portion of data chunk.");
+        throw ReadError (ReadErrorCode::FileSeekFailed, "Failed to advance to data portion of data chunk.");
     }
 
     InitializeBuffer (suggestedBufferSizeKB);
@@ -52,7 +52,13 @@ size_t Reader::read (T * destination, size_t samplesRequested)
             case 16: ReadLPCM16 (destination, samplesToRead); break;
             case 24: ReadLPCM24 (destination, samplesToRead); break;
             case 32: ReadLPCM32 (destination, samplesToRead); break;
-            default: throw ReadError ("Unsupported LPCM container size: " + std::to_string (containerSizeInBits()));
+            default:
+            {
+                assert (false);
+                throw ReadError (ReadErrorCode::InternalError,
+                                 "Internal error (should have been caught earlier): unsupported LPCM container size: "
+                                 + std::to_string (containerSizeInBits()));
+            }
         }
     }
     else if (isFloatPCM())
@@ -65,7 +71,13 @@ size_t Reader::read (T * destination, size_t samplesRequested)
             {
                 case 32: ReadFloatPCMNoConversion (destination, samplesToRead); break;
                 case 64: ReadDoubleToFloat (destination, samplesToRead);        break;
-                default: throw ReadError ("Unsupported float PCM bit depth: " + std::to_string (bitDepth()));
+                default:
+                {
+                    assert (false);
+                    throw ReadError (ReadErrorCode::InternalError,
+                                     "Internal error (should have been caught earlier): unsupported float PCM bit depth: "
+                                     + std::to_string (bitDepth()));
+                }
             }
         }
         else if constexpr (std::is_same_v<T, double>)
@@ -74,7 +86,13 @@ size_t Reader::read (T * destination, size_t samplesRequested)
             {
                 case 32: ReadFloatToDouble (destination, samplesToRead);        break;
                 case 64: ReadFloatPCMNoConversion (destination, samplesToRead); break;
-                default: throw ReadError ("Unsupported float PCM bit depth: " + std::to_string (bitDepth()));
+                default:
+                {
+                    assert (false);
+                    throw ReadError (ReadErrorCode::InternalError,
+                                     "Internal error (should have been caught earlier): unsupported float PCM bit depth: "
+                                     + std::to_string (bitDepth()));
+                }
             }
         }
     }
@@ -95,7 +113,8 @@ size_t Reader::read (std::vector<T> & destination, size_t samplesRequested)
 {
     if (samplesRequested > destination.size())
     {
-        throw ReadError ("samples requested > destination size");
+        throw ReadError (ReadErrorCode::SamplesRequestedExceedsDestinationSize,
+                         "samples requested > destination size");
     }
     return read (destination.data(), samplesRequested);
 }
@@ -111,7 +130,8 @@ size_t Reader::readFrames (std::vector<T> & destination)
 {
     if (destination.size() % channels() != 0)
     {
-        throw ReadError ("destination size in samples is not a whole number of frames");
+        throw ReadError (ReadErrorCode::DestinationFrameSizeIsFractional,
+                         "destination size is not a whole number of frames");
     }
     return read (destination, destination.size()) / channels();
 }
@@ -121,7 +141,8 @@ size_t Reader::readFrames (std::vector<T> & destination, size_t framesRequested)
 {
     if (framesRequested * channels() > destination.size())
     {
-        throw ReadError ("frames requested > destination size");
+        throw ReadError (ReadErrorCode::FramesRequestedExceedsDestinationSize,
+                         "frames requested > destination size");
     }
     return read (destination, framesRequested * channels()) / channels();
 }
@@ -144,7 +165,7 @@ void Reader::ReadLPCMU8 (T * destination, size_t totalSamplesToRead)
 
         if (std::fread (buffer.data(), bytesPerSample, samplesToRead, file.get()) != samplesToRead)
         {
-            throw ReadError ("Failed to read buffer from file.");
+            throw ReadError (ReadErrorCode::FileReadFailed, "Failed to read buffer from file.");
         }
 
         // Convert to destination type
@@ -175,7 +196,7 @@ void Reader::ReadLPCM16 (T * destination, size_t totalSamplesToRead)
 
         if (std::fread (buffer.data(), bytesPerSample, samplesToRead, file.get()) != samplesToRead)
         {
-            throw ReadError ("Failed to read buffer from file.");
+            throw ReadError (ReadErrorCode::FileReadFailed, "Failed to read buffer from file.");
         }
 
         // Byteswap if needed
@@ -215,7 +236,7 @@ void Reader::ReadLPCM24 (T * destination, size_t totalSamplesToRead)
 
         if (std::fread (buffer.data(), bytesPerSample, samplesToRead, file.get()) != samplesToRead)
         {
-            throw ReadError ("Failed to read buffer from file.");
+            throw ReadError (ReadErrorCode::FileReadFailed, "Failed to read buffer from file.");
         }
 
         // Byteswap if needed
@@ -255,7 +276,7 @@ void Reader::ReadLPCM32 (T * destination, size_t totalSamplesToRead)
 
         if (std::fread (buffer.data(), bytesPerSample, samplesToRead, file.get()) != samplesToRead)
         {
-            throw ReadError ("Failed to read buffer from file.");
+            throw ReadError (ReadErrorCode::FileReadFailed, "Failed to read buffer from file.");
         }
 
         // Byteswap if needed
@@ -285,7 +306,7 @@ void Reader::ReadFloatPCMNoConversion (T * destination, size_t samplesToRead)
     // Read directly from file to destination.
     if (std::fread (destination, sizeof (T), samplesToRead, file.get()) != samplesToRead)
     {
-        throw ReadError ("Failed to read buffer from file.");
+        throw ReadError (ReadErrorCode::FileReadFailed, "Failed to read buffer from file.");
     }
 
     // Byteswap if needed
@@ -312,7 +333,7 @@ inline void Reader::ReadFloatToDouble (double * destination, size_t totalSamples
 
         if (std::fread (buffer.data(), bytesPerSample, samplesToRead, file.get()) != samplesToRead)
         {
-            throw ReadError ("Failed to read buffer from file.");
+            throw ReadError (ReadErrorCode::FileReadFailed, "Failed to read buffer from file.");
         }
 
         // Byteswap if needed
@@ -349,7 +370,7 @@ inline void Reader::ReadDoubleToFloat (float * destination, size_t totalSamplesT
 
         if (std::fread (buffer.data(), bytesPerSample, samplesToRead, file.get()) != samplesToRead)
         {
-            throw ReadError ("Failed to read buffer from file.");
+            throw ReadError (ReadErrorCode::FileReadFailed, "Failed to read buffer from file.");
         }
 
         // Byteswap if needed
@@ -378,7 +399,8 @@ size_t Reader::read (T ** const destinations, size_t numChannels, size_t framesR
     if (!file || framesRequested == 0 || numChannels == 0) return 0;
     if (numChannels > channels())
     {
-        throw ReadError ("Requested more channels than available.");
+        throw ReadError (ReadErrorCode::ChannelsRequestedExceedsChannelCount,
+                         "Requested more channels than available.");
     }
 
     const size_t bytesPerSample {containerSizeInBits() / 8U};
@@ -395,7 +417,13 @@ size_t Reader::read (T ** const destinations, size_t numChannels, size_t framesR
             case 16: ReadLPCM16 (destinations, numChannels, framesToRead); break;
             case 24: ReadLPCM24 (destinations, numChannels, framesToRead); break;
             case 32: ReadLPCM32 (destinations, numChannels, framesToRead); break;
-            default: throw ReadError ("Unsupported LPCM container size: " + std::to_string (containerSizeInBits()));
+            default:
+            {
+                assert (false);
+                throw ReadError (ReadErrorCode::InternalError,
+                                 "Internal error (should have been caught earlier): unsupported LPCM container size: "
+                                 + std::to_string (containerSizeInBits()));
+            }
         }
     }
     else if (isFloatPCM())
@@ -406,7 +434,13 @@ size_t Reader::read (T ** const destinations, size_t numChannels, size_t framesR
         {
             case 32: ReadFloatPCM32 (destinations, numChannels, framesToRead); break;
             case 64: ReadFloatPCM64 (destinations, numChannels, framesToRead); break;
-            default: throw ReadError ("Unsupported float PCM bit depth: " + std::to_string (bitDepth()));
+            default:
+            {
+                assert (false);
+                throw ReadError (ReadErrorCode::InternalError,
+                                 "Internal error (should have been caught earlier): unsupported float PCM bit depth: "
+                                 + std::to_string (bitDepth()));
+            }
         }
     }
 
@@ -439,7 +473,7 @@ void Reader::ReadLPCMU8 (T ** const destinations, size_t channelsToRead, size_t 
 
         if (std::fread (buffer.data(), bytesPerSample, samplesThisChunk, file.get()) != samplesThisChunk)
         {
-            throw ReadError ("Failed to read buffer from file.");
+            throw ReadError (ReadErrorCode::FileReadFailed, "Failed to read buffer from file.");
         }
 
         for (size_t frame = 0; frame < framesThisChunk; ++frame)
@@ -481,7 +515,7 @@ void Reader::ReadLPCM16 (T ** const destinations, size_t channelsToRead, size_t 
 
         if (std::fread (buffer.data(), bytesPerSample, samplesThisChunk, file.get()) != samplesThisChunk)
         {
-            throw ReadError ("Failed to read buffer from file.");
+            throw ReadError (ReadErrorCode::FileReadFailed, "Failed to read buffer from file.");
         }
 
         if constexpr (std::endian::native == std::endian::big)
@@ -531,7 +565,7 @@ void Reader::ReadLPCM24 (T ** const destinations, size_t channelsToRead, size_t 
 
         if (std::fread (buffer.data(), bytesPerSample, samplesThisChunk, file.get()) != samplesThisChunk)
         {
-            throw ReadError ("Failed to read buffer from file.");
+            throw ReadError (ReadErrorCode::FileReadFailed, "Failed to read buffer from file.");
         }
 
         if constexpr (std::endian::native == std::endian::big)
@@ -581,7 +615,7 @@ void Reader::ReadLPCM32 (T ** const destinations, size_t channelsToRead, size_t 
 
         if (std::fread (buffer.data(), bytesPerSample, samplesThisChunk, file.get()) != samplesThisChunk)
         {
-            throw ReadError ("Failed to read buffer from file.");
+            throw ReadError (ReadErrorCode::FileReadFailed, "Failed to read buffer from file.");
         }
 
         if constexpr (std::endian::native == std::endian::big)
@@ -629,7 +663,7 @@ void Reader::ReadFloatPCM32 (T ** const destinations, size_t channelsToRead, siz
 
         if (std::fread (buffer.data(), bytesPerSample, samplesThisChunk, file.get()) != samplesThisChunk)
         {
-            throw ReadError ("Failed to read buffer from file.");
+            throw ReadError (ReadErrorCode::FileReadFailed, "Failed to read buffer from file.");
         }
 
         // Byteswap if needed. (Consider doing after deinterleaving instead of before.)
@@ -680,7 +714,7 @@ void Reader::ReadFloatPCM64 (T ** const destinations, size_t channelsToRead, siz
 
         if (std::fread (buffer.data(), bytesPerSample, samplesThisChunk, file.get()) != samplesThisChunk)
         {
-            throw ReadError ("Failed to read buffer from file.");
+            throw ReadError (ReadErrorCode::FileReadFailed, "Failed to read buffer from file.");
         }
 
         // Byteswap if needed. (Consider doing after deinterleaving instead of before.)
@@ -755,7 +789,8 @@ inline double Reader::normalization (uint16_t bitDepth)
 {
     if (bitDepth == 0 || bitDepth > 64)
     {
-        throw ReadError ("Invalid value: bit depth must be greater than 0 and less than or equal to 64.");
+        assert (false);
+        throw ReadError (ReadErrorCode::InternalError, "Internal error (should have been caught earlier): bit depth must be greater than 0 and less than or equal to 64.");
     }
     return static_cast<double> (uint64_t{1} << (bitDepth - 1));
 }
