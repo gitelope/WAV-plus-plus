@@ -11,9 +11,18 @@
 
 void TestSampleEncoding (TestLog & log)
 {
-    const auto filename       {"testSampleEncoding.wav"};
-    constexpr auto sampleRate {48000};
-    constexpr auto channels    {1};
+    const auto filename {"testSampleEncoding.wav"};
+
+    // The static qualifiers on sampleRate and channels are used to both:
+    // a) avoid a bug in some versions of Clang involving constexpr variables and lambda capture
+    //    that causes a compilation error
+    // b) avoid triggering a -Wunused-lambda-capture warning in other versions of Clang that
+    //    would occur if the variables were captured unnecessarily
+    //
+    // Being constexpr and used only by value, they are not ODR-used; static storage duration
+    // removes them from the capture mechanism, satisfying both.
+    static constexpr auto sampleRate {48000};
+    static constexpr auto channels   {1};
 
     const std::vector<float>  out_float
     {-1.f, -0.875f, -0.75f, -0.625f, -0.5f, -0.25f, 0.f, 0.25f, 0.5f, 0.625f, 0.75f, 0.875f, 1.f};
@@ -21,7 +30,7 @@ void TestSampleEncoding (TestLog & log)
     const std::vector<double> out_double
     {-1., -0.875, -0.75, -0.625, -0.5, -0.25, 0., 0.25, 0.5, 0.625, 0.75, 0.875, 1.};
 
-    const auto RunTest = [&log, &filename, sampleRate, channels]
+    const auto RunTest = [&log, &filename]
     <typename T> (wav::ExportFormat encoding,
                   std::vector<T> const & source,
                   std::vector<uint8_t> const & expected,
