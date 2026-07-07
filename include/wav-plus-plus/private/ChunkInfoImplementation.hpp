@@ -56,7 +56,7 @@ inline void ChunkInfo::ReadFile (std::FILE * in)
 
     const auto firstChunkID {fourCharacterCode (in)};
     if (firstChunkID != riff.id) throw ReadError (ReadErrorCode::RiffIdNotFound, "RIFF chunk ID not found.");
-    ReadRiffChunk (in);
+    ReadRiffHeader (in);
     RegisterChunk (firstChunkID, 0);
 
     while (peek (in) != EOF)
@@ -123,11 +123,16 @@ inline void ChunkInfo::ValidateAfterParsing()
     }
 }
 
-inline void ChunkInfo::ReadRiffChunk (std::FILE * in)
+inline void ChunkInfo::ReadRiffHeader (std::FILE * in)
 {
     // Technically, the whole file is a RIFF chunk. This is just the first part of it.
     // No need to read id since it has already been read and has the expected value.
     riff.size = uint32_le (in);
+    riffEnd = static_cast<std::int64_t> (riff.size) + 8;
+    if (riffEnd > actualFileSize)
+    {
+        throw ReadError (ReadErrorCode::RiffEndExceedsFileSize, "Invalid value: RIFF chunk size implies RIFF chunk exceeds the actual EOF.");
+    }
     if (fourCharacterCode (in) != riff.format)
     {
         throw ReadError (ReadErrorCode::RiffSubformatNotWave,

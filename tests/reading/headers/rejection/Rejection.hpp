@@ -64,12 +64,21 @@ inline void MultipleRiffChunks (TestLog & log)
     bytes.insert (bytes.end(), duplicate.begin(), duplicate.end());
     TestForReadError (bytes, log, "Header Rejection - RIFF chunk, multiple RIFF chunks", wav::ReadErrorCode::MultipleRiffChunks);
 }
+inline void RiffEndExceedsFileSize (TestLog & log)
+{
+    auto bytes = buildPCMWAVEFORMAT (wav::FormatCode::LinearPCM, 24, 24, 1, 96000, 8);
+    const auto correctRiffSize {static_cast<uint32_t> (bytes.size()) - 8u};
+    OverwriteUint32LE (bytes, 4, correctRiffSize + 2u); // new RIFF end is 2 bytes past EOF
+    TestForReadError (bytes, log, "Header Rejection - RIFF chunk, declared size extends past actual EOF",
+                      wav::ReadErrorCode::RiffEndExceedsFileSize);
+}
 
 inline void RunRiffChunkTests (TestLog & log)
 {
     RiffIdNotFound (log);
     RiffSubformatNotWave (log);
     MultipleRiffChunks (log);
+    RiffEndExceedsFileSize (log);
 }
 
 // FORMAT CHUNK TESTS ///////////////////////////////////////////////////////////////
