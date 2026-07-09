@@ -60,6 +60,15 @@ inline void RiffEndExceedsFileSize (TestLog & log)
     TestForReadError (bytes, log, "Header Rejection - RIFF chunk, declared size extends past actual EOF",
                       wav::ReadErrorCode::RiffEndExceedsFileSize);
 }
+inline void IncompleteRiffHeader (TestLog & log)
+{
+    std::vector<uint8_t> bytes;
+    PushFourCC   (bytes, "RIFF");
+    PushUint32LE (bytes, 4u);
+    PushFourCC   (bytes, "WAVE");
+    bytes.pop_back (); // now only 11 bytes
+    TestForReadError (bytes, log, "Header Rejection - RIFF header fewer than 12 bytes", wav::ReadErrorCode::IncompleteRiffHeader);
+}
 
 inline void RunRiffChunkTests (TestLog & log)
 {
@@ -67,6 +76,7 @@ inline void RunRiffChunkTests (TestLog & log)
     RiffSubformatNotWave (log);
     MultipleRiffChunks (log);
     RiffEndExceedsFileSize (log);
+    IncompleteRiffHeader (log);
 }
 
 // GENERIC CHUNK TESTS //////////////////////////////////////////////////////////////

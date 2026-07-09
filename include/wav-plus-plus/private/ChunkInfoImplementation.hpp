@@ -53,18 +53,23 @@ inline void ChunkInfo::ReadFile (std::FILE * in)
 {
     actualFileSize = fileSize (in);
 
+    if (actualFileSize < 12)
+    {
+        throw ReadError (ReadErrorCode::IncompleteRiffHeader, "RIFF header is less than 12 bytes");
+    }
     const auto firstChunkID {fourCharacterCode (in)};
     if (firstChunkID != riff.id) throw ReadError (ReadErrorCode::RiffIdNotFound, "RIFF chunk ID not found.");
     ReadRiffHeader (in);
     RegisterChunk (firstChunkID, 0);
 
-    while (tell (in) < riffEnd)
+    auto chunkStart {tell (in)};
+    if (chunkStart == -1)
     {
-        const auto chunkStart {tell (in)};
-        if (chunkStart == -1)
-        {
-            throw ReadError (ReadErrorCode::FileTellFailed, "Failed to get chunk position.");
-        }
+        throw ReadError (ReadErrorCode::FileTellFailed, "Failed to get chunk position.");
+    }
+
+    while (chunkStart < riffEnd)
+    {
         if (riffEnd - chunkStart < 8)
         {
             throw ReadError (ReadErrorCode::IncompleteChunkHeader, "Not enough space in RIFF chunk for a sub-chunk ID and size field.");
@@ -103,6 +108,16 @@ inline void ChunkInfo::ReadFile (std::FILE * in)
             // (Best not to add it in ahead of time since that could result in overflow.)
             SkipChunk (in, chunkSize);
         }
+        const auto currentPosition = tell (in);
+        if (currentPosition == -1)
+        {
+            throw ReadError (ReadErrorCode::FileTellFailed, "Failed to get chunk position.");
+        }
+        if (currentPosition != chunkEnd)
+        {
+            throw ReadError (ReadErrorCode::InternalError, "Chunk end not reached after reading or skipping.");
+        }
+        chunkStart = currentPosition;
     }
     ValidateAfterParsing();
 }
