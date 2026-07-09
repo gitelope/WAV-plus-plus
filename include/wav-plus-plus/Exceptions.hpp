@@ -62,6 +62,7 @@ enum class ReadErrorCode
     PeakChunkBeforeFmtChunk,
     PeakChunkSizeMismatchesChannels,
     PeakChunkSizeTooSmallForVersionField,
+    ReadPastEndOfVector,
     RiffEndExceedsFileSize,
     RiffIdNotFound,
     RiffSubformatNotWave,
@@ -115,9 +116,10 @@ constexpr ReadErrorCategory categoryFor (ReadErrorCode code)
         case ReadErrorCode::PeakChunkBeforeFmtChunk:                           return ReadErrorCategory::InvalidFile;
         case ReadErrorCode::PeakChunkSizeMismatchesChannels:                   return ReadErrorCategory::InvalidFile;
         case ReadErrorCode::PeakChunkSizeTooSmallForVersionField:              return ReadErrorCategory::InvalidFile;
+        case ReadErrorCode::ReadPastEndOfVector:                               return ReadErrorCategory::InvalidFile;
+        case ReadErrorCode::RiffEndExceedsFileSize:                            return ReadErrorCategory::InvalidFile;
         case ReadErrorCode::RiffIdNotFound:                                    return ReadErrorCategory::InvalidFile;
         case ReadErrorCode::RiffSubformatNotWave:                              return ReadErrorCategory::InvalidFile;
-        case ReadErrorCode::RiffEndExceedsFileSize:                            return ReadErrorCategory::InvalidFile;
         case ReadErrorCode::SampleRateEqualsZero:                              return ReadErrorCategory::InvalidFile;
 
         case ReadErrorCode::ChannelsRequestedExceedsChannelCount:   return ReadErrorCategory::InvalidArgument;

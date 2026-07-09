@@ -88,7 +88,7 @@ inline uint8_t uint8 (std::vector<std::byte> const & bytes, size_t & pos)
 {
     if (pos >= bytes.size())
     {
-        throw ReadError ("Attempting to read past end of vector.");
+        throw ReadError (ReadErrorCode::ReadPastEndOfVector, "Not enough bytes to read uint8_t from byte vector.");
     }
     return static_cast<uint8_t> (bytes [pos++]);
 }
@@ -129,7 +129,7 @@ inline int16_t int16_le (std::vector<std::byte> const & bytes, size_t & pos)
 {
     if (pos + 1 >= bytes.size())
     {
-        throw ReadError ("Not enough bytes to read int16_t.");
+        throw ReadError (ReadErrorCode::ReadPastEndOfVector, "Not enough bytes to read int16_t from byte vector.");
     }
     const auto result = static_cast<int16_t>
     (
@@ -148,7 +148,7 @@ inline int32_t int24_le (std::vector<std::byte> const & bytes, size_t & pos)
     // to a 32-bit signed int (2's-complement) with the same value
     if (pos + 2 >= bytes.size())
     {
-        throw ReadError ("Not enough bytes to read 24-bit int.");
+        throw ReadError (ReadErrorCode::ReadPastEndOfVector, "Not enough bytes to read 24-bit int (into int32_t) from byte vector.");
     }
 
     auto result =
@@ -183,7 +183,7 @@ inline int32_t int32_le (std::vector<std::byte> const & bytes, size_t & pos)
 {
     if (pos + 3 >= bytes.size())
     {
-        throw ReadError ("Not enough bytes to read int32_t.");
+        throw ReadError (ReadErrorCode::ReadPastEndOfVector, "Not enough bytes to read int32_t from byte vector.");
     }
     const auto result =
     static_cast<int32_t> (bytes [pos])         |
@@ -200,7 +200,7 @@ inline float float32_le (std::vector<std::byte> const & bytes, size_t & pos)
 {
     if (pos + 3 >= bytes.size())
     {
-        throw ReadError ("Not enough bytes to read 32-bit float.");
+        throw ReadError (ReadErrorCode::ReadPastEndOfVector, "Not enough bytes to read 32-bit float from byte vector.");
     }
     const auto integer =
     static_cast<uint32_t> (bytes[pos])         |
@@ -231,7 +231,7 @@ inline double float64_le (std::vector<std::byte> const & bytes, size_t & pos)
 {
     if (pos + 7 >= bytes.size())
     {
-        throw ReadError ("Not enough bytes to read 64-bit float.");
+        throw ReadError (ReadErrorCode::ReadPastEndOfVector, "Not enough bytes to read 64-bit float from byte vector.");
     }
     const auto integer =
     static_cast<uint64_t> (bytes[pos])         |

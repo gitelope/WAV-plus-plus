@@ -33,12 +33,13 @@ set (wav_plus_plus_test_headers
 
     reading/trailing_bytes/TrailingBytesIgnored.hpp
 
-    utilities/Byteswap.hpp
     utilities/UtilitiesTests.hpp
+    utilities/Byteswap.hpp
+    utilities/ReadingBytesVector.hpp
 
+    writing/WritingTests.hpp
     writing/HeaderWriting.hpp
     writing/SampleEncoding.hpp
-    writing/WritingTests.hpp
 )
 
 source_group (TREE "${CMAKE_CURRENT_SOURCE_DIR}" FILES ${wav_plus_plus_test_headers})
