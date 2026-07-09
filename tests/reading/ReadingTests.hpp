@@ -4,6 +4,9 @@
 #ifndef wavplusplus_tests_ReadingTests_hpp
 #define wavplusplus_tests_ReadingTests_hpp
 
+#include "../../include/wav-plus-plus/Reader.hpp"
+#include "reading_helper_functions.hpp"
+
 #include "headers/HeaderParsing.hpp"
 #include "decoding/SampleDecoding.hpp"
 #include "invalid_argument/InvalidArgument.hpp"

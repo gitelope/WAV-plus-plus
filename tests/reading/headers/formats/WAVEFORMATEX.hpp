@@ -4,8 +4,6 @@
 #ifndef wavplusplus_tests_WAVEFORMATEX_hpp
 #define wavplusplus_tests_WAVEFORMATEX_hpp
 
-std::vector<uint8_t> buildWAVEFORMATEX (uint16_t, uint16_t, uint16_t, uint16_t, uint32_t, uint32_t);
-
 inline void TestWAVEFORMATEX (TestLog & log)
 {
     const auto filename           {"test_WAVEFORMATEX_header_parsing.wav"};
@@ -79,44 +77,6 @@ inline void TestWAVEFORMATEX (TestLog & log)
     }
 
     std::remove (filename);
-}
-
-// Build a WAVEFORMATEX WAV file (18-byte fmt chunk).
-//
-// Layout:
-//   RIFF header   (12 bytes)
-//   fmt  chunk    (8 + 18 = 26 bytes)
-//   data chunk    (8 + dataSize bytes)
-//   padding byte  (if dataSize is odd)
-//
-inline std::vector<uint8_t> buildWAVEFORMATEX (uint16_t formatCode, uint16_t validBitDepth, uint16_t containerSizeInBits, uint16_t channels, uint32_t sampleRate, uint32_t frames)
-{
-    constexpr uint32_t formatChunkSize {wav::FormatChunkSize::WAVEFORMATEX};
-
-    assert (containerSizeInBits % 8 == 0);
-    const auto blockAlign {static_cast<uint16_t> (channels * containerSizeInBits / 8)};
-    const auto byteRate {sampleRate * blockAlign};
-    const auto dataChunkSize {frames * blockAlign};
-
-    const uint16_t cbSize {0};
-
-    std::vector<uint8_t> wav;
-
-    // RIFF
-    PushRiffHeader (wav, formatChunkSize, dataChunkSize);
-
-    // fmt
-    PushFmtHeader        (wav, formatChunkSize);
-    Push_WAVEFORMAT_Fmt    (wav, formatCode, channels, sampleRate, byteRate, blockAlign); // 14 bytes
-    Push_PCMWAVEFORMAT_Fmt (wav, validBitDepth);                                          //  2 bytes
-    Push_WAVEFORMATEX_Fmt  (wav, cbSize);                                                 //  2 bytes
-                                                                                          // --------
-                                                                                          // 18 bytes
-
-    // data
-    PushSilentDataChunk (wav, dataChunkSize);
-
-    return wav;
 }
 
 #endif

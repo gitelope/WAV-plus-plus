@@ -11,7 +11,6 @@ set (wav_plus_plus_test_headers
     reading/reading_helper_functions.hpp
     
     reading/headers/HeaderParsing.hpp
-    reading/headers/header_parsing_helper_functions.hpp
 
     reading/headers/formats/Formats.hpp
     reading/headers/formats/PCMWAVEFORMAT.hpp

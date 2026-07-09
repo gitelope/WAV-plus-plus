@@ -12,8 +12,6 @@
 // *The standard does not require that the number of channels equal the number of set
 // bits in the channel mask which allows for some freedom when testing.
 
-std::vector<uint8_t> buildWAVEFORMATEXTENSIBLE (wav::GUID const &, uint16_t, uint16_t, uint16_t, uint32_t, uint32_t, uint32_t);
-
 inline void TestWAVEFORMATEXTENSIBLE (TestLog & log)
 {
     const auto filename           {"test_WAVEFORMATEXTENSIBLE_header_parsing.wav"};
@@ -105,50 +103,6 @@ inline void TestWAVEFORMATEXTENSIBLE (TestLog & log)
     }
 
     std::remove (filename);
-}
-
-// Build a WAVEFORMATEXTENSIBLE WAV file (40-byte fmt chunk).
-//
-// Layout:
-//   RIFF header   (12 bytes)
-//   fmt  chunk    (8 + 40 = 48 bytes)
-//   data chunk    (8 + dataSize bytes)
-//   padding byte  (if dataSize is odd)
-//
-inline std::vector<uint8_t> buildWAVEFORMATEXTENSIBLE (wav::GUID const & subformat,
-                                                       uint16_t validBitDepth, uint16_t containerSizeInBits,
-                                                       uint16_t channels, uint32_t sampleRate,
-                                                       uint32_t frames, uint32_t channelMask)
-{
-    constexpr uint32_t formatChunkSize {wav::FormatChunkSize::WAVEFORMATEXTENSIBLE};
-
-    assert (containerSizeInBits % 8 == 0);
-    const auto blockAlign {static_cast<uint16_t> (channels * containerSizeInBits / 8)};
-    const auto byteRate {sampleRate * blockAlign};
-    const auto dataChunkSize {frames * blockAlign};
-
-    const uint16_t cbSize {22};
-
-    const auto formatCode {wav::FormatCode::Extensible};
-
-
-    std::vector<uint8_t> wav;
-
-    // RIFF
-    PushRiffHeader (wav, formatChunkSize, dataChunkSize);
-
-    // fmt
-    PushFmtHeader               (wav, formatChunkSize);
-    Push_WAVEFORMAT_Fmt           (wav, formatCode, channels, sampleRate, byteRate, blockAlign); // 14 bytes
-    Push_PCMWAVEFORMAT_Fmt        (wav, containerSizeInBits);                                    //  2 bytes
-    Push_WAVEFORMATEX_Fmt         (wav, cbSize);                                                 //  2 bytes
-    Push_WAVEFORMATEXTENSIBLE_Fmt (wav, validBitDepth, channelMask, subformat);                  // 22 bytes
-                                                                                                 // --------
-                                                                                                 // 40 bytes
-    // data
-    PushSilentDataChunk (wav, dataChunkSize);
-
-    return wav;
 }
 
 #endif

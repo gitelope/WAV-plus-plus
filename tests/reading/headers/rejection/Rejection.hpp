@@ -4,8 +4,6 @@
 #ifndef wavplusplus_tests_Rejection_hpp
 #define wavplusplus_tests_Rejection_hpp
 
-#include <limits>
-
 void RunRiffChunkTests    (TestLog &);
 void RunGenericChunkTests (TestLog &);
 void RunFormatChunkTests  (TestLog &);

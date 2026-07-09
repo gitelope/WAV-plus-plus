@@ -4,11 +4,6 @@
 #ifndef wavplusplus_tests_FileOpenFailure_hpp
 #define wavplusplus_tests_FileOpenFailure_hpp
 
-#include "../../../include/wav-plus-plus/Reader.hpp"
-
-#include <cassert>
-#include <filesystem>
-
 inline void FailedToOpenFileForReading (TestLog & log)
 {
     const std::filesystem::path filepath {"does_not_exist.wav"};

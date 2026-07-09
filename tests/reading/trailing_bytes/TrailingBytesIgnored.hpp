@@ -4,10 +4,6 @@
 #ifndef wavplusplus_tests_TrailingBytesIgnored_hpp
 #define wavplusplus_tests_TrailingBytesIgnored_hpp
 
-#include <cstdio>
-#include <format>
-#include <string>
-
 inline void TestTrailingBytesIgnored (TestLog & log)
 {
     const auto filename {"test_trailing_bytes.wav"};

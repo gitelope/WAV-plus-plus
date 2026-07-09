@@ -4,12 +4,6 @@
 #ifndef wavplusplus_tests_InvalidArgument_hpp
 #define wavplusplus_tests_InvalidArgument_hpp
 
-#include "../../../include/wav-plus-plus/Reader.hpp"
-#include "../headers/formats/PCMWAVEFORMAT.hpp"
-#include "../reading_helper_functions.hpp"
-
-#include <vector>
-
 inline void SamplesRequestedExceedsDestinationSize (TestLog & log)
 {
     auto bytes = buildPCMWAVEFORMAT (wav::FormatCode::LinearPCM, 24, 24, 1, 96000, 8);
