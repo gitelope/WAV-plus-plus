@@ -129,11 +129,11 @@ public:
 private:
 
     void ReadFile                        (std::FILE * in);
-    void ReadRiffChunk                   (std::FILE * in);
-    void ReadFormatChunk                 (std::FILE * in);
-    void ReadFactChunk                   (std::FILE * in);
-    void ReadPeakChunk                   (std::FILE * in, std::int64_t chunkStart);
-    void ReadDataChunkSizeAndSkipSamples (std::FILE * in);
+    void ReadRiffHeader                  (std::FILE * in);
+    void ReadFormatChunk                 (std::FILE * in, std::uint32_t chunkSize);
+    void ReadFactChunk                   (std::FILE * in, std::uint32_t chunkSize);
+    void ReadPeakChunk                   (std::FILE * in, std::uint32_t chunkSize, std::int64_t chunkStart);
+    void ReadDataChunkSizeAndSkipSamples (std::FILE * in, std::uint32_t chunkSize);
 
     void RegisterChunk        (std::string const & id, std::int64_t position);
     void RegisterSkippedChunk (std::string const & id, std::int64_t position);
@@ -149,6 +149,7 @@ private:
     bool peakChunkEncountered {false};
 
     std::int64_t actualFileSize {0};
+    std::int64_t riffEnd {0};
 };
 
 std::ostream & operator<< (std::ostream &, ChunkInfo const &);

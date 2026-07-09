@@ -19,16 +19,27 @@ set (wav_plus_plus_test_headers
     reading/headers/formats/WAVEFORMATEX.hpp
     reading/headers/formats/WAVEFORMATEXTENSIBLE.hpp
 
+    reading/headers/optional_chunks/OptionalChunks.hpp
+    reading/headers/optional_chunks/fact.hpp
+    reading/headers/optional_chunks/PEAK.hpp
+
     reading/headers/rejection/Rejection.hpp
 
     reading/decoding/SampleDecoding.hpp
 
-    utilities/Byteswap.hpp
-    utilities/UtilitiesTests.hpp
+    reading/file_open/FileOpenFailure.hpp
 
+    reading/invalid_argument/InvalidArgument.hpp
+
+    reading/trailing_bytes/TrailingBytesIgnored.hpp
+
+    utilities/UtilitiesTests.hpp
+    utilities/Byteswap.hpp
+    utilities/ReadingBytesVector.hpp
+
+    writing/WritingTests.hpp
     writing/HeaderWriting.hpp
     writing/SampleEncoding.hpp
-    writing/WritingTests.hpp
 )
 
 source_group (TREE "${CMAKE_CURRENT_SOURCE_DIR}" FILES ${wav_plus_plus_test_headers})

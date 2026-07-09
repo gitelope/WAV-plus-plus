@@ -47,29 +47,50 @@ inline std::string ChunkInfo::summary() const
                          format.channels, frames, data.size, isPadded);
 }
 
-int peek (std::FILE * in); // check if there's data available
 void SkipChunk (std::FILE *, uint32_t);
 
 inline void ChunkInfo::ReadFile (std::FILE * in)
 {
     actualFileSize = fileSize (in);
 
+    if (actualFileSize < 12)
+    {
+        throw ReadError (ReadErrorCode::IncompleteRiffHeader, "RIFF header is less than 12 bytes");
+    }
     const auto firstChunkID {fourCharacterCode (in)};
     if (firstChunkID != riff.id) throw ReadError (ReadErrorCode::RiffIdNotFound, "RIFF chunk ID not found.");
-    ReadRiffChunk (in);
+    ReadRiffHeader (in);
     RegisterChunk (firstChunkID, 0);
 
-    while (peek (in) != EOF)
+    auto chunkStart {tell (in)};
+    if (chunkStart == -1)
     {
-        const auto chunkStart {tell (in)};
-        if (chunkStart == -1) throw ReadError (ReadErrorCode::FileTellFailed, "Failed to get chunk position.");
+        throw ReadError (ReadErrorCode::FileTellFailed, "Failed to get chunk position.");
+    }
+
+    while (chunkStart < riffEnd)
+    {
+        if (riffEnd - chunkStart < 8)
+        {
+            throw ReadError (ReadErrorCode::IncompleteChunkHeader, "Not enough space in RIFF chunk for a sub-chunk ID and size field.");
+        }
         const auto chunkID {fourCharacterCode (in)};
+
+        const std::uint32_t chunkSize {uint32_le (in)};
+        const std::int64_t bodyStart {tell (in)};
+        const std::int64_t chunkEnd {bodyStart + chunkSize + (chunkSize % 2)};
+        if (chunkEnd > riffEnd)
+        {
+            throw ReadError (ReadErrorCode::DeclaredChunkEndExceedsRiffEnd,
+                             std::format ("Declared end of \"{}\" chunk (size: {} bytes) extends past RIFF chunk.", chunkID, chunkSize));
+        }
+
         RegisterChunk (chunkID, chunkStart);
 
-        if      (chunkID == format.id) ReadFormatChunk                 (in);
-        else if (chunkID == fact.id)   ReadFactChunk                   (in);
-        else if (chunkID == peak.id)   ReadPeakChunk                   (in, chunkStart);
-        else if (chunkID == data.id)   ReadDataChunkSizeAndSkipSamples (in);
+        if      (chunkID == format.id) ReadFormatChunk                 (in, chunkSize);
+        else if (chunkID == fact.id)   ReadFactChunk                   (in, chunkSize);
+        else if (chunkID == peak.id)   ReadPeakChunk                   (in, chunkSize, chunkStart);
+        else if (chunkID == data.id)   ReadDataChunkSizeAndSkipSamples (in, chunkSize);
         else if (chunkID == riff.id)   throw ReadError (ReadErrorCode::MultipleRiffChunks, "Invalid format: File contains more than one RIFF chunk.");
         else
         {
@@ -83,11 +104,20 @@ inline void ChunkInfo::ReadFile (std::FILE * in)
             // number. In contrast, all chunk padding should be reflected
             // in the main "RIFF" chunk size.
             RegisterSkippedChunk (chunkID, chunkStart);
-            const auto size {uint32_le (in)};
             // SkipChunk() detects and carefully skips potential padding byte.
             // (Best not to add it in ahead of time since that could result in overflow.)
-            SkipChunk (in, size);
+            SkipChunk (in, chunkSize);
         }
+        const auto currentPosition = tell (in);
+        if (currentPosition == -1)
+        {
+            throw ReadError (ReadErrorCode::FileTellFailed, "Failed to get chunk position.");
+        }
+        if (currentPosition != chunkEnd)
+        {
+            throw ReadError (ReadErrorCode::InternalError, "Chunk end not reached after reading or skipping.");
+        }
+        chunkStart = currentPosition;
     }
     ValidateAfterParsing();
 }
@@ -99,16 +129,6 @@ inline void SkipChunk (std::FILE * file, uint32_t size)
     {
         throw ReadError (ReadErrorCode::FileSeekFailed, "Failed to skip chunk.");
     }
-}
-
-inline int peek (std::FILE * in)
-{
-    int c = std::fgetc (in);
-    if (c != EOF)
-    {
-        std::ungetc (c, in); // Put the character back
-    }
-    return c;
 }
 
 inline void ChunkInfo::ValidateAfterParsing()
@@ -123,11 +143,16 @@ inline void ChunkInfo::ValidateAfterParsing()
     }
 }
 
-inline void ChunkInfo::ReadRiffChunk (std::FILE * in)
+inline void ChunkInfo::ReadRiffHeader (std::FILE * in)
 {
     // Technically, the whole file is a RIFF chunk. This is just the first part of it.
     // No need to read id since it has already been read and has the expected value.
     riff.size = uint32_le (in);
+    riffEnd = static_cast<std::int64_t> (riff.size) + 8;
+    if (riffEnd > actualFileSize)
+    {
+        throw ReadError (ReadErrorCode::RiffEndExceedsFileSize, "Invalid value: RIFF chunk size implies RIFF chunk exceeds the actual EOF.");
+    }
     if (fourCharacterCode (in) != riff.format)
     {
         throw ReadError (ReadErrorCode::RiffSubformatNotWave,
@@ -135,7 +160,7 @@ inline void ChunkInfo::ReadRiffChunk (std::FILE * in)
     }
 }
 
-inline void ChunkInfo::ReadFormatChunk (std::FILE * in)
+inline void ChunkInfo::ReadFormatChunk (std::FILE * in, std::uint32_t chunkSize)
 {
     if (fmtChunkEncountered)
     {
@@ -143,7 +168,7 @@ inline void ChunkInfo::ReadFormatChunk (std::FILE * in)
     }
 
     // WAVEFORMAT, PCMWAVEFORMAT, WAVEFORMATEX, and WAVEFORMATEXTENSIBLE:
-    format.size = uint32_le (in);
+    format.size = chunkSize;
     if (! isSupportedFormatChunkSize (format.size))
     {
         throw ReadError (ReadErrorCode::UnsupportedFmtChunkSize, "fmt chunk size (" + std::to_string (format.size) + ") is unsupported.");
@@ -365,51 +390,47 @@ inline void ChunkInfo::ValidateFormatChunkAndComputeBitDepthAndContainerSize()
     }
 }
 
-inline void ChunkInfo::ReadFactChunk (std::FILE * in)
+inline void ChunkInfo::ReadFactChunk (std::FILE * in, std::uint32_t chunkSize)
 {
-    if (factChunkEncountered) throw ReadError (ReadErrorCode::MultipleFactChunks, "Invalid format: File contains more than one fact chunk.");
+    if (factChunkEncountered)
+    {
+        throw ReadError (ReadErrorCode::MultipleFactChunks, "Invalid format: File contains more than one fact chunk.");
+    }
     factChunkEncountered = true;
 
-    const auto size = uint32_le (in);
-    if (size != 4) throw ReadError (ReadErrorCode::FactChunkSizeNotFour, "Invalid value: fact chunk size must be 4.");
-    fact.size = size;
+    if (chunkSize != 4)
+    {
+        throw ReadError (ReadErrorCode::FactChunkSizeNotFour, "Invalid value: fact chunk size must be 4.");
+    }
+    fact.size = chunkSize;
 
     fact.fileSize = uint32_le (in);
     fact.present = true;
 }
 
-inline void ChunkInfo::ReadPeakChunk (std::FILE * in, std::int64_t chunkStart)
+inline void ChunkInfo::ReadPeakChunk (std::FILE * in, std::uint32_t chunkSize, std::int64_t chunkStart)
 {
     // Throws ReadError when:
     //     more than one PEAK
     //     PEAK before fmt
-    //     declared size exceeds bytes remaining in file
     //     declared size is less than 4
     //     version is 1 and declared size does not match 4 + 4 + 8 * channels
     //
     // Skips remaining chunk body when:
     //     version is not 1
 
-    if (peakChunkEncountered) throw ReadError (ReadErrorCode::MultiplePeakChunks, "Invalid format: File contains more than one PEAK chunk.");
+    if (peakChunkEncountered)
+    {
+        throw ReadError (ReadErrorCode::MultiplePeakChunks, "Invalid format: File contains more than one PEAK chunk.");
+    }
     peakChunkEncountered = true;
 
-    if (!fmtChunkEncountered) throw ReadError (ReadErrorCode::PeakChunkBeforeFmtChunk, "Invalid format: PEAK chunk comes before fmt chunk.");
-
-    peak.size = uint32_le (in);
-
-    // make sure size doesn't imply chunk overruns EOF
-    const auto bodyStart = tell (in);
-    if (bodyStart == -1)
+    if (!fmtChunkEncountered)
     {
-        throw ReadError (ReadErrorCode::FileTellFailed,
-                         "Failed to get current file position before parsing PEAK chunk body.");
+        throw ReadError (ReadErrorCode::PeakChunkBeforeFmtChunk, "Invalid format: PEAK chunk comes before fmt chunk.");
     }
-    const auto bytesRemaining {actualFileSize - bodyStart};
-    if (peak.size > bytesRemaining)
-    {
-        throw ReadError (ReadErrorCode::PeakChunkSizeExceedsFileSize,
-                         std::format ("Inconsistent value: declared PEAK chunk size ({}) exceeds bytes remaining in the file ({}).", peak.size, bytesRemaining));
-    }
+
+    peak.size = chunkSize;
 
     if (peak.size < 4u) throw ReadError (ReadErrorCode::PeakChunkSizeTooSmallForVersionField, "Invalid value: PEAK chunk size is too small to contain a version field.");
 
@@ -445,14 +466,18 @@ inline void ChunkInfo::ReadPeakChunk (std::FILE * in, std::int64_t chunkStart)
     peak.present = true; // present and parsed successfully
 }
 
-inline void ChunkInfo::ReadDataChunkSizeAndSkipSamples (std::FILE * in)
+inline void ChunkInfo::ReadDataChunkSizeAndSkipSamples (std::FILE * in, std::uint32_t chunkSize)
 {
-    if (!fmtChunkEncountered) throw ReadError (ReadErrorCode::DataChunkBeforeFmtChunk, "Invalid format: data chunk reached before format chunk.");
-    if (dataChunkEncountered) throw ReadError (ReadErrorCode::MultipleDataChunks, "Invalid format: File contains more than one data chunk.");
+    if (!fmtChunkEncountered)
+    {
+        throw ReadError (ReadErrorCode::DataChunkBeforeFmtChunk, "Invalid format: data chunk reached before format chunk.");
+    }
+    if (dataChunkEncountered)
+    {
+        throw ReadError (ReadErrorCode::MultipleDataChunks, "Invalid format: File contains more than one data chunk.");
+    }
 
-    // No need to read id since it has already been read and has the expected value.
-
-    data.size = uint32_le (in);
+    data.size = chunkSize;
 
     if (data.size % format.blockAlign != 0)
     {
@@ -460,15 +485,8 @@ inline void ChunkInfo::ReadDataChunkSizeAndSkipSamples (std::FILE * in)
                          "Inconsistent value: size of data chunk is not divisible by block align.");
     }
 
-    // make sure size doesn't imply chunk overuns EOF
     data.offset = tell (in);
     if (data.offset == -1) throw ReadError (ReadErrorCode::FileTellFailed, "Failed to get current file position for data chunk.");
-    const auto bytesRemaining {actualFileSize - data.offset};
-    if (data.size > bytesRemaining)
-    {
-        throw ReadError (ReadErrorCode::DataChunkSizeExceedsFileSize,
-                         std::format ("Inconsistent value: declared data chunk size ({}) exceeds bytes remaining in the file ({}).", data.size, bytesRemaining));
-    }
 
     // SkipChunk() detects and carefully skips potential padding byte.
     // (Best not to add it in ahead of time since that could result in overflow.)
