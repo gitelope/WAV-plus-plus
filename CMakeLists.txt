@@ -93,6 +93,7 @@ if (PROJECT_IS_TOP_LEVEL)
         include/wav-plus-plus/Exceptions.hpp
         include/wav-plus-plus/FileInfo.hpp
         include/wav-plus-plus/Formats.hpp
+        include/wav-plus-plus/ReadErrorCode.hpp
         include/wav-plus-plus/Reader.hpp
         include/wav-plus-plus/Writer.hpp
     )

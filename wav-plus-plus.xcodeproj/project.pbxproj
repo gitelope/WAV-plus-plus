@@ -113,6 +113,7 @@
 		C4AEEB1E2FF4608A007EE803 /* InvalidArgument.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = InvalidArgument.hpp; sourceTree = "<group>"; };
 		C4AEEB222FFF506C007EE803 /* TrailingBytesIgnored.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = TrailingBytesIgnored.hpp; sourceTree = "<group>"; };
 		C4AEEB23300029E6007EE803 /* ReadingBytesVector.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = ReadingBytesVector.hpp; sourceTree = "<group>"; };
+		C4AEEB2430003FD9007EE803 /* ReadErrorCode.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = ReadErrorCode.hpp; sourceTree = "<group>"; };
 		C4B0EB1E2FF4610A007EE804 /* FileOpenFailure.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = FileOpenFailure.hpp; sourceTree = "<group>"; };
 		C4C641CC2F469567005545BE /* BufferSizing.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = BufferSizing.hpp; sourceTree = "<group>"; };
 		C4C641CD2F469567005545BE /* int24.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = int24.hpp; sourceTree = "<group>"; };
@@ -210,6 +211,7 @@
 				C41045252EF1CD5E0013E245 /* FileInfo.hpp */,
 				C41045222EF1CD5E0013E245 /* ChunkInfo.hpp */,
 				C41045232EF1CD5E0013E245 /* Exceptions.hpp */,
+				C4AEEB2430003FD9007EE803 /* ReadErrorCode.hpp */,
 				C4C641D02F469567005545BE /* private */,
 			);
 			path = "wav-plus-plus";
