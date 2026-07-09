@@ -21,9 +21,7 @@ enum class ReadErrorCategory
     InvalidFile,
     UnsupportedFormat,
     InvalidArgument,
-    InternalError,
-
-    MigrationCategoryToBeRemoved,
+    InternalError
 };
 
 enum class ReadErrorCode
@@ -76,9 +74,7 @@ enum class ReadErrorCode
     // InternalError should never be thrown if program is working correctly.
     // Kind of like an assert for release builds. Can be caught and logged
     // instead of crashing.
-    InternalError,
-
-    MigrationCodeToBeRemoved,
+    InternalError
 };
 
 constexpr ReadErrorCategory categoryFor (ReadErrorCode code)
@@ -135,8 +131,6 @@ constexpr ReadErrorCategory categoryFor (ReadErrorCode code)
         case ReadErrorCode::UnsupportedLPCMContainerSize:     return ReadErrorCategory::UnsupportedFormat;
 
         case ReadErrorCode::InternalError: return ReadErrorCategory::InternalError;
-
-        default: return ReadErrorCategory::MigrationCategoryToBeRemoved;
     }
 }
 
@@ -149,13 +143,10 @@ public:
     :std::runtime_error (message), code_ (code)
     {}
 
-    explicit ReadError (std::string const & message)
-    :std::runtime_error (message), code_ (ReadErrorCode::MigrationCodeToBeRemoved)
-    {}
-
     ReadErrorCategory category() const {return categoryFor (code_);}
     ReadErrorCode code() const {return code_;}
 
+private:
     ReadErrorCode code_;
 };
 

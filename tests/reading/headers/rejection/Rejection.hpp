@@ -25,7 +25,7 @@ inline void TestRejection (TestLog & log)
 
 // HELPER FUNCTIONS ///////////////////////////////////////////////////////////////
 
-void TestForReadError (std::vector<uint8_t> const &, TestLog &, std::string const &, std::optional<wav::ReadErrorCode> = std::nullopt);
+void TestForReadError (std::vector<uint8_t> const &, TestLog &, std::string const &, wav::ReadErrorCode);
 void UpdateRIFFChunkSize (std::vector<uint8_t> &);
 
 // RIFF CHUNK TESTS ///////////////////////////////////////////////////////////////
@@ -644,7 +644,7 @@ inline void RunPeakChunkTests (TestLog & log)
 inline void TestForReadError (std::vector<uint8_t> const & bytes,
                               TestLog & log,
                               std::string const & label,
-                              std::optional<wav::ReadErrorCode> expectedCode)
+                              wav::ReadErrorCode expectedCode)
 {
     const auto filename {"test_rejection.wav"};
     WriteBytesToFile (filename, bytes);
@@ -657,7 +657,7 @@ inline void TestForReadError (std::vector<uint8_t> const & bytes,
     }
     catch (wav::ReadError const & e)
     {
-        if (expectedCode.has_value() && e.code() == *expectedCode) passes = true;
+        if (e.code() == expectedCode) passes = true;
         else errorMessage = e.what();
     }
 
