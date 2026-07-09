@@ -8,6 +8,7 @@
 #include "decoding/SampleDecoding.hpp"
 #include "invalid_argument/InvalidArgument.hpp"
 #include "file_open/FileOpenFailure.hpp"
+#include "trailing_bytes/TrailingBytesIgnored.hpp"
 
 void TestReading (TestLog & log)
 {
@@ -15,6 +16,7 @@ void TestReading (TestLog & log)
     TestSampleDecoding (log);
     TestInvalidArgument (log);
     TestFileOpenFailure (log);
+    TestTrailingBytesIgnored (log);
 }
 
 #endif

@@ -6,19 +6,21 @@
 
 #include <limits>
 
-void RunRiffChunkTests   (TestLog &);
-void RunFormatChunkTests (TestLog &);
-void RunDataChunkTests   (TestLog &);
-void RunFactChunkTests   (TestLog &);
-void RunPeakChunkTests   (TestLog &);
+void RunRiffChunkTests    (TestLog &);
+void RunGenericChunkTests (TestLog &);
+void RunFormatChunkTests  (TestLog &);
+void RunDataChunkTests    (TestLog &);
+void RunFactChunkTests    (TestLog &);
+void RunPeakChunkTests    (TestLog &);
 
 inline void TestRejection (TestLog & log)
 {
-    RunRiffChunkTests   (log);
-    RunFormatChunkTests (log);
-    RunDataChunkTests   (log);
-    RunFactChunkTests   (log);
-    RunPeakChunkTests   (log);
+    RunRiffChunkTests    (log);
+    RunGenericChunkTests (log);
+    RunFormatChunkTests  (log);
+    RunDataChunkTests    (log);
+    RunFactChunkTests    (log);
+    RunPeakChunkTests    (log);
 }
 
 // HELPER FUNCTIONS ///////////////////////////////////////////////////////////////
@@ -42,26 +44,12 @@ inline void RiffSubformatNotWave (TestLog & log)
 }
 inline void MultipleRiffChunks (TestLog & log)
 {
-    // *** Test will fail if ReadFile becomes bounded by RIFF chunk size (instead of EOF). ***
-    //
-    // Duplicates RIFF chunk, but doesn't update the first RIFF chunk size so
-    // 2nd RIFF chunk would never be seen in that case.
-    //
-    // A couple options if that happens:
-    // a) Remove test.
-    // b) Update first RIFF chunk size with UpdateRIFFChunkSize (bytes) to
-    //    effectively embed the 2nd chunk in the first.
-    // c) Replace whole 2nd RIFF chunk with the four-character code "RIFF" and
-    //    update the first RIFF chunk size so only the 4CC is embedded/duplicated.
-    //
-    // It's probably also not a bad idea to add a separate test elsewhere that
-    // nothing after RIFF boundary is read so maybe append a second fmt chunk, don't
-    // update RIFF chunk size, and check that no duplicate-fmt-chunk ReadError is
-    // thrown.
-
+    // Second "RIFF" must sit inside the first RIFF envelope or trigger a different
+    // ReadError.
     auto bytes = buildPCMWAVEFORMAT (wav::FormatCode::LinearPCM, 8, 8, 1, 44100, 8);
     const auto duplicate {bytes};
     bytes.insert (bytes.end(), duplicate.begin(), duplicate.end());
+    UpdateRIFFChunkSize (bytes);
     TestForReadError (bytes, log, "Header Rejection - RIFF chunk, multiple RIFF chunks", wav::ReadErrorCode::MultipleRiffChunks);
 }
 inline void RiffEndExceedsFileSize (TestLog & log)
@@ -79,6 +67,38 @@ inline void RunRiffChunkTests (TestLog & log)
     RiffSubformatNotWave (log);
     MultipleRiffChunks (log);
     RiffEndExceedsFileSize (log);
+}
+
+// GENERIC CHUNK TESTS //////////////////////////////////////////////////////////////
+
+inline void DeclaredChunkEndExceedsRiffEnd (TestLog & log)
+{
+    auto bytes = buildPCMWAVEFORMAT (wav::FormatCode::LinearPCM, 8, 8, 1, 44100, 8);
+    PushFourCC (bytes, "chnk");
+    PushUint32LE (bytes, 1u); // no body bytes; declared end (incl. pad) past riffEnd
+    UpdateRIFFChunkSize (bytes);
+    TestForReadError (bytes, log,
+                      "Header Rejection - declared sub-chunk end exceeds RIFF end",
+                      wav::ReadErrorCode::DeclaredChunkEndExceedsRiffEnd);
+}
+inline void IncompleteChunkHeader (TestLog & log)
+{
+    auto bytes = buildPCMWAVEFORMAT (wav::FormatCode::LinearPCM, 8, 8, 1, 44100, 8);
+    // Add four bytes which is not enough for a chunk ID and size field
+    bytes.push_back (0);
+    bytes.push_back (0);
+    bytes.push_back (0);
+    bytes.push_back (0);
+    UpdateRIFFChunkSize (bytes);
+    TestForReadError (bytes, log,
+                      "Header Rejection - RIFF chunk, incomplete sub-chunk header",
+                      wav::ReadErrorCode::IncompleteChunkHeader);
+}
+
+inline void RunGenericChunkTests (TestLog & log)
+{
+    DeclaredChunkEndExceedsRiffEnd (log);
+    IncompleteChunkHeader (log);
 }
 
 // FORMAT CHUNK TESTS ///////////////////////////////////////////////////////////////
@@ -184,10 +204,15 @@ inline void ExtensibleFmtSizeCodeMismatch (TestLog & log)
 }
 inline void UnsupportedFmtChunkSize (TestLog & log)
 {
-    const uint32_t badSize {0xBADDBADD};
-    auto bytes = buildPCMWAVEFORMAT (wav::FormatCode::LinearPCM, 8, 8, 1, 44100, 8);
-    OverwriteUint32LE (bytes, chunkOffset ("fmt ", bytes) + 4, badSize);
-    TestForReadError (bytes, log, "Header Rejection - fmt chunk, unsupported format chunk size", wav::ReadErrorCode::UnsupportedFmtChunkSize);
+    auto bytes = buildWAVEFORMATEX (wav::FormatCode::LinearPCM, 8, 8, 1, 44100, 8); // fmt chunk size is 18
+    // add a couple zero bytes
+    bytes.push_back (0);
+    bytes.push_back (0);
+    OverwriteUint32LE (bytes, chunkOffset ("fmt ", bytes) + 4, 20u); // 20 bytes is accurate but unsupported
+    UpdateRIFFChunkSize (bytes);
+
+    TestForReadError (bytes, log, "Header Rejection - fmt chunk, unsupported format chunk size",
+                      wav::ReadErrorCode::UnsupportedFmtChunkSize);
 }
 inline void MultipleFmtChunks (TestLog & log)
 {
@@ -367,17 +392,6 @@ inline void RunFormatChunkTests (TestLog & log)
 
 // DATA CHUNK TESTS ///////////////////////////////////////////////////////////////
 
-inline void DataChunkSizeExceedsFileSize (TestLog & log)
-{
-    // Actual data chunk size:
-    // 1 byte per sample x 1 channel x 8 frames = 8 bytes
-    constexpr uint16_t bitDepth {8};
-    constexpr uint16_t channels {1};
-    constexpr uint32_t frames {8};
-    auto bytes = buildPCMWAVEFORMAT (wav::FormatCode::LinearPCM, bitDepth, bitDepth, channels, 44100, frames);
-    OverwriteUint32LE (bytes, chunkOffset ("data", bytes) + 4, frames + 1);
-    TestForReadError (bytes, log, "Header Rejection - data chunk, purported size extends past actual EOF", wav::ReadErrorCode::DataChunkSizeExceedsFileSize);
-}
 inline void DataChunkSizeNotDivisibleByBlockAlign (TestLog & log)
 {
     // block align: 5 x 24 / 8 = 15 bytes
@@ -441,7 +455,6 @@ inline void DataChunkBeforeFmtChunk (TestLog & log)
 
 inline void RunDataChunkTests (TestLog & log)
 {
-    DataChunkSizeExceedsFileSize (log);
     DataChunkSizeNotDivisibleByBlockAlign (log);
     MultipleDataChunks (log);
     MissingDataChunk (log);
@@ -456,8 +469,9 @@ inline void FactChunkSizeNotFour (TestLog & log)
     auto bytes = buildPCMWAVEFORMAT (wav::FormatCode::FloatPCM, 32, 32, 2, 48000, frames);
     const auto factChunkStart {bytes.size()};
     PushFactChunk (bytes, frames);
-    // Rewrite fact chunk size to invalid value of 5.
-    OverwriteUint32LE (bytes, factChunkStart + 4, 5);
+    // Rewrite fact chunk size to invalid value of 2.
+    // (Must be smaller than 4, not bigger, to not trigger DeclaredChunkEndExceedsRiffEnd error.)
+    OverwriteUint32LE (bytes, factChunkStart + 4, 2u);
     UpdateRIFFChunkSize (bytes);
     TestForReadError (bytes, log, "Header Rejection - fact chunk, size not 4", wav::ReadErrorCode::FactChunkSizeNotFour);
 }
@@ -530,24 +544,6 @@ inline void PeakChunkBeforeFmtChunk (TestLog & log)
     UpdateRIFFChunkSize (bytes);
 
     TestForReadError (bytes, log, "Header Rejection - PEAK chunk, PEAK comes before fmt", wav::ReadErrorCode::PeakChunkBeforeFmtChunk);
-}
-inline void PeakChunkSizeExceedsFileSize (TestLog & log)
-{
-    constexpr uint16_t channels {2};
-
-    auto bytes = buildPCMWAVEFORMAT (wav::FormatCode::FloatPCM, 32, 32, channels, 48000, 8);
-
-    const auto peakChunkStart {bytes.size()};
-    std::vector<wav::Peak> peaks;
-    for (auto n = channels; n > 0; --n) peaks.push_back ({0.f, 0u});
-    PushPeakChunk (bytes, peaks, 0);
-    // version (4 bytes), timestamp (4 bytes), 8 bytes per peak (one peak per channel)
-    constexpr uint32_t actualPeakSize {4u + 4u + 8u * channels};
-    // Overwrite PEAK chunk size with size + 1.
-    OverwriteUint32LE (bytes, peakChunkStart + 4, actualPeakSize + 1);
-    UpdateRIFFChunkSize (bytes);
-
-    TestForReadError (bytes, log, "Header Rejection - PEAK chunk, purported size extends past actual EOF", wav::ReadErrorCode::PeakChunkSizeExceedsFileSize);
 }
 inline void PeakChunkSizeMismatchesChannels (TestLog & log)
 {
@@ -627,7 +623,6 @@ inline void PeakChunkSizeTooSmallForVersionField (TestLog & log)
 inline void RunPeakChunkTests (TestLog & log)
 {
     PeakChunkBeforeFmtChunk (log);
-    PeakChunkSizeExceedsFileSize (log);
     PeakChunkSizeMismatchesChannels (log);
     PeakChunkVersionUnsupported (log);
     MultiplePeakChunks (log);

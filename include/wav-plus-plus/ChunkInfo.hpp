@@ -130,10 +130,10 @@ private:
 
     void ReadFile                        (std::FILE * in);
     void ReadRiffHeader                  (std::FILE * in);
-    void ReadFormatChunk                 (std::FILE * in);
-    void ReadFactChunk                   (std::FILE * in);
-    void ReadPeakChunk                   (std::FILE * in, std::int64_t chunkStart);
-    void ReadDataChunkSizeAndSkipSamples (std::FILE * in);
+    void ReadFormatChunk                 (std::FILE * in, std::uint32_t chunkSize);
+    void ReadFactChunk                   (std::FILE * in, std::uint32_t chunkSize);
+    void ReadPeakChunk                   (std::FILE * in, std::uint32_t chunkSize, std::int64_t chunkStart);
+    void ReadDataChunkSizeAndSkipSamples (std::FILE * in, std::uint32_t chunkSize);
 
     void RegisterChunk        (std::string const & id, std::int64_t position);
     void RegisterSkippedChunk (std::string const & id, std::int64_t position);

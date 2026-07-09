@@ -111,6 +111,7 @@
 		C499DB752E13435300A88D60 /* write and read */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "write and read"; sourceTree = BUILT_PRODUCTS_DIR; };
 		C499DB802E13436900A88D60 /* write and inspect */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "write and inspect"; sourceTree = BUILT_PRODUCTS_DIR; };
 		C4AEEB1E2FF4608A007EE803 /* InvalidArgument.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = InvalidArgument.hpp; sourceTree = "<group>"; };
+		C4AEEB222FFF506C007EE803 /* TrailingBytesIgnored.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = TrailingBytesIgnored.hpp; sourceTree = "<group>"; };
 		C4B0EB1E2FF4610A007EE804 /* FileOpenFailure.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = FileOpenFailure.hpp; sourceTree = "<group>"; };
 		C4C641CC2F469567005545BE /* BufferSizing.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = BufferSizing.hpp; sourceTree = "<group>"; };
 		C4C641CD2F469567005545BE /* int24.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = int24.hpp; sourceTree = "<group>"; };
@@ -315,6 +316,14 @@
 			path = invalid_argument;
 			sourceTree = "<group>";
 		};
+		C4AEEB212FFF5033007EE803 /* trailing_bytes */ = {
+			isa = PBXGroup;
+			children = (
+				C4AEEB222FFF506C007EE803 /* TrailingBytesIgnored.hpp */,
+			);
+			path = trailing_bytes;
+			sourceTree = "<group>";
+		};
 		C4B0EB1F2FF4610A007EE804 /* file_open */ = {
 			isa = PBXGroup;
 			children = (
@@ -359,8 +368,9 @@
 				C46085FC2F96C1A5007F0361 /* reading_helper_functions.hpp */,
 				C46085F92F9046E6007F0361 /* headers */,
 				C46085FE2F96C36A007F0361 /* decoding */,
-				C4AEEB1F2FF4608A007EE803 /* invalid_argument */,
 				C4B0EB1F2FF4610A007EE804 /* file_open */,
+				C4AEEB1F2FF4608A007EE803 /* invalid_argument */,
+				C4AEEB212FFF5033007EE803 /* trailing_bytes */,
 			);
 			path = reading;
 			sourceTree = "<group>";
