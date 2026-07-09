@@ -1,8 +1,8 @@
 // WAV++ (c) 2025-2026 David Adams
 // SPDX-License-Identifier: MIT
 
-#ifndef wavplusplus_reading_tests_helper_functions_hpp
-#define wavplusplus_reading_tests_helper_functions_hpp
+#ifndef wavplusplus_tests_header_parsing_helper_functions_hpp
+#define wavplusplus_tests_header_parsing_helper_functions_hpp
 
 #include "../reading_helper_functions.hpp"
 #include "../../../include/wav-plus-plus/ChunkInfo.hpp" // for wav::Peak
