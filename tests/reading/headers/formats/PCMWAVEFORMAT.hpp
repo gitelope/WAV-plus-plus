@@ -4,6 +4,13 @@
 #ifndef wavplusplus_tests_PCMWAVEFORMAT_hpp
 #define wavplusplus_tests_PCMWAVEFORMAT_hpp
 
+#include <cassert>
+#include <cstdint>
+#include <cstdio>
+#include <format>
+#include <string>
+#include <vector>
+
 inline void TestPCMWAVEFORMAT (TestLog & log)
 {
     const auto filename           {"test_PCMWAVEFORMAT_header_parsing.wav"};

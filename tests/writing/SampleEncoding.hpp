@@ -4,9 +4,9 @@
 #ifndef wavplusplus_tests_SampleEncoding_hpp
 #define wavplusplus_tests_SampleEncoding_hpp
 
-#include "../../include/wav-plus-plus/Writer.hpp"
-
+#include <cstdio>
 #include <fstream>
+#include <string>
 #include <vector>
 
 void TestSampleEncoding (TestLog & log)

@@ -4,6 +4,13 @@
 #ifndef wavplusplus_tests_WAVEFORMAT_hpp
 #define wavplusplus_tests_WAVEFORMAT_hpp
 
+#include <cassert>
+#include <cstdint>
+#include <cstdio>
+#include <format>
+#include <string>
+#include <vector>
+
 inline void TestWAVEFORMAT (TestLog & log)
 {
     const auto filename           {"test_WAVEFORMAT_header_parsing.wav"};

@@ -4,6 +4,11 @@
 #ifndef wavplusplus_tests_fact_hpp
 #define wavplusplus_tests_fact_hpp
 
+#include <cstdint>
+#include <cstdio>
+#include <format>
+#include <string>
+
 inline void TestFact (TestLog & log)
 {
     const auto filename {"test_fact_header_parsing.wav"};

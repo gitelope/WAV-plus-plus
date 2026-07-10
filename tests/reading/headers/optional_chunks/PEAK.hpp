@@ -4,6 +4,13 @@
 #ifndef wavplusplus_tests_PEAK_hpp
 #define wavplusplus_tests_PEAK_hpp
 
+#include <cstddef>
+#include <cstdint>
+#include <cstdio>
+#include <format>
+#include <string>
+#include <vector>
+
 inline void TestPeak (TestLog & log)
 {
     const auto filename {"test_peak_header_parsing.wav"};

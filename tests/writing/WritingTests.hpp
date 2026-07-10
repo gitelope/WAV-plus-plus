@@ -4,6 +4,8 @@
 #ifndef wavplusplus_tests_WritingTests_hpp
 #define wavplusplus_tests_WritingTests_hpp
 
+#include "../../include/wav-plus-plus/Writer.hpp"
+
 #include "SampleEncoding.hpp"
 #include "HeaderWriting.hpp"
 

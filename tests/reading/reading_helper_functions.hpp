@@ -4,10 +4,6 @@
 #ifndef wavplusplus_tests_reading_helper_functions_hpp
 #define wavplusplus_tests_reading_helper_functions_hpp
 
-#include "../../include/wav-plus-plus/ChunkInfo.hpp"
-#include "../../include/wav-plus-plus/Formats.hpp"
-#include "../../include/wav-plus-plus/private/File.hpp"
-
 #include <bit>
 #include <cassert>
 #include <climits>

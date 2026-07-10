@@ -4,6 +4,11 @@
 #ifndef wavplusplus_tests_SampleDecoding_hpp
 #define wavplusplus_tests_SampleDecoding_hpp
 
+#include <cassert>
+#include <cstdint>
+#include <cstdio>
+#include <vector>
+
 // build WAVEFORMATEX with specific data in the data chunk
 std::vector<uint8_t> buildWAVEFORMATEX (wav::ExportFormat encoding, uint16_t channels, uint32_t sampleRate, std::vector<uint8_t> const & data);
 

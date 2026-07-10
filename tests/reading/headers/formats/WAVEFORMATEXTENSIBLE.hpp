@@ -4,6 +4,13 @@
 #ifndef wavplusplus_tests_WAVEFORMATEXTENSIBLE_hpp
 #define wavplusplus_tests_WAVEFORMATEXTENSIBLE_hpp
 
+#include <cassert>
+#include <cstdint>
+#include <cstdio>
+#include <format>
+#include <string>
+#include <vector>
+
 // Tests all 6 supported encodings,
 // packing samples in containers larger than their valid bit depth,
 // with 1 to 3 channels,

@@ -4,6 +4,14 @@
 #ifndef wavplusplus_tests_Rejection_hpp
 #define wavplusplus_tests_Rejection_hpp
 
+#include <cassert>
+#include <cstddef>
+#include <cstdint>
+#include <cstdio>
+#include <format>
+#include <string>
+#include <vector>
+
 void RunRiffChunkTests    (TestLog &);
 void RunGenericChunkTests (TestLog &);
 void RunFormatChunkTests  (TestLog &);

@@ -4,7 +4,6 @@
 #ifndef wavplusplus_tests_HeaderWriting_hpp
 #define wavplusplus_tests_HeaderWriting_hpp
 
-#include "../../include/wav-plus-plus/Writer.hpp"
 #include "../../include/wav-plus-plus/private/ReadingBytes.hpp"
 
 #include <array>
