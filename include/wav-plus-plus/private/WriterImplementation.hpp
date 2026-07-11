@@ -30,26 +30,26 @@ inline Writer::Writer (std::filesystem::path const & filepath,
 {
     if (sampleRate == 0)
     {
-        throw WriteError ("Sample rate must be greater than zero.");
+        throw WriteError (WriteErrorCode::SampleRateZero, "Sample rate must be greater than zero.");
     }
 
     if (channels == 0)
     {
-        throw WriteError ("Channel count must be greater than zero.");
+        throw WriteError (WriteErrorCode::ChannelsZero, "Channel count must be greater than zero.");
     }
     if (channels > maxChannels)
     {
-        throw WriteError ("Channel count exceeds the supported maximum of " + std::to_string (static_cast<unsigned> (maxChannels)) + ".");
+        throw WriteError (WriteErrorCode::ChannelsExceedsMax, "Channel count exceeds the supported maximum of " + std::to_string (static_cast<unsigned> (maxChannels)) + ".");
     }
 
     if (channelMask & ~SpeakerPosition::ValidBits)
     {
-        throw WriteError ("Channel mask contains undefined speaker position bits.");
+        throw WriteError (WriteErrorCode::ChannelMaskInvalid, "Channel mask contains undefined speaker position bits.");
     }
 
     if (bufferSizeInKB == 0)
     {
-        throw WriteError ("Write buffer size must be greater than zero.");
+        throw WriteError (WriteErrorCode::BufferSizeZero, "Write buffer size must be greater than zero.");
     }
 
     std::tie (this->bitsPerSample, this->formatCode) = bitDepthAndFormatCode (exportFormat);

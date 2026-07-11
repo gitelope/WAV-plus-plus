@@ -300,19 +300,19 @@ inline void ChunkInfo::ValidateFormatChunkAndComputeBitDepthAndContainerSize()
 
     if (format.channels == 0)
     {
-        throw ReadError (ReadErrorCode::ChannelsEqualsZero, "Invalid value: channels must not be zero.");
+        throw ReadError (ReadErrorCode::ChannelsZero, "Invalid value: channels must not be zero.");
     }
     if (format.channels > maxChannels)
     {
-        throw ReadError (ReadErrorCode::ChannelsExceedMax, "Invalid value: channels must not be greater than " + std::to_string (static_cast<unsigned> (maxChannels)) + ".");
+        throw ReadError (ReadErrorCode::ChannelsExceedsMax, "Invalid value: channels must not be greater than " + std::to_string (static_cast<unsigned> (maxChannels)) + ".");
     }
     if (format.sampleRate == 0)
     {
-        throw ReadError (ReadErrorCode::SampleRateEqualsZero, "Invalid value: sample rate must not be zero.");
+        throw ReadError (ReadErrorCode::SampleRateZero, "Invalid value: sample rate must not be zero.");
     }
     if (format.blockAlign == 0)
     {
-        throw ReadError (ReadErrorCode::BlockAlignEqualsZero, "Invalid value: block align must not be zero.");
+        throw ReadError (ReadErrorCode::BlockAlignZero, "Invalid value: block align must not be zero.");
     }
     if (format.blockAlign % format.channels != 0)
     {
@@ -376,7 +376,7 @@ inline void ChunkInfo::ValidateFormatChunkAndComputeBitDepthAndContainerSize()
     // bit depth checks
     if (bitDepth == 0)
     {
-        throw ReadError (ReadErrorCode::BitDepthEqualsZero, "bit depth must be greater than 0.");
+        throw ReadError (ReadErrorCode::BitDepthZero, "bit depth must be greater than 0.");
     }
     if (isFloat && bitDepth != containerSize)
     {

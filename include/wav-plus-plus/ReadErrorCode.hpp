@@ -19,11 +19,11 @@ enum class ReadErrorCategory
 
 enum class ReadErrorCode
 {
-    BlockAlignEqualsZero,
+    BlockAlignZero,
     BlockAlignNotDivisibleByChannels,
-    BitDepthEqualsZero,
-    ChannelsExceedMax,
-    ChannelsEqualsZero,
+    BitDepthZero,
+    ChannelsZero,
+    ChannelsExceedsMax,
     ChannelsRequestedExceedsChannelCount,
     DataChunkBeforeFmtChunk,
     DataChunkSizeNotDivisibleByBlockAlign,
@@ -57,7 +57,7 @@ enum class ReadErrorCode
     RiffEndExceedsFileSize,
     RiffIdNotFound,
     RiffSubformatNotWave,
-    SampleRateEqualsZero,
+    SampleRateZero,
     SamplesRequestedExceedsDestinationSize,
     UnsupportedFloatContainerSize,
     UnsupportedFmtChunkSize,
@@ -80,10 +80,10 @@ constexpr ReadErrorCategory categoryFor (ReadErrorCode code)
         case ReadErrorCode::FileTellFailed: return ReadErrorCategory::IOFailure;
         case ReadErrorCode::FileReadFailed: return ReadErrorCategory::IOFailure;
 
-        case ReadErrorCode::BlockAlignEqualsZero:                              return ReadErrorCategory::InvalidFile;
+        case ReadErrorCode::BlockAlignZero:                                    return ReadErrorCategory::InvalidFile;
         case ReadErrorCode::BlockAlignNotDivisibleByChannels:                  return ReadErrorCategory::InvalidFile;
-        case ReadErrorCode::BitDepthEqualsZero:                                return ReadErrorCategory::InvalidFile;
-        case ReadErrorCode::ChannelsEqualsZero:                                return ReadErrorCategory::InvalidFile;
+        case ReadErrorCode::BitDepthZero:                                      return ReadErrorCategory::InvalidFile;
+        case ReadErrorCode::ChannelsZero:                                      return ReadErrorCategory::InvalidFile;
         case ReadErrorCode::DataChunkBeforeFmtChunk:                           return ReadErrorCategory::InvalidFile;
         case ReadErrorCode::DataChunkSizeNotDivisibleByBlockAlign:             return ReadErrorCategory::InvalidFile;
         case ReadErrorCode::DeclaredChunkEndExceedsRiffEnd:                    return ReadErrorCategory::InvalidFile;
@@ -109,14 +109,14 @@ constexpr ReadErrorCategory categoryFor (ReadErrorCode code)
         case ReadErrorCode::RiffEndExceedsFileSize:                            return ReadErrorCategory::InvalidFile;
         case ReadErrorCode::RiffIdNotFound:                                    return ReadErrorCategory::InvalidFile;
         case ReadErrorCode::RiffSubformatNotWave:                              return ReadErrorCategory::InvalidFile;
-        case ReadErrorCode::SampleRateEqualsZero:                              return ReadErrorCategory::InvalidFile;
+        case ReadErrorCode::SampleRateZero:                                    return ReadErrorCategory::InvalidFile;
 
         case ReadErrorCode::ChannelsRequestedExceedsChannelCount:   return ReadErrorCategory::InvalidArgument;
         case ReadErrorCode::DestinationFrameSizeIsFractional:       return ReadErrorCategory::InvalidArgument;
         case ReadErrorCode::FramesRequestedExceedsDestinationSize:  return ReadErrorCategory::InvalidArgument;
         case ReadErrorCode::SamplesRequestedExceedsDestinationSize: return ReadErrorCategory::InvalidArgument;
 
-        case ReadErrorCode::ChannelsExceedMax:                return ReadErrorCategory::UnsupportedFormat;
+        case ReadErrorCode::ChannelsExceedsMax:                return ReadErrorCategory::UnsupportedFormat;
         case ReadErrorCode::ExtensibleSubformatNotSupported:  return ReadErrorCategory::UnsupportedFormat;
         case ReadErrorCode::UnsupportedFloatContainerSize:    return ReadErrorCategory::UnsupportedFormat;
         case ReadErrorCode::UnsupportedFmtChunkSize:          return ReadErrorCategory::UnsupportedFormat;

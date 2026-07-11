@@ -8,6 +8,7 @@
 #include <string>
 
 #include "ReadErrorCode.hpp"
+#include "WriteErrorCode.hpp"
 
 namespace wav
 {
@@ -31,9 +32,20 @@ private:
 class WriteError : public std::runtime_error
 {
 public:
-    explicit WriteError (std::string const & message)
-    :std::runtime_error (message)
+
+    explicit WriteError (WriteErrorCode code, std::string const & message)
+    :std::runtime_error (message), code_ (code)
     {}
+
+    explicit WriteError (std::string const & message)
+    :std::runtime_error (message), code_ (WriteErrorCode::MigrationCodeToBeRemoved)
+    {}
+
+    WriteErrorCategory category() const {return categoryFor (code_);}
+    WriteErrorCode code() const {return code_;}
+
+private:
+    WriteErrorCode code_;
 };
 
 } // namespace wav

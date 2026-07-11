@@ -129,15 +129,15 @@ inline void BitDepthEqualsZero (TestLog & log)
     constexpr uint32_t frames {8};
     {
         const auto bytes = buildPCMWAVEFORMAT (wav::FormatCode::LinearPCM, bitDepth, containerSize, channels, sr, frames);
-        TestForReadError (bytes, log, "Header Rejection - fmt chunk, bit depth zero, PCMWAVEFORMAT", wav::ReadErrorCode::BitDepthEqualsZero);
+        TestForReadError (bytes, log, "Header Rejection - fmt chunk, bit depth zero, PCMWAVEFORMAT", wav::ReadErrorCode::BitDepthZero);
     }
     {
         const auto bytes = buildWAVEFORMATEX (wav::FormatCode::LinearPCM, bitDepth, containerSize, channels, sr, frames);
-        TestForReadError (bytes, log, "Header Rejection - fmt chunk, bit depth zero, WAVEFORMATEX", wav::ReadErrorCode::BitDepthEqualsZero);
+        TestForReadError (bytes, log, "Header Rejection - fmt chunk, bit depth zero, WAVEFORMATEX", wav::ReadErrorCode::BitDepthZero);
     }
     {
         const auto bytes = buildWAVEFORMATEXTENSIBLE (wav::ExtensibleFormat::LinearPCM, bitDepth, containerSize, channels, sr, frames, wav::SpeakerConfiguration::Stereo);
-        TestForReadError (bytes, log, "Header Rejection - fmt chunk, bit depth zero, WAVEFORMATEXTENSIBLE", wav::ReadErrorCode::BitDepthEqualsZero);
+        TestForReadError (bytes, log, "Header Rejection - fmt chunk, bit depth zero, WAVEFORMATEXTENSIBLE", wav::ReadErrorCode::BitDepthZero);
     }
 
     // No need to test WAVEFORMAT since bitDepth = 0 implies blockAlign
@@ -148,26 +148,26 @@ inline void ChannelsEqualsZero (TestLog & log)
 {
     constexpr uint16_t channels {0};
     const auto bytes = buildPCMWAVEFORMAT (wav::FormatCode::LinearPCM, 8, 8, channels, 44100, 8);
-    TestForReadError (bytes, log, "Header Rejection - fmt chunk, zero channels", wav::ReadErrorCode::ChannelsEqualsZero);
+    TestForReadError (bytes, log, "Header Rejection - fmt chunk, zero channels", wav::ReadErrorCode::ChannelsZero);
 }
 inline void ChannelsExceedMax (TestLog & log)
 {
     constexpr uint16_t channels {wav::maxChannels + 1};
     constexpr uint32_t frames {channels};
     const auto bytes = buildPCMWAVEFORMAT (wav::FormatCode::LinearPCM, 8, 8, channels, 44100, frames);
-    TestForReadError (bytes, log, "Header Rejection - fmt chunk, channels exceed WAV++ maximum", wav::ReadErrorCode::ChannelsExceedMax);
+    TestForReadError (bytes, log, "Header Rejection - fmt chunk, channels exceed WAV++ maximum", wav::ReadErrorCode::ChannelsExceedsMax);
 }
 inline void SampleRateEqualsZero (TestLog & log)
 {
     constexpr uint32_t sampleRate {0};
     const auto bytes = buildPCMWAVEFORMAT (wav::FormatCode::LinearPCM, 8, 8, 1, sampleRate, 8);
-    TestForReadError (bytes, log, "Header Rejection - fmt chunk, sample rate zero", wav::ReadErrorCode::SampleRateEqualsZero);
+    TestForReadError (bytes, log, "Header Rejection - fmt chunk, sample rate zero", wav::ReadErrorCode::SampleRateZero);
 }
 inline void BlockAlignEqualsZero (TestLog & log)
 {
     auto bytes = buildPCMWAVEFORMAT (wav::FormatCode::LinearPCM, 8, 8, 1, 44100, 8);
     OverwriteUint16LE (bytes, chunkOffset ("fmt ", bytes) + 20, 0);
-    TestForReadError (bytes, log, "Header Rejection - fmt chunk, block align zero", wav::ReadErrorCode::BlockAlignEqualsZero);
+    TestForReadError (bytes, log, "Header Rejection - fmt chunk, block align zero", wav::ReadErrorCode::BlockAlignZero);
 }
 inline void UnsupportedFormatCode (TestLog & log)
 {
