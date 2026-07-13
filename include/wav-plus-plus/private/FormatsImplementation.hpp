@@ -30,7 +30,7 @@ constexpr std::pair <uint16_t, uint16_t> bitDepthAndFormatCode (ExportFormat ef)
         case ExportFormat::LinearPCM_32: return {static_cast<uint16_t> (32), FormatCode::LinearPCM};
         case ExportFormat::FloatPCM_32:  return {static_cast<uint16_t> (32), FormatCode::FloatPCM};
         case ExportFormat::FloatPCM_64:  return {static_cast<uint16_t> (64), FormatCode::FloatPCM};
-        default: throw wav::WriteError ("Unsupported ExportFormat.");
+        default: throw wav::WriteError (WriteErrorCode::InternalError, "Unsupported ExportFormat.");
     }
 }
 

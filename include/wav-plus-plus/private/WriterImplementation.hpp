@@ -85,7 +85,7 @@ size_t Writer::write (T const * source, size_t samplesToWrite)
             {
                 case 32: WriteFloatPCM_NoConversion (source, samplesToWrite);  break;
                 case 64: WriteFloatToDouble         (source, samplesToWrite);  break;
-                default: throw WriteError ("Unsupported float PCM bit depth: " + std::to_string (bitsPerSample));
+                default: throw WriteError (WriteErrorCode::InternalError, "Unsupported float PCM bit depth: " + std::to_string (bitsPerSample));
             }
         }
         else if constexpr (std::is_same_v<T, double>)
@@ -94,7 +94,7 @@ size_t Writer::write (T const * source, size_t samplesToWrite)
             {
                 case 32: WriteDoubleToFloat         (source, samplesToWrite);  break;
                 case 64: WriteFloatPCM_NoConversion (source, samplesToWrite);  break;
-                default: throw WriteError ("Unsupported float PCM bit depth: " + std::to_string (bitsPerSample));
+                default: throw WriteError (WriteErrorCode::InternalError, "Unsupported float PCM bit depth: " + std::to_string (bitsPerSample));
             }
         }
     }
@@ -106,7 +106,7 @@ size_t Writer::write (T const * source, size_t samplesToWrite)
             case 16: WriteLPCM16 (source, samplesToWrite); break;
             case 24: WriteLPCM24 (source, samplesToWrite); break;
             case 32: WriteLPCM32 (source, samplesToWrite); break;
-            default: throw WriteError ("Unsupported linear PCM bit depth: " + std::to_string (bitsPerSample));
+            default: throw WriteError (WriteErrorCode::InternalError, "Unsupported linear PCM bit depth: " + std::to_string (bitsPerSample));
         }
     }
 
