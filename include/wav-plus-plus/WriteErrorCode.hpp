@@ -25,6 +25,10 @@ enum class WriteErrorCode
     ChannelMaskInvalid,
     ChannelsExceedsMax,
     ChannelsZero,
+    FileCloseFailed,
+    FileFlushFailed,
+    FileSeekFailed,
+    FileTellFailed,
     FramesToWriteExceedsSourceSize,
     SampleRateZero,
     SamplesToWriteExceedsSourceSize,
@@ -49,6 +53,11 @@ constexpr WriteErrorCategory categoryFor (WriteErrorCode code)
         case WriteErrorCode::SampleRateZero:                  return WriteErrorCategory::InvalidArgument;
         case WriteErrorCode::SamplesToWriteExceedsSourceSize: return WriteErrorCategory::InvalidArgument;
         case WriteErrorCode::SourceFrameSizeIsFractional:     return WriteErrorCategory::InvalidArgument;
+
+        case WriteErrorCode::FileCloseFailed: return WriteErrorCategory::IOFailure;
+        case WriteErrorCode::FileFlushFailed: return WriteErrorCategory::IOFailure;
+        case WriteErrorCode::FileSeekFailed:  return WriteErrorCategory::IOFailure;
+        case WriteErrorCode::FileTellFailed:  return WriteErrorCategory::IOFailure;
 
         case WriteErrorCode::ChannelsExceedsMax: return WriteErrorCategory::UnsupportedFormat;
 

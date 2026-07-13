@@ -546,7 +546,7 @@ inline void Writer::WriteHeader (uint32_t sampleRate)
     WriteToHeader (file.get(), "RIFF");
     // Record position of RIFF chunk size so it can be updated later:
     riffChunkSizePosition = tell (file.get());
-    if (riffChunkSizePosition == -1) throw WriteError ("Failed to get RIFF chunk size position.");
+    if (riffChunkSizePosition == -1) throw WriteError (WriteErrorCode::FileTellFailed, "Failed to get RIFF chunk size position.");
     // Write RIFF chunk size placeholder:
     WriteToHeader (file.get(), static_cast<uint32_t> (0));
     WriteToHeader (file.get(), "WAVE");
@@ -581,7 +581,7 @@ inline void Writer::WriteHeader (uint32_t sampleRate)
     WriteToHeader (file.get(), "data");
     // Record position of data chunk size so it can be updated later:
     dataChunkSizePosition = tell (file.get());
-    if (dataChunkSizePosition == -1) throw WriteError ("Failed to get data chunk size position.");
+    if (dataChunkSizePosition == -1) throw WriteError (WriteErrorCode::FileTellFailed, "Failed to get data chunk size position.");
     // Write data chunk size placeholder:
     WriteToHeader (file.get(), static_cast<uint32_t> (0)); // Will be updated in UpdateHeader()
 
@@ -651,7 +651,7 @@ inline void Writer::Close()
     // Flush any buffered data.
     if (std::fflush (file.get()) != 0)
     {
-        throw WriteError ("Failed to flush file buffers.");
+        throw WriteError (WriteErrorCode::FileFlushFailed, "Failed to flush file buffers.");
     }
 
     const auto dataChunkSize {static_cast<uint32_t>(totalSamplesWritten * (bitsPerSample / 8U))};
@@ -663,7 +663,7 @@ inline void Writer::Close()
 
     if (std::fclose (file.release()) != 0)
     {
-        throw WriteError ("Failed to close file");
+        throw WriteError (WriteErrorCode::FileCloseFailed, "Failed to close file");
     }
 }
 
@@ -696,7 +696,7 @@ inline void Writer::UpdateHeader (uint32_t dataChunkSize)
     // Update data chunk size. (Padding does not go into the count.)
     if (seek (file.get(), dataChunkSizePosition, SEEK_SET) != 0)
     {
-        throw WriteError ("Failed to reposition to data chunk size.");
+        throw WriteError (WriteErrorCode::FileSeekFailed, "Failed to reposition to data chunk size.");
     }
     WriteToHeader (file.get(), dataChunkSize);
 
@@ -706,7 +706,7 @@ inline void Writer::UpdateHeader (uint32_t dataChunkSize)
     const uint32_t riffChunkSize {(20 + fmtChunkSize) + dataChunkSize + (dataChunkSize % 2)};
     if (seek (file.get(), riffChunkSizePosition, SEEK_SET) != 0)
     {
-        throw WriteError ("Failed to reposition to RIFF chunk size");
+        throw WriteError (WriteErrorCode::FileSeekFailed, "Failed to reposition to RIFF chunk size");
     }
     WriteToHeader (file.get(), riffChunkSize);
 }
