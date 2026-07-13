@@ -57,7 +57,7 @@ inline File fileForWriting (std::filesystem::path const & filepath)
 #else
     File f (std::fopen (filepath.c_str(), "wb"));
 #endif
-    if (f == nullptr) throw WriteError ("Failed to open file for writing.");
+    if (f == nullptr) throw WriteError (WriteErrorCode::FailedToOpenFileForWriting, "Failed to open file for writing.");
     return f;
 }
 

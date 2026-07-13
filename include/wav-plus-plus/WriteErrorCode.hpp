@@ -25,6 +25,7 @@ enum class WriteErrorCode
     ChannelMaskInvalid,
     ChannelsExceedsMax,
     ChannelsZero,
+    FailedToOpenFileForWriting,
     FileCloseFailed,
     FileFlushFailed,
     FileSeekFailed,
@@ -46,6 +47,8 @@ constexpr WriteErrorCategory categoryFor (WriteErrorCode code)
 {
     switch (code)
     {
+        case WriteErrorCode::FailedToOpenFileForWriting: return WriteErrorCategory::FileOpenFailure;
+
         case WriteErrorCode::BufferSizeZero:                  return WriteErrorCategory::InvalidArgument;
         case WriteErrorCode::ChannelMaskInvalid:              return WriteErrorCategory::InvalidArgument;
         case WriteErrorCode::ChannelsZero:                    return WriteErrorCategory::InvalidArgument;
