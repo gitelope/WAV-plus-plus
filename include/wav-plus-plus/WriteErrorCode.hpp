@@ -13,7 +13,7 @@ enum class WriteErrorCategory
     IOFailure,
     InvalidArgument,
     UnsupportedFormat,
-    WouldExceedDataLimit,
+    WriteWouldExceedWAVSizeLimit,
     InternalError,
 
     MigrationCategoryToBeRemoved
@@ -34,6 +34,7 @@ enum class WriteErrorCode
     SampleRateZero,
     SamplesToWriteExceedsSourceSize,
     SourceFrameSizeIsFractional,
+    WriteWouldExceedWAVSizeLimit,
 
     MigrationCodeToBeRemoved,
 
@@ -63,6 +64,8 @@ constexpr WriteErrorCategory categoryFor (WriteErrorCode code)
         case WriteErrorCode::FileTellFailed:  return WriteErrorCategory::IOFailure;
 
         case WriteErrorCode::ChannelsExceedsMax: return WriteErrorCategory::UnsupportedFormat;
+
+        case WriteErrorCode::WriteWouldExceedWAVSizeLimit: return WriteErrorCategory::WriteWouldExceedWAVSizeLimit;
 
         case WriteErrorCode::MigrationCodeToBeRemoved: return WriteErrorCategory::MigrationCategoryToBeRemoved;
 

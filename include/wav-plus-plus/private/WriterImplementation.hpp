@@ -74,7 +74,7 @@ size_t Writer::write (T const * source, size_t samplesToWrite)
     const uint64_t newDataSize {newTotalSamples * (bitsPerSample / 8U)};
     if (newDataSize > maxDataChunkSize)
     {
-        throw WriteError ("Writing would exceed WAV format data chunk size limit.");
+        throw WriteError (WriteErrorCode::WriteWouldExceedWAVSizeLimit, "Writing would exceed WAV format data chunk size limit.");
     }
 
     if (formatCode == FormatCode::FloatPCM)
