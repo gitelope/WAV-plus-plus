@@ -23,9 +23,12 @@ enum class WriteErrorCode
 {
     BufferSizeZero,
     ChannelMaskInvalid,
-    ChannelsZero,
     ChannelsExceedsMax,
+    ChannelsZero,
+    FramesToWriteExceedsSourceSize,
     SampleRateZero,
+    SamplesToWriteExceedsSourceSize,
+    SourceFrameSizeIsFractional,
 
     MigrationCodeToBeRemoved,
 
@@ -39,10 +42,13 @@ constexpr WriteErrorCategory categoryFor (WriteErrorCode code)
 {
     switch (code)
     {
-        case WriteErrorCode::BufferSizeZero:     return WriteErrorCategory::InvalidArgument;
-        case WriteErrorCode::ChannelMaskInvalid: return WriteErrorCategory::InvalidArgument;
-        case WriteErrorCode::ChannelsZero:       return WriteErrorCategory::InvalidArgument;
-        case WriteErrorCode::SampleRateZero:     return WriteErrorCategory::InvalidArgument;
+        case WriteErrorCode::BufferSizeZero:                  return WriteErrorCategory::InvalidArgument;
+        case WriteErrorCode::ChannelMaskInvalid:              return WriteErrorCategory::InvalidArgument;
+        case WriteErrorCode::ChannelsZero:                    return WriteErrorCategory::InvalidArgument;
+        case WriteErrorCode::FramesToWriteExceedsSourceSize:  return WriteErrorCategory::InvalidArgument;
+        case WriteErrorCode::SampleRateZero:                  return WriteErrorCategory::InvalidArgument;
+        case WriteErrorCode::SamplesToWriteExceedsSourceSize: return WriteErrorCategory::InvalidArgument;
+        case WriteErrorCode::SourceFrameSizeIsFractional:     return WriteErrorCategory::InvalidArgument;
 
         case WriteErrorCode::ChannelsExceedsMax: return WriteErrorCategory::UnsupportedFormat;
 

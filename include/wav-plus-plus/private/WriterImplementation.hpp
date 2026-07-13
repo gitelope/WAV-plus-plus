@@ -126,7 +126,7 @@ size_t Writer::write (std::vector<T> const & source, size_t samplesToWrite)
 {
     if (samplesToWrite > source.size())
     {
-        throw WriteError ("samples to write > source size");
+        throw WriteError (WriteErrorCode::SamplesToWriteExceedsSourceSize, "samples to write > source size");
     }
     return write (source.data(), samplesToWrite);
 }
@@ -143,7 +143,7 @@ size_t Writer::writeFrames (std::vector<T> const & source)
     // check that there are a whole number of frames
     if (source.size() % channels != 0)
     {
-        throw WriteError ("vector size is not a whole number of frames.");
+        throw WriteError (WriteErrorCode::SourceFrameSizeIsFractional, "vector size is not a whole number of frames.");
     }
     return write (source.data(), source.size()) / channels;
 }
@@ -153,7 +153,7 @@ size_t Writer::writeFrames (std::vector<T> const & source, size_t framesToWrite)
 {
     if (framesToWrite * channels > source.size())
     {
-        throw WriteError ("frames to write exceeds the size of source");
+        throw WriteError (WriteErrorCode::FramesToWriteExceedsSourceSize, "frames to write exceeds the size of source");
     }
     return write (source.data(), framesToWrite * channels) / channels;
 }
