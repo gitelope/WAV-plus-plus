@@ -30,6 +30,7 @@ enum class WriteErrorCode
     FileFlushFailed,
     FileSeekFailed,
     FileTellFailed,
+    FileWriteFailed,
     FramesToWriteExceedsSourceSize,
     SampleRateZero,
     SamplesToWriteExceedsSourceSize,
@@ -62,6 +63,7 @@ constexpr WriteErrorCategory categoryFor (WriteErrorCode code)
         case WriteErrorCode::FileFlushFailed: return WriteErrorCategory::IOFailure;
         case WriteErrorCode::FileSeekFailed:  return WriteErrorCategory::IOFailure;
         case WriteErrorCode::FileTellFailed:  return WriteErrorCategory::IOFailure;
+        case WriteErrorCode::FileWriteFailed: return WriteErrorCategory::IOFailure;
 
         case WriteErrorCode::ChannelsExceedsMax: return WriteErrorCategory::UnsupportedFormat;
 
