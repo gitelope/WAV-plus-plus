@@ -7,6 +7,9 @@
 #include <cstdio>
 #include <vector>
 
+namespace reading
+{
+
 inline void SamplesRequestedExceedsDestinationSize (TestLog & log)
 {
     auto bytes = buildPCMWAVEFORMAT (wav::FormatCode::LinearPCM, 24, 24, 1, 96000, 8);
@@ -104,5 +107,7 @@ inline void TestInvalidArgument (TestLog & log)
     FramesRequestedExceedsDestinationSize (log);
     ChannelsRequestedExceedsChannelCount (log);
 }
+
+} // namespace reading
 
 #endif
