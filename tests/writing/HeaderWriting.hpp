@@ -15,7 +15,6 @@
 
 void TestHeader (wav::ExportFormat, uint32_t, uint16_t, uint32_t, TestLog &);
 void TestSpeakerPosition (TestLog &);
-void TestSpeakerPositionValidation (TestLog &);
 
 void TestHeaders (TestLog & log)
 {
@@ -35,7 +34,7 @@ void TestHeaders (TestLog & log)
     // an odd number of data bytes since that requires bytes per sample,
     // channel count, and frame count to all be odd.
     //
-    // Speaker position and channel mask validation are tested separately.
+    // Speaker position is tested separately.
 
     constexpr auto maxChannels {4};
 
@@ -61,7 +60,6 @@ void TestHeaders (TestLog & log)
     }
 
     TestSpeakerPosition (log);
-    TestSpeakerPositionValidation (log);
 }
 
 /*
@@ -283,25 +281,6 @@ void TestSpeakerPosition (TestLog & log)
 
         std::remove (filename);
     }
-}
-
-void TestSpeakerPositionValidation (TestLog & log)
-{
-    const auto filename {"testSpeakerPositionValidation.wav"};
-
-    bool caughtInvalid {false};
-    try
-    {
-        constexpr uint32_t invalidMask {0xFFFFFFFF};
-        wav::Writer writer {filename, wav::ExportFormat::LinearPCM_16, 44100, 1, invalidMask};
-    }
-    catch (wav::WriteError const &)
-    {
-        caughtInvalid = true;
-    }
-    log.Record (caughtInvalid, "Write Header - invalid channel mask bits throws");
-
-    std::remove (filename);
 }
 
 Header ReadHeader (std::string const & filepath)

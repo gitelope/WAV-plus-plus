@@ -8,11 +8,17 @@
 
 #include "SampleEncoding.hpp"
 #include "HeaderWriting.hpp"
+#include "invalid_argument/InvalidArgument.hpp"
+#include "unsupported_format/UnsupportedFormat.hpp"
+#include "file_open/FileOpenFailure.hpp"
 
 void TestWriting (TestLog & log)
 {
     TestHeaders (log);
     TestSampleEncoding (log);
+    writing::TestInvalidArgument (log);
+    writing::TestUnsupportedFormat (log);
+    writing::TestFileOpenFailure (log);
 }
 
 #endif

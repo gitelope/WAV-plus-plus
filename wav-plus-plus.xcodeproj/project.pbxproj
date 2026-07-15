@@ -110,6 +110,9 @@
 		C499DB752E13435300A88D60 /* write and read */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "write and read"; sourceTree = BUILT_PRODUCTS_DIR; };
 		C499DB802E13436900A88D60 /* write and inspect */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "write and inspect"; sourceTree = BUILT_PRODUCTS_DIR; };
 		C4AEEB1E2FF4608A007EE803 /* InvalidArgument.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = InvalidArgument.hpp; sourceTree = "<group>"; };
+		C4WERR012FF4608A007EE901 /* InvalidArgument.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = InvalidArgument.hpp; sourceTree = "<group>"; };
+		C4WERR032FF4608A007EE903 /* UnsupportedFormat.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = UnsupportedFormat.hpp; sourceTree = "<group>"; };
+		C4WERR052FF4608A007EE905 /* FileOpenFailure.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = FileOpenFailure.hpp; sourceTree = "<group>"; };
 		C4AEEB222FFF506C007EE803 /* TrailingBytesIgnored.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = TrailingBytesIgnored.hpp; sourceTree = "<group>"; };
 		C4AEEB23300029E6007EE803 /* ReadingBytesVector.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = ReadingBytesVector.hpp; sourceTree = "<group>"; };
 		C4AEEB2430003FD9007EE803 /* ReadErrorCode.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = ReadErrorCode.hpp; sourceTree = "<group>"; };
@@ -198,6 +201,9 @@
 				C40B8FC62F73237D00FDFC86 /* WritingTests.hpp */,
 				C40B8FC82F7326C200FDFC86 /* HeaderWriting.hpp */,
 				C40B8FC72F73250900FDFC86 /* SampleEncoding.hpp */,
+				C4WERR022FF4608A007EE902 /* invalid_argument */,
+				C4WERR042FF4608A007EE904 /* unsupported_format */,
+				C4WERR062FF4608A007EE906 /* file_open */,
 			);
 			path = writing;
 			sourceTree = "<group>";
@@ -317,6 +323,30 @@
 				C4AEEB1E2FF4608A007EE803 /* InvalidArgument.hpp */,
 			);
 			path = invalid_argument;
+			sourceTree = "<group>";
+		};
+		C4WERR022FF4608A007EE902 /* invalid_argument */ = {
+			isa = PBXGroup;
+			children = (
+				C4WERR012FF4608A007EE901 /* InvalidArgument.hpp */,
+			);
+			path = invalid_argument;
+			sourceTree = "<group>";
+		};
+		C4WERR042FF4608A007EE904 /* unsupported_format */ = {
+			isa = PBXGroup;
+			children = (
+				C4WERR032FF4608A007EE903 /* UnsupportedFormat.hpp */,
+			);
+			path = unsupported_format;
+			sourceTree = "<group>";
+		};
+		C4WERR062FF4608A007EE906 /* file_open */ = {
+			isa = PBXGroup;
+			children = (
+				C4WERR052FF4608A007EE905 /* FileOpenFailure.hpp */,
+			);
+			path = file_open;
 			sourceTree = "<group>";
 		};
 		C4AEEB212FFF5033007EE803 /* trailing_bytes */ = {

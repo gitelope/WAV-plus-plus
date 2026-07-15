@@ -39,6 +39,12 @@ set (wav_plus_plus_test_headers
     writing/WritingTests.hpp
     writing/HeaderWriting.hpp
     writing/SampleEncoding.hpp
+
+    writing/invalid_argument/InvalidArgument.hpp
+
+    writing/unsupported_format/UnsupportedFormat.hpp
+
+    writing/file_open/FileOpenFailure.hpp
 )
 
 source_group (TREE "${CMAKE_CURRENT_SOURCE_DIR}" FILES ${wav_plus_plus_test_headers})
