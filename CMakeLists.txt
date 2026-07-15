@@ -95,6 +95,7 @@ if (PROJECT_IS_TOP_LEVEL)
         include/wav-plus-plus/Formats.hpp
         include/wav-plus-plus/ReadErrorCode.hpp
         include/wav-plus-plus/Reader.hpp
+        include/wav-plus-plus/WriteErrorCode.hpp
         include/wav-plus-plus/Writer.hpp
     )
     #          Private
@@ -103,7 +104,9 @@ if (PROJECT_IS_TOP_LEVEL)
         include/wav-plus-plus/private/BufferSizing.hpp
         include/wav-plus-plus/private/Byteswap.hpp
         include/wav-plus-plus/private/ChunkInfoImplementation.hpp
+        include/wav-plus-plus/private/File.hpp
         include/wav-plus-plus/private/FileInfoImplementation.hpp
+        include/wav-plus-plus/private/FileOffset.hpp
         include/wav-plus-plus/private/FormatsImplementation.hpp
         include/wav-plus-plus/private/QuantizationConstants.hpp
         include/wav-plus-plus/private/ReaderImplementation.hpp
