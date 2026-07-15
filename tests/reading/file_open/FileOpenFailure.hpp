@@ -1,8 +1,8 @@
 // WAV++ (c) 2025-2026 David Adams
 // SPDX-License-Identifier: MIT
 
-#ifndef wavplusplus_tests_FileOpenFailure_hpp
-#define wavplusplus_tests_FileOpenFailure_hpp
+#ifndef wavplusplus_tests_reading_FileOpenFailure_hpp
+#define wavplusplus_tests_reading_FileOpenFailure_hpp
 
 #include <cassert>
 #include <filesystem>
