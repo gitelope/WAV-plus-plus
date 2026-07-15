@@ -14,9 +14,7 @@ enum class WriteErrorCategory
     InvalidArgument,
     UnsupportedFormat,
     WriteWouldExceedWAVSizeLimit,
-    InternalError,
-
-    MigrationCategoryToBeRemoved
+    InternalError
 };
 
 enum class WriteErrorCode
@@ -36,8 +34,6 @@ enum class WriteErrorCode
     SamplesToWriteExceedsSourceSize,
     SourceFrameSizeIsFractional,
     WriteWouldExceedWAVSizeLimit,
-
-    MigrationCodeToBeRemoved,
 
     // InternalError should never be thrown if program is working correctly.
     // Kind of like an assert for release builds. Can be caught and logged
@@ -68,8 +64,6 @@ constexpr WriteErrorCategory categoryFor (WriteErrorCode code)
         case WriteErrorCode::ChannelsExceedsMax: return WriteErrorCategory::UnsupportedFormat;
 
         case WriteErrorCode::WriteWouldExceedWAVSizeLimit: return WriteErrorCategory::WriteWouldExceedWAVSizeLimit;
-
-        case WriteErrorCode::MigrationCodeToBeRemoved: return WriteErrorCategory::MigrationCategoryToBeRemoved;
 
         case WriteErrorCode::InternalError: return WriteErrorCategory::InternalError;
     }

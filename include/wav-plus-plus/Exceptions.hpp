@@ -37,10 +37,6 @@ public:
     :std::runtime_error (message), code_ (code)
     {}
 
-    explicit WriteError (std::string const & message)
-    :std::runtime_error (message), code_ (WriteErrorCode::MigrationCodeToBeRemoved)
-    {}
-
     WriteErrorCategory category() const {return categoryFor (code_);}
     WriteErrorCode code() const {return code_;}
 
