@@ -22,7 +22,7 @@ inline void SamplesRequestedExceedsDestinationSize (TestLog & log)
     }
     catch (wav::ReadError const & e)
     {
-        if (e.code() == wav::ReadErrorCode::SamplesRequestedExceedsDestinationSize) passes = true;
+        passes = (e.code() == wav::ReadErrorCode::SamplesRequestedExceedsDestinationSize);
     }
 
     log.Record (passes, "Reader InvalidArgument - read (vector &, size_t) - samples requested exceeds destination size");
@@ -44,7 +44,7 @@ inline void DestinationFrameSizeIsFractional (TestLog & log)
     }
     catch (wav::ReadError const & e)
     {
-        if (e.code() == wav::ReadErrorCode::DestinationFrameSizeIsFractional) passes = true;
+        passes = (e.code() == wav::ReadErrorCode::DestinationFrameSizeIsFractional);
     }
 
     log.Record (passes, "Reader InvalidArgument - readFrames (vector &) - destination size in frames is not a whole number");
@@ -66,7 +66,7 @@ inline void FramesRequestedExceedsDestinationSize (TestLog & log)
     }
     catch (wav::ReadError const & e)
     {
-        if (e.code() == wav::ReadErrorCode::FramesRequestedExceedsDestinationSize) passes = true;
+        passes = (e.code() == wav::ReadErrorCode::FramesRequestedExceedsDestinationSize);
     }
 
     log.Record (passes, "Reader InvalidArgument - readFrames (vector &, size_t) - frames requested exceeds destination size");
@@ -90,7 +90,7 @@ inline void ChannelsRequestedExceedsChannelCount (TestLog & log)
     }
     catch (wav::ReadError const & e)
     {
-        if (e.code() == wav::ReadErrorCode::ChannelsRequestedExceedsChannelCount) passes = true;
+        passes = (e.code() == wav::ReadErrorCode::ChannelsRequestedExceedsChannelCount);
     }
 
     log.Record (passes, "Reader InvalidArgument - read (T ** const, size_t, size_t) - channels requested exceeds channel count");
