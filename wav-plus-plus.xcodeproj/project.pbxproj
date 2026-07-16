@@ -110,9 +110,6 @@
 		C499DB752E13435300A88D60 /* write and read */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "write and read"; sourceTree = BUILT_PRODUCTS_DIR; };
 		C499DB802E13436900A88D60 /* write and inspect */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "write and inspect"; sourceTree = BUILT_PRODUCTS_DIR; };
 		C4AEEB1E2FF4608A007EE803 /* InvalidArgument.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = InvalidArgument.hpp; sourceTree = "<group>"; };
-		C4WERR012FF4608A007EE901 /* InvalidArgument.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = InvalidArgument.hpp; sourceTree = "<group>"; };
-		C4WERR032FF4608A007EE903 /* UnsupportedFormat.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = UnsupportedFormat.hpp; sourceTree = "<group>"; };
-		C4WERR052FF4608A007EE905 /* FileOpenFailure.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = FileOpenFailure.hpp; sourceTree = "<group>"; };
 		C4AEEB222FFF506C007EE803 /* TrailingBytesIgnored.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = TrailingBytesIgnored.hpp; sourceTree = "<group>"; };
 		C4AEEB23300029E6007EE803 /* ReadingBytesVector.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = ReadingBytesVector.hpp; sourceTree = "<group>"; };
 		C4AEEB2430003FD9007EE803 /* ReadErrorCode.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = ReadErrorCode.hpp; sourceTree = "<group>"; };
@@ -133,6 +130,9 @@
 		C4F096452F7489C700C1852B /* helper_functions.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = helper_functions.hpp; sourceTree = "<group>"; };
 		C4F0964A2F7B2FBC00C1852B /* ReadingTests.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = ReadingTests.hpp; sourceTree = "<group>"; };
 		C4F704F62EA6CB4500243874 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = SOURCE_ROOT; };
+		C4WERR012FF4608A007EE901 /* InvalidArgument.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = InvalidArgument.hpp; sourceTree = "<group>"; };
+		C4WERR032FF4608A007EE903 /* UnsupportedFormat.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = UnsupportedFormat.hpp; sourceTree = "<group>"; };
+		C4WERR052FF4608A007EE905 /* FileOpenFailure.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = FileOpenFailure.hpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -325,30 +325,6 @@
 			path = invalid_argument;
 			sourceTree = "<group>";
 		};
-		C4WERR022FF4608A007EE902 /* invalid_argument */ = {
-			isa = PBXGroup;
-			children = (
-				C4WERR012FF4608A007EE901 /* InvalidArgument.hpp */,
-			);
-			path = invalid_argument;
-			sourceTree = "<group>";
-		};
-		C4WERR042FF4608A007EE904 /* unsupported_format */ = {
-			isa = PBXGroup;
-			children = (
-				C4WERR032FF4608A007EE903 /* UnsupportedFormat.hpp */,
-			);
-			path = unsupported_format;
-			sourceTree = "<group>";
-		};
-		C4WERR062FF4608A007EE906 /* file_open */ = {
-			isa = PBXGroup;
-			children = (
-				C4WERR052FF4608A007EE905 /* FileOpenFailure.hpp */,
-			);
-			path = file_open;
-			sourceTree = "<group>";
-		};
 		C4AEEB212FFF5033007EE803 /* trailing_bytes */ = {
 			isa = PBXGroup;
 			children = (
@@ -407,6 +383,30 @@
 				C4AEEB212FFF5033007EE803 /* trailing_bytes */,
 			);
 			path = reading;
+			sourceTree = "<group>";
+		};
+		C4WERR022FF4608A007EE902 /* invalid_argument */ = {
+			isa = PBXGroup;
+			children = (
+				C4WERR012FF4608A007EE901 /* InvalidArgument.hpp */,
+			);
+			path = invalid_argument;
+			sourceTree = "<group>";
+		};
+		C4WERR042FF4608A007EE904 /* unsupported_format */ = {
+			isa = PBXGroup;
+			children = (
+				C4WERR032FF4608A007EE903 /* UnsupportedFormat.hpp */,
+			);
+			path = unsupported_format;
+			sourceTree = "<group>";
+		};
+		C4WERR062FF4608A007EE906 /* file_open */ = {
+			isa = PBXGroup;
+			children = (
+				C4WERR052FF4608A007EE905 /* FileOpenFailure.hpp */,
+			);
+			path = file_open;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -653,6 +653,10 @@
 				CODE_SIGN_STYLE = Automatic;
 				MACOSX_DEPLOYMENT_TARGET = 15.7;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				WARNING_CFLAGS = (
+					"$(inherited)",
+					"-Wno-unused-variable",
+				);
 			};
 			name = Debug;
 		};
@@ -662,6 +666,10 @@
 				CODE_SIGN_STYLE = Automatic;
 				MACOSX_DEPLOYMENT_TARGET = 15.7;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				WARNING_CFLAGS = (
+					"$(inherited)",
+					"-Wno-unused-variable",
+				);
 			};
 			name = Release;
 		};
