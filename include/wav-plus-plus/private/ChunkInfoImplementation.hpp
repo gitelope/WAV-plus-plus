@@ -78,6 +78,8 @@ inline void ChunkInfo::ReadFile (std::FILE * in)
 
         const std::uint32_t chunkSize {uint32_le (in)};
         const std::int64_t bodyStart {tell (in)};
+        if (bodyStart == -1)
+            throw ReadError (ReadErrorCode::FileTellFailed, "Failed to get chunk body position.");
         const std::int64_t chunkEnd {bodyStart + chunkSize + (chunkSize % 2)};
         if (chunkEnd > riffEnd)
         {
