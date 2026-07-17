@@ -23,6 +23,12 @@ set (wav_plus_plus_test_headers
     reading/headers/optional_chunks/PEAK.hpp
 
     reading/headers/rejection/Rejection.hpp
+    reading/headers/rejection/RIFF.hpp
+    reading/headers/rejection/fmt.hpp
+    reading/headers/rejection/data.hpp
+    reading/headers/rejection/fact.hpp
+    reading/headers/rejection/PEAK.hpp
+    reading/headers/rejection/generic.hpp
 
     reading/decoding/SampleDecoding.hpp
 

@@ -79,6 +79,10 @@
 		C40B8FC82F7326C200FDFC86 /* HeaderWriting.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = HeaderWriting.hpp; sourceTree = "<group>"; };
 		C4100481300AC8DE005ED9AB /* RIFF.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = RIFF.hpp; sourceTree = "<group>"; };
 		C4100482300ACC65005ED9AB /* fmt.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = fmt.hpp; sourceTree = "<group>"; };
+		C4100483300ACD8B005ED9AB /* data.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = data.hpp; sourceTree = "<group>"; };
+		C4100484300ACE58005ED9AB /* fact.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = fact.hpp; sourceTree = "<group>"; };
+		C4100485300ACE6E005ED9AB /* PEAK.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = PEAK.hpp; sourceTree = "<group>"; };
+		C4100486300ACF2E005ED9AB /* generic.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = generic.hpp; sourceTree = "<group>"; };
 		C41045222EF1CD5E0013E245 /* ChunkInfo.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = ChunkInfo.hpp; sourceTree = "<group>"; };
 		C41045232EF1CD5E0013E245 /* Exceptions.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Exceptions.hpp; sourceTree = "<group>"; };
 		C41045242EF1CD5E0013E245 /* Formats.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Formats.hpp; sourceTree = "<group>"; };
@@ -292,6 +296,10 @@
 				C498069D2FC92D14005415C0 /* Rejection.hpp */,
 				C4100481300AC8DE005ED9AB /* RIFF.hpp */,
 				C4100482300ACC65005ED9AB /* fmt.hpp */,
+				C4100483300ACD8B005ED9AB /* data.hpp */,
+				C4100484300ACE58005ED9AB /* fact.hpp */,
+				C4100485300ACE6E005ED9AB /* PEAK.hpp */,
+				C4100486300ACF2E005ED9AB /* generic.hpp */,
 			);
 			path = rejection;
 			sourceTree = "<group>";

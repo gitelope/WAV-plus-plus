@@ -4,6 +4,9 @@
 #ifndef wavplusplus_tests_RIFF_hpp
 #define wavplusplus_tests_RIFF_hpp
 
+#include <cstdint>
+#include <vector>
+
 inline void RiffIdNotFound (TestLog & log)
 {
     auto bytes = buildPCMWAVEFORMAT (wav::FormatCode::LinearPCM, 8, 8, 1, 44100, 8);

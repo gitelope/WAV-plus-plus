@@ -4,6 +4,9 @@
 #ifndef wavplusplus_tests_fmt_hpp
 #define wavplusplus_tests_fmt_hpp
 
+#include <cstdint>
+#include <vector>
+
 inline void BitDepthEqualsZero (TestLog & log)
 {
     constexpr uint16_t bitDepth {0};

@@ -1,8 +1,8 @@
 // WAV++ (c) 2025-2026 David Adams
 // SPDX-License-Identifier: MIT
 
-#ifndef wavplusplus_tests_PEAK_hpp
-#define wavplusplus_tests_PEAK_hpp
+#ifndef wavplusplus_tests_optional_chunks_PEAK_hpp
+#define wavplusplus_tests_optional_chunks_PEAK_hpp
 
 #include <cstddef>
 #include <cstdint>
