@@ -8,6 +8,7 @@
 
 #include <bit>
 #include <cassert>
+#include <cstddef>
 #include <cstdint>
 #include <string>
 #include <type_traits>
@@ -22,7 +23,7 @@ bool areEqual (std::vector<T> const & a, std::vector<T> const & b)
 template <typename T>
 bool areEqual (std::vector<T> const & a, std::vector<T> const & b, std::size_t size)
 {
-    return std::equal (a.begin(), a.begin() + size, b.begin());
+    return std::equal (a.begin(), a.begin() + static_cast<std::ptrdiff_t> (size), b.begin());
 }
 
 inline void Compare (bool passes, std::string const & failure, std::string & failures)
