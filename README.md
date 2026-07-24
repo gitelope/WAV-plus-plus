@@ -126,7 +126,7 @@ const auto samplesRead = reader.read (std_vector.data(), std_vector.size());
 
 #### `Reader::readFrames()`
 
-`readFrames` also has three overloads:
+`readFrames` also has three overloads that preserve sample interleaving:
 
 ```cpp
 template <FloatOrDouble T>
@@ -147,7 +147,7 @@ To separate the interleaved audio into channels, pass an array of pointers to de
 
 ```cpp
 template <FloatOrDouble T>
-size_t read (T ** const destinations, size_t channelsRequested, size_t framesRequested);
+size_t readFrames (T ** const destinations, size_t channelsRequested, size_t framesRequested);
 ```
 
 Following are some examples of the many possible use cases and approaches.
@@ -160,7 +160,7 @@ std::vector<float> right (frames);
 
 std::vector<float *> destinations {left.data(), right.data()};
 
-const auto framesRead = reader.read (destinations.data(), destinations.size(), frames);
+const auto framesRead = reader.readFrames (destinations.data(), destinations.size(), frames);
 ```
 
 Reading a fixed number of channels into named arrays:
@@ -172,7 +172,7 @@ float * center = new float [frames];
 
 float * destinations[] = {left, right, center};
 
-const auto framesRead = reader.read (destinations, 3, frames);
+const auto framesRead = reader.readFrames (destinations, 3, frames);
 
 delete[] left;
 delete[] right;
@@ -190,7 +190,7 @@ for (size_t i = 0; i < channels; ++i)
     destinations[i] = buffer.data() + frames * i;
 }
 
-const auto framesRead = reader.read (destinations.data(), channels, frames);
+const auto framesRead = reader.readFrames (destinations.data(), channels, frames);
 ```
 
 Reading all channels into a single array:
@@ -204,7 +204,7 @@ for (size_t i = 0; i < channels; ++i)
     destinations[i] = buffer + frames * i;
 }
 
-const auto framesRead = reader.read (destinations, channels, frames);
+const auto framesRead = reader.readFrames (destinations, channels, frames);
 
 delete[] destinations;
 delete[] buffer;
@@ -226,7 +226,7 @@ for (auto & channel : buffers)
     destinations.push_back (channel.data());
 }
 
-const auto framesRead = reader.read (destinations.data(), channels, frames);
+const auto framesRead = reader.readFrames (destinations.data(), channels, frames);
 ```
 
 ### Dequantization

@@ -394,7 +394,7 @@ inline void Reader::ReadDoubleToFloat (float * destination, size_t totalSamplesT
 }
 
 template <FloatOrDouble T>
-size_t Reader::read (T ** const destinations, size_t numChannels, size_t framesRequested)
+size_t Reader::readFrames (T ** const destinations, size_t numChannels, size_t framesRequested)
 {
     if (!file || framesRequested == 0 || numChannels == 0) return 0;
     if (numChannels > channels())

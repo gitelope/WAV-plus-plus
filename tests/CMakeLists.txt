@@ -51,6 +51,8 @@ set (wav_plus_plus_test_headers
     writing/unsupported_format/UnsupportedFormat.hpp
 
     writing/file_open/FileOpenFailure.hpp
+
+    round_trip/RoundTripTests.hpp
 )
 
 source_group (TREE "${CMAKE_CURRENT_SOURCE_DIR}" FILES ${wav_plus_plus_test_headers})

@@ -6,6 +6,7 @@
 
 #include "writing/WritingTests.hpp"
 #include "reading/ReadingTests.hpp"
+#include "round_trip/RoundTripTests.hpp"
 #include "utilities/UtilitiesTests.hpp"
 
 #include <iostream>
@@ -16,6 +17,7 @@ int main ()
 
     TestWriting   (log);
     TestReading   (log);
+    TestRoundTrip (log);
     TestUtilities (log);
 
     std::cout << log << std::endl;

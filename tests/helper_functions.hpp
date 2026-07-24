@@ -16,8 +16,13 @@
 template <typename T>
 bool areEqual (std::vector<T> const & a, std::vector<T> const & b)
 {
-    assert (a.size() == b.size());
-    return std::equal (a.begin(), a.end(), b.begin());
+    return a.size() == b.size() && std::equal (a.begin(), a.end(), b.begin());
+}
+
+template <typename T>
+bool areEqual (std::vector<T> const & a, std::vector<T> const & b, std::size_t size)
+{
+    return std::equal (a.begin(), a.begin() + size, b.begin());
 }
 
 inline void Compare (bool passes, std::string const & failure, std::string & failures)

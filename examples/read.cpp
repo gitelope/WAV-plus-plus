@@ -141,7 +141,7 @@ int main ()
 
         std::vector<float *> destinations {left.data(), right.data()};
 
-        const auto framesRead = reader.read (destinations.data(), destinations.size(), frames);
+        const auto framesRead = reader.readFrames (destinations.data(), destinations.size(), frames);
     }
 
     // Reading a fixed number of channels into named arrays
@@ -155,7 +155,7 @@ int main ()
 
         float * destinations[] = {left, right, center};
 
-        const auto framesRead = reader.read (destinations, 3, frames);
+        const auto framesRead = reader.readFrames (destinations, 3, frames);
 
         delete[] left;
         delete[] right;
@@ -182,7 +182,7 @@ int main ()
             destinations.push_back (channel.data());
         }
 
-        const auto framesRead = reader.read (destinations.data(), channels, frames);
+        const auto framesRead = reader.readFrames (destinations.data(), channels, frames);
     }
 
     // Reading all channels into a single vector
@@ -201,7 +201,7 @@ int main ()
             destinations[i] = buffer.data() + frames * i;
         }
 
-        const auto framesRead = reader.read (destinations.data(), channels, frames);
+        const auto framesRead = reader.readFrames (destinations.data(), channels, frames);
     }
 
     // Reading all channels into a single array
@@ -220,7 +220,7 @@ int main ()
             destinations[i] = buffer + frames * i;
         }
 
-        const auto framesRead = reader.read (destinations, channels, frames);
+        const auto framesRead = reader.readFrames (destinations, channels, frames);
 
         delete[] destinations;
         delete[] buffer;

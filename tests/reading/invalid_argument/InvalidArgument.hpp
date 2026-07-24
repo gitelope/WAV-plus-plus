@@ -89,14 +89,14 @@ inline void ChannelsRequestedExceedsChannelCount (TestLog & log)
         float left {};
         float right {};
         float * destinations[] {&left, &right};
-        reader.read (destinations, 2, 1);
+        reader.readFrames (destinations, 2, 1);
     }
     catch (wav::ReadError const & e)
     {
         passes = (e.code() == wav::ReadErrorCode::ChannelsRequestedExceedsChannelCount);
     }
 
-    log.Record (passes, "Reader InvalidArgument - read (T ** const, size_t, size_t) - channels requested exceeds channel count");
+    log.Record (passes, "Reader InvalidArgument - readFrames (T ** const, size_t, size_t) - channels requested exceeds channel count");
     std::remove (filename);
 }
 

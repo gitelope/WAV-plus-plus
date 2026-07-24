@@ -26,10 +26,10 @@ public:
     // May throw wav::ReadError.
     explicit Reader (std::filesystem::path const & filePath, uint32_t suggestedBufferSizeKB = 32);
 
-    // INTERLEAVED READING //////////////////////////////
-
-    // read()
-    // Read in interleaved samples. Return the number of samples read.
+    // READ ///////////////////////////////////////////////////
+    //
+    // Read in interleaved samples.
+    // Return the number of samples read.
     // May throw wav::ReadError.
     //
     template <FloatOrDouble T>
@@ -41,8 +41,12 @@ public:
     template <FloatOrDouble T>
     size_t read (std::vector<T> & destination);
 
-    // readFrames()
-    // Read in a number of frames. Return the number of frames read.
+    // READFRAMES /////////////////////////////////////////////
+    //
+    // INTERLEAVED
+    //
+    // Read in a number of frames, samples interleaved.
+    // Return the number of frames read.
     // May throw wav::ReadError.
     //
     template <FloatOrDouble T>
@@ -53,17 +57,17 @@ public:
     //
     template <FloatOrDouble T>
     size_t readFrames (std::vector<T> & destination);
-
-    // CHANNEL-SEPARATED READING ////////////////////////
-
-    // read() - deinterleaving version
-    // Read frames, grouping samples by channel. Return the number of frames read.
+    //
+    // CHANNEL-SEPARATED READING //////////////////////////////
+    //
+    // Read in a number of frames, grouping samples by channel.
+    // Return the number of frames read.
     // May throw wav::ReadError.
     //
     template <FloatOrDouble T>
-    size_t read (T ** const destinations, size_t numChannels, size_t framesRequested);
+    size_t readFrames (T ** const destinations, size_t numChannels, size_t framesRequested);
 
-    // FILE INFO ////////////////////////////////////////
+    // FILE INFO //////////////////////////////////////////////
 
     FileInfo const & getInfo() const {return info;}
     uint16_t channels() const {return info.channels;}
