@@ -16,9 +16,9 @@ void TestWriting (TestLog & log)
 {
     TestHeaders (log);
     TestSampleEncoding (log);
-    writing::TestInvalidArgument (log);
-    writing::TestUnsupportedFormat (log);
-    writing::TestFileOpenFailure (log);
+    TestInvalidArgumentForWriting (log);
+    TestUnsupportedFormat (log);
+    TestFileOpenForWritingFailure (log);
 }
 
 #endif

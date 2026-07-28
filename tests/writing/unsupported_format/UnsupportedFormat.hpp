@@ -6,9 +6,6 @@
 
 #include <cstdio>
 
-namespace writing
-{
-
 inline void ChannelsExceedsMax (TestLog & log)
 {
     constexpr auto channels {static_cast<uint16_t> (wav::maxChannels + 1)};
@@ -32,7 +29,5 @@ inline void TestUnsupportedFormat (TestLog & log)
 {
     ChannelsExceedsMax (log);
 }
-
-} // namespace writing
 
 #endif

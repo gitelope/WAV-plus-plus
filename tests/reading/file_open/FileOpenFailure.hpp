@@ -7,9 +7,6 @@
 #include <cassert>
 #include <filesystem>
 
-namespace reading
-{
-
 inline void FailedToOpenFileForReading (TestLog & log)
 {
     const std::filesystem::path filepath {"does_not_exist.wav"};
@@ -28,11 +25,9 @@ inline void FailedToOpenFileForReading (TestLog & log)
     log.Record (passes, "Reader FileOpenFailure - failed to open file for reading");
 }
 
-inline void TestFileOpenFailure (TestLog & log)
+inline void TestFileOpenForReadingFailure (TestLog & log)
 {
     FailedToOpenFileForReading (log);
 }
-
-} // namespace reading
 
 #endif

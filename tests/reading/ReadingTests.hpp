@@ -17,8 +17,8 @@ void TestReading (TestLog & log)
 {
     TestHeaderParsing (log);
     TestSampleDecoding (log);
-    reading::TestInvalidArgument (log);
-    reading::TestFileOpenFailure (log);
+    TestInvalidArgumentForReading (log);
+    TestFileOpenForReadingFailure (log);
     TestTrailingBytesIgnored (log);
 }
 

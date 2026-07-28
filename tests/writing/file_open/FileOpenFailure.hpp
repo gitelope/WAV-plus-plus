@@ -7,9 +7,6 @@
 #include <cassert>
 #include <filesystem>
 
-namespace writing
-{
-
 inline void FailedToOpenFileForWriting (TestLog & log)
 {
     const std::filesystem::path filepath {"does_not_exist_dir/out.wav"};
@@ -30,11 +27,9 @@ inline void FailedToOpenFileForWriting (TestLog & log)
     log.Record (passes, "Writer FileOpenFailure - failed to open file for writing");
 }
 
-inline void TestFileOpenFailure (TestLog & log)
+inline void TestFileOpenForWritingFailure (TestLog & log)
 {
     FailedToOpenFileForWriting (log);
 }
-
-} // namespace writing
 
 #endif

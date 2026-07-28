@@ -7,9 +7,6 @@
 #include <cstdio>
 #include <vector>
 
-namespace writing
-{
-
 inline void SampleRateZero (TestLog & log)
 {
     constexpr std::uint32_t sampleRate {0};
@@ -154,7 +151,7 @@ inline void FramesToWriteExceedsSourceSize (TestLog & log)
     std::remove (filename);
 }
 
-inline void TestInvalidArgument (TestLog & log)
+inline void TestInvalidArgumentForWriting (TestLog & log)
 {
     SampleRateZero (log);
     ChannelsZero (log);
@@ -164,7 +161,5 @@ inline void TestInvalidArgument (TestLog & log)
     SourceFrameSizeIsFractional (log);
     FramesToWriteExceedsSourceSize (log);
 }
-
-} // namespace writing
 
 #endif

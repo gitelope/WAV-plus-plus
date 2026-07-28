@@ -7,9 +7,6 @@
 #include <cstdio>
 #include <vector>
 
-namespace reading
-{
-
 inline void SamplesRequestedExceedsDestinationSize (TestLog & log)
 {
     auto bytes = buildPCMWAVEFORMAT (wav::FormatCode::LinearPCM, 24, 24, 1, 96000, 8);
@@ -100,14 +97,12 @@ inline void ChannelsRequestedExceedsChannelCount (TestLog & log)
     std::remove (filename);
 }
 
-inline void TestInvalidArgument (TestLog & log)
+inline void TestInvalidArgumentForReading (TestLog & log)
 {
     SamplesRequestedExceedsDestinationSize (log);
     DestinationFrameSizeIsFractional (log);
     FramesRequestedExceedsDestinationSize (log);
     ChannelsRequestedExceedsChannelCount (log);
 }
-
-} // namespace reading
 
 #endif
