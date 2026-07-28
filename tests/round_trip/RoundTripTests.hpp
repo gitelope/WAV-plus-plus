@@ -332,6 +332,34 @@ inline void ReadStopsAtEOF (std::string const & filename, std::vector<float> con
         };
         log.Record (result, "Round Trip - readFrames (T *, size_t) - client requests more frames than frames remaining in file");
     }
+    {
+        wav::Reader reader {filename};
+        const auto frames {reader.frames()};
+        const auto framesRequested {frames + 1};
+        const auto channels {reader.channels()};
+        std::vector<float> left  (framesRequested, sentinelValue);
+        std::vector<float> right (framesRequested, sentinelValue);
+        float * destinations[] {left.data(), right.data()};
+        const auto framesRead = reader.readFrames (destinations, channels, framesRequested);
+
+        std::vector<float> signalLeft  (frames);
+        std::vector<float> signalRight (frames);
+        // split signal into left and right channels
+        for (size_t frame = 0; frame < frames; ++frame)
+        {
+            const auto n {frame * channels};
+            signalLeft  [frame] = signal [n];
+            signalRight [frame] = signal [n+1];
+        }
+
+        const bool result
+        {
+            framesRead == frames &&
+            partialReadSuccessful (left,  signalLeft,  frames, sentinelValue) &&
+            partialReadSuccessful (right, signalRight, frames, sentinelValue)
+        };
+        log.Record (result, "Round Trip - readFrames (T ** const, size_t, size_t) - client requests more frames than frames remaining in file");
+    }
 }
 
 inline void TestWriteMethods (std::vector<float> const & signal,
