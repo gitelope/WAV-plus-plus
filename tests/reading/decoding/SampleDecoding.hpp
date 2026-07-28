@@ -25,7 +25,7 @@ void TestSampleDecoding (TestLog & log)
         std::vector<double> expected;
     };
 
-    std::vector<TestCase> testCases
+    std::vector<TestCase> monoTestCases
     {
         {
             wav::ExportFormat::LinearPCM_8,
@@ -95,28 +95,76 @@ void TestSampleDecoding (TestLog & log)
         },
 
     };
-    for (auto & testCase : testCases)
+    for (auto & testCase : monoTestCases)
     {
         WriteBytesToFile (filename, buildWAVEFORMATEX (testCase.encoding, channels, sampleRate, testCase.data));
+
         {
             // read into float
+
             // (first convert expected from double to float)
-            std::vector<float> expected_float (testCase.expected.size());
+            std::vector<float> expectedFloat (testCase.expected.size());
             for (size_t i = 0; i < testCase.expected.size(); ++i)
             {
-                expected_float [i] = static_cast<float> (testCase.expected [i]);
+                expectedFloat [i] = static_cast<float> (testCase.expected [i]);
             }
-            wav::Reader reader {filename};
-            std::vector<float> actual (reader.samples());
-            const auto samplesRead = reader.read (actual);
-            log.Record (samplesRead == expected_float.size() && areEqual (actual, expected_float), "Sample Decoding - " + exportFormatShortPrefix (testCase.encoding) + " -> float");
+
+            {
+                // read interleaved
+                wav::Reader reader {filename};
+                std::vector<float> actual (reader.samples());
+                const auto samplesRead = reader.read (actual);
+                const bool result
+                {
+                    samplesRead == expectedFloat.size() &&
+                    areEqual (actual, expectedFloat)
+                };
+                log.Record (result, "Sample Decoding, interleaved   - " + exportFormatShortPrefix (testCase.encoding) + " -> float");
+            }
+            {
+                // read deinterleaved
+                wav::Reader reader {filename};
+                std::vector<float> actual (reader.frames());
+                std::vector<float *> destinations {actual.data()};
+                const auto framesRead = reader.readFrames (destinations.data(), reader.channels(), reader.frames());
+                const bool result
+                {
+                    framesRead == expectedFloat.size() &&
+                    areEqual (actual, expectedFloat)
+                };
+                log.Record (result, "Sample Decoding, deinterleaved - " + exportFormatShortPrefix (testCase.encoding) + " -> float");
+            }
         }
+
         {
             // read into double
-            wav::Reader reader {filename};
-            std::vector<double> actual (reader.samples());
-            const auto samplesRead = reader.read (actual);
-            log.Record (samplesRead == testCase.expected.size() && areEqual (actual, testCase.expected), "Sample Decoding - " + exportFormatShortPrefix (testCase.encoding) + " -> double");
+
+            {
+                // read interleaved
+                wav::Reader reader {filename};
+                std::vector<double> actual (reader.samples());
+                const auto samplesRead = reader.read (actual);
+                const bool result
+                {
+                    samplesRead == testCase.expected.size() &&
+                    areEqual (actual, testCase.expected)
+                };
+                log.Record (result, "Sample Decoding, interleaved   - " + exportFormatShortPrefix (testCase.encoding) + " -> double");
+            }
+            {
+                // read deinterleaved
+                wav::Reader reader {filename};
+                std::vector<double> actual (reader.frames());
+                std::vector<double *> destinations {actual.data()};
+                const auto framesRead = reader.readFrames (destinations.data(), reader.channels(), reader.frames());
+                const bool result
+                {
+                    framesRead == testCase.expected.size() &&
+                    areEqual (actual, testCase.expected)
+                };
+                log.Record (result, "Sample Decoding, deinterleaved - " + exportFormatShortPrefix (testCase.encoding) + " -> double");
+            }
+
         }
     }
     std::remove (filename);
