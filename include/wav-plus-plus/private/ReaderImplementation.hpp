@@ -25,7 +25,7 @@ inline Reader::Reader (std::filesystem::path const & filepath, uint32_t suggeste
     dataChunk = chunkInfo.data;
 
     // Position file at start of data
-    if (seek (file.get(), dataChunk.offset, SEEK_SET) != 0)
+    if (seek (file.get(), dataChunk.payloadOffset, SEEK_SET) != 0)
     {
         throw ReadError (ReadErrorCode::FileSeekFailed, "Failed to advance to data portion of data chunk.");
     }

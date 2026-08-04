@@ -52,9 +52,9 @@ struct DataChunk
 {
     std::string id {"data"};
     uint32_t size {0};
-    // first byte of first sample,
+    // Location of the first byte of the first sample.
     // (-1 means data chunk hasn't been encountered yet):
-    std::int64_t offset {-1};
+    std::int64_t payloadOffset {-1};
 };
 
 struct FactChunk
