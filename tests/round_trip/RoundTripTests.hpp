@@ -172,6 +172,48 @@ inline void Read_PointerAndCount (std::string const & filename, std::vector<floa
     const bool result {samplesRead == reader.samples() && areEqual (in, signal)};
     log.Record (result, "Round Trip - read (T *, size_t)");
 }
+inline void Read_PointerAndCount_Chunked (std::string const & filename, std::vector<float> const & signal, TestLog & log)
+{
+    constexpr size_t samplesRequested {6};
+    assert (signal.size() == 10);
+
+    wav::Reader reader {filename};
+    assert (reader.samples() == signal.size());
+
+    constexpr float sentinelValue {42};
+    std::vector<float> in1 (samplesRequested, sentinelValue);
+    std::vector<float> in2 (samplesRequested, sentinelValue);
+    std::vector<float> in3 (samplesRequested, sentinelValue);
+
+    // 1. request 6 samples, get 6 samples
+    // 2. request 6 samples, get the remaining 4.
+    // 3. request 6 samples, get 0.
+    const auto samplesRead1 = reader.read (in1.data(), samplesRequested);
+    const auto samplesRead2 = reader.read (in2.data(), samplesRequested);
+    const auto samplesRead3 = reader.read (in3.data(), samplesRequested);
+
+    std::vector<float> expected1 (signal.cbegin(), signal.cbegin() + static_cast<std::ptrdiff_t> (samplesRequested));
+
+    // 4 remaining samples from the file and 6 untouched sentinel values
+    std::vector<float> expected2 (samplesRequested, sentinelValue);
+    std::copy (signal.cbegin() + static_cast<std::ptrdiff_t> (samplesRequested),
+               signal.cbegin() + static_cast<std::ptrdiff_t> (signal.size()),
+               expected2.begin());
+
+    // no samples left to read so sentinels should be untouched
+    std::vector<float> expected3 (samplesRequested, sentinelValue);
+
+    const bool result
+    {
+        samplesRead1 == samplesRequested &&
+        samplesRead2 == signal.size() - samplesRequested &&
+        samplesRead3 == 0 &&
+        areEqual (in1, expected1) &&
+        areEqual (in2, expected2) &&
+        areEqual (in3, expected3)
+    };
+    log.Record (result, "Round Trip - read (T *, size_t) - chunked");
+}
 
 inline void Read_VectorAndCount (std::string const & filename, std::vector<float> const & signal, TestLog & log)
 {
@@ -230,6 +272,48 @@ inline void ReadFrames_PointerAndCount (std::string const & filename, std::vecto
 
     const bool result {framesRead == framesRequested && areEqual (in, signal)};
     log.Record (result, "Round Trip - readFrames (T *, size_t)");
+}
+
+inline void ReadFrames_PointerAndCount_Chunked (std::string const & filename, std::vector<float> const & signal, TestLog & log)
+{
+    constexpr size_t framesRequested {3};
+    assert (signal.size() == 10);
+
+    wav::Reader reader {filename};
+    assert (reader.frames() == 5);
+    assert (reader.channels() == 2);
+
+    const auto samplesRequested {framesRequested * reader.channels()};
+    constexpr float sentinelValue {42};
+    std::vector<float> in1 (samplesRequested, sentinelValue);
+    std::vector<float> in2 (samplesRequested, sentinelValue);
+    std::vector<float> in3 (samplesRequested, sentinelValue);
+
+    // 1. request 3 frames, get 3
+    // 2. request 3 frames, get 2
+    // 3. request 3 frames, get 0
+    const auto framesRead1 = reader.readFrames (in1.data(), framesRequested);
+    const auto framesRead2 = reader.readFrames (in2.data(), framesRequested);
+    const auto framesRead3 = reader.readFrames (in3.data(), framesRequested);
+
+    std::vector<float> expected1 (signal.cbegin(), signal.cbegin() + static_cast<std::ptrdiff_t> (samplesRequested));
+
+    std::vector<float> expected2 (samplesRequested, sentinelValue);
+    std::copy (signal.cbegin() + static_cast<std::ptrdiff_t> (samplesRequested),
+               signal.cbegin() + static_cast<std::ptrdiff_t> (signal.size()),
+               expected2.begin());
+
+    std::vector<float> expected3 (samplesRequested, sentinelValue);
+    const bool result
+    {
+        framesRead1 == framesRequested &&
+        framesRead2 == reader.frames() - framesRequested &&
+        framesRead3 == 0 &&
+        areEqual (in1, expected1) &&
+        areEqual (in2, expected2) &&
+        areEqual (in3, expected3)
+    };
+    log.Record (result, "Round Trip - readFrames (T *, size_t) - chunked");
 }
 
 inline void ReadFrames_VectorAndCount (std::string const & filename, std::vector<float> const & signal, TestLog & log)
@@ -295,6 +379,74 @@ inline void ReadFrames_Deinterleaved (std::string const & filename, std::vector<
         channels == 2
     };
     log.Record (result, "Round Trip - readFrames (T ** const, size_t, size_t)");
+}
+
+inline void ReadFrames_Deinterleaved_Chunked (std::string const & filename, std::vector<float> const & signal, TestLog & log)
+{
+    constexpr size_t framesRequested {3};
+
+    wav::Reader reader {filename};
+    assert (reader.frames() == 5);
+
+    const auto channels {reader.channels()};
+    assert (reader.channels() == 2);
+
+    assert (signal.size() == 10);
+
+    constexpr float sentinelValue {42};
+
+    std::vector<float> in1_left  (framesRequested, sentinelValue);
+    std::vector<float> in1_right (framesRequested, sentinelValue);
+    std::vector<float> in2_left  (framesRequested, sentinelValue);
+    std::vector<float> in2_right (framesRequested, sentinelValue);
+    std::vector<float> in3_left  (framesRequested, sentinelValue);
+    std::vector<float> in3_right (framesRequested, sentinelValue);
+
+    float * destinations1[] {in1_left.data(),  in1_right.data()};
+    float * destinations2[] {in2_left.data(),  in2_right.data()};
+    float * destinations3[] {in3_left.data(),  in3_right.data()};
+
+    // 1. request 3 frames, get 3
+    // 2. request 3 frames, get 2
+    // 3. request 3 frames, get 0
+    const auto framesRead1 = reader.readFrames (destinations1, channels, framesRequested);
+    const auto framesRead2 = reader.readFrames (destinations2, channels, framesRequested);
+    const auto framesRead3 = reader.readFrames (destinations3, channels, framesRequested);
+
+    // split interleaved signal into channels
+    std::vector<float> L (reader.frames());
+    std::vector<float> R (reader.frames());
+    for (size_t frame = 0; frame < reader.frames(); ++frame)
+    {
+        const auto n {frame * channels};
+        L [frame] = signal [n];
+        R [frame] = signal [n + 1];
+    }
+
+    const std::vector<float> expected1L (L.cbegin(), L.cbegin() + static_cast<std::ptrdiff_t> (framesRequested));
+    const std::vector<float> expected1R (R.cbegin(), R.cbegin() + static_cast<std::ptrdiff_t> (framesRequested));
+
+    std::vector<float> expected2L (framesRequested, sentinelValue);
+    std::vector<float> expected2R (framesRequested, sentinelValue);
+    std::copy (L.cbegin() + static_cast<std::ptrdiff_t> (framesRequested), L.cend(), expected2L.begin());
+    std::copy (R.cbegin() + static_cast<std::ptrdiff_t> (framesRequested), R.cend(), expected2R.begin());
+
+    std::vector<float> expected3L (framesRequested, sentinelValue);
+    std::vector<float> expected3R (framesRequested, sentinelValue);
+
+    const bool result
+    {
+        framesRead1 == framesRequested &&
+        framesRead2 == reader.frames() - framesRequested &&
+        framesRead3 == 0 &&
+        areEqual (in1_left,  expected1L) &&
+        areEqual (in1_right, expected1R) &&
+        areEqual (in2_left,  expected2L) &&
+        areEqual (in2_right, expected2R) &&
+        areEqual (in3_left,  expected3L) &&
+        areEqual (in3_right, expected3R)
+    };
+    log.Record (result, "Round Trip - readFrames (T ** const, size_t, size_t) - chunked");
 }
 
 inline void ReadStopsAtEOF (std::string const & filename, std::vector<float> const & signal, TestLog & log)
@@ -384,16 +536,20 @@ inline void TestReadMethods (std::vector<float> const & signal,
     writer.write (signal);
     writer.Close();
 
-    Read_PointerAndCount       (filename, signal, log);
-    Read_VectorAndCount        (filename, signal, log);
-    Read_Vector                (filename, signal, log);
+    Read_PointerAndCount               (filename, signal, log);
+    Read_PointerAndCount_Chunked       (filename, signal, log);
+    Read_VectorAndCount                (filename, signal, log);
+    Read_Vector                        (filename, signal, log);
 
-    ReadFrames_PointerAndCount (filename, signal, log);
-    ReadFrames_VectorAndCount  (filename, signal, log);
-    ReadFrames_Vector          (filename, signal, log);
-    ReadFrames_Deinterleaved   (filename, signal, log);
+    ReadFrames_PointerAndCount         (filename, signal, log);
+    ReadFrames_PointerAndCount_Chunked (filename, signal, log);
+    ReadFrames_VectorAndCount          (filename, signal, log);
+    ReadFrames_Vector                  (filename, signal, log);
 
-    ReadStopsAtEOF             (filename, signal, log);
+    ReadFrames_Deinterleaved           (filename, signal, log);
+    ReadFrames_Deinterleaved_Chunked   (filename, signal, log);
+
+    ReadStopsAtEOF                     (filename, signal, log);
 
     std::remove (filename);
 }
