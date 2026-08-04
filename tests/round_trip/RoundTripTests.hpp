@@ -52,6 +52,40 @@ inline void Write_PointerAndCount (std::vector<float> const & signal,
     std::remove (filename);
 }
 
+inline void Write_PointerAndCount_Chunked (std::vector<float> const & signal,
+                                           WriteParameters const & wp,
+                                           TestLog & log)
+{
+    const auto filename {"test_round_trip_write_pointer_and_count_chunked.wav"};
+
+    constexpr size_t samplesFirstChunk {6};
+    assert (samplesFirstChunk < signal.size());
+
+    const auto samplesSecondChunk {signal.size() - samplesFirstChunk};
+
+    wav::Writer writer {filename, wp.format, wp.sampleRate, wp.channels};
+
+    // 1. write some samples
+    // 2. write some more samples
+    // 3. write 0 samples
+    const auto samplesWritten1 = writer.write (signal.data(), samplesFirstChunk);
+    const auto samplesWritten2 = writer.write (signal.data() + samplesFirstChunk, samplesSecondChunk);
+    const auto samplesWritten3 = writer.write (signal.data() + signal.size(), 0);
+
+    writer.Close();
+
+    const bool result
+    {
+        samplesWritten1 == samplesFirstChunk &&
+        samplesWritten2 == samplesSecondChunk &&
+        samplesWritten3 == 0 &&
+        same (filename, signal)
+    };
+    log.Record (result, "Round Trip - write (T const *, size_t) - chunked");
+
+    std::remove (filename);
+}
+
 inline void Write_VectorAndCount (std::vector<float> const & signal,
                                   WriteParameters const & wp,
                                   TestLog & log)
@@ -111,6 +145,42 @@ inline void WriteFrames_PointerAndCount (std::vector<float> const & signal,
 
     const bool result {framesWritten == framesToWrite && same (filename, signal)};
     log.Record (result, "Round Trip - writeFrames (T const *, size_t)");
+
+    std::remove (filename);
+}
+
+inline void WriteFrames_PointerAndCount_Chunked (std::vector<float> const & signal,
+                                                 WriteParameters const & wp,
+                                                 TestLog & log)
+{
+    const auto filename {"test_round_trip_writeFrames_pointer_and_count_chunked.wav"};
+
+    constexpr size_t framesFirstChunk {3};
+    const auto totalFrames {signal.size() / wp.channels};
+    assert (framesFirstChunk < totalFrames);
+
+    const auto framesSecondChunk {totalFrames - framesFirstChunk};
+    const auto samplesFirstChunk {framesFirstChunk * wp.channels};
+
+    wav::Writer writer {filename, wp.format, wp.sampleRate, wp.channels};
+
+    // 1. write 3 frames
+    // 2. write remaining 2 frames
+    // 3. write 0 frames
+    const auto framesWritten1 = writer.writeFrames (signal.data(), framesFirstChunk);
+    const auto framesWritten2 = writer.writeFrames (signal.data() + samplesFirstChunk, framesSecondChunk);
+    const auto framesWritten3 = writer.writeFrames (signal.data() + signal.size(), 0);
+
+    writer.Close();
+
+    const bool result
+    {
+        framesWritten1 == framesFirstChunk &&
+        framesWritten2 == framesSecondChunk &&
+        framesWritten3 == 0 &&
+        same (filename, signal)
+    };
+    log.Record (result, "Round Trip - writeFrames (T const *, size_t) - chunked");
 
     std::remove (filename);
 }
@@ -518,12 +588,15 @@ inline void TestWriteMethods (std::vector<float> const & signal,
                               WriteParameters const & writeParameters,
                               TestLog & log)
 {
-    Write_PointerAndCount       (signal, writeParameters, log);
-    Write_VectorAndCount        (signal, writeParameters, log);
-    Write_Vector                (signal, writeParameters, log);
-    WriteFrames_PointerAndCount (signal, writeParameters, log);
-    WriteFrames_VectorAndCount  (signal, writeParameters, log);
-    WriteFrames_Vector          (signal, writeParameters, log);
+    Write_PointerAndCount               (signal, writeParameters, log);
+    Write_PointerAndCount_Chunked       (signal, writeParameters, log);
+    Write_VectorAndCount                (signal, writeParameters, log);
+    Write_Vector                        (signal, writeParameters, log);
+
+    WriteFrames_PointerAndCount         (signal, writeParameters, log);
+    WriteFrames_PointerAndCount_Chunked (signal, writeParameters, log);
+    WriteFrames_VectorAndCount          (signal, writeParameters, log);
+    WriteFrames_Vector                  (signal, writeParameters, log);
 }
 
 inline void TestReadMethods (std::vector<float> const & signal,
