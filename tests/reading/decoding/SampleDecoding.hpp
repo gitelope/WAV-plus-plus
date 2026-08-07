@@ -12,9 +12,9 @@
 // build WAVEFORMATEX with specific data in the data chunk
 std::vector<uint8_t> buildWAVEFORMATEX (wav::ExportFormat encoding, uint16_t channels, uint32_t sampleRate, std::vector<uint8_t> const & data);
 
-void TestInterleavedAndMonoDeinterleavedSampleDecoding (TestLog & log)
+void TestInterleavedAndMonoDeinterleaved (TestLog & log)
 {
-    constexpr auto sampleRate {44100};
+    constexpr auto sampleRate {48000};
     constexpr auto channels {1};
     const auto filename {"testSampleDecoding.wav"};
 
@@ -170,7 +170,7 @@ void TestInterleavedAndMonoDeinterleavedSampleDecoding (TestLog & log)
     std::remove (filename);
 }
 
-void TestDeinterleavedStereoSampleDecoding (TestLog & log)
+void TestDeinterleavedStereo (TestLog & log)
 {
     constexpr auto sampleRate {44100};
     constexpr auto channels {2};
@@ -260,24 +260,26 @@ void TestDeinterleavedStereoSampleDecoding (TestLog & log)
         },
 
     };
+
+    constexpr double sentinelValue {42};
+
     for (auto & testCase : stereoTestCases)
     {
         WriteBytesToFile (filename, buildWAVEFORMATEX (testCase.encoding, channels, sampleRate, testCase.data));
 
+        // create float version of expected input
+        const auto expectedSize {testCase.expectedLeft.size()};
+        assert (testCase.expectedLeft.size() == testCase.expectedRight.size());
+        std::vector<float> expectedFloatLeft  (expectedSize);
+        std::vector<float> expectedFloatRight (expectedSize);
+        for (size_t i = 0; i < expectedSize; ++i)
+        {
+            expectedFloatLeft  [i] = static_cast<float> (testCase.expectedLeft  [i]);
+            expectedFloatRight [i] = static_cast<float> (testCase.expectedRight [i]);
+        }
+
         {
             // read deinterleaved into float
-
-            // (first convert expected from double to float)
-            const auto expectedSize {testCase.expectedLeft.size()};
-            assert (testCase.expectedLeft.size() == testCase.expectedRight.size());
-            std::vector<float> expectedFloatLeft   (expectedSize);
-            std::vector<float> expectedFloatRight (expectedSize);
-
-            for (size_t i = 0; i < expectedSize; ++i)
-            {
-                expectedFloatLeft  [i] = static_cast<float> (testCase.expectedLeft  [i]);
-                expectedFloatRight [i] = static_cast<float> (testCase.expectedRight [i]);
-            }
 
             wav::Reader reader {filename};
             std::vector<float> actualLeft  (reader.frames());
@@ -295,6 +297,7 @@ void TestDeinterleavedStereoSampleDecoding (TestLog & log)
 
         {
             // read deinterleaved into double
+
             wav::Reader reader {filename};
             std::vector<double> actualLeft  (reader.frames());
             std::vector<double> actualRight (reader.frames());
@@ -309,14 +312,155 @@ void TestDeinterleavedStereoSampleDecoding (TestLog & log)
             log.Record (result, "Sample Decoding, deinterleaved stereo - " + exportFormatShortPrefix (testCase.encoding) + " -> double");
 
         }
+
+        constexpr size_t channelsRequested {1};
+
+        {
+            // read deinterleaved into float, first channel only
+
+            wav::Reader reader {filename};
+
+            // 1. request all frames, get all frames.
+            std::vector<float> actualLeft (reader.frames());
+            float * destination[] {actualLeft.data()};
+            const auto framesRead1 = reader.readFrames (destination, channelsRequested, reader.frames());
+
+            // 2. request all frames again, get none.
+            const std::vector<float> sentinelValues (reader.frames(), sentinelValue);
+            std::vector<float> secondAttempt (sentinelValues);
+            float * destination2[] {secondAttempt.data()};
+            const auto framesRead2 = reader.readFrames (destination2, channelsRequested, reader.frames());
+
+            const bool result
+            {
+                framesRead1 == reader.frames() &&
+                framesRead2 == 0 &&
+                areEqual (actualLeft, expectedFloatLeft) &&
+                areEqual (secondAttempt, sentinelValues)
+            };
+
+            log.Record (result, "Sample Decoding, deinterleaved, requesting 1 of 2 channels - " + exportFormatShortPrefix (testCase.encoding) + " -> float");
+        }
+
+        {
+            // read deinterleaved into double, first channel only
+
+            wav::Reader reader {filename};
+
+            // 1. request all frames, get all frames.
+            std::vector<double> actualLeft (reader.frames());
+            double * destination[] {actualLeft.data()};
+            const auto framesRead1 = reader.readFrames (destination, channelsRequested, reader.frames());
+
+            // 2. request all frames again, get none.
+            const std::vector<double> sentinelValues (reader.frames(), sentinelValue);
+            std::vector<double> secondAttempt (sentinelValues);
+            double * destination2[] {secondAttempt.data()};
+            const auto framesRead2 = reader.readFrames (destination2, channelsRequested, reader.frames());
+
+            const bool result
+            {
+                framesRead1 == reader.frames() &&
+                framesRead2 == 0 &&
+                areEqual (actualLeft, testCase.expectedLeft) &&
+                areEqual (secondAttempt, sentinelValues)
+            };
+            log.Record (result, "Sample Decoding, deinterleaved, requesting 1 of 2 channels - " + exportFormatShortPrefix (testCase.encoding) + " -> double");
+        }
     }
+    std::remove (filename);
+}
+
+void TestDeinterleavedThreeChannelSubset (TestLog & log)
+{
+    constexpr auto sampleRate {48000};
+    constexpr auto channels {3};
+    const auto filename {"testSampleDecodingThreeChannel.wav"};
+
+    // 3 channels, 3 frames, 32-bit float
+    const std::vector<uint8_t> data
+    {
+        0x00, 0x00, 0x80, 0xBF,  0x00, 0x00, 0x40, 0xBF,  0x00, 0x00, 0x00, 0xBF, // frame 0: ch0, ch1, ch2  (-1,   -0.75, -0.5 )
+        0x00, 0x00, 0x80, 0xBE,  0x00, 0x00, 0x00, 0x00,  0x00, 0x00, 0x80, 0x3E, // frame 1: ch0, ch1, ch2  (-0.25, 0,     0.25)
+        0x00, 0x00, 0x00, 0x3F,  0x00, 0x00, 0x40, 0x3F,  0x00, 0x00, 0x80, 0x3F, // frame 2: ch0, ch1, ch2  ( 0.5,  0.75,  1   )
+    };
+    const std::vector<float> expectedCh0 {-1.f, -0.25f, 0.5f};
+    const std::vector<float> expectedCh1 {-0.75f, 0.f, 0.75f};
+
+    WriteBytesToFile (filename, buildWAVEFORMATEX (wav::ExportFormat::FloatPCM_32, channels, sampleRate, data));
+
+    constexpr float sentinelValue {42};
+
+    {
+        // request 1 of 3 channels
+
+        constexpr size_t channelsRequested {1};
+
+        wav::Reader reader {filename};
+        assert (reader.frames() == 3);
+        assert (reader.channels() == channels);
+
+        // 1. request all the frames, get all the frames.
+        std::vector<float> ch0 (reader.frames());
+        float * destination[] {ch0.data()};
+        const auto framesRead1 = reader.readFrames (destination, channelsRequested, reader.frames());
+
+        // 2. request all the frames again, get 0.
+        const std::vector<float> allSentinels (reader.frames(), sentinelValue);
+        std::vector<float> secondAttempt (allSentinels);
+        float * destination2[] {secondAttempt.data()};
+        const auto framesRead2 = reader.readFrames (destination2, channelsRequested, reader.frames());
+
+        const bool result
+        {
+            framesRead1 == reader.frames() &&
+            framesRead2 == 0 &&
+            areEqual (ch0, expectedCh0) &&
+            areEqual (secondAttempt, allSentinels)
+        };
+        log.Record (result, "Sample Decoding, deinterleaved, requesting 1 of 3 channels");
+    }
+
+    {
+        // request 2 of 3 channels
+
+        wav::Reader reader {filename};
+
+        constexpr size_t channelsRequested {2};
+
+        // 1. request all the frames, get all the frames.
+        std::vector<float> ch0 (reader.frames());
+        std::vector<float> ch1 (reader.frames());
+        float * destinations[] {ch0.data(), ch1.data()};
+        const auto framesRead1 = reader.readFrames (destinations, channelsRequested, reader.frames());
+
+        // 2. request all the frames again, get 0.
+        const std::vector<float> allSentinels (reader.frames(), sentinelValue);
+        std::vector<float> secondAttemptCh0 (allSentinels);
+        std::vector<float> secondAttemptCh1 (allSentinels);
+        float * destinations2[] {secondAttemptCh0.data(), secondAttemptCh1.data()};
+        const auto framesRead2 = reader.readFrames (destinations2, channelsRequested, reader.frames());
+
+        const bool result
+        {
+            framesRead1 == reader.frames() &&
+            framesRead2 == 0 &&
+            areEqual (ch0, expectedCh0) &&
+            areEqual (ch1, expectedCh1) &&
+            areEqual (secondAttemptCh0, allSentinels) &&
+            areEqual (secondAttemptCh1, allSentinels)
+        };
+        log.Record (result, "Sample Decoding, deinterleaved, requesting 2 of 3 channels");
+    }
+
     std::remove (filename);
 }
 
 inline void TestSampleDecoding (TestLog & log)
 {
-    TestInterleavedAndMonoDeinterleavedSampleDecoding (log);
-    TestDeinterleavedStereoSampleDecoding (log);
+    TestInterleavedAndMonoDeinterleaved (log);
+    TestDeinterleavedStereo (log); // both channels and just first channel
+    TestDeinterleavedThreeChannelSubset (log);
 }
 
 // Build a WAVEFORMATEX WAV file (18-byte fmt chunk).
