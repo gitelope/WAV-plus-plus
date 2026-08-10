@@ -80,7 +80,7 @@
 		C4280E442FD0D89A00A4A7BC /* fact.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = fact.hpp; sourceTree = "<group>"; };
 		C4280E452FD0D8AB00A4A7BC /* PEAK.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = PEAK.hpp; sourceTree = "<group>"; };
 		C46085F02F8EC53B007F0361 /* HeaderParsing.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = HeaderParsing.hpp; sourceTree = "<group>"; };
-		C46085F12F8EC5DB007F0361 /* SampleDecoding.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = SampleDecoding.hpp; sourceTree = "<group>"; };
+		C46085F12F8EC5DB007F0361 /* FullContainer.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = FullContainer.hpp; sourceTree = "<group>"; };
 		C46085FC2F96C1A5007F0361 /* reading_helper_functions.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = reading_helper_functions.hpp; sourceTree = "<group>"; };
 		C470C0272F6A058B00F3A7D1 /* AudioSummary.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = AudioSummary.hpp; sourceTree = "<group>"; };
 		C48AB6732F636A5900C70CDA /* read */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = read; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -231,7 +231,7 @@
 		C46085FE2F96C36A007F0361 /* decoding */ = {
 			isa = PBXGroup;
 			children = (
-				C46085F12F8EC5DB007F0361 /* SampleDecoding.hpp */,
+				C46085F12F8EC5DB007F0361 /* FullContainer.hpp */,
 				C4EDA956302A71B300EB8822 /* PackedLPCM.hpp */,
 			);
 			path = decoding;
