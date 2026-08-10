@@ -456,7 +456,7 @@ void TestDeinterleavedThreeChannelSubset (TestLog & log)
     std::remove (filename);
 }
 
-inline void TestSampleDecoding (TestLog & log)
+inline void TestFullContainer (TestLog & log)
 {
     TestInterleavedAndMonoDeinterleaved (log);
     TestDeinterleavedStereo (log); // both channels and just first channel
