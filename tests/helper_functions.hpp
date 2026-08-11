@@ -26,6 +26,7 @@ bool areEqual (std::vector<T> const & a, std::vector<T> const & b, std::size_t s
     return std::equal (a.begin(), a.begin() + static_cast<std::ptrdiff_t> (size), b.begin());
 }
 
+// If expression passed in evaluates to false, add failure string to failures string.
 inline void Compare (bool passes, std::string const & failure, std::string & failures)
 {
     if (!passes)
