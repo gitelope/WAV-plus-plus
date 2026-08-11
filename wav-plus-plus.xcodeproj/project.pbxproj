@@ -65,7 +65,6 @@
 		C4100484300ACE58005ED9AB /* fact.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = fact.hpp; sourceTree = "<group>"; };
 		C4100485300ACE6E005ED9AB /* PEAK.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = PEAK.hpp; sourceTree = "<group>"; };
 		C4100486300ACF2E005ED9AB /* generic.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = generic.hpp; sourceTree = "<group>"; };
-		C4RTRIP12A1B2C3D4E5F6071 /* RoundTripTests.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = RoundTripTests.hpp; sourceTree = "<group>"; };
 		C41045222EF1CD5E0013E245 /* ChunkInfo.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = ChunkInfo.hpp; sourceTree = "<group>"; };
 		C41045232EF1CD5E0013E245 /* Exceptions.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Exceptions.hpp; sourceTree = "<group>"; };
 		C41045242EF1CD5E0013E245 /* Formats.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Formats.hpp; sourceTree = "<group>"; };
@@ -81,7 +80,7 @@
 		C4280E442FD0D89A00A4A7BC /* fact.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = fact.hpp; sourceTree = "<group>"; };
 		C4280E452FD0D8AB00A4A7BC /* PEAK.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = PEAK.hpp; sourceTree = "<group>"; };
 		C46085F02F8EC53B007F0361 /* HeaderParsing.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = HeaderParsing.hpp; sourceTree = "<group>"; };
-		C46085F12F8EC5DB007F0361 /* SampleDecoding.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = SampleDecoding.hpp; sourceTree = "<group>"; };
+		C46085F12F8EC5DB007F0361 /* FullContainer.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = FullContainer.hpp; sourceTree = "<group>"; };
 		C46085FC2F96C1A5007F0361 /* reading_helper_functions.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = reading_helper_functions.hpp; sourceTree = "<group>"; };
 		C470C0272F6A058B00F3A7D1 /* AudioSummary.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = AudioSummary.hpp; sourceTree = "<group>"; };
 		C48AB6732F636A5900C70CDA /* read */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = read; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -114,9 +113,12 @@
 		C4E4D40C2F9AA6150059CA2F /* Byteswap.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Byteswap.hpp; sourceTree = "<group>"; };
 		C4E4D40F2F9ABC410059CA2F /* Byteswap.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Byteswap.hpp; sourceTree = "<group>"; };
 		C4E4D4102F9ABE150059CA2F /* UtilitiesTests.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = UtilitiesTests.hpp; sourceTree = "<group>"; };
+		C4EDA956302A71B300EB8822 /* PackedLPCM.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = PackedLPCM.hpp; sourceTree = "<group>"; };
+		C4EDA957302A749700EB8822 /* SampleDecoding.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = SampleDecoding.hpp; sourceTree = "<group>"; };
 		C4F096452F7489C700C1852B /* helper_functions.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = helper_functions.hpp; sourceTree = "<group>"; };
 		C4F0964A2F7B2FBC00C1852B /* ReadingTests.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = ReadingTests.hpp; sourceTree = "<group>"; };
 		C4F704F62EA6CB4500243874 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = SOURCE_ROOT; };
+		C4RTRIP12A1B2C3D4E5F6071 /* RoundTripTests.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = RoundTripTests.hpp; sourceTree = "<group>"; };
 		C4WERR012FF4608A007EE901 /* InvalidArgument.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = InvalidArgument.hpp; sourceTree = "<group>"; };
 		C4WERR032FF4608A007EE903 /* UnsupportedFormat.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = UnsupportedFormat.hpp; sourceTree = "<group>"; };
 		C4WERR052FF4608A007EE905 /* FileOpenFailure.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = FileOpenFailure.hpp; sourceTree = "<group>"; };
@@ -167,14 +169,6 @@
 				C4E4D40E2F9ABC230059CA2F /* utilities */,
 			);
 			path = tests;
-			sourceTree = "<group>";
-		};
-		C4RTRIP12A1B2C3D4E5F6070 /* round_trip */ = {
-			isa = PBXGroup;
-			children = (
-				C4RTRIP12A1B2C3D4E5F6071 /* RoundTripTests.hpp */,
-			);
-			path = round_trip;
 			sourceTree = "<group>";
 		};
 		C40B8FC52F73233100FDFC86 /* writing */ = {
@@ -238,7 +232,9 @@
 		C46085FE2F96C36A007F0361 /* decoding */ = {
 			isa = PBXGroup;
 			children = (
-				C46085F12F8EC5DB007F0361 /* SampleDecoding.hpp */,
+				C4EDA957302A749700EB8822 /* SampleDecoding.hpp */,
+				C46085F12F8EC5DB007F0361 /* FullContainer.hpp */,
+				C4EDA956302A71B300EB8822 /* PackedLPCM.hpp */,
 			);
 			path = decoding;
 			sourceTree = "<group>";
@@ -369,6 +365,14 @@
 				C4AEEB212FFF5033007EE803 /* trailing_bytes */,
 			);
 			path = reading;
+			sourceTree = "<group>";
+		};
+		C4RTRIP12A1B2C3D4E5F6070 /* round_trip */ = {
+			isa = PBXGroup;
+			children = (
+				C4RTRIP12A1B2C3D4E5F6071 /* RoundTripTests.hpp */,
+			);
+			path = round_trip;
 			sourceTree = "<group>";
 		};
 		C4WERR022FF4608A007EE902 /* invalid_argument */ = {
