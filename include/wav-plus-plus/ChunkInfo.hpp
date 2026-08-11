@@ -54,7 +54,7 @@ struct DataChunk
     uint32_t size {0};
     // Location of the first byte of the first sample.
     // (-1 means data chunk hasn't been encountered yet):
-    std::int64_t payloadOffset {-1};
+    std::int64_t firstSampleOffset {-1};
 };
 
 struct FactChunk

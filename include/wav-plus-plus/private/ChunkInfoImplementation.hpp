@@ -487,8 +487,8 @@ inline void ChunkInfo::ReadDataChunkSizeAndSkipSamples (std::FILE * in, std::uin
                          "Inconsistent value: size of data chunk is not divisible by block align.");
     }
 
-    data.payloadOffset = tell (in);
-    if (data.payloadOffset == -1) throw ReadError (ReadErrorCode::FileTellFailed, "Failed to get current file position for data chunk.");
+    data.firstSampleOffset = tell (in);
+    if (data.firstSampleOffset == -1) throw ReadError (ReadErrorCode::FileTellFailed, "Failed to get current file position for data chunk.");
 
     // SkipChunk() detects and carefully skips potential padding byte.
     // (Best not to add it in ahead of time since that could result in overflow.)
