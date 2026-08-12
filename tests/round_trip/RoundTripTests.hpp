@@ -8,6 +8,7 @@
 #include "../../include/wav-plus-plus/Writer.hpp"
 
 #include <algorithm>
+#include <cassert>
 #include <cstddef>
 #include <cstdint>
 #include <cstdio>

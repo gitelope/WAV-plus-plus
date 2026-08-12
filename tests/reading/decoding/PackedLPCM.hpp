@@ -4,10 +4,9 @@
 #ifndef wavplusplus_tests_PackedLPCM_hpp
 #define wavplusplus_tests_PackedLPCM_hpp
 
-#include "../reading_helper_functions.hpp"
-#include "../../../include/wav-plus-plus/Reader.hpp"
-#include "../../helper_functions.hpp"
-
+#include <algorithm>
+#include <cassert>
+#include <cstdint>
 #include <cstdio>
 #include <format>
 #include <string>

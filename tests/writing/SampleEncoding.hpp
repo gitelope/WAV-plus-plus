@@ -4,6 +4,7 @@
 #ifndef wavplusplus_tests_SampleEncoding_hpp
 #define wavplusplus_tests_SampleEncoding_hpp
 
+#include <cstdint>
 #include <cstdio>
 #include <fstream>
 #include <string>

@@ -6,6 +6,7 @@
 
 #include "../include/wav-plus-plus/Formats.hpp"
 
+#include <algorithm>
 #include <bit>
 #include <cassert>
 #include <cstddef>

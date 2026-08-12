@@ -4,6 +4,7 @@
 #ifndef wavplusplus_tests_writing_UnsupportedFormat_hpp
 #define wavplusplus_tests_writing_UnsupportedFormat_hpp
 
+#include <cstdint>
 #include <cstdio>
 
 inline void ChannelsExceedsMax (TestLog & log)

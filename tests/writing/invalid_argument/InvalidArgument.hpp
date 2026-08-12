@@ -4,6 +4,8 @@
 #ifndef wavplusplus_tests_writing_InvalidArgument_hpp
 #define wavplusplus_tests_writing_InvalidArgument_hpp
 
+#include <cstddef>
+#include <cstdint>
 #include <cstdio>
 #include <vector>
 
