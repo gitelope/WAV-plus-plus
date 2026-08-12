@@ -31,6 +31,8 @@ set (wav_plus_plus_test_headers
     reading/headers/rejection/generic.hpp
 
     reading/decoding/SampleDecoding.hpp
+    reading/decoding/FullContainer.hpp
+    reading/decoding/PackedLPCM.hpp
 
     reading/file_open/FileOpenFailure.hpp
 
