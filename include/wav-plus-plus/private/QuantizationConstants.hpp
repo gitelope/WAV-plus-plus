@@ -7,10 +7,13 @@
 namespace wav
 {
 
-inline constexpr double uint8Scale              {127}; // 2^7 - 1
-inline constexpr double uint8QuantizationOffset {128}; // 2^7
-inline constexpr double uint8Min                {  1};
-inline constexpr double uint8Max                {255}; // 2^8 - 1
+namespace quantization
+{
+
+inline constexpr double uint8Scale  {127}; // 2^7 - 1
+inline constexpr double uint8Offset {128}; // 2^7
+inline constexpr double uint8Min    {  1};
+inline constexpr double uint8Max    {255}; // 2^8 - 1
 
 inline constexpr double int16Scale { 32767}; //   2^15 - 1
 inline constexpr double int16Min   {-32767}; // -(2^15 - 1)
@@ -24,6 +27,22 @@ inline constexpr double int32Scale { 2147483647}; //   2^31 - 1
 inline constexpr double int32Min   {-2147483647}; // -(2^31 - 1)
 inline constexpr double int32Max   { 2147483647}; //   2^31 - 1
 
-} // namespace wav
+}
+
+namespace dequantization
+{
+
+inline constexpr double uint8Scale  {128}; // 2^7
+static constexpr double uint8Offset {128};
+
+inline constexpr double int16Scale  {32768}; // 2^15
+
+inline constexpr double int24Scale  {8388608}; // 2^23
+
+inline constexpr double int32Scale  {2147483648}; // 2^31
+
+}
+
+}
 
 #endif

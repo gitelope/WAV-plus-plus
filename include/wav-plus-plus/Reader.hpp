@@ -97,9 +97,6 @@ private:
     std::vector<double>  bufferFloatPCM64;
 
     void InitializeBuffer (uint32_t suggestedBufferSizeKB);
-    double normalization (uint16_t bitDepth); // divide LPCM (integer) values by return value to convert to normalized double
-
-    static constexpr double uint8DequantizationOffset {128.};
 
     // INTERLEAVED READING //////////////////////////////
     //
