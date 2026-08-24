@@ -108,7 +108,7 @@ if (PROJECT_IS_TOP_LEVEL)
         include/wav-plus-plus/private/FileInfoImplementation.hpp
         include/wav-plus-plus/private/FileOffset.hpp
         include/wav-plus-plus/private/FormatsImplementation.hpp
-        include/wav-plus-plus/private/QuantizationConstants.hpp
+        include/wav-plus-plus/private/QuantDequantConstants.hpp
         include/wav-plus-plus/private/ReaderImplementation.hpp
         include/wav-plus-plus/private/ReadingBytes.hpp
         include/wav-plus-plus/private/WriterImplementation.hpp

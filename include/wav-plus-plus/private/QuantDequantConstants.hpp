@@ -1,8 +1,8 @@
 // WAV++ (c) 2025-2026 David Adams
 // SPDX-License-Identifier: MIT
 
-#ifndef wavplusplus_QuantizationConstants_hpp
-#define wavplusplus_QuantizationConstants_hpp
+#ifndef wavplusplus_QuantDequantConstants_hpp
+#define wavplusplus_QuantDequantConstants_hpp
 
 namespace wav
 {

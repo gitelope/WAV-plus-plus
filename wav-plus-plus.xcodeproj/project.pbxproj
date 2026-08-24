@@ -103,7 +103,7 @@
 		C4B0EB1E2FF4610A007EE804 /* FileOpenFailure.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = FileOpenFailure.hpp; sourceTree = "<group>"; };
 		C4C641CC2F469567005545BE /* BufferSizing.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = BufferSizing.hpp; sourceTree = "<group>"; };
 		C4C641CD2F469567005545BE /* int24.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = int24.hpp; sourceTree = "<group>"; };
-		C4C641CE2F469567005545BE /* QuantizationConstants.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = QuantizationConstants.hpp; sourceTree = "<group>"; };
+		C4C641CE2F469567005545BE /* QuantDequantConstants.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = QuantDequantConstants.hpp; sourceTree = "<group>"; };
 		C4C641CF2F469567005545BE /* ReadingBytes.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = ReadingBytes.hpp; sourceTree = "<group>"; };
 		C4D146EC2F4E4667002DCA78 /* ReaderImplementation.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = ReaderImplementation.hpp; sourceTree = "<group>"; };
 		C4D146ED2F4E51B7002DCA78 /* WriterImplementation.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = WriterImplementation.hpp; sourceTree = "<group>"; };
@@ -333,7 +333,7 @@
 				C4D146EE2F4E584E002DCA78 /* ChunkInfoImplementation.hpp */,
 				C4C641CC2F469567005545BE /* BufferSizing.hpp */,
 				C4C641CD2F469567005545BE /* int24.hpp */,
-				C4C641CE2F469567005545BE /* QuantizationConstants.hpp */,
+				C4C641CE2F469567005545BE /* QuantDequantConstants.hpp */,
 				C4C641CF2F469567005545BE /* ReadingBytes.hpp */,
 				C4E4D40C2F9AA6150059CA2F /* Byteswap.hpp */,
 				C470C0272F6A058B00F3A7D1 /* AudioSummary.hpp */,

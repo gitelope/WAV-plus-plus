@@ -6,7 +6,7 @@
 
 #include "Byteswap.hpp"
 #include "FileOffset.hpp"
-#include "QuantizationConstants.hpp"
+#include "QuantDequantConstants.hpp"
 
 #include <algorithm>
 #include <bit>
