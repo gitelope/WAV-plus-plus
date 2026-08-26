@@ -1,8 +1,8 @@
 // WAV++ (c) 2025-2026 David Adams
 // SPDX-License-Identifier: MIT
 
-#ifndef wavplusplus_tests_PackedLPCM_hpp
-#define wavplusplus_tests_PackedLPCM_hpp
+#ifndef wavplusplus_tests_PaddedLPCM_hpp
+#define wavplusplus_tests_PaddedLPCM_hpp
 
 #include <algorithm>
 #include <cassert>
@@ -18,24 +18,18 @@ void WriteDataAndTest (std::string const &, std::vector<uint8_t> &, std::vector<
 
 struct TestCase
 {
-    std::vector<uint8_t> packed;
+    std::vector<uint8_t> padded;
     std::vector<float> expected;
     uint16_t validBitDepth {0};
     uint16_t containerSizeInBits {0};
 };
 
-// Valid bits of packed LPCM samples are assumed to be LSB-aligned inside their containers.
-// The stored signed integer is sign-extended to the container width.
-//
-// (The stored value is the same when interpreted in terms of full container size as
-// it would be if interpreted in a container that was truncated according to the number of
-// valid bits.)
-//
-// Dequantization: sample_float = integer / 2^(validBits - 1).
+// The meaningful bits of padded LPCM samples are MSB-aligned
+// inside their containers. The extra lower bits are zero padding.
 
-inline void TestPackedLPCM (TestLog & log)
+inline void TestPaddedLPCM (TestLog & log)
 {
-    const auto filename {"test_packed_lpcm.wav"};
+    const auto filename {"test_padded_lpcm.wav"};
     constexpr uint16_t channels {1};
     constexpr uint32_t sampleRate {44100};
 
@@ -107,7 +101,7 @@ inline void TestPackedLPCM (TestLog & log)
     {
         const auto & expected {testCase.expected};
         const auto frames {static_cast<uint32_t> (expected.size())};
-        const auto & packed {testCase.packed};
+        const auto & padded {testCase.padded};
         const auto validBitDepth {testCase.validBitDepth};
         const auto containerSizeInBits {testCase.containerSizeInBits};
 
@@ -118,7 +112,7 @@ inline void TestPackedLPCM (TestLog & log)
                                                 channels, sampleRate, frames,
                                                 wav::SpeakerConfiguration::Unassigned);
 
-        WriteDataAndTest (filename, bytes, packed,
+        WriteDataAndTest (filename, bytes, padded,
                           log, expected, validBitDepth, containerSizeInBits, fileFormat);
     }
 }
@@ -170,7 +164,7 @@ inline void WriteDataAndTest (std::string const & filename,
             readCount == expected.size() &&
             areEqual (in, expected)
         };
-        log.Record (result, std::format ("Packed LPCM - {}|{}, {}, {}", validBitDepth, containerSizeInBits, fileFormat, interleaved ? "interleaved" : "deinterleaved"));
+        log.Record (result, std::format ("Padded LPCM - {}|{}, {}, {}", validBitDepth, containerSizeInBits, fileFormat, interleaved ? "interleaved" : "deinterleaved"));
     }
 
     std::remove (filename.c_str());

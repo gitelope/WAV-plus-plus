@@ -32,7 +32,7 @@ set (wav_plus_plus_test_headers
 
     reading/decoding/SampleDecoding.hpp
     reading/decoding/FullContainer.hpp
-    reading/decoding/PackedLPCM.hpp
+    reading/decoding/PaddedLPCM.hpp
 
     reading/file_open/FileOpenFailure.hpp
 

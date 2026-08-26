@@ -10,7 +10,7 @@
 inline void TestSampleDecoding (TestLog & log)
 {
     TestFullContainer (log); // the bulk of the tests are here
-    TestPackedLPCM (log);
+    TestPaddedLPCM (log);
 }
 
 #endif

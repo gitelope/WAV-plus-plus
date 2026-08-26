@@ -43,9 +43,11 @@ inline void TestWAVEFORMATEXTENSIBLE (TestLog & log)
         {wav::ExportFormat::FloatPCM_32,  32, wav::SpeakerConfiguration::Seven_Point_One},
         {wav::ExportFormat::FloatPCM_64,  64, wav::SpeakerConfiguration::Unassigned},
 
-        {wav::ExportFormat::LinearPCM_16, 12, wav::SpeakerConfiguration::Stereo},          // 12 bits packed in 16
-        {wav::ExportFormat::LinearPCM_24, 20, wav::SpeakerConfiguration::Five_Point_One},  // 20 bits packed in 24
-        {wav::ExportFormat::LinearPCM_32, 24, wav::SpeakerConfiguration::Seven_Point_One}, // 24 bits packed in 32
+        // padded LPCM
+        {wav::ExportFormat::LinearPCM_8,   6, wav::SpeakerConfiguration::Unassigned},      //  6 bits in  8
+        {wav::ExportFormat::LinearPCM_16, 12, wav::SpeakerConfiguration::Stereo},          // 12 bits in 16
+        {wav::ExportFormat::LinearPCM_24, 20, wav::SpeakerConfiguration::Five_Point_One},  // 20 bits in 24
+        {wav::ExportFormat::LinearPCM_32, 24, wav::SpeakerConfiguration::Seven_Point_One}, // 24 bits in 32
     };
 
     for (uint16_t channels = 1; channels <= 3; ++channels)
@@ -89,7 +91,7 @@ inline void TestWAVEFORMATEXTENSIBLE (TestLog & log)
 
             std::string label {"WAVEFORMATEXTENSIBLE " + exportFormatShortPrefix (testCase.encoding)};
             if (validBitDepth < containerSizeInBits)
-                label += std::format (" ({} bits packed in {})", validBitDepth, containerSizeInBits);
+                label += std::format (" ({} bits stored in {} bits)", validBitDepth, containerSizeInBits);
             label += std::format (", {}ch", channels);
             assert (containerSizeInBits % 8 == 0);
             if ((frames * channels * containerSizeInBits / 8U) % 2) label += " (padded)";

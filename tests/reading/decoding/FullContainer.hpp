@@ -11,7 +11,7 @@
 
 // Tests reading all the supported formats both interleaved and deinterleaved.
 // Covers valid bit depth equals container size.
-// Packed LPCM tests are in a separate header.
+// Padded LPCM tests are in a separate header.
 
 // build WAVEFORMATEX with specific data in the data chunk
 std::vector<uint8_t> buildWAVEFORMATEX (wav::ExportFormat encoding, uint16_t channels, uint32_t sampleRate, std::vector<uint8_t> const & data);
