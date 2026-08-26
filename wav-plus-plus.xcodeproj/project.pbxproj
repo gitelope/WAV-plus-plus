@@ -79,6 +79,8 @@
 		C4280E432FD0D70300A4A7BC /* OptionalChunks.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = OptionalChunks.hpp; sourceTree = "<group>"; };
 		C4280E442FD0D89A00A4A7BC /* fact.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = fact.hpp; sourceTree = "<group>"; };
 		C4280E452FD0D8AB00A4A7BC /* PEAK.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = PEAK.hpp; sourceTree = "<group>"; };
+		C452F8FC303F941E00749AF9 /* dequantization.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = dequantization.md; sourceTree = "<group>"; };
+		C452F8FD303F941E00749AF9 /* quantization.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = quantization.md; sourceTree = "<group>"; };
 		C46085F02F8EC53B007F0361 /* HeaderParsing.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = HeaderParsing.hpp; sourceTree = "<group>"; };
 		C46085F12F8EC5DB007F0361 /* FullContainer.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = FullContainer.hpp; sourceTree = "<group>"; };
 		C46085FC2F96C1A5007F0361 /* reading_helper_functions.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = reading_helper_functions.hpp; sourceTree = "<group>"; };
@@ -282,6 +284,8 @@
 				C416D40E2FB3A5B200C2E249 /* CMakeLists.txt */,
 				C410452C2EF1CD5E0013E245 /* include */,
 				C4F704F62EA6CB4500243874 /* README.md */,
+				C452F8FD303F941E00749AF9 /* quantization.md */,
+				C452F8FC303F941E00749AF9 /* dequantization.md */,
 				C48AB67A2F636A5E00C70CDA /* examples */,
 				C40B8FBD2F7321A600FDFC86 /* tests */,
 				C499DB4C2E1341E700A88D60 /* Products */,
