@@ -113,7 +113,7 @@
 		C4E4D40C2F9AA6150059CA2F /* Byteswap.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Byteswap.hpp; sourceTree = "<group>"; };
 		C4E4D40F2F9ABC410059CA2F /* Byteswap.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Byteswap.hpp; sourceTree = "<group>"; };
 		C4E4D4102F9ABE150059CA2F /* UtilitiesTests.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = UtilitiesTests.hpp; sourceTree = "<group>"; };
-		C4EDA956302A71B300EB8822 /* PackedLPCM.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = PackedLPCM.hpp; sourceTree = "<group>"; };
+		C4EDA956302A71B300EB8822 /* PaddedLPCM.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = PaddedLPCM.hpp; sourceTree = "<group>"; };
 		C4EDA957302A749700EB8822 /* SampleDecoding.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = SampleDecoding.hpp; sourceTree = "<group>"; };
 		C4F096452F7489C700C1852B /* helper_functions.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = helper_functions.hpp; sourceTree = "<group>"; };
 		C4F0964A2F7B2FBC00C1852B /* ReadingTests.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = ReadingTests.hpp; sourceTree = "<group>"; };
@@ -234,7 +234,7 @@
 			children = (
 				C4EDA957302A749700EB8822 /* SampleDecoding.hpp */,
 				C46085F12F8EC5DB007F0361 /* FullContainer.hpp */,
-				C4EDA956302A71B300EB8822 /* PackedLPCM.hpp */,
+				C4EDA956302A71B300EB8822 /* PaddedLPCM.hpp */,
 			);
 			path = decoding;
 			sourceTree = "<group>";

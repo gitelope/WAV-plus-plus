@@ -5,7 +5,7 @@
 #define wavplusplus_tests_SampleDecoding_hpp
 
 #include "FullContainer.hpp"
-#include "PackedLPCM.hpp"
+#include "PaddedLPCM.hpp"
 
 inline void TestSampleDecoding (TestLog & log)
 {
