@@ -293,7 +293,7 @@ inline std::vector<uint8_t> buildWAVEFORMATEX (uint16_t formatCode, uint16_t val
     PushRiffHeader (wav, formatChunkSize, dataChunkSize);
 
     // fmt
-    PushFmtHeader        (wav, formatChunkSize);
+    PushFmtHeader          (wav, formatChunkSize);
     Push_WAVEFORMAT_Fmt    (wav, formatCode, channels, sampleRate, byteRate, blockAlign); // 14 bytes
     Push_PCMWAVEFORMAT_Fmt (wav, validBitDepth);                                          //  2 bytes
     Push_WAVEFORMATEX_Fmt  (wav, cbSize);                                                 //  2 bytes
@@ -338,7 +338,7 @@ inline std::vector<uint8_t> buildWAVEFORMATEXTENSIBLE (wav::GUID const & subform
     PushRiffHeader (wav, formatChunkSize, dataChunkSize);
 
     // fmt
-    PushFmtHeader               (wav, formatChunkSize);
+    PushFmtHeader                 (wav, formatChunkSize);
     Push_WAVEFORMAT_Fmt           (wav, formatCode, channels, sampleRate, byteRate, blockAlign); // 14 bytes
     Push_PCMWAVEFORMAT_Fmt        (wav, containerSizeInBits);                                    //  2 bytes
     Push_WAVEFORMATEX_Fmt         (wav, cbSize);                                                 //  2 bytes

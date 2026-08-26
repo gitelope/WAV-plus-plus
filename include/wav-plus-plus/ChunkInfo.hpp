@@ -141,8 +141,6 @@ private:
     void ValidateFormatChunkAndComputeBitDepthAndContainerSize();
     void ValidateAfterParsing();
 
-    void DeriveBitDepthAndContainerSize();
-
     bool fmtChunkEncountered  {false};
     bool dataChunkEncountered {false};
     bool factChunkEncountered {false};
