@@ -61,7 +61,7 @@ struct FactChunk
 {
     std::string id {"fact"};
     uint32_t size {0};
-    uint32_t fileSize {0};
+    uint32_t frameCount {0};
     bool present {false};
 };
 

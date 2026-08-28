@@ -31,9 +31,9 @@ inline void TestFact (TestLog & log)
     try
     {
         wav::ChunkInfo info {filename};
-        Compare (info.fact.present  == true,   "fact chunk not detected",  failures);
-        Compare (info.fact.size     == 4,      "unexpected fact.size",     failures);
-        Compare (info.fact.fileSize == frames, "unexpected fact.fileSize", failures);
+        Compare (info.fact.present    == true,   "fact chunk not detected",    failures);
+        Compare (info.fact.size       == 4,      "unexpected fact.size",       failures);
+        Compare (info.fact.frameCount == frames, "unexpected fact.frameCount", failures);
     }
     catch (wav::ReadError const & e)
     {

@@ -355,7 +355,7 @@ inline void ChunkInfo::ReadFactChunk (std::FILE * in, std::uint32_t chunkSize)
     }
     fact.size = chunkSize;
 
-    fact.fileSize = uint32_le (in);
+    fact.frameCount = uint32_le (in);
     fact.present = true;
 }
 
@@ -583,7 +583,7 @@ inline std::ostream & operator<< (std::ostream & os, FactChunk const & fact)
     << "----------" << '\n'
     << "id: " << fact.id << '\n'
     << "chunk size: " << fact.size << '\n'
-    << "file size: " << fact.fileSize;
+    << "file size (in frames): " << fact.frameCount;
 }
 
 inline std::ostream & operator<< (std::ostream & os, PeakChunk const & peak)
