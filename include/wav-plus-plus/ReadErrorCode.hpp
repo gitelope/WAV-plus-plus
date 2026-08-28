@@ -19,9 +19,9 @@ enum class ReadErrorCategory
 
 enum class ReadErrorCode
 {
+    BitsPerSampleChannelsBlockAlignMismatch,
     BlockAlignZero,
     BlockAlignNotDivisibleByChannels,
-    BitDepthZero,
     ChannelsZero,
     ChannelsExceedsMax,
     ChannelsRequestedExceedsChannelCount,
@@ -29,7 +29,6 @@ enum class ReadErrorCode
     DataChunkSizeNotDivisibleByBlockAlign,
     DeclaredChunkEndExceedsRiffEnd,
     DestinationFrameSizeIsFractional,
-    ExtensibleBitsPerSampleChannelsBlockAlignMismatch,
     ExtensibleFmtSizeCodeMismatch,
     ExtensibleSubformatNotSupported,
     FactChunkSizeNotFour,
@@ -37,12 +36,10 @@ enum class ReadErrorCode
     FileReadFailed,
     FileSeekFailed,
     FileTellFailed,
-    FloatBitDepthNotEqualToContainerSize,
     FramesRequestedExceedsDestinationSize,
     IncompleteChunkHeader,
     IncompleteRiffHeader,
     InvalidCbSize,
-    LinearBitDepthExceedsContainerSize,
     MissingDataChunk,
     MissingFmtChunk,
     MultipleDataChunks,
@@ -63,6 +60,9 @@ enum class ReadErrorCode
     UnsupportedFmtChunkSize,
     UnsupportedFormatCode,
     UnsupportedLPCMContainerSize,
+    ValidBitsPerSampleExceedsLinearContainerSize,
+    ValidBitsPerSampleNotEqualToFloatContainerSize,
+    ValidBitsPerSampleZero,
 
     // InternalError should never be thrown if program is working correctly.
     // Kind of like an assert for release builds. Can be caught and logged
@@ -80,36 +80,36 @@ constexpr ReadErrorCategory categoryFor (ReadErrorCode code)
         case ReadErrorCode::FileTellFailed: return ReadErrorCategory::IOFailure;
         case ReadErrorCode::FileReadFailed: return ReadErrorCategory::IOFailure;
 
-        case ReadErrorCode::BlockAlignZero:                                    return ReadErrorCategory::InvalidFile;
-        case ReadErrorCode::BlockAlignNotDivisibleByChannels:                  return ReadErrorCategory::InvalidFile;
-        case ReadErrorCode::BitDepthZero:                                      return ReadErrorCategory::InvalidFile;
-        case ReadErrorCode::ChannelsZero:                                      return ReadErrorCategory::InvalidFile;
-        case ReadErrorCode::DataChunkBeforeFmtChunk:                           return ReadErrorCategory::InvalidFile;
-        case ReadErrorCode::DataChunkSizeNotDivisibleByBlockAlign:             return ReadErrorCategory::InvalidFile;
-        case ReadErrorCode::DeclaredChunkEndExceedsRiffEnd:                    return ReadErrorCategory::InvalidFile;
-        case ReadErrorCode::ExtensibleBitsPerSampleChannelsBlockAlignMismatch: return ReadErrorCategory::InvalidFile;
-        case ReadErrorCode::ExtensibleFmtSizeCodeMismatch:                     return ReadErrorCategory::InvalidFile;
-        case ReadErrorCode::FactChunkSizeNotFour:                              return ReadErrorCategory::InvalidFile;
-        case ReadErrorCode::FloatBitDepthNotEqualToContainerSize:              return ReadErrorCategory::InvalidFile;
-        case ReadErrorCode::IncompleteChunkHeader:                             return ReadErrorCategory::InvalidFile;
-        case ReadErrorCode::IncompleteRiffHeader:                              return ReadErrorCategory::InvalidFile;
-        case ReadErrorCode::InvalidCbSize:                                     return ReadErrorCategory::InvalidFile;
-        case ReadErrorCode::LinearBitDepthExceedsContainerSize:                return ReadErrorCategory::InvalidFile;
-        case ReadErrorCode::MissingDataChunk:                                  return ReadErrorCategory::InvalidFile;
-        case ReadErrorCode::MissingFmtChunk:                                   return ReadErrorCategory::InvalidFile;
-        case ReadErrorCode::MultipleDataChunks:                                return ReadErrorCategory::InvalidFile;
-        case ReadErrorCode::MultipleFactChunks:                                return ReadErrorCategory::InvalidFile;
-        case ReadErrorCode::MultipleFmtChunks:                                 return ReadErrorCategory::InvalidFile;
-        case ReadErrorCode::MultiplePeakChunks:                                return ReadErrorCategory::InvalidFile;
-        case ReadErrorCode::MultipleRiffChunks:                                return ReadErrorCategory::InvalidFile;
-        case ReadErrorCode::PeakChunkBeforeFmtChunk:                           return ReadErrorCategory::InvalidFile;
-        case ReadErrorCode::PeakChunkSizeMismatchesChannels:                   return ReadErrorCategory::InvalidFile;
-        case ReadErrorCode::PeakChunkSizeTooSmallForVersionField:              return ReadErrorCategory::InvalidFile;
-        case ReadErrorCode::ReadPastEndOfVector:                               return ReadErrorCategory::InvalidFile;
-        case ReadErrorCode::RiffEndExceedsFileSize:                            return ReadErrorCategory::InvalidFile;
-        case ReadErrorCode::RiffIdNotFound:                                    return ReadErrorCategory::InvalidFile;
-        case ReadErrorCode::RiffSubformatNotWave:                              return ReadErrorCategory::InvalidFile;
-        case ReadErrorCode::SampleRateZero:                                    return ReadErrorCategory::InvalidFile;
+        case ReadErrorCode::BitsPerSampleChannelsBlockAlignMismatch:        return ReadErrorCategory::InvalidFile;
+        case ReadErrorCode::BlockAlignZero:                                 return ReadErrorCategory::InvalidFile;
+        case ReadErrorCode::BlockAlignNotDivisibleByChannels:               return ReadErrorCategory::InvalidFile;
+        case ReadErrorCode::ChannelsZero:                                   return ReadErrorCategory::InvalidFile;
+        case ReadErrorCode::DataChunkBeforeFmtChunk:                        return ReadErrorCategory::InvalidFile;
+        case ReadErrorCode::DataChunkSizeNotDivisibleByBlockAlign:          return ReadErrorCategory::InvalidFile;
+        case ReadErrorCode::DeclaredChunkEndExceedsRiffEnd:                 return ReadErrorCategory::InvalidFile;
+        case ReadErrorCode::ExtensibleFmtSizeCodeMismatch:                  return ReadErrorCategory::InvalidFile;
+        case ReadErrorCode::FactChunkSizeNotFour:                           return ReadErrorCategory::InvalidFile;
+        case ReadErrorCode::IncompleteChunkHeader:                          return ReadErrorCategory::InvalidFile;
+        case ReadErrorCode::IncompleteRiffHeader:                           return ReadErrorCategory::InvalidFile;
+        case ReadErrorCode::InvalidCbSize:                                  return ReadErrorCategory::InvalidFile;
+        case ReadErrorCode::MissingDataChunk:                               return ReadErrorCategory::InvalidFile;
+        case ReadErrorCode::MissingFmtChunk:                                return ReadErrorCategory::InvalidFile;
+        case ReadErrorCode::MultipleDataChunks:                             return ReadErrorCategory::InvalidFile;
+        case ReadErrorCode::MultipleFactChunks:                             return ReadErrorCategory::InvalidFile;
+        case ReadErrorCode::MultipleFmtChunks:                              return ReadErrorCategory::InvalidFile;
+        case ReadErrorCode::MultiplePeakChunks:                             return ReadErrorCategory::InvalidFile;
+        case ReadErrorCode::MultipleRiffChunks:                             return ReadErrorCategory::InvalidFile;
+        case ReadErrorCode::PeakChunkBeforeFmtChunk:                        return ReadErrorCategory::InvalidFile;
+        case ReadErrorCode::PeakChunkSizeMismatchesChannels:                return ReadErrorCategory::InvalidFile;
+        case ReadErrorCode::PeakChunkSizeTooSmallForVersionField:           return ReadErrorCategory::InvalidFile;
+        case ReadErrorCode::ReadPastEndOfVector:                            return ReadErrorCategory::InvalidFile;
+        case ReadErrorCode::RiffEndExceedsFileSize:                         return ReadErrorCategory::InvalidFile;
+        case ReadErrorCode::RiffIdNotFound:                                 return ReadErrorCategory::InvalidFile;
+        case ReadErrorCode::RiffSubformatNotWave:                           return ReadErrorCategory::InvalidFile;
+        case ReadErrorCode::SampleRateZero:                                 return ReadErrorCategory::InvalidFile;
+        case ReadErrorCode::ValidBitsPerSampleZero:                         return ReadErrorCategory::InvalidFile;
+        case ReadErrorCode::ValidBitsPerSampleExceedsLinearContainerSize:   return ReadErrorCategory::InvalidFile;
+        case ReadErrorCode::ValidBitsPerSampleNotEqualToFloatContainerSize: return ReadErrorCategory::InvalidFile;
 
         case ReadErrorCode::ChannelsRequestedExceedsChannelCount:   return ReadErrorCategory::InvalidArgument;
         case ReadErrorCode::DestinationFrameSizeIsFractional:       return ReadErrorCategory::InvalidArgument;

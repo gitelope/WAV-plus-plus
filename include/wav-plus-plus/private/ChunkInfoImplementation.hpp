@@ -216,66 +216,6 @@ inline void ChunkInfo::ReadFormatChunk (std::FILE * in, std::uint32_t chunkSize)
     fmtChunkEncountered = true;
 }
 
-inline void ChunkInfo::DeriveBitDepthAndContainerSize()
-{
-    // SAMPLE SIZE AND SAMPLE CONTAINER SIZE
-    //
-    // According to the non-formally defined WAV standard, WAVEFORMATEXTENSIBLE
-    // is the only format to be used to pack linear PCM samples into larger
-    // containers. bitsPerSample represents the container size while
-    // validBitsPerSample represents the number of meaningful bits, a.k.a the
-    // sample bit depth.
-    //
-    // While PCMWAVEFORMAT and WAVEFORMATEX contain bitsPerSample, they do not
-    // have a validBitsPerSample. However, due to the fact that bitsPerSample
-    // is redundant for linear PCM audio
-    // –it can be calculated as 8 * blockAlign / channels–
-    // it is possible to pack linear PCM samples into larger containers by
-    // interpreting bitsPerSample as the number of valid bits per sample and
-    // 8 * blockAlign / channels as the container size.
-    //
-    // (WAVEFORMAT, unlikely to be enountered, does not have a bitsPerSample and
-    // thus the container size and the number of valid bits are one and the same
-    // and calculated as 8 * blockAlign / channels.)
-    //
-    // The following scheme shows how WAV++ determines sample bit depth and sample
-    // container size in order to correctly parse both packed WAV files following
-    // the standard (uses WAVEFORMATEXTENSIBLE) and WAV files encoded using the
-    // non-standard (uses PCMWAVEFORMAT and WAVEFORMATEX) method.
-    //
-    // format                 sample size                  container size
-    //
-    // WAVEFORMAT             8 * blockAlign / channels    8 * blockAlign / channels
-    // PCMWAVEFORMAT          bitsPerSample                8 * blockAlign / channels
-    // WAVEFORMATEX           bitsPerSample                8 * blockAlign / channels
-    // WAVEFORMATEXTENSIBLE   validBitsPerSample           8 * blockAlign / channels (= bitsPerSample)
-    //
-    // For WAVEFORMATEXTENSIBLE, 8 * blockAlign / channels should equal bitsPerSample.
-
-    containerSize = static_cast<std::uint16_t> (8u * format.blockAlign / format.channels);
-
-    if (format.size == FormatChunkSize::WAVEFORMAT)
-    {
-        bitDepth = containerSize;
-    }
-    else if (format.size == FormatChunkSize::PCMWAVEFORMAT)
-    {
-        bitDepth = format.bitsPerSample;
-    }
-    else if (format.size == FormatChunkSize::WAVEFORMATEX)
-    {
-        bitDepth = format.bitsPerSample;
-    }
-    else if (isExtensible)
-    {
-        bitDepth = format.validBitsPerSample;
-    }
-    else
-    {
-        assert (false);
-        throw ReadError (ReadErrorCode::InternalError, "Internal error (should have been caught earlier): Unsupported fmt chunk size.");
-    }
-}
 inline void ChunkInfo::ValidateFormatChunkAndComputeBitDepthAndContainerSize()
 {
     // WAVEFORMAT, PCMWAVEFORMAT, WAVEFORMATEX, and WAVEFORMATEXTENSIBLE
@@ -321,10 +261,14 @@ inline void ChunkInfo::ValidateFormatChunkAndComputeBitDepthAndContainerSize()
         throw ReadError (ReadErrorCode::BlockAlignNotDivisibleByChannels, "Invalid value: block align must be divisible by channels.");
     }
 
-    // PCMWAVEFORMAT, WAVEFORMATEX, and WAVEFORMATEXTENSIBLE
-    // Instead of validating bitsPerSample here, validate it indirectly
-    // later on as either bit depth (PCMWAVEFORMAT, WAVEFORMATEX) or
-    // container size later on (WAVEFORMATEXTENSIBLE) once those are derived.
+    containerSize = static_cast<std::uint16_t> (8u * format.blockAlign / format.channels);
+
+    // check that bitsPerSample equals the container size (derived from blockAlign and channels)
+    if ((format.size == FormatChunkSize::PCMWAVEFORMAT || format.size == FormatChunkSize::WAVEFORMATEX || isExtensible)
+        && format.bitsPerSample != containerSize)
+    {
+        throw ReadError (ReadErrorCode::BitsPerSampleChannelsBlockAlignMismatch, "bitsPerSample, when present, should equal container size (8 * blockAlign / channels)");
+    }
 
     // WAVEFORMATEX and WAVEFORMATEXTENSIBLE
     // cbSize
@@ -341,8 +285,10 @@ inline void ChunkInfo::ValidateFormatChunkAndComputeBitDepthAndContainerSize()
     // WAVEFORMATEXTENSIBLE only
     if (isExtensible)
     {
-        // Validate channel mask? What's the max?
-
+        if (format.validBitsPerSample == 0)
+        {
+            throw ReadError (ReadErrorCode::ValidBitsPerSampleZero, "valid bits per sample must be greater than 0.");
+        }
         if (format.subFormat != ExtensibleFormat::LinearPCM && format.subFormat != ExtensibleFormat::FloatPCM)
         {
             throw ReadError (ReadErrorCode::ExtensibleSubformatNotSupported, "Extensible subformat not supported: " + format.subFormat.str());
@@ -356,10 +302,6 @@ inline void ChunkInfo::ValidateFormatChunkAndComputeBitDepthAndContainerSize()
         throw ReadError (ReadErrorCode::InternalError, "Internal error (should have been caught earlier): file should either be float or linear PCM.");
     }
 
-    // Derive bit depth and container size using format chunk size/format
-    // and WAV++'s permissive LPCM bit-packing rules.
-    DeriveBitDepthAndContainerSize();
-
     // container size checks
     if (isLinear && containerSize != 8u && containerSize != 16u && containerSize != 24u && containerSize != 32u)
     {
@@ -370,25 +312,32 @@ inline void ChunkInfo::ValidateFormatChunkAndComputeBitDepthAndContainerSize()
         throw ReadError (ReadErrorCode::UnsupportedFloatContainerSize,
                          std::format ("Unsupported float PCM sample width: {}", containerSize));
     }
-    if (isExtensible && format.bitsPerSample != containerSize)
+
+    // WAVEFORMATEXTENSIBLE only
+    if (isExtensible)
     {
-        throw ReadError (ReadErrorCode::ExtensibleBitsPerSampleChannelsBlockAlignMismatch, "Extensible files should have a bitsPerSample equal to 8 * blockAlign / channels");
+        if (isFloat && format.validBitsPerSample != containerSize)
+        {
+            throw ReadError (ReadErrorCode::ValidBitsPerSampleNotEqualToFloatContainerSize,
+                             std::format ("Extensible's validBitsPerSample ({}) and container size ({}) should be equal for float audio.", format.validBitsPerSample, containerSize));
+        }
+        if (isLinear && format.validBitsPerSample > containerSize)
+        {
+            throw ReadError (ReadErrorCode::ValidBitsPerSampleExceedsLinearContainerSize,
+                             std::format ("Extensible's validBitsPerSample ({}) must be <= container size ({}) for linear audio.", format.validBitsPerSample, containerSize));
+        }
     }
 
-    // bit depth checks
-    if (bitDepth == 0)
+    if (!isExtensible) // WAVEFORMAT, PCMWAVEFORMAT, WAVEFORMATEX
     {
-        throw ReadError (ReadErrorCode::BitDepthZero, "bit depth must be greater than 0.");
+        bitDepth = containerSize;
     }
-    if (isFloat && bitDepth != containerSize)
+    else // WAVEFORMATEXTENSIBLE
     {
-        throw ReadError (ReadErrorCode::FloatBitDepthNotEqualToContainerSize,
-                         std::format ("Bit depth ({}) and container size ({}) should be equal for float audio.", bitDepth, containerSize));
-    }
-    if (isLinear && bitDepth > containerSize)
-    {
-        throw ReadError (ReadErrorCode::LinearBitDepthExceedsContainerSize,
-                         std::format ("Bit depth ({}) must be <= container size ({}).", bitDepth, containerSize));
+        // bitDepth <= containerSize
+        // Allows for padded LPCM where the number of meaningful bits is less than the container width.
+        // Samples are left-justified (occupy the high bits) with zero padding in the lowest leftover bits.
+        bitDepth = format.validBitsPerSample;
     }
 }
 

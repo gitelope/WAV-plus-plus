@@ -7,6 +7,7 @@
 #include "BufferSizing.hpp"
 #include "Byteswap.hpp"
 #include "FileOffset.hpp"
+#include "QuantDequantConstants.hpp"
 
 #include <algorithm>
 #include <bit>
@@ -153,8 +154,8 @@ void Reader::ReadLPCMU8 (T * destination, size_t totalSamplesToRead)
     auto & buffer {bufferLPCMU8};
     constexpr size_t bytesPerSample {1};
 
-    constexpr double offset {uint8DequantizationOffset};
-    const double scale      {normalization (bitDepth())};
+    constexpr double offset {dequantization::uint8Offset};
+    constexpr double scale  {dequantization::uint8Scale};
 
     size_t samplesRemaining {totalSamplesToRead};
     size_t writePosition {0};
@@ -185,7 +186,7 @@ void Reader::ReadLPCM16 (T * destination, size_t totalSamplesToRead)
     auto & buffer {bufferLPCM16};
     constexpr size_t bytesPerSample {2};
 
-    const double scale {normalization (bitDepth())};
+    constexpr double scale {dequantization::int16Scale};
 
     size_t samplesRemaining {totalSamplesToRead};
     size_t writePosition {0};
@@ -225,7 +226,7 @@ void Reader::ReadLPCM24 (T * destination, size_t totalSamplesToRead)
     auto & buffer {bufferLPCM24};
     constexpr size_t bytesPerSample {3};
 
-    const double scale {normalization (bitDepth())};
+    constexpr double scale {dequantization::int24Scale};
 
     size_t samplesRemaining {totalSamplesToRead};
     size_t writePosition {0};
@@ -265,7 +266,7 @@ void Reader::ReadLPCM32 (T * destination, size_t totalSamplesToRead)
     auto & buffer {bufferLPCM32};
     constexpr size_t bytesPerSample {4};
 
-    const double scale {normalization (bitDepth())};
+    constexpr double scale {dequantization::int32Scale};
 
     size_t samplesRemaining {totalSamplesToRead};
     size_t writePosition {0};
@@ -460,8 +461,8 @@ void Reader::ReadLPCMU8 (T ** const destinations, size_t channelsToRead, size_t 
     const size_t framesPerBuffer {buffer.size() / sourceChannels};
     assert (framesPerBuffer > 0);
 
-    const double offset {uint8DequantizationOffset};
-    const double scale  {normalization (bitDepth())};
+    constexpr double offset {dequantization::uint8Offset};
+    constexpr double scale  {dequantization::uint8Scale};
 
     size_t framesRemaining {totalFramesToRead};
     size_t baseFrame {0};
@@ -503,7 +504,7 @@ void Reader::ReadLPCM16 (T ** const destinations, size_t channelsToRead, size_t 
     const size_t framesPerBuffer {buffer.size() / sourceChannels};
     assert (framesPerBuffer > 0);
 
-    const double scale {normalization (bitDepth())};
+    constexpr double scale {dequantization::int16Scale};
 
     size_t framesRemaining {totalFramesToRead};
     size_t baseFrame {0};
@@ -553,7 +554,7 @@ void Reader::ReadLPCM24 (T ** const destinations, size_t channelsToRead, size_t 
     const size_t framesPerBuffer {buffer.size() / sourceChannels};
     assert (framesPerBuffer > 0);
 
-    const double scale {normalization (bitDepth())};
+    constexpr double scale {dequantization::int24Scale};
 
     size_t framesRemaining {totalFramesToRead};
     size_t baseFrame {0};
@@ -603,7 +604,7 @@ void Reader::ReadLPCM32 (T ** const destinations, size_t channelsToRead, size_t 
     const size_t framesPerBuffer {buffer.size() / sourceChannels};
     assert (framesPerBuffer > 0);
 
-    const double scale {normalization (bitDepth())};
+    constexpr double scale {dequantization::int32Scale};
 
     size_t framesRemaining {totalFramesToRead};
     size_t baseFrame {0};
@@ -778,21 +779,6 @@ inline void Reader::InitializeBuffer (uint32_t suggestedBufferSizeKB)
         if      (containerSizeInBits() == 32) bufferFloatPCM32.resize (size);
         else if (containerSizeInBits() == 64) bufferFloatPCM64.resize (size);
     }
-}
-
-// Calculates the absolute value of the minimum value for a signed integer
-// of the given bit depth for use in normalization when decoding to a
-// floating-point type, e.g. for 16-bit (signed) linear PCM, the absolute
-// value of the minimum value is 32768 and can be used to convert the integer
-// value into a normalized float or double through division.
-inline double Reader::normalization (uint16_t bitDepth)
-{
-    if (bitDepth == 0 || bitDepth > 64)
-    {
-        assert (false);
-        throw ReadError (ReadErrorCode::InternalError, "Internal error (should have been caught earlier): bit depth must be greater than 0 and less than or equal to 64.");
-    }
-    return static_cast<double> (uint64_t{1} << (bitDepth - 1));
 }
 
 } // namespace wav

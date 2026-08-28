@@ -6,7 +6,7 @@
 
 #include "Byteswap.hpp"
 #include "FileOffset.hpp"
-#include "QuantizationConstants.hpp"
+#include "QuantDequantConstants.hpp"
 
 #include <algorithm>
 #include <bit>
@@ -311,10 +311,10 @@ void Writer::WriteLPCMU8 (T const * source, size_t totalSamplesToWrite)
     const auto bufferSize {bufferLPCMU8.size()};
     constexpr size_t bytesPerSample {1};
 
-    constexpr double scale  {uint8Scale};
-    constexpr double offset {uint8QuantizationOffset};
-    constexpr double min    {uint8Min};
-    constexpr double max    {uint8Max};
+    constexpr double scale  {quantization::uint8Scale};
+    constexpr double offset {quantization::uint8Offset};
+    constexpr double min    {quantization::uint8Min};
+    constexpr double max    {quantization::uint8Max};
 
     size_t samplesRemaining {totalSamplesToWrite};
     size_t readPosition {0};
@@ -361,9 +361,9 @@ void Writer::WriteLPCM16 (T const * source, size_t totalSamplesToWrite)
     const auto bufferSize {bufferLPCM16.size()};
     constexpr size_t bytesPerSample {2};
 
-    constexpr double scale {int16Scale};
-    constexpr double min   {int16Min};
-    constexpr double max   {int16Max};
+    constexpr double scale {quantization::int16Scale};
+    constexpr double min   {quantization::int16Min};
+    constexpr double max   {quantization::int16Max};
 
     size_t samplesRemaining {totalSamplesToWrite};
     size_t readPosition {0};
@@ -405,9 +405,9 @@ void Writer::WriteLPCM24 (T const * source, size_t totalSamplesToWrite)
     const auto bufferSize {bufferLPCM24.size()};
     constexpr size_t bytesPerSample {3};
 
-    constexpr double scale {int24Scale};
-    constexpr double min   {int24Min};
-    constexpr double max   {int24Max};
+    constexpr double scale {quantization::int24Scale};
+    constexpr double min   {quantization::int24Min};
+    constexpr double max   {quantization::int24Max};
 
     size_t samplesRemaining {totalSamplesToWrite};
     size_t readPosition {0};
@@ -449,9 +449,9 @@ void Writer::WriteLPCM32 (T const * source, size_t totalSamplesToWrite)
     constexpr size_t bytesPerSample {4};
 
     // Need to use double because floats can't represent all the 32-bit int values.
-    constexpr double scale {int32Scale};
-    constexpr double min   {int32Min};
-    constexpr double max   {int32Max};
+    constexpr double scale {quantization::int32Scale};
+    constexpr double min   {quantization::int32Min};
+    constexpr double max   {quantization::int32Max};
 
     size_t samplesRemaining {totalSamplesToWrite};
     size_t readPosition {0};
