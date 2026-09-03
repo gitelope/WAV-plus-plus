@@ -1,5 +1,6 @@
 # WAV++
 
+[![Release](https://img.shields.io/github/v/release/gitelope/WAV-plus-plus?sort=semver&color=blue)](https://github.com/gitelope/WAV-plus-plus/releases)
 [![CI](https://github.com/gitelope/WAV-plus-plus/actions/workflows/ci.yml/badge.svg)](https://github.com/gitelope/WAV-plus-plus/actions/workflows/ci.yml)
 
 A header-only, dependency-free, C++ library for reading and writing WAV files.
