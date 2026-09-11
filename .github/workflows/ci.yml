@@ -34,7 +34,7 @@ jobs:
             os: windows-2022
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
 
       - name: Configure (Linux/macOS)
         if: runner.os != 'Windows'
