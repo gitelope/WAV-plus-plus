@@ -1,4 +1,4 @@
-# WAV++ (c) 2025-2026 David Adams
+# WAV++ (c) 2025 David Adams
 # SPDX-License-Identifier: MIT
 
 foreach (name IN ITEMS read write inspect) # <-- add new examples here
