@@ -6,6 +6,9 @@ on:
   pull_request:
     branches: ["main", "develop"]
 
+permissions:
+  contents: read
+
 jobs:
   build-and-test:
     name: ${{ matrix.name }}
@@ -15,23 +18,31 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - name: linux-gcc
+          - name: ubuntu-latest-gcc
             os: ubuntu-latest
             cc: gcc
             cxx: g++
 
-          - name: linux-clang
+          - name: ubuntu-latest-clang
             os: ubuntu-latest
             cc: clang
             cxx: clang++
 
-          - name: macos-apple-clang
+          - name: macos-latest-clang
             os: macos-latest
             cc: clang
             cxx: clang++
 
-          - name: windows-msvc
+          - name: macos-15-clang
+            os: macos-15
+            cc: clang
+            cxx: clang++
+
+          - name: windows-2022-msvc
             os: windows-2022
+
+          - name: windows-latest-msvc
+            os: windows-latest
 
     steps:
       - uses: actions/checkout@v7
@@ -52,7 +63,6 @@ jobs:
         if: runner.os == 'Windows'
         run: >
           cmake -S . -B build
-          -G "Visual Studio 17 2022"
           -A x64
           -DWAV_PLUS_PLUS_BUILD_TESTS=ON
           -DWAV_PLUS_PLUS_BUILD_EXAMPLES=ON
