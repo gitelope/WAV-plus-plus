@@ -1,4 +1,5 @@
-// WAV++ (c) 2025 David Adams
+// WAV++
+// Copyright (c) 2025 David Adams
 // SPDX-License-Identifier: MIT
 
 #ifndef wavplusplus_tests_data_hpp
