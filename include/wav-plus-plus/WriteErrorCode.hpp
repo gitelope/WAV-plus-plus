@@ -13,7 +13,6 @@ enum class WriteErrorCategory
     FileOpenFailure,
     IOFailure,
     InvalidArgument,
-    UnsupportedFormat,
     WriteWouldExceedWAVSizeLimit,
     InternalError
 };
@@ -50,6 +49,7 @@ constexpr WriteErrorCategory categoryFor (WriteErrorCode code)
 
         case WriteErrorCode::BufferSizeZero:                  return WriteErrorCategory::InvalidArgument;
         case WriteErrorCode::ChannelMaskInvalid:              return WriteErrorCategory::InvalidArgument;
+        case WriteErrorCode::ChannelsExceedsMax:              return WriteErrorCategory::InvalidArgument;
         case WriteErrorCode::ChannelsZero:                    return WriteErrorCategory::InvalidArgument;
         case WriteErrorCode::FramesToWriteExceedsSourceSize:  return WriteErrorCategory::InvalidArgument;
         case WriteErrorCode::SampleRateZero:                  return WriteErrorCategory::InvalidArgument;
@@ -61,8 +61,6 @@ constexpr WriteErrorCategory categoryFor (WriteErrorCode code)
         case WriteErrorCode::FileSeekFailed:  return WriteErrorCategory::IOFailure;
         case WriteErrorCode::FileTellFailed:  return WriteErrorCategory::IOFailure;
         case WriteErrorCode::FileWriteFailed: return WriteErrorCategory::IOFailure;
-
-        case WriteErrorCode::ChannelsExceedsMax: return WriteErrorCategory::UnsupportedFormat;
 
         case WriteErrorCode::WriteWouldExceedWAVSizeLimit: return WriteErrorCategory::WriteWouldExceedWAVSizeLimit;
 
