@@ -14,7 +14,7 @@
 
 void TestWriting (TestLog & log)
 {
-    TestHeaders (log);
+    TestHeaderWriting (log);
     TestSampleEncoding (log);
     TestInvalidArgumentForWriting (log);
     TestFileOpenForWritingFailure (log);

@@ -17,7 +17,7 @@
 void TestHeader (wav::ExportFormat, uint32_t, uint16_t, uint32_t, TestLog &);
 void TestSpeakerPosition (TestLog &);
 
-void TestHeaders (TestLog & log)
+void TestHeaderWriting (TestLog & log)
 {
     // Verify the entire header.
     //
