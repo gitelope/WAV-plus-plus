@@ -122,7 +122,6 @@
 		C4F704F62EA6CB4500243874 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = SOURCE_ROOT; };
 		C4RTRIP12A1B2C3D4E5F6071 /* RoundTripTests.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = RoundTripTests.hpp; sourceTree = "<group>"; };
 		C4WERR012FF4608A007EE901 /* InvalidArgument.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = InvalidArgument.hpp; sourceTree = "<group>"; };
-		C4WERR032FF4608A007EE903 /* UnsupportedFormat.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = UnsupportedFormat.hpp; sourceTree = "<group>"; };
 		C4WERR052FF4608A007EE905 /* FileOpenFailure.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = FileOpenFailure.hpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -180,7 +179,6 @@
 				C40B8FC82F7326C200FDFC86 /* HeaderWriting.hpp */,
 				C40B8FC72F73250900FDFC86 /* SampleEncoding.hpp */,
 				C4WERR022FF4608A007EE902 /* invalid_argument */,
-				C4WERR042FF4608A007EE904 /* unsupported_format */,
 				C4WERR062FF4608A007EE906 /* file_open */,
 			);
 			path = writing;
@@ -385,14 +383,6 @@
 				C4WERR012FF4608A007EE901 /* InvalidArgument.hpp */,
 			);
 			path = invalid_argument;
-			sourceTree = "<group>";
-		};
-		C4WERR042FF4608A007EE904 /* unsupported_format */ = {
-			isa = PBXGroup;
-			children = (
-				C4WERR032FF4608A007EE903 /* UnsupportedFormat.hpp */,
-			);
-			path = unsupported_format;
 			sourceTree = "<group>";
 		};
 		C4WERR062FF4608A007EE906 /* file_open */ = {

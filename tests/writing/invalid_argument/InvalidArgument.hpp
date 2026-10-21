@@ -48,6 +48,25 @@ inline void ChannelsZero (TestLog & log)
     std::remove (filename);
 }
 
+inline void ChannelsExceedsMax (TestLog & log)
+{
+    constexpr auto channels {static_cast<std::uint16_t> (wav::maxChannels + 1)};
+
+    const auto filename {"test_writer_channels_exceeds_max.wav"};
+    bool passes {false};
+    try
+    {
+        wav::Writer writer {filename, wav::ExportFormat::LinearPCM_16, 44100, channels};
+    }
+    catch (wav::WriteError const & e)
+    {
+        passes = (e.code() == wav::WriteErrorCode::ChannelsExceedsMax);
+    }
+
+    log.Record (passes, "Writer InvalidArgument - constructor - channels exceed maximum imposed by WAV++");
+    std::remove (filename);
+}
+
 inline void BufferSizeZero (TestLog & log)
 {
     constexpr std::size_t bufferSize {0};
@@ -158,6 +177,7 @@ inline void TestInvalidArgumentForWriting (TestLog & log)
 {
     SampleRateZero (log);
     ChannelsZero (log);
+    ChannelsExceedsMax (log);
     BufferSizeZero (log);
     ChannelMaskInvalid (log);
     SamplesToWriteExceedsSourceSize (log);

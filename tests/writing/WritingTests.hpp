@@ -10,7 +10,6 @@
 #include "SampleEncoding.hpp"
 #include "HeaderWriting.hpp"
 #include "invalid_argument/InvalidArgument.hpp"
-#include "unsupported_format/UnsupportedFormat.hpp"
 #include "file_open/FileOpenFailure.hpp"
 
 void TestWriting (TestLog & log)
@@ -18,7 +17,6 @@ void TestWriting (TestLog & log)
     TestHeaders (log);
     TestSampleEncoding (log);
     TestInvalidArgumentForWriting (log);
-    TestUnsupportedFormat (log);
     TestFileOpenForWritingFailure (log);
 }
 

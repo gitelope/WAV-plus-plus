@@ -51,8 +51,6 @@ set (wav_plus_plus_test_headers
 
     writing/invalid_argument/InvalidArgument.hpp
 
-    writing/unsupported_format/UnsupportedFormat.hpp
-
     writing/file_open/FileOpenFailure.hpp
 
     round_trip/RoundTripTests.hpp
