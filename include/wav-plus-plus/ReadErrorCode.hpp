@@ -126,6 +126,10 @@ constexpr ReadErrorCategory categoryFor (ReadErrorCode code)
 
         case ReadErrorCode::InternalError: return ReadErrorCategory::InternalError;
     }
+
+    // Unreachable for every named enumerator, but a value outside the enum would
+    // run off the end. A default label would silence -Wswitch instead.
+    return ReadErrorCategory::InternalError;
 }
 
 } // namespace wav

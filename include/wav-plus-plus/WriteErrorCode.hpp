@@ -66,6 +66,10 @@ constexpr WriteErrorCategory categoryFor (WriteErrorCode code)
 
         case WriteErrorCode::InternalError: return WriteErrorCategory::InternalError;
     }
+
+    // Unreachable for every named enumerator, but a value outside the enum would
+    // run off the end. A default label would silence -Wswitch instead.
+    return WriteErrorCategory::InternalError;
 }
 
 } // namespace wav
