@@ -10,14 +10,14 @@
 #include "SampleEncoding.hpp"
 #include "HeaderWriting.hpp"
 #include "invalid_argument/InvalidArgument.hpp"
-#include "file_open/FileOpenFailure.hpp"
+#include "file_open/FileOpenTests.hpp"
 
 void TestWriting (TestLog & log)
 {
     TestHeaderWriting (log);
     TestSampleEncoding (log);
     TestInvalidArgumentForWriting (log);
-    TestFileOpenForWritingFailure (log);
+    TestFileOpenForWriting (log);
 }
 
 #endif

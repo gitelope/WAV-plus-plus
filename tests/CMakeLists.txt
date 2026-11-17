@@ -51,7 +51,9 @@ set (wav_plus_plus_test_headers
 
     writing/invalid_argument/InvalidArgument.hpp
 
+    writing/file_open/FileOpenTests.hpp
     writing/file_open/FileOpenFailure.hpp
+    writing/file_open/IsOpen.hpp
 
     round_trip/RoundTripTests.hpp
 )
