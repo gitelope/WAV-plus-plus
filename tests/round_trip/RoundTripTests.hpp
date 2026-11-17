@@ -660,19 +660,37 @@ inline void TestReadMethods (std::vector<T> const & signal,
 template <wav::FloatOrDouble T>
 void TestRoundTripFor (wav::ExportFormat format, TestLog & log)
 {
+    // Catch unintended casting to float in double round trip.
+    //
+    // Neither a nor b below fits exactly in a float or a double. Each type
+    // stores its own nearest value, and the two differ, so if the double path
+    // converts through float anywhere, the value comes back changed and the
+    // round trip fails. Every test should cover the second frame, including
+    // those that use only part of the signal.
+    constexpr double a { 0.251};
+    constexpr double b {-0.749};
+    constexpr bool aFitsFloat {static_cast<double> (static_cast<float> (a)) == a};
+    constexpr bool bFitsFloat {static_cast<double> (static_cast<float> (b)) == b};
+    static_assert (!aFitsFloat && !bFitsFloat,
+                   "a and b must not fit exactly in float, or the double run can't detect narrowing");
+
     // interleaved stereo signal
     // L =  0 → 1
     // R = -1 → 0
-    // Every value is exact in both float and double.
-    const std::vector<float> values
+    const std::vector<double> values
     {
-        0.f,    -1.f,
-        0.25f,  -0.75f,
-        0.5f,   -0.5f,
-        0.75f,  -0.25f,
-        1.f,     0.f
+        0.0,   -1.0,
+        a,     b,    // See note above.
+        0.5,   -0.5,
+        0.75,  -0.25,
+        1.0,    0.0
     };
-    const std::vector<T> signal (values.cbegin(), values.cend());
+
+    std::vector<T> signal (values.size());
+
+    // Copy values to signal with an explicit, and therefore silent, cast.
+    std::transform (values.cbegin(), values.cend(), signal.begin(),
+                    [] (double value) {return static_cast<T> (value);});
 
     WriteParameters writeParameters {format, 48000, 2};
 
