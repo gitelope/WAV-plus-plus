@@ -4,58 +4,10 @@
 
 add_executable (tests tests.cpp)
 
-set (wav_plus_plus_test_headers
-    TestLog.hpp
-    helper_functions.hpp
-
-    reading/ReadingTests.hpp
-    reading/reading_helper_functions.hpp
-    
-    reading/headers/HeaderParsing.hpp
-
-    reading/headers/formats/Formats.hpp
-    reading/headers/formats/PCMWAVEFORMAT.hpp
-    reading/headers/formats/WAVEFORMAT.hpp
-    reading/headers/formats/WAVEFORMATEX.hpp
-    reading/headers/formats/WAVEFORMATEXTENSIBLE.hpp
-
-    reading/headers/optional_chunks/OptionalChunks.hpp
-    reading/headers/optional_chunks/fact.hpp
-    reading/headers/optional_chunks/PEAK.hpp
-
-    reading/headers/rejection/Rejection.hpp
-    reading/headers/rejection/RIFF.hpp
-    reading/headers/rejection/fmt.hpp
-    reading/headers/rejection/data.hpp
-    reading/headers/rejection/fact.hpp
-    reading/headers/rejection/PEAK.hpp
-    reading/headers/rejection/generic.hpp
-
-    reading/decoding/SampleDecoding.hpp
-    reading/decoding/FullContainer.hpp
-    reading/decoding/PaddedLPCM.hpp
-
-    reading/file_open/FileOpenFailure.hpp
-
-    reading/invalid_argument/InvalidArgument.hpp
-
-    reading/trailing_bytes/TrailingBytesIgnored.hpp
-
-    utilities/UtilitiesTests.hpp
-    utilities/Byteswap.hpp
-    utilities/ReadingBytesVector.hpp
-
-    writing/WritingTests.hpp
-    writing/HeaderWriting.hpp
-    writing/SampleEncoding.hpp
-
-    writing/invalid_argument/InvalidArgument.hpp
-
-    writing/file_open/FileOpenTests.hpp
-    writing/file_open/FileOpenFailure.hpp
-    writing/file_open/IsOpen.hpp
-
-    round_trip/RoundTripTests.hpp
+# Listed only so the headers appear in IDE projects: tests.cpp reaches them
+# all through the umbrella headers, so nothing compiles from this list.
+file (GLOB_RECURSE wav_plus_plus_test_headers CONFIGURE_DEPENDS
+    "${CMAKE_CURRENT_SOURCE_DIR}/*.hpp"
 )
 
 source_group (TREE "${CMAKE_CURRENT_SOURCE_DIR}" FILES ${wav_plus_plus_test_headers})

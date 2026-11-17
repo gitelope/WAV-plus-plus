@@ -89,37 +89,8 @@ endif ()
 
 # ---- Header listing for browsing in an IDE ----
 if (PROJECT_IS_TOP_LEVEL)
-    #          Public
-    set (wav_plus_plus_public_headers
-        include/wav-plus-plus/ChunkInfo.hpp
-        include/wav-plus-plus/Exceptions.hpp
-        include/wav-plus-plus/FileInfo.hpp
-        include/wav-plus-plus/Formats.hpp
-        include/wav-plus-plus/ReadErrorCode.hpp
-        include/wav-plus-plus/Reader.hpp
-        include/wav-plus-plus/WriteErrorCode.hpp
-        include/wav-plus-plus/Writer.hpp
-    )
-    #          Private
-    set (wav_plus_plus_private_headers
-        include/wav-plus-plus/private/AudioSummary.hpp
-        include/wav-plus-plus/private/BufferSizing.hpp
-        include/wav-plus-plus/private/Byteswap.hpp
-        include/wav-plus-plus/private/ChunkInfoImplementation.hpp
-        include/wav-plus-plus/private/File.hpp
-        include/wav-plus-plus/private/FileInfoImplementation.hpp
-        include/wav-plus-plus/private/FileOffset.hpp
-        include/wav-plus-plus/private/FormatsImplementation.hpp
-        include/wav-plus-plus/private/QuantDequantConstants.hpp
-        include/wav-plus-plus/private/ReaderImplementation.hpp
-        include/wav-plus-plus/private/ReadingBytes.hpp
-        include/wav-plus-plus/private/WriterImplementation.hpp
-        include/wav-plus-plus/private/int24.hpp
-    )
-    #          All
-    set (wav_plus_plus_all_headers
-        ${wav_plus_plus_public_headers}
-        ${wav_plus_plus_private_headers}
+    file (GLOB_RECURSE wav_plus_plus_all_headers CONFIGURE_DEPENDS
+        "${CMAKE_CURRENT_SOURCE_DIR}/include/*.hpp"
     )
     source_group (TREE "${CMAKE_CURRENT_SOURCE_DIR}" FILES ${wav_plus_plus_all_headers})
     # IDE-only target so include/ appears once in navigator
