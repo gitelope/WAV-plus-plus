@@ -74,6 +74,7 @@ else ()
             -Wcomma
             -Wrange-loop-analysis
             -Wconditional-uninitialized
+            -Wshadow-all
         )
     endif ()
 endif ()
