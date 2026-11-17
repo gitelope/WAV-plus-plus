@@ -22,7 +22,8 @@ inline void FailedToOpenFileForWriting (TestLog & log)
     }
     catch (wav::WriteError const & e)
     {
-        passes = (e.code() == wav::WriteErrorCode::FailedToOpenFileForWriting);
+        passes = (e.code() == wav::WriteErrorCode::FailedToOpenFileForWriting
+                  && e.category() == wav::WriteErrorCategory::FileOpenFailure);
     }
 
     log.Record (passes, "Writer FileOpenFailure - failed to open file for writing");

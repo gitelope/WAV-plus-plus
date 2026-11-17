@@ -20,7 +20,8 @@ inline void FailedToOpenFileForReading (TestLog & log)
     }
     catch (wav::ReadError const & e)
     {
-        passes = (e.code() == wav::ReadErrorCode::FailedToOpenFileForReading);
+        passes = (e.code() == wav::ReadErrorCode::FailedToOpenFileForReading
+                  && e.category() == wav::ReadErrorCategory::FileOpenFailure);
     }
 
     log.Record (passes, "Reader FileOpenFailure - failed to open file for reading");
