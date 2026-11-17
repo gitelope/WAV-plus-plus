@@ -15,6 +15,7 @@
 #include <cstdio>
 #include <span>
 #include <string>
+#include <type_traits>
 #include <vector>
 
 struct WriteParameters
@@ -24,10 +25,14 @@ struct WriteParameters
     std::uint16_t channels;
 };
 
-inline bool same (std::string const & filename, std::vector<float> const & expected)
+template <wav::FloatOrDouble T>
+inline const std::string labelPrefix {std::is_same_v<T, float> ? "Round Trip - float - " : "Round Trip - double - "};
+
+template <wav::FloatOrDouble T>
+inline bool same (std::string const & filename, std::vector<T> const & expected)
 {
     wav::Reader reader {filename};
-    std::vector<float> actual (expected.size());
+    std::vector<T> actual (expected.size());
     const auto n = reader.read (actual);
     return n == expected.size() && areEqual (actual, expected);
 }
@@ -38,7 +43,8 @@ inline bool same (std::string const & filename, std::vector<float> const & expec
 // size_t write (std::vector<T> const & source, size_t samplesToWrite);
 // size_t write (std::vector<T> const & source);
 
-inline void Write_PointerAndCount (std::vector<float> const & signal,
+template <wav::FloatOrDouble T>
+inline void Write_PointerAndCount (std::vector<T> const & signal,
                                    WriteParameters const & wp,
                                    TestLog & log)
 {
@@ -49,12 +55,13 @@ inline void Write_PointerAndCount (std::vector<float> const & signal,
     writer.Close();
 
     const bool result {samplesWritten == signal.size() && same (filename, signal)};
-    log.Record (result, "Round Trip - write (T const *, size_t)");
+    log.Record (result, labelPrefix<T> + "write (T const *, size_t)");
 
     std::remove (filename);
 }
 
-inline void Write_PointerAndCount_Chunked (std::vector<float> const & signal,
+template <wav::FloatOrDouble T>
+inline void Write_PointerAndCount_Chunked (std::vector<T> const & signal,
                                            WriteParameters const & wp,
                                            TestLog & log)
 {
@@ -83,12 +90,13 @@ inline void Write_PointerAndCount_Chunked (std::vector<float> const & signal,
         samplesWritten3 == 0 &&
         same (filename, signal)
     };
-    log.Record (result, "Round Trip - write (T const *, size_t) - chunked");
+    log.Record (result, labelPrefix<T> + "write (T const *, size_t) - chunked");
 
     std::remove (filename);
 }
 
-inline void Write_VectorAndCount (std::vector<float> const & signal,
+template <wav::FloatOrDouble T>
+inline void Write_VectorAndCount (std::vector<T> const & signal,
                                   WriteParameters const & wp,
                                   TestLog & log)
 {
@@ -99,19 +107,20 @@ inline void Write_VectorAndCount (std::vector<float> const & signal,
     const auto totalFrames {signal.size() / wp.channels};
     const auto samplesToWrite {(totalFrames - 1) * wp.channels};
 
-    const std::vector<float> expected (signal.begin(), signal.begin() + static_cast<std::ptrdiff_t> (samplesToWrite));
+    const std::vector<T> expected (signal.begin(), signal.begin() + static_cast<std::ptrdiff_t> (samplesToWrite));
 
     wav::Writer writer {filename, wp.format, wp.sampleRate, wp.channels};
     const auto samplesWritten = writer.write (signal, samplesToWrite);
     writer.Close();
 
     const bool result {samplesWritten == samplesToWrite && same (filename, expected)};
-    log.Record (result, "Round Trip - write (vector const &, size_t)");
+    log.Record (result, labelPrefix<T> + "write (vector<T> const &, size_t)");
 
     std::remove (filename);
 }
 
-inline void Write_Vector (std::vector<float> const & signal,
+template <wav::FloatOrDouble T>
+inline void Write_Vector (std::vector<T> const & signal,
                           WriteParameters const & wp,
                           TestLog & log)
 {
@@ -122,7 +131,7 @@ inline void Write_Vector (std::vector<float> const & signal,
     writer.Close();
 
     const bool result {samplesWritten == signal.size() && same (filename, signal)};
-    log.Record (result, "Round Trip - write (vector const &)");
+    log.Record (result, labelPrefix<T> + "write (vector<T> const &)");
 
     std::remove (filename);
 }
@@ -133,7 +142,8 @@ inline void Write_Vector (std::vector<float> const & signal,
 // size_t writeFrames (std::vector<T> const & source, size_t framesToWrite);
 // size_t writeFrames (std::vector<T> const & source);
 
-inline void WriteFrames_PointerAndCount (std::vector<float> const & signal,
+template <wav::FloatOrDouble T>
+inline void WriteFrames_PointerAndCount (std::vector<T> const & signal,
                                          WriteParameters const & wp,
                                          TestLog & log)
 {
@@ -146,12 +156,13 @@ inline void WriteFrames_PointerAndCount (std::vector<float> const & signal,
     writer.Close();
 
     const bool result {framesWritten == framesToWrite && same (filename, signal)};
-    log.Record (result, "Round Trip - writeFrames (T const *, size_t)");
+    log.Record (result, labelPrefix<T> + "writeFrames (T const *, size_t)");
 
     std::remove (filename);
 }
 
-inline void WriteFrames_PointerAndCount_Chunked (std::vector<float> const & signal,
+template <wav::FloatOrDouble T>
+inline void WriteFrames_PointerAndCount_Chunked (std::vector<T> const & signal,
                                                  WriteParameters const & wp,
                                                  TestLog & log)
 {
@@ -182,12 +193,13 @@ inline void WriteFrames_PointerAndCount_Chunked (std::vector<float> const & sign
         framesWritten3 == 0 &&
         same (filename, signal)
     };
-    log.Record (result, "Round Trip - writeFrames (T const *, size_t) - chunked");
+    log.Record (result, labelPrefix<T> + "writeFrames (T const *, size_t) - chunked");
 
     std::remove (filename);
 }
 
-inline void WriteFrames_VectorAndCount (std::vector<float> const & signal,
+template <wav::FloatOrDouble T>
+inline void WriteFrames_VectorAndCount (std::vector<T> const & signal,
                                         WriteParameters const & wp,
                                         TestLog & log)
 {
@@ -198,19 +210,20 @@ inline void WriteFrames_VectorAndCount (std::vector<float> const & signal,
     const auto totalFrames {signal.size() / wp.channels};
     const auto framesToWrite {totalFrames - 1};
 
-    const std::vector<float> expected (signal.begin(), signal.begin() + static_cast<std::ptrdiff_t> (framesToWrite * wp.channels));
+    const std::vector<T> expected (signal.begin(), signal.begin() + static_cast<std::ptrdiff_t> (framesToWrite * wp.channels));
 
     wav::Writer writer {filename, wp.format, wp.sampleRate, wp.channels};
     const auto framesWritten = writer.writeFrames (signal, framesToWrite);
     writer.Close();
 
     const bool result {framesWritten == framesToWrite && same (filename, expected)};
-    log.Record (result, "Round Trip - writeFrames (vector const &, size_t)");
+    log.Record (result, labelPrefix<T> + "writeFrames (vector<T> const &, size_t)");
 
     std::remove (filename);
 }
 
-inline void WriteFrames_Vector (std::vector<float> const & signal,
+template <wav::FloatOrDouble T>
+inline void WriteFrames_Vector (std::vector<T> const & signal,
                                 WriteParameters const & wp,
                                 TestLog & log)
 {
@@ -222,7 +235,7 @@ inline void WriteFrames_Vector (std::vector<float> const & signal,
 
     const auto totalFrames {signal.size() / wp.channels};
     const bool result {framesWritten == totalFrames && same (filename, signal)};
-    log.Record (result, "Round Trip - writeFrames (vector const &)");
+    log.Record (result, labelPrefix<T> + "writeFrames (vector<T> const &)");
 
     std::remove (filename);
 }
@@ -233,18 +246,22 @@ inline void WriteFrames_Vector (std::vector<float> const & signal,
 // size_t read (std::vector<T> & destination, size_t samplesRequested);
 // size_t read (std::vector<T> & destination);
 
-bool partialReadSuccessful(std::vector<float> const &,std::vector<float> const &,std::size_t,float);
+template <wav::FloatOrDouble T>
+inline bool partialReadSuccessful (std::vector<T> const &, std::vector<T> const &, std::size_t, T);
 
-inline void Read_PointerAndCount (std::string const & filename, std::vector<float> const & signal, TestLog & log)
+template <wav::FloatOrDouble T>
+inline void Read_PointerAndCount (std::string const & filename, std::vector<T> const & signal, TestLog & log)
 {
     wav::Reader reader {filename};
-    std::vector<float> in (reader.samples());
+    std::vector<T> in (reader.samples());
     const auto samplesRead = reader.read (in.data(), in.size());
 
     const bool result {samplesRead == reader.samples() && areEqual (in, signal)};
-    log.Record (result, "Round Trip - read (T *, size_t)");
+    log.Record (result, labelPrefix<T> + "read (T *, size_t)");
 }
-inline void Read_PointerAndCount_Chunked (std::string const & filename, std::vector<float> const & signal, TestLog & log)
+
+template <wav::FloatOrDouble T>
+inline void Read_PointerAndCount_Chunked (std::string const & filename, std::vector<T> const & signal, TestLog & log)
 {
     constexpr size_t samplesRequested {6};
     assert (signal.size() == 10);
@@ -252,10 +269,10 @@ inline void Read_PointerAndCount_Chunked (std::string const & filename, std::vec
     wav::Reader reader {filename};
     assert (reader.samples() == signal.size());
 
-    constexpr float sentinelValue {42};
-    std::vector<float> in1 (samplesRequested, sentinelValue);
-    std::vector<float> in2 (samplesRequested, sentinelValue);
-    std::vector<float> in3 (samplesRequested, sentinelValue);
+    constexpr T sentinelValue {42};
+    std::vector<T> in1 (samplesRequested, sentinelValue);
+    std::vector<T> in2 (samplesRequested, sentinelValue);
+    std::vector<T> in3 (samplesRequested, sentinelValue);
 
     // 1. request 6 samples, get 6 samples
     // 2. request 6 samples, get the remaining 4.
@@ -264,16 +281,16 @@ inline void Read_PointerAndCount_Chunked (std::string const & filename, std::vec
     const auto samplesRead2 = reader.read (in2.data(), samplesRequested);
     const auto samplesRead3 = reader.read (in3.data(), samplesRequested);
 
-    std::vector<float> expected1 (signal.cbegin(), signal.cbegin() + static_cast<std::ptrdiff_t> (samplesRequested));
+    std::vector<T> expected1 (signal.cbegin(), signal.cbegin() + static_cast<std::ptrdiff_t> (samplesRequested));
 
     // 4 remaining samples from the file and 6 untouched sentinel values
-    std::vector<float> expected2 (samplesRequested, sentinelValue);
+    std::vector<T> expected2 (samplesRequested, sentinelValue);
     std::copy (signal.cbegin() + static_cast<std::ptrdiff_t> (samplesRequested),
                signal.cbegin() + static_cast<std::ptrdiff_t> (signal.size()),
                expected2.begin());
 
     // no samples left to read so sentinels should be untouched
-    std::vector<float> expected3 (samplesRequested, sentinelValue);
+    std::vector<T> expected3 (samplesRequested, sentinelValue);
 
     const bool result
     {
@@ -284,10 +301,11 @@ inline void Read_PointerAndCount_Chunked (std::string const & filename, std::vec
         areEqual (in2, expected2) &&
         areEqual (in3, expected3)
     };
-    log.Record (result, "Round Trip - read (T *, size_t) - chunked");
+    log.Record (result, labelPrefix<T> + "read (T *, size_t) - chunked");
 }
 
-inline void Read_VectorAndCount (std::string const & filename, std::vector<float> const & signal, TestLog & log)
+template <wav::FloatOrDouble T>
+inline void Read_VectorAndCount (std::string const & filename, std::vector<T> const & signal, TestLog & log)
 {
     wav::Reader reader {filename};
 
@@ -300,8 +318,8 @@ inline void Read_VectorAndCount (std::string const & filename, std::vector<float
     // Allocate enough room to store the entire file's contents,
     // and fill with a sentinel value so we can detect if read
     // past the requested count occurs.
-    constexpr float sentinelValue {42};
-    std::vector<float> in (reader.samples(), sentinelValue);
+    constexpr T sentinelValue {42};
+    std::vector<T> in (reader.samples(), sentinelValue);
 
     const auto samplesRead = reader.read (in, samplesRequested);
 
@@ -310,17 +328,18 @@ inline void Read_VectorAndCount (std::string const & filename, std::vector<float
         partialReadSuccessful (in, signal, samplesRequested, sentinelValue) &&
         samplesRead == samplesRequested
     };
-    log.Record (result, "Round Trip - read (vector &, size_t)");
+    log.Record (result, labelPrefix<T> + "read (vector<T> &, size_t)");
 }
 
-inline void Read_Vector (std::string const & filename, std::vector<float> const & signal, TestLog & log)
+template <wav::FloatOrDouble T>
+inline void Read_Vector (std::string const & filename, std::vector<T> const & signal, TestLog & log)
 {
     wav::Reader reader {filename};
-    std::vector<float> in (reader.samples());
+    std::vector<T> in (reader.samples());
     const auto samplesRead = reader.read (in);
 
     const bool result {samplesRead == reader.samples() && areEqual (in, signal)};
-    log.Record (result, "Round Trip - read (vector &)");
+    log.Record (result, labelPrefix<T> + "read (vector<T> &)");
 }
 
 // READFRAMES OVERLOADS /////////////////////////////////////////////////////////
@@ -335,18 +354,20 @@ inline void Read_Vector (std::string const & filename, std::vector<float> const 
 //
 // size_t readFrames (T ** const destinations, size_t numChannels, size_t framesRequested);
 
-inline void ReadFrames_PointerAndCount (std::string const & filename, std::vector<float> const & signal, TestLog & log)
+template <wav::FloatOrDouble T>
+inline void ReadFrames_PointerAndCount (std::string const & filename, std::vector<T> const & signal, TestLog & log)
 {
     wav::Reader reader {filename};
     const size_t framesRequested {reader.frames()};
-    std::vector<float> in (reader.samples());
+    std::vector<T> in (reader.samples());
     const auto framesRead = reader.readFrames (in.data(), framesRequested);
 
     const bool result {framesRead == framesRequested && areEqual (in, signal)};
-    log.Record (result, "Round Trip - readFrames (T *, size_t)");
+    log.Record (result, labelPrefix<T> + "readFrames (T *, size_t)");
 }
 
-inline void ReadFrames_PointerAndCount_Chunked (std::string const & filename, std::vector<float> const & signal, TestLog & log)
+template <wav::FloatOrDouble T>
+inline void ReadFrames_PointerAndCount_Chunked (std::string const & filename, std::vector<T> const & signal, TestLog & log)
 {
     constexpr size_t framesRequested {3};
     assert (signal.size() == 10);
@@ -356,10 +377,10 @@ inline void ReadFrames_PointerAndCount_Chunked (std::string const & filename, st
     assert (reader.channels() == 2);
 
     const auto samplesRequested {framesRequested * reader.channels()};
-    constexpr float sentinelValue {42};
-    std::vector<float> in1 (samplesRequested, sentinelValue);
-    std::vector<float> in2 (samplesRequested, sentinelValue);
-    std::vector<float> in3 (samplesRequested, sentinelValue);
+    constexpr T sentinelValue {42};
+    std::vector<T> in1 (samplesRequested, sentinelValue);
+    std::vector<T> in2 (samplesRequested, sentinelValue);
+    std::vector<T> in3 (samplesRequested, sentinelValue);
 
     // 1. request 3 frames, get 3
     // 2. request 3 frames, get 2
@@ -368,14 +389,14 @@ inline void ReadFrames_PointerAndCount_Chunked (std::string const & filename, st
     const auto framesRead2 = reader.readFrames (in2.data(), framesRequested);
     const auto framesRead3 = reader.readFrames (in3.data(), framesRequested);
 
-    std::vector<float> expected1 (signal.cbegin(), signal.cbegin() + static_cast<std::ptrdiff_t> (samplesRequested));
+    std::vector<T> expected1 (signal.cbegin(), signal.cbegin() + static_cast<std::ptrdiff_t> (samplesRequested));
 
-    std::vector<float> expected2 (samplesRequested, sentinelValue);
+    std::vector<T> expected2 (samplesRequested, sentinelValue);
     std::copy (signal.cbegin() + static_cast<std::ptrdiff_t> (samplesRequested),
                signal.cbegin() + static_cast<std::ptrdiff_t> (signal.size()),
                expected2.begin());
 
-    std::vector<float> expected3 (samplesRequested, sentinelValue);
+    std::vector<T> expected3 (samplesRequested, sentinelValue);
     const bool result
     {
         framesRead1 == framesRequested &&
@@ -385,17 +406,18 @@ inline void ReadFrames_PointerAndCount_Chunked (std::string const & filename, st
         areEqual (in2, expected2) &&
         areEqual (in3, expected3)
     };
-    log.Record (result, "Round Trip - readFrames (T *, size_t) - chunked");
+    log.Record (result, labelPrefix<T> + "readFrames (T *, size_t) - chunked");
 }
 
-inline void ReadFrames_VectorAndCount (std::string const & filename, std::vector<float> const & signal, TestLog & log)
+template <wav::FloatOrDouble T>
+inline void ReadFrames_VectorAndCount (std::string const & filename, std::vector<T> const & signal, TestLog & log)
 {
     wav::Reader reader {filename};
 
     // Create a destination with enough room to read the whole
     // file and fill with sentinel values.
-    constexpr float sentinelValue {42};
-    std::vector<float> in (reader.samples(), sentinelValue);
+    constexpr T sentinelValue {42};
+    std::vector<T> in (reader.samples(), sentinelValue);
 
     // Request one frame fewer than the file holds,
     // into a vector sized for the full file to make
@@ -410,28 +432,30 @@ inline void ReadFrames_VectorAndCount (std::string const & filename, std::vector
         partialReadSuccessful (in, signal, samplesRequested, sentinelValue) &&
         framesRead == framesRequested
     };
-    log.Record (result, "Round Trip - readFrames (vector &, size_t)");
+    log.Record (result, labelPrefix<T> + "readFrames (vector<T> &, size_t)");
 }
 
-inline void ReadFrames_Vector (std::string const & filename, std::vector<float> const & signal, TestLog & log)
+template <wav::FloatOrDouble T>
+inline void ReadFrames_Vector (std::string const & filename, std::vector<T> const & signal, TestLog & log)
 {
     wav::Reader reader {filename};
-    std::vector<float> in (reader.samples());
+    std::vector<T> in (reader.samples());
     const auto framesRead = reader.readFrames (in);
 
     const bool result {framesRead == reader.frames() && areEqual (in, signal)};
-    log.Record (result, "Round Trip - readFrames (vector &)");
+    log.Record (result, labelPrefix<T> + "readFrames (vector<T> &)");
 }
 
-inline void ReadFrames_Deinterleaved (std::string const & filename, std::vector<float> const & signal, TestLog & log)
+template <wav::FloatOrDouble T>
+inline void ReadFrames_Deinterleaved (std::string const & filename, std::vector<T> const & signal, TestLog & log)
 {
     wav::Reader reader {filename};
 
     const auto frames {reader.frames()};
 
-    std::vector<float> left (frames);
-    std::vector<float> right (frames);
-    float * destinations[] {left.data(), right.data()};
+    std::vector<T> left (frames);
+    std::vector<T> right (frames);
+    T * destinations[] {left.data(), right.data()};
 
     const auto channels {reader.channels()};
 
@@ -450,10 +474,11 @@ inline void ReadFrames_Deinterleaved (std::string const & filename, std::vector<
         framesRead == frames &&
         channels == 2
     };
-    log.Record (result, "Round Trip - readFrames (T ** const, size_t, size_t)");
+    log.Record (result, labelPrefix<T> + "readFrames (T ** const, size_t, size_t)");
 }
 
-inline void ReadFrames_Deinterleaved_Chunked (std::string const & filename, std::vector<float> const & signal, TestLog & log)
+template <wav::FloatOrDouble T>
+inline void ReadFrames_Deinterleaved_Chunked (std::string const & filename, std::vector<T> const & signal, TestLog & log)
 {
     constexpr size_t framesRequested {3};
 
@@ -465,18 +490,18 @@ inline void ReadFrames_Deinterleaved_Chunked (std::string const & filename, std:
 
     assert (signal.size() == 10);
 
-    constexpr float sentinelValue {42};
+    constexpr T sentinelValue {42};
 
-    std::vector<float> in1_left  (framesRequested, sentinelValue);
-    std::vector<float> in1_right (framesRequested, sentinelValue);
-    std::vector<float> in2_left  (framesRequested, sentinelValue);
-    std::vector<float> in2_right (framesRequested, sentinelValue);
-    std::vector<float> in3_left  (framesRequested, sentinelValue);
-    std::vector<float> in3_right (framesRequested, sentinelValue);
+    std::vector<T> in1_left  (framesRequested, sentinelValue);
+    std::vector<T> in1_right (framesRequested, sentinelValue);
+    std::vector<T> in2_left  (framesRequested, sentinelValue);
+    std::vector<T> in2_right (framesRequested, sentinelValue);
+    std::vector<T> in3_left  (framesRequested, sentinelValue);
+    std::vector<T> in3_right (framesRequested, sentinelValue);
 
-    float * destinations1[] {in1_left.data(),  in1_right.data()};
-    float * destinations2[] {in2_left.data(),  in2_right.data()};
-    float * destinations3[] {in3_left.data(),  in3_right.data()};
+    T * destinations1[] {in1_left.data(),  in1_right.data()};
+    T * destinations2[] {in2_left.data(),  in2_right.data()};
+    T * destinations3[] {in3_left.data(),  in3_right.data()};
 
     // 1. request 3 frames, get 3
     // 2. request 3 frames, get 2
@@ -486,8 +511,8 @@ inline void ReadFrames_Deinterleaved_Chunked (std::string const & filename, std:
     const auto framesRead3 = reader.readFrames (destinations3, channels, framesRequested);
 
     // split interleaved signal into channels
-    std::vector<float> L (reader.frames());
-    std::vector<float> R (reader.frames());
+    std::vector<T> L (reader.frames());
+    std::vector<T> R (reader.frames());
     for (size_t frame = 0; frame < reader.frames(); ++frame)
     {
         const auto n {frame * channels};
@@ -495,16 +520,16 @@ inline void ReadFrames_Deinterleaved_Chunked (std::string const & filename, std:
         R [frame] = signal [n + 1];
     }
 
-    const std::vector<float> expected1L (L.cbegin(), L.cbegin() + static_cast<std::ptrdiff_t> (framesRequested));
-    const std::vector<float> expected1R (R.cbegin(), R.cbegin() + static_cast<std::ptrdiff_t> (framesRequested));
+    const std::vector<T> expected1L (L.cbegin(), L.cbegin() + static_cast<std::ptrdiff_t> (framesRequested));
+    const std::vector<T> expected1R (R.cbegin(), R.cbegin() + static_cast<std::ptrdiff_t> (framesRequested));
 
-    std::vector<float> expected2L (framesRequested, sentinelValue);
-    std::vector<float> expected2R (framesRequested, sentinelValue);
+    std::vector<T> expected2L (framesRequested, sentinelValue);
+    std::vector<T> expected2R (framesRequested, sentinelValue);
     std::copy (L.cbegin() + static_cast<std::ptrdiff_t> (framesRequested), L.cend(), expected2L.begin());
     std::copy (R.cbegin() + static_cast<std::ptrdiff_t> (framesRequested), R.cend(), expected2R.begin());
 
-    std::vector<float> expected3L (framesRequested, sentinelValue);
-    std::vector<float> expected3R (framesRequested, sentinelValue);
+    std::vector<T> expected3L (framesRequested, sentinelValue);
+    std::vector<T> expected3R (framesRequested, sentinelValue);
 
     const bool result
     {
@@ -518,20 +543,21 @@ inline void ReadFrames_Deinterleaved_Chunked (std::string const & filename, std:
         areEqual (in3_left,  expected3L) &&
         areEqual (in3_right, expected3R)
     };
-    log.Record (result, "Round Trip - readFrames (T ** const, size_t, size_t) - chunked");
+    log.Record (result, labelPrefix<T> + "readFrames (T ** const, size_t, size_t) - chunked");
 }
 
-inline void ReadStopsAtEOF (std::string const & filename, std::vector<float> const & signal, TestLog & log)
+template <wav::FloatOrDouble T>
+inline void ReadStopsAtEOF (std::string const & filename, std::vector<T> const & signal, TestLog & log)
 {
     // Make sure we handle the case where there are not enough samples
     // left to read the number of samples (or frames) requested by the
     // client.
     // Read what remains and return that count.
 
-    constexpr float sentinelValue {42};
+    constexpr T sentinelValue {42};
     {
         wav::Reader reader {filename};
-        std::vector<float> in (reader.samples() + 1, sentinelValue);
+        std::vector<T> in (reader.samples() + 1, sentinelValue);
         // Request more samples than samples remaining in the file:
         const auto samplesRead = reader.read (in.data(), in.size());
 
@@ -540,12 +566,12 @@ inline void ReadStopsAtEOF (std::string const & filename, std::vector<float> con
             samplesRead == reader.samples() &&
             partialReadSuccessful (in, signal, signal.size(), sentinelValue)
         };
-        log.Record (result, "Round Trip - read (T *, size_t) - client requests more samples than samples remaining in file");
+        log.Record (result, labelPrefix<T> + "read (T *, size_t) - client requests more samples than samples remaining in file");
     }
     {
         wav::Reader reader {filename};
         const auto framesRequested {reader.frames() + 1};
-        std::vector<float> in (framesRequested * reader.channels(), sentinelValue);
+        std::vector<T> in (framesRequested * reader.channels(), sentinelValue);
         // Request more frames than frames remaining in the file:
         const auto framesRead = reader.readFrames (in.data(), framesRequested);
 
@@ -554,20 +580,20 @@ inline void ReadStopsAtEOF (std::string const & filename, std::vector<float> con
             framesRead == reader.frames() &&
             partialReadSuccessful (in, signal, signal.size(), sentinelValue)
         };
-        log.Record (result, "Round Trip - readFrames (T *, size_t) - client requests more frames than frames remaining in file");
+        log.Record (result, labelPrefix<T> + "readFrames (T *, size_t) - client requests more frames than frames remaining in file");
     }
     {
         wav::Reader reader {filename};
         const auto frames {reader.frames()};
         const auto framesRequested {frames + 1};
         const auto channels {reader.channels()};
-        std::vector<float> left  (framesRequested, sentinelValue);
-        std::vector<float> right (framesRequested, sentinelValue);
-        float * destinations[] {left.data(), right.data()};
+        std::vector<T> left  (framesRequested, sentinelValue);
+        std::vector<T> right (framesRequested, sentinelValue);
+        T * destinations[] {left.data(), right.data()};
         const auto framesRead = reader.readFrames (destinations, channels, framesRequested);
 
-        std::vector<float> signalLeft  (frames);
-        std::vector<float> signalRight (frames);
+        std::vector<T> signalLeft  (frames);
+        std::vector<T> signalRight (frames);
         // split signal into left and right channels
         for (size_t frame = 0; frame < frames; ++frame)
         {
@@ -582,11 +608,12 @@ inline void ReadStopsAtEOF (std::string const & filename, std::vector<float> con
             partialReadSuccessful (left,  signalLeft,  frames, sentinelValue) &&
             partialReadSuccessful (right, signalRight, frames, sentinelValue)
         };
-        log.Record (result, "Round Trip - readFrames (T ** const, size_t, size_t) - client requests more frames than frames remaining in file");
+        log.Record (result, labelPrefix<T> + "readFrames (T ** const, size_t, size_t) - client requests more frames than frames remaining in file");
     }
 }
 
-inline void TestWriteMethods (std::vector<float> const & signal,
+template <wav::FloatOrDouble T>
+inline void TestWriteMethods (std::vector<T> const & signal,
                               WriteParameters const & writeParameters,
                               TestLog & log)
 {
@@ -601,7 +628,8 @@ inline void TestWriteMethods (std::vector<float> const & signal,
     WriteFrames_Vector                  (signal, writeParameters, log);
 }
 
-inline void TestReadMethods (std::vector<float> const & signal,
+template <wav::FloatOrDouble T>
+inline void TestReadMethods (std::vector<T> const & signal,
                              WriteParameters const & wp,
                              TestLog & log)
 {
@@ -629,12 +657,14 @@ inline void TestReadMethods (std::vector<float> const & signal,
     std::remove (filename);
 }
 
-void TestRoundTrip (TestLog & log)
+template <wav::FloatOrDouble T>
+void TestRoundTripFor (wav::ExportFormat format, TestLog & log)
 {
     // interleaved stereo signal
     // L =  0 → 1
     // R = -1 → 0
-    const std::vector<float> signal
+    // Every value is exact in both float and double.
+    const std::vector<float> values
     {
         0.f,    -1.f,
         0.25f,  -0.75f,
@@ -642,13 +672,22 @@ void TestRoundTrip (TestLog & log)
         0.75f,  -0.25f,
         1.f,     0.f
     };
-    WriteParameters writeParameters {wav::ExportFormat::FloatPCM_32, 48000, 2};
+    const std::vector<T> signal (values.cbegin(), values.cend());
+
+    WriteParameters writeParameters {format, 48000, 2};
 
     TestWriteMethods (signal, writeParameters, log);
     TestReadMethods  (signal, writeParameters, log);
 }
 
-inline bool partialReadSuccessful (std::vector<float> const & in, std::vector<float> const & signal, std::size_t samplesRequested, float sentinelValue)
+void TestRoundTrip (TestLog & log)
+{
+    TestRoundTripFor<float>  (wav::ExportFormat::FloatPCM_32, log);
+    TestRoundTripFor<double> (wav::ExportFormat::FloatPCM_64, log);
+}
+
+template <wav::FloatOrDouble T>
+inline bool partialReadSuccessful (std::vector<T> const & in, std::vector<T> const & signal, std::size_t samplesRequested, T sentinelValue)
 {
 
     const bool partialReadMatchesSignal = areEqual (signal, in, samplesRequested);
