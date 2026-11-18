@@ -228,6 +228,12 @@ inline float float32_le (std::FILE * in)
     return std::bit_cast<float> (integer);
 }
 
+// GCC 15 at -O3 reports a false -Warray-bounds on bytes[pos+7]
+// despite the guard
+#if defined(__GNUC__) && !defined(__clang__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Warray-bounds"
+#endif
 inline double float64_le (std::vector<std::byte> const & bytes, size_t & pos)
 {
     if (pos + 7 >= bytes.size())
@@ -248,6 +254,9 @@ inline double float64_le (std::vector<std::byte> const & bytes, size_t & pos)
 
     return std::bit_cast<double> (integer);
 }
+#if defined(__GNUC__) && !defined(__clang__)
+#pragma GCC diagnostic pop
+#endif
 
 inline std::vector<std::byte> bytesFromFile (std::filesystem::path const & filepath)
 {
