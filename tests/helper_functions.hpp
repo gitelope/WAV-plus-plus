@@ -48,8 +48,11 @@ inline std::string exportFormatShortPrefix (wav::ExportFormat encoding)
         case wav::ExportFormat::LinearPCM_32: return "s32";
         case wav::ExportFormat::FloatPCM_32:  return "f32";
         case wav::ExportFormat::FloatPCM_64:  return "f64";
-        default: return "?";
     }
+
+    // Unreachable for every named enumerator. No default, so -Wswitch flags
+    // a new ExportFormat that is not represented above.
+    return "?";
 }
 
 #endif
