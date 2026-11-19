@@ -39,6 +39,7 @@ if (MSVC)
         /W4
         /permissive-
         /w14062 # C4062: enumerator not handled in a switch with no default (MSVC's -Wswitch, off by default)
+        /w14061 # C4061: enumerator not handled even with a default (MSVC's -Wswitch-enum, off by default)
     )
 else ()
     set (wav_plus_plus_warning_flags
@@ -68,6 +69,7 @@ else ()
         -Wreorder
         -Wsign-compare
         -Wredundant-move
+        -Wswitch-enum
     )
     if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
         list (APPEND wav_plus_plus_warning_flags
@@ -79,6 +81,7 @@ else ()
             -Wrange-loop-analysis
             -Wconditional-uninitialized
             -Wshadow-all
+            -Wcovered-switch-default # GCC rejects it
         )
     endif ()
 endif ()

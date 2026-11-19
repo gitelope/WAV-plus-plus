@@ -730,6 +730,8 @@
 					"-Wsign-compare",
 					"-Wimplicit-int-conversion",
 					"-Wimplicit-int-float-conversion",
+					"-Wswitch-enum",
+					"-Wcovered-switch-default",
 				);
 			};
 			name = Debug;
@@ -821,6 +823,8 @@
 					"-Wsign-compare",
 					"-Wimplicit-int-conversion",
 					"-Wimplicit-int-float-conversion",
+					"-Wswitch-enum",
+					"-Wcovered-switch-default",
 				);
 			};
 			name = Release;
