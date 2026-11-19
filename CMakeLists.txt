@@ -35,7 +35,11 @@ endif ()
 
 # ---- Warning flags for tests and examples ----
 if (MSVC)
-    set (wav_plus_plus_warning_flags /W4 /permissive-)
+    set (wav_plus_plus_warning_flags
+        /W4
+        /permissive-
+        /w14062 # C4062: enumerator not handled in a switch with no default (MSVC's -Wswitch, off by default)
+    )
 else ()
     set (wav_plus_plus_warning_flags
         -Wall
