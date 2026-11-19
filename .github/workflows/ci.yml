@@ -5,6 +5,12 @@ on:
     branches: ["main", "develop"]
   pull_request:
     branches: ["main", "develop"]
+  # Monthly run to catch a runner image or toolchain change breaking the build.
+  # Schedules run on the default branch (main) only, and GitHub turns them off
+  # after 60 days without repository activity, emailing first.
+  schedule:
+    - cron: "0 6 1 * *"   # 06:00 UTC on the first of each month
+  workflow_dispatch:      # adds a "Run workflow" button to the Actions tab
 
 permissions:
   contents: read
