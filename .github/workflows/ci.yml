@@ -18,6 +18,12 @@ jobs:
       fail-fast: false
       matrix:
         include:
+          - name: ubuntu-24.04-gcc
+            os: ubuntu-24.04
+            cc: gcc
+            cxx: g++
+            build_type: Release
+
           - name: ubuntu-latest-gcc
             os: ubuntu-latest
             cc: gcc
