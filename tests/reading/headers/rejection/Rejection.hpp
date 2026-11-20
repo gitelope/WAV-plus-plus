@@ -19,7 +19,7 @@ void UpdateRIFFChunkSize (std::vector<uint8_t> &);
 #include "PEAK.hpp"
 #include "generic.hpp"
 
-#include <cstdio>
+#include <filesystem>
 #include <format>
 
 inline void TestRejection (TestLog & log)
@@ -39,14 +39,14 @@ inline void TestForReadError (std::vector<uint8_t> const & bytes,
                               std::string const & label,
                               wav::ReadErrorCode expectedCode)
 {
-    const auto filename {"test_rejection.wav"};
-    WriteBytesToFile (filename, bytes);
+    const auto filepath {tempPath ("test_rejection.wav")};
+    WriteBytesToFile (filepath, bytes);
 
     bool passes {false};
     std::string errorMessage;
     try
     {
-        wav::Reader reader {filename};
+        wav::Reader reader {filepath};
     }
     catch (wav::ReadError const & e)
     {
@@ -63,7 +63,7 @@ inline void TestForReadError (std::vector<uint8_t> const & bytes,
         log.Record (passes, std::format ("{} - {}", label, errorMessage));
     }
 
-    std::remove (filename);
+    std::filesystem::remove (filepath);
 }
 
 inline void UpdateRIFFChunkSize (std::vector<uint8_t> & bytes)

@@ -7,18 +7,18 @@
 
 #include <cstddef>
 #include <cstdint>
-#include <cstdio>
+#include <filesystem>
 #include <vector>
 
 inline void SampleRateZero (TestLog & log)
 {
     constexpr std::uint32_t sampleRate {0};
 
-    const auto filename {"test_writer_sample_rate_zero.wav"};
+    const auto filepath {tempPath ("test_writer_sample_rate_zero.wav")};
     bool passes {false};
     try
     {
-        wav::Writer writer {filename, wav::ExportFormat::LinearPCM_16, sampleRate, 1};
+        wav::Writer writer {filepath, wav::ExportFormat::LinearPCM_16, sampleRate, 1};
     }
     catch (wav::WriteError const & e)
     {
@@ -26,18 +26,18 @@ inline void SampleRateZero (TestLog & log)
     }
 
     log.Record (passes, "Writer InvalidArgument - constructor - sample rate zero");
-    std::remove (filename);
+    std::filesystem::remove (filepath);
 }
 
 inline void ChannelsZero (TestLog & log)
 {
     constexpr std::uint16_t channels {0};
 
-    const auto filename {"test_writer_channels_zero.wav"};
+    const auto filepath {tempPath ("test_writer_channels_zero.wav")};
     bool passes {false};
     try
     {
-        wav::Writer writer {filename, wav::ExportFormat::LinearPCM_16, 44100, channels};
+        wav::Writer writer {filepath, wav::ExportFormat::LinearPCM_16, 44100, channels};
     }
     catch (wav::WriteError const & e)
     {
@@ -45,18 +45,18 @@ inline void ChannelsZero (TestLog & log)
     }
 
     log.Record (passes, "Writer InvalidArgument - constructor - channels zero");
-    std::remove (filename);
+    std::filesystem::remove (filepath);
 }
 
 inline void ChannelsExceedsMax (TestLog & log)
 {
     constexpr auto channels {static_cast<std::uint16_t> (wav::maxChannels + 1)};
 
-    const auto filename {"test_writer_channels_exceeds_max.wav"};
+    const auto filepath {tempPath ("test_writer_channels_exceeds_max.wav")};
     bool passes {false};
     try
     {
-        wav::Writer writer {filename, wav::ExportFormat::LinearPCM_16, 44100, channels};
+        wav::Writer writer {filepath, wav::ExportFormat::LinearPCM_16, 44100, channels};
     }
     catch (wav::WriteError const & e)
     {
@@ -64,18 +64,18 @@ inline void ChannelsExceedsMax (TestLog & log)
     }
 
     log.Record (passes, "Writer InvalidArgument - constructor - channels exceed maximum imposed by WAV++");
-    std::remove (filename);
+    std::filesystem::remove (filepath);
 }
 
 inline void BufferSizeZero (TestLog & log)
 {
     constexpr std::size_t bufferSize {0};
 
-    const auto filename {"test_writer_buffer_size_zero.wav"};
+    const auto filepath {tempPath ("test_writer_buffer_size_zero.wav")};
     bool passes {false};
     try
     {
-        wav::Writer writer {filename, wav::ExportFormat::LinearPCM_16, 44100, 1, 0, bufferSize};
+        wav::Writer writer {filepath, wav::ExportFormat::LinearPCM_16, 44100, 1, 0, bufferSize};
     }
     catch (wav::WriteError const & e)
     {
@@ -83,18 +83,18 @@ inline void BufferSizeZero (TestLog & log)
     }
 
     log.Record (passes, "Writer InvalidArgument - constructor - buffer size zero");
-    std::remove (filename);
+    std::filesystem::remove (filepath);
 }
 
 inline void ChannelMaskInvalid (TestLog & log)
 {
     constexpr std::uint32_t invalidMask {0xFFFFFFFF};
 
-    const auto filename {"test_writer_channel_mask_invalid.wav"};
+    const auto filepath {tempPath ("test_writer_channel_mask_invalid.wav")};
     bool passes {false};
     try
     {
-        wav::Writer writer {filename, wav::ExportFormat::LinearPCM_16, 44100, 1, invalidMask};
+        wav::Writer writer {filepath, wav::ExportFormat::LinearPCM_16, 44100, 1, invalidMask};
     }
     catch (wav::WriteError const & e)
     {
@@ -102,7 +102,7 @@ inline void ChannelMaskInvalid (TestLog & log)
     }
 
     log.Record (passes, "Writer InvalidArgument - constructor - channel mask invalid");
-    std::remove (filename);
+    std::filesystem::remove (filepath);
 }
 
 inline void SamplesToWriteExceedsSourceSize (TestLog & log)
@@ -110,11 +110,11 @@ inline void SamplesToWriteExceedsSourceSize (TestLog & log)
     std::size_t sourceSize {1};
     std::size_t samplesToWrite {sourceSize + 1};
 
-    const auto filename {"test_writer_samples_exceeds_source.wav"};
+    const auto filepath {tempPath ("test_writer_samples_exceeds_source.wav")};
     bool passes {false};
     try
     {
-        wav::Writer writer {filename, wav::ExportFormat::LinearPCM_16, 44100, 1};
+        wav::Writer writer {filepath, wav::ExportFormat::LinearPCM_16, 44100, 1};
         std::vector<float> source (sourceSize, 0.f);
         writer.write (source, samplesToWrite);
     }
@@ -124,7 +124,7 @@ inline void SamplesToWriteExceedsSourceSize (TestLog & log)
     }
 
     log.Record (passes, "Writer InvalidArgument - write (vector &, size_t) - samples to write exceeds source size");
-    std::remove (filename);
+    std::filesystem::remove (filepath);
 }
 
 inline void SourceFrameSizeIsFractional (TestLog & log)
@@ -132,11 +132,11 @@ inline void SourceFrameSizeIsFractional (TestLog & log)
     constexpr std::uint16_t channels {2};
     constexpr std::size_t sourceSizeInSamples {3}; // 3/2 = 1.5 frames
 
-    const auto filename {"test_writer_source_not_whole_frames.wav"};
+    const auto filepath {tempPath ("test_writer_source_not_whole_frames.wav")};
     bool passes {false};
     try
     {
-        wav::Writer writer {filename, wav::ExportFormat::LinearPCM_16, 44100, channels};
+        wav::Writer writer {filepath, wav::ExportFormat::LinearPCM_16, 44100, channels};
         std::vector<float> source (sourceSizeInSamples, 0.f);
         writer.writeFrames (source);
     }
@@ -146,7 +146,7 @@ inline void SourceFrameSizeIsFractional (TestLog & log)
     }
 
     log.Record (passes, "Writer InvalidArgument - writeFrames (vector &) - source size is not a whole number of frames");
-    std::remove (filename);
+    std::filesystem::remove (filepath);
 }
 
 inline void FramesToWriteExceedsSourceSize (TestLog & log)
@@ -156,11 +156,11 @@ inline void FramesToWriteExceedsSourceSize (TestLog & log)
 
     constexpr std::uint16_t channels {2};
 
-    const auto filename {"test_writer_frames_exceeds_source.wav"};
+    const auto filepath {tempPath ("test_writer_frames_exceeds_source.wav")};
     bool passes {false};
     try
     {
-        wav::Writer writer {filename, wav::ExportFormat::LinearPCM_16, 44100, channels};
+        wav::Writer writer {filepath, wav::ExportFormat::LinearPCM_16, 44100, channels};
         std::vector<float> source (channels * sourceSizeInFrames, 0.f);
         writer.writeFrames (source, framesToWrite);
     }
@@ -170,7 +170,7 @@ inline void FramesToWriteExceedsSourceSize (TestLog & log)
     }
 
     log.Record (passes, "Writer InvalidArgument - writeFrames (vector &, size_t) - frames to write exceeds source size");
-    std::remove (filename);
+    std::filesystem::remove (filepath);
 }
 
 inline void TestInvalidArgumentForWriting (TestLog & log)

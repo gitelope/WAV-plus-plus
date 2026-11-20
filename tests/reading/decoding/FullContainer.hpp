@@ -7,7 +7,7 @@
 
 #include <cassert>
 #include <cstdint>
-#include <cstdio>
+#include <filesystem>
 #include <vector>
 
 // Tests reading all the supported formats both interleaved and deinterleaved.
@@ -21,7 +21,7 @@ void TestInterleavedAndMonoDeinterleaved (TestLog & log)
 {
     constexpr auto sampleRate {48000};
     constexpr auto channels {1};
-    const auto filename {"testSampleDecoding.wav"};
+    const auto filepath {tempPath ("testSampleDecoding.wav")};
 
     struct TestCase
     {
@@ -102,7 +102,7 @@ void TestInterleavedAndMonoDeinterleaved (TestLog & log)
     };
     for (auto & testCase : testCases)
     {
-        WriteBytesToFile (filename, buildWAVEFORMATEX (testCase.encoding, channels, sampleRate, testCase.data));
+        WriteBytesToFile (filepath, buildWAVEFORMATEX (testCase.encoding, channels, sampleRate, testCase.data));
 
         {
             // read into float
@@ -116,7 +116,7 @@ void TestInterleavedAndMonoDeinterleaved (TestLog & log)
 
             {
                 // read interleaved
-                wav::Reader reader {filename};
+                wav::Reader reader {filepath};
                 std::vector<float> actual (reader.samples());
                 const auto samplesRead = reader.read (actual);
                 const bool result
@@ -128,7 +128,7 @@ void TestInterleavedAndMonoDeinterleaved (TestLog & log)
             }
             {
                 // read deinterleaved
-                wav::Reader reader {filename};
+                wav::Reader reader {filepath};
                 std::vector<float> actual (reader.frames());
                 std::vector<float *> destinations {actual.data()};
                 const auto framesRead = reader.readFrames (destinations.data(), reader.channels(), reader.frames());
@@ -146,7 +146,7 @@ void TestInterleavedAndMonoDeinterleaved (TestLog & log)
 
             {
                 // read interleaved
-                wav::Reader reader {filename};
+                wav::Reader reader {filepath};
                 std::vector<double> actual (reader.samples());
                 const auto samplesRead = reader.read (actual);
                 const bool result
@@ -158,7 +158,7 @@ void TestInterleavedAndMonoDeinterleaved (TestLog & log)
             }
             {
                 // read deinterleaved
-                wav::Reader reader {filename};
+                wav::Reader reader {filepath};
                 std::vector<double> actual (reader.frames());
                 std::vector<double *> destinations {actual.data()};
                 const auto framesRead = reader.readFrames (destinations.data(), reader.channels(), reader.frames());
@@ -172,14 +172,14 @@ void TestInterleavedAndMonoDeinterleaved (TestLog & log)
 
         }
     }
-    std::remove (filename);
+    std::filesystem::remove (filepath);
 }
 
 void TestDeinterleavedStereo (TestLog & log)
 {
     constexpr auto sampleRate {44100};
     constexpr auto channels {2};
-    const auto filename {"testSampleDecoding.wav"};
+    const auto filepath {tempPath ("testSampleDecoding.wav")};
 
     struct TestCase
     {
@@ -270,7 +270,7 @@ void TestDeinterleavedStereo (TestLog & log)
 
     for (auto & testCase : stereoTestCases)
     {
-        WriteBytesToFile (filename, buildWAVEFORMATEX (testCase.encoding, channels, sampleRate, testCase.data));
+        WriteBytesToFile (filepath, buildWAVEFORMATEX (testCase.encoding, channels, sampleRate, testCase.data));
 
         // create float version of expected input
         const auto expectedSize {testCase.expectedLeft.size()};
@@ -286,7 +286,7 @@ void TestDeinterleavedStereo (TestLog & log)
         {
             // read deinterleaved into float
 
-            wav::Reader reader {filename};
+            wav::Reader reader {filepath};
             std::vector<float> actualLeft  (reader.frames());
             std::vector<float> actualRight (reader.frames());
             std::vector<float *> destinations {actualLeft.data(), actualRight.data()};
@@ -303,7 +303,7 @@ void TestDeinterleavedStereo (TestLog & log)
         {
             // read deinterleaved into double
 
-            wav::Reader reader {filename};
+            wav::Reader reader {filepath};
             std::vector<double> actualLeft  (reader.frames());
             std::vector<double> actualRight (reader.frames());
             std::vector<double *> destinations {actualLeft.data(), actualRight.data()};
@@ -323,7 +323,7 @@ void TestDeinterleavedStereo (TestLog & log)
         {
             // read deinterleaved into float, first channel only
 
-            wav::Reader reader {filename};
+            wav::Reader reader {filepath};
 
             // 1. request all frames, get all frames.
             std::vector<float> actualLeft (reader.frames());
@@ -350,7 +350,7 @@ void TestDeinterleavedStereo (TestLog & log)
         {
             // read deinterleaved into double, first channel only
 
-            wav::Reader reader {filename};
+            wav::Reader reader {filepath};
 
             // 1. request all frames, get all frames.
             std::vector<double> actualLeft (reader.frames());
@@ -373,14 +373,14 @@ void TestDeinterleavedStereo (TestLog & log)
             log.Record (result, "Sample Decoding, deinterleaved, requesting 1 of 2 channels - " + exportFormatShortPrefix (testCase.encoding) + " -> double");
         }
     }
-    std::remove (filename);
+    std::filesystem::remove (filepath);
 }
 
 void TestDeinterleavedThreeChannelSubset (TestLog & log)
 {
     constexpr auto sampleRate {48000};
     constexpr auto channels {3};
-    const auto filename {"testSampleDecodingThreeChannel.wav"};
+    const auto filepath {tempPath ("testSampleDecodingThreeChannel.wav")};
 
     // 3 channels, 3 frames, 32-bit float
     const std::vector<uint8_t> data
@@ -392,7 +392,7 @@ void TestDeinterleavedThreeChannelSubset (TestLog & log)
     const std::vector<float> expectedCh0 {-1.f, -0.25f, 0.5f};
     const std::vector<float> expectedCh1 {-0.75f, 0.f, 0.75f};
 
-    WriteBytesToFile (filename, buildWAVEFORMATEX (wav::ExportFormat::FloatPCM_32, channels, sampleRate, data));
+    WriteBytesToFile (filepath, buildWAVEFORMATEX (wav::ExportFormat::FloatPCM_32, channels, sampleRate, data));
 
     constexpr float sentinelValue {42};
 
@@ -401,7 +401,7 @@ void TestDeinterleavedThreeChannelSubset (TestLog & log)
 
         constexpr size_t channelsRequested {1};
 
-        wav::Reader reader {filename};
+        wav::Reader reader {filepath};
         assert (reader.frames() == 3);
         assert (reader.channels() == channels);
 
@@ -429,7 +429,7 @@ void TestDeinterleavedThreeChannelSubset (TestLog & log)
     {
         // request 2 of 3 channels
 
-        wav::Reader reader {filename};
+        wav::Reader reader {filepath};
 
         constexpr size_t channelsRequested {2};
 
@@ -458,7 +458,7 @@ void TestDeinterleavedThreeChannelSubset (TestLog & log)
         log.Record (result, "Sample Decoding, deinterleaved, requesting 2 of 3 channels");
     }
 
-    std::remove (filename);
+    std::filesystem::remove (filepath);
 }
 
 inline void TestFullContainer (TestLog & log)

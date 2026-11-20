@@ -7,13 +7,13 @@
 
 #include <cstddef>
 #include <cstdint>
-#include <cstdio>
+#include <filesystem>
 #include <format>
 #include <string>
 
 inline void TestTrailingBytesIgnored (TestLog & log)
 {
-    const auto filename {"test_trailing_bytes.wav"};
+    const auto filepath {tempPath ("test_trailing_bytes.wav")};
 
     constexpr uint32_t frames {8};
     auto bytes = buildPCMWAVEFORMAT (wav::FormatCode::LinearPCM, 8, 8, 1, 44100, frames);
@@ -27,12 +27,12 @@ inline void TestTrailingBytesIgnored (TestLog & log)
                   bytes.begin() + static_cast<std::ptrdiff_t> (fmtStart),
                   bytes.begin() + static_cast<std::ptrdiff_t> (dataStart));
 
-    WriteBytesToFile (filename, bytes);
+    WriteBytesToFile (filepath, bytes);
 
     std::string failures;
     try
     {
-        wav::ChunkInfo info {filename};
+        wav::ChunkInfo info {filepath};
         size_t fmtCount {0};
         for (auto const & entry : info.chunksEncountered)
         {
@@ -49,7 +49,7 @@ inline void TestTrailingBytesIgnored (TestLog & log)
     log.Record (failures.empty(),
                 std::format ("Trailing bytes ignored - second fmt past RIFF size not parsed{}", suffix));
 
-    std::remove (filename);
+    std::filesystem::remove (filepath);
 }
 
 

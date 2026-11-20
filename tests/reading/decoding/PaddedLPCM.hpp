@@ -8,14 +8,14 @@
 #include <algorithm>
 #include <cassert>
 #include <cstdint>
-#include <cstdio>
+#include <filesystem>
 #include <format>
 #include <string>
 #include <vector>
 
 void WriteData (std::vector<uint8_t> &, std::vector<uint8_t> const &);
 
-void WriteDataAndTest (std::string const &, std::vector<uint8_t> &, std::vector<uint8_t> const &, TestLog &, std::vector<float> const &, uint16_t, uint16_t, std::string const &);
+void WriteDataAndTest (std::filesystem::path const &, std::vector<uint8_t> &, std::vector<uint8_t> const &, TestLog &, std::vector<float> const &, uint16_t, uint16_t, std::string const &);
 
 struct TestCase
 {
@@ -30,7 +30,7 @@ struct TestCase
 
 inline void TestPaddedLPCM (TestLog & log)
 {
-    const auto filename {"test_padded_lpcm.wav"};
+    const auto filepath {tempPath ("test_padded_lpcm.wav")};
     constexpr uint16_t channels {1};
     constexpr uint32_t sampleRate {44100};
 
@@ -113,7 +113,7 @@ inline void TestPaddedLPCM (TestLog & log)
                                                 channels, sampleRate, frames,
                                                 wav::SpeakerConfiguration::Unassigned);
 
-        WriteDataAndTest (filename, bytes, padded,
+        WriteDataAndTest (filepath, bytes, padded,
                           log, expected, validBitDepth, containerSizeInBits, fileFormat);
     }
 }
@@ -125,7 +125,7 @@ inline void WriteData (std::vector<uint8_t> & bytes, std::vector<uint8_t> const 
     std::copy (data.cbegin(), data.cend(), bytes.begin() + static_cast<std::ptrdiff_t> (dataStart));
 }
 
-inline void WriteDataAndTest (std::string const & filename,
+inline void WriteDataAndTest (std::filesystem::path const & filepath,
                               std::vector<uint8_t> & bytes, std::vector<uint8_t> const & data,
                               TestLog & log,
                               std::vector<float> const & expected,
@@ -133,11 +133,11 @@ inline void WriteDataAndTest (std::string const & filename,
                               std::string const & fileFormat)
 {
     WriteData (bytes, data);
-    WriteBytesToFile (filename, bytes);
+    WriteBytesToFile (filepath, bytes);
 
     for (bool interleaved : {true, false})
     {
-        wav::Reader reader {filename};
+        wav::Reader reader {filepath};
 
         const auto channels {reader.channels()};
         const auto samples {reader.samples()};
@@ -168,7 +168,7 @@ inline void WriteDataAndTest (std::string const & filename,
         log.Record (result, std::format ("Padded LPCM - {}|{}, {}, {}", validBitDepth, containerSizeInBits, fileFormat, interleaved ? "interleaved" : "deinterleaved"));
     }
 
-    std::remove (filename.c_str());
+    std::filesystem::remove (filepath);
 }
 
 #endif

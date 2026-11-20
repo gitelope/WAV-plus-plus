@@ -7,7 +7,7 @@
 
 #include <cassert>
 #include <cstdint>
-#include <cstdio>
+#include <filesystem>
 #include <format>
 #include <string>
 #include <vector>
@@ -93,7 +93,7 @@ inline void PeakChunkVersionUnsupported (TestLog & log)
 {
     // Since PEAK is optional, we can skip any chunk that isn't version 1 instead of throwing.
 
-    const auto filename {"test_peak_version_unsupported.wav"};
+    const auto filepath {tempPath ("test_peak_version_unsupported.wav")};
     constexpr uint16_t channels {2};
 
     auto bytes = buildPCMWAVEFORMAT (wav::FormatCode::FloatPCM, 32, 32, channels, 48000, 8);
@@ -106,12 +106,12 @@ inline void PeakChunkVersionUnsupported (TestLog & log)
     OverwriteUint32LE (bytes, peakChunkStart + 8, 2);
     UpdateRIFFChunkSize (bytes);
 
-    WriteBytesToFile (filename, bytes);
+    WriteBytesToFile (filepath, bytes);
 
     std::string failures;
     try
     {
-        wav::ChunkInfo info {filename};
+        wav::ChunkInfo info {filepath};
 
         Compare (info.peak.present == false, "peak.present should be false when version != 1", failures);
 
@@ -136,7 +136,7 @@ inline void PeakChunkVersionUnsupported (TestLog & log)
 
     log.Record (failures.empty(), std::format ("Skip Chunk - PEAK, version not 1{}", suffix));
 
-    std::remove (filename);
+    std::filesystem::remove (filepath);
 }
 
 inline void RunPeakChunkTests (TestLog & log)

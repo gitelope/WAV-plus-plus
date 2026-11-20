@@ -7,7 +7,7 @@
 
 #include <cassert>
 #include <cstdint>
-#include <cstdio>
+#include <filesystem>
 #include <format>
 #include <string>
 #include <vector>
@@ -22,7 +22,7 @@
 
 inline void TestWAVEFORMATEXTENSIBLE (TestLog & log)
 {
-    const auto filename           {"test_WAVEFORMATEXTENSIBLE_header_parsing.wav"};
+    const auto filepath           {tempPath ("test_WAVEFORMATEXTENSIBLE_header_parsing.wav")};
     constexpr uint32_t sampleRate {44100};
     // Frames should be odd to create odd data chunk sizes when both byte depth
     // and channels are odd so we can test for the presence of padding.
@@ -68,13 +68,13 @@ inline void TestWAVEFORMATEXTENSIBLE (TestLog & log)
                                                           validBitDepth, containerSizeInBits,
                                                           channels, sampleRate,
                                                           frames, channelMask);
-            WriteBytesToFile (filename, bytes);
+            WriteBytesToFile (filepath, bytes);
 
             std::string failures;
 
             try
             {
-                wav::Reader reader {filename};
+                wav::Reader reader {filepath};
 
                 Compare (reader.channels()            == channels,            "unexpected channels",            failures);
                 Compare (reader.sampleRate()          == sampleRate,          "unexpected sampleRate",          failures);
@@ -112,7 +112,7 @@ inline void TestWAVEFORMATEXTENSIBLE (TestLog & log)
         }
     }
 
-    std::remove (filename);
+    std::filesystem::remove (filepath);
 }
 
 #endif

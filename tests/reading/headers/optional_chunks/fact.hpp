@@ -6,13 +6,13 @@
 #define wavplusplus_tests_optional_chunks_fact_hpp
 
 #include <cstdint>
-#include <cstdio>
+#include <filesystem>
 #include <format>
 #include <string>
 
 inline void TestFact (TestLog & log)
 {
-    const auto filename {"test_fact_header_parsing.wav"};
+    const auto filepath {tempPath ("test_fact_header_parsing.wav")};
     constexpr auto formatCode {wav::FormatCode::FloatPCM};
     constexpr uint16_t channels {2};
     constexpr uint16_t bitDepth {32};
@@ -26,12 +26,12 @@ inline void TestFact (TestLog & log)
     // Update RIFF chunk size to reflect fact chunk size:
     OverwriteUint32LE (bytes, 4, static_cast<uint32_t> (bytes.size() - 8));
 
-    WriteBytesToFile (filename, bytes);
+    WriteBytesToFile (filepath, bytes);
 
     std::string failures;
     try
     {
-        wav::ChunkInfo info {filename};
+        wav::ChunkInfo info {filepath};
         Compare (info.fact.present    == true,   "fact chunk not detected",    failures);
         Compare (info.fact.size       == 4,      "unexpected fact.size",       failures);
         Compare (info.fact.frameCount == frames, "unexpected fact.frameCount", failures);
@@ -43,7 +43,7 @@ inline void TestFact (TestLog & log)
     const auto suffix {failures.empty() ? "" : ", failures: " + failures};
     log.Record (failures.empty(), std::format ("Read Header - optional chunks - fact parsed correctly{}", suffix));
 
-    std::remove (filename);
+    std::filesystem::remove (filepath);
 }
 
 #endif

@@ -11,6 +11,7 @@
 #include <bit>
 #include <cstdint>
 #include <cstdio>
+#include <filesystem>
 #include <string>
 #include <vector>
 
@@ -143,7 +144,7 @@ struct Header
 };
 
 std::string headerTestLabel (wav::ExportFormat, uint16_t, uint32_t);
-Header ReadHeader (std::string const &);
+Header ReadHeader (std::filesystem::path const &);
 
 void TestHeader (wav::ExportFormat encoding,
                  uint32_t sampleRate,
@@ -151,7 +152,7 @@ void TestHeader (wav::ExportFormat encoding,
                  uint32_t frames,
                  TestLog & log)
 {
-    const auto filename {"testHeader.wav"};
+    const auto filepath {tempPath ("testHeader.wav")};
 
     std::string const label = headerTestLabel (encoding, channels, frames);
 
@@ -174,11 +175,11 @@ void TestHeader (wav::ExportFormat encoding,
 
     std::vector<float> zeros (frames * channels, 0.f);
 
-    wav::Writer writer {filename, encoding, sampleRate, channels};
+    wav::Writer writer {filepath, encoding, sampleRate, channels};
     writer.write (zeros);
     writer.Close();
 
-    const auto h = ReadHeader (filename);
+    const auto h = ReadHeader (filepath);
 
     std::string failures;
 
@@ -219,12 +220,12 @@ void TestHeader (wav::ExportFormat encoding,
 
     log.Record (failures.empty(), logMessage);
 
-    std::remove (filename);
+    std::filesystem::remove (filepath);
 }
 
 void TestSpeakerPosition (TestLog & log)
 {
-    const auto filename       {"testSpeakerPosition.wav"};
+    const auto filepath       {tempPath ("testSpeakerPosition.wav")};
     constexpr auto encoding   {wav::ExportFormat::LinearPCM_16};
     constexpr auto sampleRate {48000};
     constexpr auto frames     {10};
@@ -259,11 +260,11 @@ void TestSpeakerPosition (TestLog & log)
     {
         std::vector<float> zeros (static_cast<size_t> (frames) * testCase.channels, 0.f);
 
-        wav::Writer writer {filename, encoding, sampleRate, testCase.channels, testCase.channelMask};
+        wav::Writer writer {filepath, encoding, sampleRate, testCase.channels, testCase.channelMask};
         writer.write (zeros);
         writer.Close();
 
-        const auto h = ReadHeader (filename);
+        const auto h = ReadHeader (filepath);
 
         std::string failures;
 
@@ -280,11 +281,11 @@ void TestSpeakerPosition (TestLog & log)
 
         log.Record (failures.empty(), message);
 
-        std::remove (filename);
+        std::filesystem::remove (filepath);
     }
 }
 
-Header ReadHeader (std::string const & filepath)
+Header ReadHeader (std::filesystem::path const & filepath)
 {
     auto in = wav::fileForReading (filepath);
     const Header h {in.get()};

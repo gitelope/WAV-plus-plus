@@ -6,14 +6,14 @@
 #define wavplusplus_tests_SampleEncoding_hpp
 
 #include <cstdint>
-#include <cstdio>
+#include <filesystem>
 #include <fstream>
 #include <string>
 #include <vector>
 
 void TestSampleEncoding (TestLog & log)
 {
-    const auto filename {"testSampleEncoding.wav"};
+    const auto filepath {tempPath ("testSampleEncoding.wav")};
 
     // The static qualifiers on sampleRate and channels are used to both:
     // a) avoid a bug in some versions of Clang involving constexpr variables and lambda capture
@@ -32,7 +32,7 @@ void TestSampleEncoding (TestLog & log)
     const std::vector<double> out_double
     {-1., -0.875, -0.75, -0.625, -0.5, -0.25, 0., 0.25, 0.5, 0.625, 0.75, 0.875, 1.};
 
-    const auto RunTest = [&log, &filename]
+    const auto RunTest = [&log, &filepath]
     <typename T> (wav::ExportFormat encoding,
                   std::vector<T> const & source,
                   std::vector<uint8_t> const & expected,
@@ -40,11 +40,11 @@ void TestSampleEncoding (TestLog & log)
     {
         std::vector<uint8_t> actual (expected.size());
 
-        wav::Writer writer {filename, encoding, sampleRate, channels};
+        wav::Writer writer {filepath, encoding, sampleRate, channels};
         writer.write (source);
         writer.Close();
 
-        std::ifstream in {filename, std::ios::binary};
+        std::ifstream in {filepath, std::ios::binary};
 
         const auto [bits, _] = wav::bitDepthAndFormatCode (encoding);
         const auto headerSize = (bits > 16) ? 68 /*WAVEFORMATEXTENSIBLE*/ : 46 /*WAVEFORMATEX*/;
@@ -205,7 +205,7 @@ void TestSampleEncoding (TestLog & log)
         RunTest (encoding, out_double, expected, "double -> f64");
     }
 
-    std::remove (filename);
+    std::filesystem::remove (filepath);
 }
 
 #endif

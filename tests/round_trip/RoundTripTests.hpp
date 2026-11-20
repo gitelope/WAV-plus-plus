@@ -12,7 +12,7 @@
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
-#include <cstdio>
+#include <filesystem>
 #include <span>
 #include <string>
 #include <type_traits>
@@ -29,9 +29,9 @@ template <wav::FloatOrDouble T>
 inline const std::string labelPrefix {std::is_same_v<T, float> ? "Round Trip - float - " : "Round Trip - double - "};
 
 template <wav::FloatOrDouble T>
-inline bool same (std::string const & filename, std::vector<T> const & expected)
+inline bool same (std::filesystem::path const & filepath, std::vector<T> const & expected)
 {
-    wav::Reader reader {filename};
+    wav::Reader reader {filepath};
     std::vector<T> actual (expected.size());
     const auto n = reader.read (actual);
     return n == expected.size() && areEqual (actual, expected);
@@ -48,16 +48,16 @@ inline void Write_PointerAndCount (std::vector<T> const & signal,
                                    WriteParameters const & wp,
                                    TestLog & log)
 {
-    const auto filename {"test_round_trip_write_pointer_and_count.wav"};
+    const auto filepath {tempPath ("test_round_trip_write_pointer_and_count.wav")};
 
-    wav::Writer writer {filename, wp.format, wp.sampleRate, wp.channels};
+    wav::Writer writer {filepath, wp.format, wp.sampleRate, wp.channels};
     const auto samplesWritten = writer.write (signal.data(), signal.size());
     writer.Close();
 
-    const bool result {samplesWritten == signal.size() && same (filename, signal)};
+    const bool result {samplesWritten == signal.size() && same (filepath, signal)};
     log.Record (result, labelPrefix<T> + "write (T const *, size_t)");
 
-    std::remove (filename);
+    std::filesystem::remove (filepath);
 }
 
 template <wav::FloatOrDouble T>
@@ -65,14 +65,14 @@ inline void Write_PointerAndCount_Chunked (std::vector<T> const & signal,
                                            WriteParameters const & wp,
                                            TestLog & log)
 {
-    const auto filename {"test_round_trip_write_pointer_and_count_chunked.wav"};
+    const auto filepath {tempPath ("test_round_trip_write_pointer_and_count_chunked.wav")};
 
     constexpr size_t samplesFirstChunk {6};
     assert (samplesFirstChunk < signal.size());
 
     const auto samplesSecondChunk {signal.size() - samplesFirstChunk};
 
-    wav::Writer writer {filename, wp.format, wp.sampleRate, wp.channels};
+    wav::Writer writer {filepath, wp.format, wp.sampleRate, wp.channels};
 
     // 1. write some samples
     // 2. write some more samples
@@ -88,11 +88,11 @@ inline void Write_PointerAndCount_Chunked (std::vector<T> const & signal,
         samplesWritten1 == samplesFirstChunk &&
         samplesWritten2 == samplesSecondChunk &&
         samplesWritten3 == 0 &&
-        same (filename, signal)
+        same (filepath, signal)
     };
     log.Record (result, labelPrefix<T> + "write (T const *, size_t) - chunked");
 
-    std::remove (filename);
+    std::filesystem::remove (filepath);
 }
 
 template <wav::FloatOrDouble T>
@@ -100,7 +100,7 @@ inline void Write_VectorAndCount (std::vector<T> const & signal,
                                   WriteParameters const & wp,
                                   TestLog & log)
 {
-    const auto filename {"test_round_trip_write_vector_and_count.wav"};
+    const auto filepath {tempPath ("test_round_trip_write_vector_and_count.wav")};
 
     // Write one frame less than the full vector to make sure the number of
     // samples written is from the supplied count and not the vector's size.
@@ -109,14 +109,14 @@ inline void Write_VectorAndCount (std::vector<T> const & signal,
 
     const std::vector<T> expected (signal.begin(), signal.begin() + static_cast<std::ptrdiff_t> (samplesToWrite));
 
-    wav::Writer writer {filename, wp.format, wp.sampleRate, wp.channels};
+    wav::Writer writer {filepath, wp.format, wp.sampleRate, wp.channels};
     const auto samplesWritten = writer.write (signal, samplesToWrite);
     writer.Close();
 
-    const bool result {samplesWritten == samplesToWrite && same (filename, expected)};
+    const bool result {samplesWritten == samplesToWrite && same (filepath, expected)};
     log.Record (result, labelPrefix<T> + "write (vector<T> const &, size_t)");
 
-    std::remove (filename);
+    std::filesystem::remove (filepath);
 }
 
 template <wav::FloatOrDouble T>
@@ -124,16 +124,16 @@ inline void Write_Vector (std::vector<T> const & signal,
                           WriteParameters const & wp,
                           TestLog & log)
 {
-    const auto filename {"test_round_trip_write_vector.wav"};
+    const auto filepath {tempPath ("test_round_trip_write_vector.wav")};
 
-    wav::Writer writer {filename, wp.format, wp.sampleRate, wp.channels};
+    wav::Writer writer {filepath, wp.format, wp.sampleRate, wp.channels};
     const auto samplesWritten = writer.write (signal);
     writer.Close();
 
-    const bool result {samplesWritten == signal.size() && same (filename, signal)};
+    const bool result {samplesWritten == signal.size() && same (filepath, signal)};
     log.Record (result, labelPrefix<T> + "write (vector<T> const &)");
 
-    std::remove (filename);
+    std::filesystem::remove (filepath);
 }
 
 // WRITEFRAMES OVERLOADS ////////////////////////////////////////////////////////
@@ -147,18 +147,18 @@ inline void WriteFrames_PointerAndCount (std::vector<T> const & signal,
                                          WriteParameters const & wp,
                                          TestLog & log)
 {
-    const auto filename {"test_round_trip_writeFrames_pointer_and_count.wav"};
+    const auto filepath {tempPath ("test_round_trip_writeFrames_pointer_and_count.wav")};
 
     const size_t framesToWrite {signal.size() / wp.channels};
 
-    wav::Writer writer {filename, wp.format, wp.sampleRate, wp.channels};
+    wav::Writer writer {filepath, wp.format, wp.sampleRate, wp.channels};
     const auto framesWritten = writer.writeFrames (signal.data(), framesToWrite);
     writer.Close();
 
-    const bool result {framesWritten == framesToWrite && same (filename, signal)};
+    const bool result {framesWritten == framesToWrite && same (filepath, signal)};
     log.Record (result, labelPrefix<T> + "writeFrames (T const *, size_t)");
 
-    std::remove (filename);
+    std::filesystem::remove (filepath);
 }
 
 template <wav::FloatOrDouble T>
@@ -166,7 +166,7 @@ inline void WriteFrames_PointerAndCount_Chunked (std::vector<T> const & signal,
                                                  WriteParameters const & wp,
                                                  TestLog & log)
 {
-    const auto filename {"test_round_trip_writeFrames_pointer_and_count_chunked.wav"};
+    const auto filepath {tempPath ("test_round_trip_writeFrames_pointer_and_count_chunked.wav")};
 
     constexpr size_t framesFirstChunk {3};
     const auto totalFrames {signal.size() / wp.channels};
@@ -175,7 +175,7 @@ inline void WriteFrames_PointerAndCount_Chunked (std::vector<T> const & signal,
     const auto framesSecondChunk {totalFrames - framesFirstChunk};
     const auto samplesFirstChunk {framesFirstChunk * wp.channels};
 
-    wav::Writer writer {filename, wp.format, wp.sampleRate, wp.channels};
+    wav::Writer writer {filepath, wp.format, wp.sampleRate, wp.channels};
 
     // 1. write 3 frames
     // 2. write remaining 2 frames
@@ -191,11 +191,11 @@ inline void WriteFrames_PointerAndCount_Chunked (std::vector<T> const & signal,
         framesWritten1 == framesFirstChunk &&
         framesWritten2 == framesSecondChunk &&
         framesWritten3 == 0 &&
-        same (filename, signal)
+        same (filepath, signal)
     };
     log.Record (result, labelPrefix<T> + "writeFrames (T const *, size_t) - chunked");
 
-    std::remove (filename);
+    std::filesystem::remove (filepath);
 }
 
 template <wav::FloatOrDouble T>
@@ -203,7 +203,7 @@ inline void WriteFrames_VectorAndCount (std::vector<T> const & signal,
                                         WriteParameters const & wp,
                                         TestLog & log)
 {
-    const auto filename {"test_round_trip_writeFrames_vector_and_count.wav"};
+    const auto filepath {tempPath ("test_round_trip_writeFrames_vector_and_count.wav")};
 
     // Write one frame less than the full vector to make sure the number of
     // samples written is from the supplied count and not the vector's size.
@@ -212,14 +212,14 @@ inline void WriteFrames_VectorAndCount (std::vector<T> const & signal,
 
     const std::vector<T> expected (signal.begin(), signal.begin() + static_cast<std::ptrdiff_t> (framesToWrite * wp.channels));
 
-    wav::Writer writer {filename, wp.format, wp.sampleRate, wp.channels};
+    wav::Writer writer {filepath, wp.format, wp.sampleRate, wp.channels};
     const auto framesWritten = writer.writeFrames (signal, framesToWrite);
     writer.Close();
 
-    const bool result {framesWritten == framesToWrite && same (filename, expected)};
+    const bool result {framesWritten == framesToWrite && same (filepath, expected)};
     log.Record (result, labelPrefix<T> + "writeFrames (vector<T> const &, size_t)");
 
-    std::remove (filename);
+    std::filesystem::remove (filepath);
 }
 
 template <wav::FloatOrDouble T>
@@ -227,17 +227,17 @@ inline void WriteFrames_Vector (std::vector<T> const & signal,
                                 WriteParameters const & wp,
                                 TestLog & log)
 {
-    const auto filename {"test_round_trip_writeFrames_vector.wav"};
+    const auto filepath {tempPath ("test_round_trip_writeFrames_vector.wav")};
 
-    wav::Writer writer {filename, wp.format, wp.sampleRate, wp.channels};
+    wav::Writer writer {filepath, wp.format, wp.sampleRate, wp.channels};
     const auto framesWritten = writer.writeFrames (signal);
     writer.Close();
 
     const auto totalFrames {signal.size() / wp.channels};
-    const bool result {framesWritten == totalFrames && same (filename, signal)};
+    const bool result {framesWritten == totalFrames && same (filepath, signal)};
     log.Record (result, labelPrefix<T> + "writeFrames (vector<T> const &)");
 
-    std::remove (filename);
+    std::filesystem::remove (filepath);
 }
 
 // READ OVERLOADS ///////////////////////////////////////////////////////////////
@@ -250,9 +250,9 @@ template <wav::FloatOrDouble T>
 inline bool partialReadSuccessful (std::vector<T> const &, std::vector<T> const &, std::size_t, T);
 
 template <wav::FloatOrDouble T>
-inline void Read_PointerAndCount (std::string const & filename, std::vector<T> const & signal, TestLog & log)
+inline void Read_PointerAndCount (std::filesystem::path const & filepath, std::vector<T> const & signal, TestLog & log)
 {
-    wav::Reader reader {filename};
+    wav::Reader reader {filepath};
     std::vector<T> in (reader.samples());
     const auto samplesRead = reader.read (in.data(), in.size());
 
@@ -261,12 +261,12 @@ inline void Read_PointerAndCount (std::string const & filename, std::vector<T> c
 }
 
 template <wav::FloatOrDouble T>
-inline void Read_PointerAndCount_Chunked (std::string const & filename, std::vector<T> const & signal, TestLog & log)
+inline void Read_PointerAndCount_Chunked (std::filesystem::path const & filepath, std::vector<T> const & signal, TestLog & log)
 {
     constexpr size_t samplesRequested {6};
     assert (signal.size() == 10);
 
-    wav::Reader reader {filename};
+    wav::Reader reader {filepath};
     assert (reader.samples() == signal.size());
 
     constexpr T sentinelValue {42};
@@ -305,9 +305,9 @@ inline void Read_PointerAndCount_Chunked (std::string const & filename, std::vec
 }
 
 template <wav::FloatOrDouble T>
-inline void Read_VectorAndCount (std::string const & filename, std::vector<T> const & signal, TestLog & log)
+inline void Read_VectorAndCount (std::filesystem::path const & filepath, std::vector<T> const & signal, TestLog & log)
 {
-    wav::Reader reader {filename};
+    wav::Reader reader {filepath};
 
     // Request one frame fewer than the file holds,
     // into a vector sized for the full file to make
@@ -332,9 +332,9 @@ inline void Read_VectorAndCount (std::string const & filename, std::vector<T> co
 }
 
 template <wav::FloatOrDouble T>
-inline void Read_Vector (std::string const & filename, std::vector<T> const & signal, TestLog & log)
+inline void Read_Vector (std::filesystem::path const & filepath, std::vector<T> const & signal, TestLog & log)
 {
-    wav::Reader reader {filename};
+    wav::Reader reader {filepath};
     std::vector<T> in (reader.samples());
     const auto samplesRead = reader.read (in);
 
@@ -355,9 +355,9 @@ inline void Read_Vector (std::string const & filename, std::vector<T> const & si
 // size_t readFrames (T ** const destinations, size_t numChannels, size_t framesRequested);
 
 template <wav::FloatOrDouble T>
-inline void ReadFrames_PointerAndCount (std::string const & filename, std::vector<T> const & signal, TestLog & log)
+inline void ReadFrames_PointerAndCount (std::filesystem::path const & filepath, std::vector<T> const & signal, TestLog & log)
 {
-    wav::Reader reader {filename};
+    wav::Reader reader {filepath};
     const size_t framesRequested {reader.frames()};
     std::vector<T> in (reader.samples());
     const auto framesRead = reader.readFrames (in.data(), framesRequested);
@@ -367,12 +367,12 @@ inline void ReadFrames_PointerAndCount (std::string const & filename, std::vecto
 }
 
 template <wav::FloatOrDouble T>
-inline void ReadFrames_PointerAndCount_Chunked (std::string const & filename, std::vector<T> const & signal, TestLog & log)
+inline void ReadFrames_PointerAndCount_Chunked (std::filesystem::path const & filepath, std::vector<T> const & signal, TestLog & log)
 {
     constexpr size_t framesRequested {3};
     assert (signal.size() == 10);
 
-    wav::Reader reader {filename};
+    wav::Reader reader {filepath};
     assert (reader.frames() == 5);
     assert (reader.channels() == 2);
 
@@ -410,9 +410,9 @@ inline void ReadFrames_PointerAndCount_Chunked (std::string const & filename, st
 }
 
 template <wav::FloatOrDouble T>
-inline void ReadFrames_VectorAndCount (std::string const & filename, std::vector<T> const & signal, TestLog & log)
+inline void ReadFrames_VectorAndCount (std::filesystem::path const & filepath, std::vector<T> const & signal, TestLog & log)
 {
-    wav::Reader reader {filename};
+    wav::Reader reader {filepath};
 
     // Create a destination with enough room to read the whole
     // file and fill with sentinel values.
@@ -436,9 +436,9 @@ inline void ReadFrames_VectorAndCount (std::string const & filename, std::vector
 }
 
 template <wav::FloatOrDouble T>
-inline void ReadFrames_Vector (std::string const & filename, std::vector<T> const & signal, TestLog & log)
+inline void ReadFrames_Vector (std::filesystem::path const & filepath, std::vector<T> const & signal, TestLog & log)
 {
-    wav::Reader reader {filename};
+    wav::Reader reader {filepath};
     std::vector<T> in (reader.samples());
     const auto framesRead = reader.readFrames (in);
 
@@ -447,9 +447,9 @@ inline void ReadFrames_Vector (std::string const & filename, std::vector<T> cons
 }
 
 template <wav::FloatOrDouble T>
-inline void ReadFrames_Deinterleaved (std::string const & filename, std::vector<T> const & signal, TestLog & log)
+inline void ReadFrames_Deinterleaved (std::filesystem::path const & filepath, std::vector<T> const & signal, TestLog & log)
 {
-    wav::Reader reader {filename};
+    wav::Reader reader {filepath};
 
     const auto frames {reader.frames()};
 
@@ -478,11 +478,11 @@ inline void ReadFrames_Deinterleaved (std::string const & filename, std::vector<
 }
 
 template <wav::FloatOrDouble T>
-inline void ReadFrames_Deinterleaved_Chunked (std::string const & filename, std::vector<T> const & signal, TestLog & log)
+inline void ReadFrames_Deinterleaved_Chunked (std::filesystem::path const & filepath, std::vector<T> const & signal, TestLog & log)
 {
     constexpr size_t framesRequested {3};
 
-    wav::Reader reader {filename};
+    wav::Reader reader {filepath};
     assert (reader.frames() == 5);
 
     const auto channels {reader.channels()};
@@ -547,7 +547,7 @@ inline void ReadFrames_Deinterleaved_Chunked (std::string const & filename, std:
 }
 
 template <wav::FloatOrDouble T>
-inline void ReadStopsAtEOF (std::string const & filename, std::vector<T> const & signal, TestLog & log)
+inline void ReadStopsAtEOF (std::filesystem::path const & filepath, std::vector<T> const & signal, TestLog & log)
 {
     // Make sure we handle the case where there are not enough samples
     // left to read the number of samples (or frames) requested by the
@@ -556,7 +556,7 @@ inline void ReadStopsAtEOF (std::string const & filename, std::vector<T> const &
 
     constexpr T sentinelValue {42};
     {
-        wav::Reader reader {filename};
+        wav::Reader reader {filepath};
         std::vector<T> in (reader.samples() + 1, sentinelValue);
         // Request more samples than samples remaining in the file:
         const auto samplesRead = reader.read (in.data(), in.size());
@@ -569,7 +569,7 @@ inline void ReadStopsAtEOF (std::string const & filename, std::vector<T> const &
         log.Record (result, labelPrefix<T> + "read (T *, size_t) - client requests more samples than samples remaining in file");
     }
     {
-        wav::Reader reader {filename};
+        wav::Reader reader {filepath};
         const auto framesRequested {reader.frames() + 1};
         std::vector<T> in (framesRequested * reader.channels(), sentinelValue);
         // Request more frames than frames remaining in the file:
@@ -583,7 +583,7 @@ inline void ReadStopsAtEOF (std::string const & filename, std::vector<T> const &
         log.Record (result, labelPrefix<T> + "readFrames (T *, size_t) - client requests more frames than frames remaining in file");
     }
     {
-        wav::Reader reader {filename};
+        wav::Reader reader {filepath};
         const auto frames {reader.frames()};
         const auto framesRequested {frames + 1};
         const auto channels {reader.channels()};
@@ -633,28 +633,28 @@ inline void TestReadMethods (std::vector<T> const & signal,
                              WriteParameters const & wp,
                              TestLog & log)
 {
-    const auto filename {"test_read_methods.wav"};
+    const auto filepath {tempPath ("test_read_methods.wav")};
 
-    wav::Writer writer {filename, wp.format, wp.sampleRate, wp.channels};
+    wav::Writer writer {filepath, wp.format, wp.sampleRate, wp.channels};
     writer.write (signal);
     writer.Close();
 
-    Read_PointerAndCount               (filename, signal, log);
-    Read_PointerAndCount_Chunked       (filename, signal, log);
-    Read_VectorAndCount                (filename, signal, log);
-    Read_Vector                        (filename, signal, log);
+    Read_PointerAndCount               (filepath, signal, log);
+    Read_PointerAndCount_Chunked       (filepath, signal, log);
+    Read_VectorAndCount                (filepath, signal, log);
+    Read_Vector                        (filepath, signal, log);
 
-    ReadFrames_PointerAndCount         (filename, signal, log);
-    ReadFrames_PointerAndCount_Chunked (filename, signal, log);
-    ReadFrames_VectorAndCount          (filename, signal, log);
-    ReadFrames_Vector                  (filename, signal, log);
+    ReadFrames_PointerAndCount         (filepath, signal, log);
+    ReadFrames_PointerAndCount_Chunked (filepath, signal, log);
+    ReadFrames_VectorAndCount          (filepath, signal, log);
+    ReadFrames_Vector                  (filepath, signal, log);
 
-    ReadFrames_Deinterleaved           (filename, signal, log);
-    ReadFrames_Deinterleaved_Chunked   (filename, signal, log);
+    ReadFrames_Deinterleaved           (filepath, signal, log);
+    ReadFrames_Deinterleaved_Chunked   (filepath, signal, log);
 
-    ReadStopsAtEOF                     (filename, signal, log);
+    ReadStopsAtEOF                     (filepath, signal, log);
 
-    std::remove (filename);
+    std::filesystem::remove (filepath);
 }
 
 template <wav::FloatOrDouble T>

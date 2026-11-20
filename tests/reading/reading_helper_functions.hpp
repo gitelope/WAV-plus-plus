@@ -10,6 +10,7 @@
 #include <climits>
 #include <cstdint>
 #include <cstdio>
+#include <filesystem>
 #include <format>
 #include <limits>
 #include <stdexcept>
@@ -17,13 +18,13 @@
 #include <vector>
 
 // Write byte vector to a file.
-inline void WriteBytesToFile (std::string const & filepath, std::vector<uint8_t> const & bytes)
+inline void WriteBytesToFile (std::filesystem::path const & filepath, std::vector<uint8_t> const & bytes)
 {
     auto out = wav::fileForWriting (filepath);
 
     if (std::fwrite (bytes.data(), 1, bytes.size(), out.get()) != bytes.size())
     {
-        throw std::runtime_error ("Failed to write file: " + filepath);
+        throw std::runtime_error ("Failed to write file: " + filepath.string());
     }
 }
 

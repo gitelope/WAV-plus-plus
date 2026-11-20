@@ -7,14 +7,14 @@
 
 #include <cstddef>
 #include <cstdint>
-#include <cstdio>
+#include <filesystem>
 #include <format>
 #include <string>
 #include <vector>
 
 inline void TestPeak (TestLog & log)
 {
-    const auto filename {"test_peak_header_parsing.wav"};
+    const auto filepath {tempPath ("test_peak_header_parsing.wav")};
     constexpr auto formatCode {wav::FormatCode::FloatPCM};
     constexpr uint16_t channels            {2};
     constexpr uint16_t bitDepth            {32};
@@ -39,7 +39,7 @@ inline void TestPeak (TestLog & log)
     // Update RIFF chunk size to reflect PEAK chunk size:
     OverwriteUint32LE (bytes, 4, static_cast<uint32_t> (bytes.size() - 8));
 
-    WriteBytesToFile (filename, bytes);
+    WriteBytesToFile (filepath, bytes);
 
     constexpr uint32_t expectedSize {8 + 8 * channels}; // 4 bytes for version, 4 bytes for timestamp, 8 bytes per peak
     constexpr uint32_t expectedVersion {1}; // version 1 is the only supported version
@@ -48,7 +48,7 @@ inline void TestPeak (TestLog & log)
     std::string failures;
     try
     {
-        wav::ChunkInfo info {filename};
+        wav::ChunkInfo info {filepath};
 
         Compare (info.peak.present      == true,              "PEAK chunk not detected",   failures);
         Compare (info.peak.size         == expectedSize,      "unexpected peak.size",      failures);
@@ -70,7 +70,7 @@ inline void TestPeak (TestLog & log)
     const auto suffix {failures.empty() ? "" : ", failures: " + failures};
     log.Record (failures.empty(), std::format ("Read Header - optional chunks - PEAK parsed correctly{}", suffix));
 
-    std::remove (filename);
+    std::filesystem::remove (filepath);
 }
 
 #endif

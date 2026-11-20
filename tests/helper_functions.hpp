@@ -12,9 +12,16 @@
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
+#include <filesystem>
 #include <string>
 #include <type_traits>
 #include <vector>
+
+// Path in the system temp directory for placing a test file.
+inline std::filesystem::path tempPath (std::string const & name)
+{
+    return std::filesystem::temp_directory_path() / ("wav_plus_plus_" + name);
+}
 
 template <typename T>
 bool areEqual (std::vector<T> const & a, std::vector<T> const & b)

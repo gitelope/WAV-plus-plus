@@ -7,14 +7,14 @@
 
 #include <cassert>
 #include <cstdint>
-#include <cstdio>
+#include <filesystem>
 #include <format>
 #include <string>
 #include <vector>
 
 inline void TestPCMWAVEFORMAT (TestLog & log)
 {
-    const auto filename           {"test_PCMWAVEFORMAT_header_parsing.wav"};
+    const auto filepath           {tempPath ("test_PCMWAVEFORMAT_header_parsing.wav")};
     constexpr uint32_t sampleRate {44100};
     // Frames should be odd to enable testing for padding for odd channel and byte depth combinations.
     constexpr uint32_t frames     {7};
@@ -39,13 +39,13 @@ inline void TestPCMWAVEFORMAT (TestLog & log)
             const bool isFloatPCM  {formatCode == wav::FormatCode::FloatPCM};
 
             const auto bytes = buildPCMWAVEFORMAT (formatCode, bitDepth, bitDepth, channels, sampleRate, frames);
-            WriteBytesToFile (filename, bytes);
+            WriteBytesToFile (filepath, bytes);
 
             std::string failures;
 
             try
             {
-                wav::Reader reader {filename};
+                wav::Reader reader {filepath};
 
                 Compare (reader.channels()            == channels,    "unexpected channels",            failures);
                 Compare (reader.sampleRate()          == sampleRate,  "unexpected sampleRate",          failures);
@@ -71,7 +71,7 @@ inline void TestPCMWAVEFORMAT (TestLog & log)
         }
     }
 
-    std::remove (filename);
+    std::filesystem::remove (filepath);
 }
 
 #endif

@@ -5,19 +5,19 @@
 #ifndef wavplusplus_tests_reading_InvalidArgument_hpp
 #define wavplusplus_tests_reading_InvalidArgument_hpp
 
-#include <cstdio>
+#include <filesystem>
 #include <vector>
 
 inline void SamplesRequestedExceedsDestinationSize (TestLog & log)
 {
     auto bytes = buildPCMWAVEFORMAT (wav::FormatCode::LinearPCM, 24, 24, 1, 96000, 8);
-    const auto filename {"test_samples_requested_exceeds_destination.wav"};
-    WriteBytesToFile (filename, bytes);
+    const auto filepath {tempPath ("test_samples_requested_exceeds_destination.wav")};
+    WriteBytesToFile (filepath, bytes);
 
     bool passes {false};
     try
     {
-        wav::Reader reader {filename};
+        wav::Reader reader {filepath};
         std::vector<float> destination (1);
         reader.read (destination, 2);
     }
@@ -27,19 +27,19 @@ inline void SamplesRequestedExceedsDestinationSize (TestLog & log)
     }
 
     log.Record (passes, "Reader InvalidArgument - read (vector &, size_t) - samples requested exceeds destination size");
-    std::remove (filename);
+    std::filesystem::remove (filepath);
 }
 
 inline void DestinationFrameSizeIsFractional (TestLog & log)
 {
     auto bytes = buildPCMWAVEFORMAT (wav::FormatCode::LinearPCM, 16, 16, 2, 44100, 8);
-    const auto filename {"test_destination_not_whole_frames.wav"};
-    WriteBytesToFile (filename, bytes);
+    const auto filepath {tempPath ("test_destination_not_whole_frames.wav")};
+    WriteBytesToFile (filepath, bytes);
 
     bool passes {false};
     try
     {
-        wav::Reader reader {filename};
+        wav::Reader reader {filepath};
         std::vector<float> destination (3);
         reader.readFrames (destination);
     }
@@ -49,19 +49,19 @@ inline void DestinationFrameSizeIsFractional (TestLog & log)
     }
 
     log.Record (passes, "Reader InvalidArgument - readFrames (vector &) - destination size in frames is not a whole number");
-    std::remove (filename);
+    std::filesystem::remove (filepath);
 }
 
 inline void FramesRequestedExceedsDestinationSize (TestLog & log)
 {
     auto bytes = buildPCMWAVEFORMAT (wav::FormatCode::LinearPCM, 16, 16, 2, 44100, 8);
-    const auto filename {"test_frames_requested_exceeds_destination.wav"};
-    WriteBytesToFile (filename, bytes);
+    const auto filepath {tempPath ("test_frames_requested_exceeds_destination.wav")};
+    WriteBytesToFile (filepath, bytes);
 
     bool passes {false};
     try
     {
-        wav::Reader reader {filename};
+        wav::Reader reader {filepath};
         std::vector<float> destination (4);
         reader.readFrames (destination, 3);
     }
@@ -71,19 +71,19 @@ inline void FramesRequestedExceedsDestinationSize (TestLog & log)
     }
 
     log.Record (passes, "Reader InvalidArgument - readFrames (vector &, size_t) - frames requested exceeds destination size");
-    std::remove (filename);
+    std::filesystem::remove (filepath);
 }
 
 inline void ChannelsRequestedExceedsChannelCount (TestLog & log)
 {
     auto bytes = buildPCMWAVEFORMAT (wav::FormatCode::LinearPCM, 16, 16, 1, 44100, 8);
-    const auto filename {"test_channels_requested_exceeds_file.wav"};
-    WriteBytesToFile (filename, bytes);
+    const auto filepath {tempPath ("test_channels_requested_exceeds_file.wav")};
+    WriteBytesToFile (filepath, bytes);
 
     bool passes {false};
     try
     {
-        wav::Reader reader {filename};
+        wav::Reader reader {filepath};
         float left {};
         float right {};
         float * destinations[] {&left, &right};
@@ -95,7 +95,7 @@ inline void ChannelsRequestedExceedsChannelCount (TestLog & log)
     }
 
     log.Record (passes, "Reader InvalidArgument - readFrames (T ** const, size_t, size_t) - channels requested exceeds channel count");
-    std::remove (filename);
+    std::filesystem::remove (filepath);
 }
 
 inline void TestInvalidArgumentForReading (TestLog & log)
